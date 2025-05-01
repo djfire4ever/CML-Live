@@ -311,7 +311,7 @@ addMaterialForm?.addEventListener("submit", async function (event) {
     if (unitField) unitField.value = unit.toFixed(2);
   }
   
-function attachMaterialListeners() {
+  function attachMaterialListeners() {
     document.querySelectorAll(".materials").forEach(input => {
       input.removeEventListener("change", handleMaterialLookup);
       input.addEventListener("change", handleMaterialLookup);
@@ -320,21 +320,44 @@ function attachMaterialListeners() {
     document.querySelectorAll(".material-row").forEach(row => {
       const priceInput = row.querySelector(".matPrice");
       const qtyInput = row.querySelector(".incoming");
-  
-      if (priceInput && qtyInput) {
-        priceInput.removeEventListener("change", handlePriceQtyChange);
-        qtyInput.removeEventListener("change", handlePriceQtyChange);
-  
-        priceInput.addEventListener("change", handlePriceQtyChange);
-        qtyInput.addEventListener("change", handlePriceQtyChange);
-      }
+      const onHandInput = row.querySelector(".onHand");
+      const outgoingInput = row.querySelector(".outgoing");
+      const unitField = row.querySelector(".unitPrice");
+      const totalStockField = row.querySelector(".totalStock");
   
       function handlePriceQtyChange() {
-        calculateUnitPriceInRow(row);
+        const price = priceInput?.value.trim() || "";
+        const qty = qtyInput?.value.trim() || "";
+        const onHand = onHandInput?.value.trim() || "";
+        const outgoing = outgoingInput?.value.trim() || "";
+  
+        // 🧮 Unit Price
+        const unitPrice = calculateUnitPrice(price, qty);
+        if (unitField) unitField.value = unitPrice.toFixed(2);
+  
+        // 🧮 Total Stock
+        const totalStock = calculateTotalStock(onHand, qty, outgoing);
+        if (totalStockField) totalStockField.value = totalStock;
       }
+  
+      [priceInput, qtyInput, onHandInput, outgoingInput].forEach(input => {
+        if (input) {
+          input.removeEventListener("change", handlePriceQtyChange);
+          input.addEventListener("change", handlePriceQtyChange);
+        }
+      });
     });
   }
-    
+
+  function handlePriceQtyChange() {
+    const matPrice = row.querySelector(".matPrice")?.value.trim() || "";
+    const incomingQty = row.querySelector(".incoming")?.value.trim() || "";
+    const unitField = row.querySelector(".unitPrice");
+  
+    const unitPrice = calculateUnitPrice(matPrice, incomingQty);
+    if (unitField) unitField.value = unitPrice.toFixed(2);
+  }
+  
   // ✅ On DOM load
   document.addEventListener("DOMContentLoaded", () => {
     toggleLoader();
@@ -456,7 +479,7 @@ function calculateUnitPrice(price, qty) {
 
   return parsedPrice / parsedQty;
 }
-//not working
+
 // 🔔 Reorder Alert
 function checkLowStock() {
     const total = parseFloat(document.getElementById("edit-totalStock")?.value) || 0;
