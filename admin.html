@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard</title>
+<script src="config.js"></script>
+<style>
+@keyframes ring {
+  0% { transform: rotate(0); }
+  1% { transform: rotate(30deg); }
+  3% { transform: rotate(-28deg); }
+  5% { transform: rotate(34deg); }
+  7% { transform: rotate(-32deg); }
+  9% { transform: rotate(30deg); }
+  11% { transform: rotate(-28deg); }
+  13% { transform: rotate(26deg); }
+  15% { transform: rotate(-24deg); }
+  17% { transform: rotate(22deg); }
+  19% { transform: rotate(-20deg); }
+  21% { transform: rotate(18deg); }
+  23% { transform: rotate(-16deg); }
+  25% { transform: rotate(14deg); }
+  27% { transform: rotate(-12deg); }
+  29% { transform: rotate(10deg); }
+  31% { transform: rotate(-8deg); }
+  33% { transform: rotate(6deg); }
+  35% { transform: rotate(-4deg); }
+  37% { transform: rotate(2deg); }
+  39% { transform: rotate(-1deg); }
+  41% { transform: rotate(1deg); }
+  43% { transform: rotate(0); }
+  100% { transform: rotate(0); }
+}
+
+.ringing i {
+  animation: ring 1s ease-in-out;
+}
+
+/* 🎯 Hover & focus effect */
+.notif-btn {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.notif-btn:hover i,
+.notif-btn:focus i {
+  transform: scale(1.1);
+  text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+}
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.3); opacity: 0.7; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.pulse {
+  animation: pulse-animation 5s infinite;
+}
+
+@keyframes pulse-animation {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.6; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.flash-badge {
+  animation: flash 0.8s ease-in-out;
+}
+
+@keyframes flash {
+  0%   { transform: scale(1); background-color: #dc3545; }
+  50%  { transform: scale(1.3); background-color: #ff6b6b; }
+  100% { transform: scale(1); background-color: #dc3545; }
+}
+
+</style>
+</head>
+
+<body class="d-flex flex-column">
+<div id="header-placeholder"></div>
+
+<main class="flex-grow-1 d-flex flex-column">
+
+<iframe id="content-frame" src="dashboard.html"></iframe>
+    
+</main>
+
+<div id="footer-placeholder"></div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // Load the header and footer includes
+    loadInclude("header-placeholder", "header.html");
+    loadInclude("footer-placeholder", "footer.html");
+
+  });
+
+function loadPage(page, element) {
+  const frame = document.getElementById('content-frame');
+  if (frame) frame.src = page;
+  document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+  if (element) element.classList.add('active');
+}
+
+// Load header/footer includes
+function loadInclude(id, file) {
+  fetch(file)
+    .then(res => res.text())
+    .then(data => {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = data;
+    });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  checkNewLeads();
+
+  const tooltipTriggers = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+  tooltipTriggers.forEach(el => new bootstrap.Tooltip(el));
+});
+
+async function checkNewLeads() {
+  try {
+    const response = await fetch(`${scriptURL}?system=leads&action=getLeads`);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    const text = await response.text();
+    if (!text) {
+      console.warn("⚠️ No data received for leads.");
+      return;
+    }
+
+    const leads = JSON.parse(text);
+
+    if (!Array.isArray(leads)) {
+      console.warn("⚠️ getLeads did not return an array.");
+      return;
+    }
+
+    const latestLead = leads.at(-1);
+    if (!latestLead?.LeadID) {
+      console.warn("⚠️ Could not determine latest LeadID.");
+      return;
+    }
+
+    const latestLeadID = parseInt(latestLead.LeadID, 10);
+    const lastSeenLeadID = parseInt(localStorage.getItem("lastSeenLeadID") || "0", 10);
+    const dot = document.getElementById("leadNotifDot");
+
+    if (dot) {
+      if (latestLeadID > lastSeenLeadID) {
+        dot.classList.remove("d-none");
+        const bell = document.getElementById("leadNotifBtn");
+        bell.classList.add("ringing");
+        setTimeout(() => bell.classList.remove("ringing"), 1500);
+      } else {
+        dot.classList.add("d-none");
+      }
+    }
+
+    updateLeadBadge(leads);
+
+  } catch (error) {
+    console.error("❌ Error checking new leads:", error);
+  }
+}
+
+function updateLeadBadge(leads) {
+  const badge = document.getElementById("leadNotifBadge");
+  const btn = document.getElementById("leadNotifBtn");
+  const dot = document.getElementById("leadNotifDot");
+  const acknowledged = getAcknowledgedLeads();
+
+  const newLeads = leads.filter(lead =>
+    lead.Status?.toLowerCase() === "new" &&
+    !acknowledged.includes(lead.LeadID)
+  );
+
+  const count = newLeads.length;
+
+  if (count > 0) {
+    badge.textContent = count;
+    badge.classList.remove("d-none", "fade");
+    badge.classList.add("pulse");
+
+    if (dot) {
+      dot.classList.remove("d-none");
+      dot.classList.add("pulse");
+    }
+
+    btn.setAttribute("title", `${count} new lead${count === 1 ? "" : "s"}`);
+  } else {
+    badge.classList.add("d-none");
+    badge.classList.remove("pulse");
+
+    if (dot) {
+      dot.classList.add("d-none");
+      dot.classList.remove("pulse");
+    }
+
+    btn.setAttribute("title", "No new leads");
+  }
+
+  const tooltip = bootstrap.Tooltip.getInstance(btn);
+  if (tooltip) tooltip.dispose();
+  new bootstrap.Tooltip(btn);
+}
+
+function getAcknowledgedLeads() {
+  return JSON.parse(localStorage.getItem("acknowledgedLeadIDs")) || [];
+}
+
+function acknowledgeLead(id) {
+  const current = getAcknowledgedLeads();
+  if (!current.includes(id)) {
+    localStorage.setItem("acknowledgedLeadIDs", JSON.stringify([...current, id]));
+  }
+}
+
+function openLeadsPage() {
+  const iframe = document.querySelector("iframe");
+  iframe.src = "leads.html";
+
+  fetch(`${scriptURL}?system=leads&action=getLeads`)
+    .then(res => res.json())
+    .then(data => {
+      if (Array.isArray(data) && data.length > 0) {
+        const latestLeadID = parseInt(data.at(-1).LeadID, 10);
+        localStorage.setItem("lastSeenLeadID", latestLeadID);
+        const dot = document.getElementById("leadNotifDot");
+        if (dot) dot.classList.add("d-none");
+      }
+    });
+}
+
+// Auto-refresh every 30 seconds
+setInterval(checkNewLeads, 30000);
+
+</script>

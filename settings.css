@@ -1,0 +1,230 @@
+/* ================================
+   🎨 THEME SETTINGS (settings.css)
+   Override style.css defaults here
+=================================== */
+
+/* ✅ Define color variables here to enable future theme switching */
+:root {
+    --main-bg: #198754;
+    --main-text: #333;
+    --input-bg: lightgrey;
+    --table-header-bg: #198754;
+    --table-hover-bg: rgba(40, 167, 69, 0.15);
+    --accent-color: #198754;
+    --search-bg: #fff;
+  }
+  
+  /* ✅ Apply overrides with variables */
+  body {
+    background-color: var(--main-bg) !important;
+    color: var(--main-text);
+    font-family: "Courgette", cursive;
+  }
+  
+  input.form-control,
+  select.form-select {
+    background-color: var(--input-bg);
+  }
+  
+  #searchInput {
+    background-color: var(--search-bg);
+    border: 2px solid var(--accent-color);
+  }
+  
+/* Only style header */
+.my-custom-table thead th {
+    background-color: var(--table-header-bg, #198754);
+    color: #000;
+  }
+  
+  /* Optional: override alternating stripe colors */
+  .table-striped > tbody > tr:nth-of-type(odd) {
+    --bs-table-accent-bg: rgba(25, 135, 84, 0.1); /* Light green stripe */
+  }
+  
+  /* Optional: override hover background */
+  .table-hover > tbody > tr:hover {
+    --bs-table-hover-bg: rgba(25, 135, 84, 0.25); /* Hover shade */
+  }
+  
+/* Themes */
+
+/* ─────────────────────────────────────
+   🌟 Classic Theme
+───────────────────────────────────── */
+body.classic-theme {
+    /* Core theme variables */
+    --accent-color: #198754;
+    --text-color:   #000;
+    --input-bg:     lightgrey;
+  
+    /* Page-level styles */
+    font-family: "Courgette", cursive;
+    background-color: var(--accent-color) !important;
+    color:            var(--text-color)   !important;
+  }
+  
+  /* Inputs & Textareas */
+  body.classic-theme input.form-control,
+  body.classic-theme select.form-select,
+  body.classic-theme textarea {
+    background-color: var(--input-bg) !important;
+    color: #333 !important;
+    border: 1px solid #ccc !important;
+    border-radius: 0.375rem !important;
+  }
+  
+  /* Search input */
+  body.classic-theme #searchInput {
+    border: 2px solid var(--accent-color) !important;
+    border-radius: 25px !important;
+  }
+  body.classic-theme #searchInput:focus {
+    box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25) !important;
+  }
+  
+  /* Counters */
+  body.classic-theme #searchCounter,
+  body.classic-theme #totalCounter {
+    background-color: var(--accent-color) !important;
+    color: var(--text-color) !important;
+  }
+  .counter {
+    background-color: var(--accent-color, #198754);
+    color: var(--text-color, #000);
+  }
+  
+  /* Tables */
+  body.classic-theme .my-custom-table th,
+  body.classic-theme .my-custom-table td,
+  body.classic-theme .my-custom-table thead th {
+    background-color: var(--accent-color, #198754) !important;
+    color: var(--text-color, #000) !important;
+  }
+  body.classic-theme .my-custom-table tbody tr:hover {
+    background-color: rgba(40, 167, 69, 0.15) !important;
+  }
+  
+  /* Buttons */
+  body.classic-theme .edit-button {
+    background-color: #343a40 !important; /* Bootstrap-dark */
+    color: #fff !important;
+  }
+  body.classic-theme .delete-button {
+    background-color: #dc3545 !important; /* Bootstrap-danger */
+    color: #fff !important;
+  }
+  
+  /* Nav tabs */
+  body.classic-theme .nav-tabs .nav-link {
+    background-color: var(--accent-color) !important;
+    color: var(--text-color) !important;
+  }
+  body.classic-theme .nav-tabs .nav-link.active {
+    background-color: var(--bs-success) !important;
+    color: var(--text-color) !important;
+  }
+  
+  /* Tab content */
+  body.classic-theme .tab-content {
+    background-color: var(--bs-success) !important;
+    color: var(--bs-body-color) !important;
+  }
+  
+  /* Optional watermark */
+  body.classic-theme .watermark {
+    opacity: 0.2 !important;
+  }
+    
+/* ─────────────────────────────────────
+   🖤🤍 Black & White Theme
+───────────────────────────────────── */
+body.bw-theme {
+    /* Theme variables */
+    --accent-color: #fff;
+    --text-color:   #000;
+    --input-bg:     lightgrey;
+  
+    /* Global styles */
+    font-family: Arial, sans-serif;
+    background-color: var(--accent-color) !important;
+    color:            var(--text-color)   !important;
+  }
+  
+  /* Inputs, selects, textareas */
+  body.bw-theme input.form-control,
+  body.bw-theme select.form-select,
+  body.bw-theme textarea {
+    background-color: #333 !important;
+    color: #fff !important;
+    border: 1px solid #fff !important;
+    border-radius: 0.375rem !important;
+  }
+  
+  /* Search input */
+  body.bw-theme #searchInput {
+    border: 2px solid #fff !important;
+    border-radius: 25px !important;
+  }
+  body.bw-theme #searchInput:focus {
+    box-shadow: 0 0 0 0.25rem rgba(255, 255, 255, 0.25) !important;
+  }
+  
+  /* Counters */
+  body.bw-theme #searchCounter,
+  body.bw-theme #totalCounter {
+    background-color: #000 !important;
+    color: #fff !important;
+  }
+  .counter {
+    background-color: #000;
+    color: #fff;
+  }
+  
+  /* Table styles */
+  body.bw-theme .my-custom-table th,
+  body.bw-theme .my-custom-table td {
+    background-color: #000 !important;
+    color: #fff !important;
+  }
+  body.bw-theme .my-custom-table thead th {
+    background-color: var(--accent-color, #fff) !important;
+    color: var(--text-color, #000) !important;
+  }
+  body.bw-theme .my-custom-table tbody tr:hover {
+    background-color: #444 !important;
+  }
+  
+  /* Buttons */
+  body.bw-theme .edit-button {
+    background-color: #fff !important;
+    color: #000 !important;
+    border: 1px solid #000 !important;
+  }
+  body.bw-theme .delete-button {
+    background-color: #000 !important;
+    color: #fff !important;
+    border: 1px solid #fff !important;
+  }
+  
+  /* Tabs */
+  body.bw-theme .nav-tabs .nav-link {
+    background-color: #666 !important;
+    color: #fff !important;
+  }
+  body.bw-theme .nav-tabs .nav-link.active {
+    background-color: #fff !important;
+    color: #000 !important;
+  }
+  
+  /* Tab content panel */
+  body.bw-theme .tab-content {
+    background-color: #fff !important;
+    color: #000 !important;
+  }
+  
+  /* Watermark */
+  body.bw-theme .watermark {
+    opacity: 0.1 !important;
+  }
+  

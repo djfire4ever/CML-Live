@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Material Manager</title>
+  <style>
+  </style>
+</head>
+<div class="watermark"></div>
+<!-- Notification Toasts -->
+
+<div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3"></div>
+
+<!-- Loader -->
+<div id="loadingOverlay" class="d-none">
+  <div class="text-center text-white">
+      <div class="spinner-border text-light" role="status"></div>
+      <p class="mt-2">Loading... Please wait...</p>
+  </div>
+</div>
+
+<!-- Client Management Section -->
+<section class="bg-success text-dark text-center text-sm-start">
+  <div class="container">
+    <h2 class="text-center">Materials Management</h2>
+
+<!-- Navigation Tabs -->
+<ul class="nav nav-tabs" id="materialTabs">
+  <li class="nav-item"><button class="nav-link active text-dark fw-bold" data-bs-toggle="tab" data-bs-target="#search-material">🔍 Search Material</button></li>
+  <li class="nav-item"><button class="nav-link text-dark fw-bold" data-bs-toggle="tab" data-bs-target="#add-material">➕ Add Material</button></li>
+  <li class="nav-item"><button class="nav-link text-dark fw-bold" data-bs-toggle="tab" data-bs-target="#add-inventory">➕ Add Inventory</button></li>
+  <li class="nav-item"><button class="nav-link text-dark fw-bold" data-bs-toggle="tab" data-bs-target="#edit-material" style="display:none;">✏️ Edit Material</button></li> <!-- Hidden tab -->
+</ul>
+
+<!-- Search Template -->
+<template id="rowTemplate">
+  <tr class="result-box search-result-row" style="cursor: pointer;">
+    <th class="matID" scope="row"></th>
+    <th class="matName"></th>
+    <th class="matPrice"></th>
+    <th class="supplier"></th>
+    <th class="text-center">
+      <button type="button" class="btn btn-dark edit-button btn-sm d-none">Edit</button> <!-- hidden now -->
+    </th>
+    <th class="text-center">
+      <div class="btn-group" role="group">
+        <button type="button" class="btn btn-danger delete-button btn-sm d-none">Confirm</button>
+        <button type="button" class="btn btn-dark btn-sm before-delete-button" data-button-state="delete">Delete</button>
+      </div>
+    </th>
+  </tr>
+</template>
+
+<!-- Tab Content -->
+<div class="tab-content">
+      
+<!-- 🔍 Search Materials -->
+<div class="tab-pane fade show active" id="search-material">
+  <div class="input-group">
+    <input type="text" class="form-control text-dark fw-bold" id="searchInput" placeholder="🔍 search...">
+      <div class="input-group-append">
+        <span class="input-group-text fw-bold" id="searchCounter">🔍</span> 
+      </div>
+  </div>
+  <table class="table table-hover my-custom-table fw-bold">
+    <thead>
+      <tr>
+        <th>ID#</th>
+        <th>Name</th>
+        <th>Price</th>
+        <th>Supplier</th>
+        <th></th>
+        <th></th>
+
+      </tr>
+    </thead>
+    <tbody id="searchResults">
+    </tbody>
+  </table>
+</div>
+
+<!-- ➕ Add New Material -->
+<div class="tab-pane fade" id="add-material">
+  <form id="addMaterialForm">
+    <div class="container">
+      <div class="row g-3">
+        <div class="col-md-2 col-lg-4 fw-bold"><label><b>Name</b></label><input type="text" class="form-control" id="add-matName"></div>
+        <div class="col-md-2 col-lg-2 fw-bold"><label><b>Supplier</b></label><input type="text" class="form-control" id="add-supplier"></div>
+        <div class="col-md-2 col-lg-4 fw-bold"><label><b>Supplier Url</b></label><input type="text" class="form-control" id="add-supplierUrl"></div>
+      </div>
+      <div class="row g-3">
+        <div class="col-md-2 col-lg-2 fw-bold"><label><b>Unit Type</b></label><input type="text" class="form-select" id="add-unitType" list="unit-type-options">
+          <datalist id="unit-type-options"></datalist></div>
+          <div class="col-md-2 col-lg-2 fw-bold"><label><b>Reorder Level</b></label><input type="text" class="form-control" id="add-reorderLevel"></div>
+          <div class="col-md-2 col-lg-2 fw-bold"><label><b>Last Updated</b></label><input type="text" class="form-control" id="add-lastUpdated" readonly></div>
+          <div class="col-md-2 col-lg-2 fw-bold"><label><b>Price</b></label><input type="text" class="form-control" id="add-matPrice"></div>
+        <div class="col-md-2 col-lg-2 fw-bold"><label><b>Unit Qty</b></label><input type="text" class="form-control" id="add-unitQty"></div>
+        <div class="col-md-2 col-lg-2 fw-bold"><label><b>Unit Price</b></label><input type="text" class="form-control" id="add-unitPrice" readonly></div>
+        <div class="col-md-2 col-lg-2 fw-bold"><label><b>On Hand</b></label><input type="text" class="form-control" id="add-onHand"></div>
+      </div>
+      <div class="row g-3 mt-1">
+        <div class="col-sm-2"><button type="submit" class="btn btn-dark" id="add-product-button">💾 Save</button></div>
+      </div>
+    </div> <!-- container -->
+  </form>
+</div>
+
+<!-- ✏️ Edit Material -->
+<div class="tab-pane fade" id="edit-material">
+  <form id="editMaterialForm">
+    <input type="hidden" id="edit-material-id">
+    <input type="hidden" id="edit-matID">
+    <div class="container">
+      <div class="row g-3">
+        <div class="col-md-2 col-lg-4 fw-bold"><label><b>Name</b></label><input type="text" class="form-control" id="edit-matName"></div>
+        <div class="col-md-2 col-lg-2 fw-bold"><label><b>Supplier</b></label><input type="text" class="form-control" id="edit-supplier"></div>
+        <div class="col-md-2 col-lg-4 fw-bold"><label><b>Supplier Url</b></label>
+          <div class="input-group"><input type="text" class="form-control" id="edit-supplierUrl" placeholder="Enter URL here">
+            <button class="btn btn-dark" type="button" id="openSupplierUrlBtn" title="Open in new tab">🔗</button>
+          </div>
+        </div>
+      </div>
+      <div class="row g-3">
+        <div class="col-md-2 col-lg-2 fw-bold"><label><b>Unit Type</b></label><input type="text" class="form-select" id="edit-unitType" list="unit-type-options">
+          <datalist id="unit-type-options"></datalist>
+        </div>
+        <div class="col-md-2 col-lg-2 fw-bold"><label><b>Price</b></label><input type="text" class="form-control" id="edit-matPrice"></div>
+        <div class="col-md-2 col-lg-2 fw-bold"><label><b>Unit Qty</b></label><input type="text" class="form-control" id="edit-unitQty"></div>
+        <div class="col-md-2 col-lg-2 fw-bold"><label><b>Unit Price</b></label><input type="text" class="form-control" id="edit-unitPrice" readonly></div>
+        <div class="col-md-2 col-lg-2 fw-bold"><label><b>Reorder Level</b></label><input type="text" class="form-control" id="edit-reorderLevel"></div>
+      </div>
+      <div class="row g-3">
+        <div class="col-md-2 col-lg-2 fw-bold"><label><b>On Hand</b></label><input type="text" class="form-control" id="edit-onHand"></div>
+        <div class="col-md-2 col-lg-2 fw-bold"><label><b>Incoming</b></label><input type="text" class="form-control" id="edit-incoming"></div>
+        <div class="col-md-2 col-lg-2 fw-bold"><label><b>Outgoing</b></label><input type="text" class="form-control" id="edit-outgoing"></div>
+        <div class="col-md-2 col-lg-2 fw-bold"><label><b>Total Stock</b></label><input type="number" class="form-control" id="edit-totalStock" readonly></div>
+        <div class="col-md-2 col-lg-2 fw-bold"><label><b>Last Updated</b></label><input type="text" class="form-control" id="edit-lastUpdated" readonly></div>
+      </div>
+      <div class="row g-3 mt-1">
+        <div class="col-12">
+          <button type="button" class="btn btn-dark" id="save-changes">💾 Save</button>
+          <button type="button" class="btn btn-dark" id="cancel-changes">Cancel</button>
+        </div>
+      </div>
+      <div id="reorderAlert" class="alert alert-danger mt-2 mb-2 d-none fw-bold">
+        ⚠ Low stock! Time to reorder.
+      </div>
+    </div> <!-- container -->
+  </form>
+</div>
+
+<!-- 🏗️ Add Inventory -->
+<div class="tab-pane fade" id="add-inventory">
+  <form id="addInventoryForm">
+    <div id="materialRows">
+      <!-- 🔁 Template Material Row -->
+      <div class="row g-3 material-row mb-3 border rounded p-3">
+        <div class="col-12 text-center mt-2">
+          <h5 class="text-muted">📦 Incoming Deliveries</h5>
+        </div>
+        
+        <!-- Material Dropdown & Hidden matID -->
+        <div class="col-md-4 fw-bold">
+          <label><b>Material</b></label>
+          <input type="text" class="form-select materials" list="parts-options" placeholder="Select Material">
+          <datalist id="parts-options"></datalist>
+          <input type="hidden" class="matID">
+          <input type="hidden" class="matName">
+        </div>
+
+        <div class="col-md-2 fw-bold">
+          <label><b>Unit Type</b></label>
+          <input type="text" class="form-control unitType" readonly>
+        </div>
+
+        <div class="col-md-2 fw-bold">
+          <label><b>Unit Price</b></label>
+          <input type="text" class="form-control unitPrice" readonly>
+        </div>
+
+        <div class="col-md-2 fw-bold">
+          <label><b>Qty On Hand</b></label>
+          <input type="text" class="form-control onHand">
+        </div>
+
+        <div class="col-md-4 fw-bold">
+          <label><b>Supplier</b></label>
+          <input type="text" class="form-control supplier">
+        </div>
+
+        <div class="col-md-8 fw-bold">
+          <label><b>Supplier URL</b></label>
+          <input type="text" class="form-control supplierUrl">
+        </div>
+
+        <div class="col-md-2 fw-bold">
+          <label><b>Last Updated</b></label>
+          <input type="text" class="form-control lastUpdated" readonly>
+        </div>
+
+        <div class="col-md-2 fw-bold">
+          <label><b>Package Price</b></label>
+          <input type="text" class="form-control matPrice">
+        </div>
+
+        <div class="col-md-2 fw-bold">
+          <label><b>Package Qty</b></label>
+          <input type="text" class="form-control incoming">
+        </div>
+
+        <!-- Row Control Buttons -->
+        <div class="col-md-6 d-flex align-items-end gap-2">
+          <button type="button" class="btn btn-dark btn-sm" id="add-material-btn">➕ Add Material</button>
+          <button type="button" class="remove-material-row btn btn-danger btn-sm" style="display: none;">🗑️ Remove</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Save Button -->
+    <div class="mt-3 text-start">
+      <button type="submit" class="btn btn-dark btn-sm" id="save-inventory-btn">💾 Save Inventory</button>
+    </div>
+
+    <!-- Reorder Alert -->
+    <div id="reorder-alert" class="alert alert-warning d-none mt-3">
+      ⚠️ Stock is below reorder level!
+    </div>
+  </form>
+</div>
+
+
+    </div>
+  </div>
+</section>
+
+<!-- <script> -->
+
+<script>
+
+// Function to open the URL in a new tab
+function openUrl() {
+  const url = document.getElementById('edit-supplierUrl').value.trim();
+  
+  if (url && !/^https?:\/\//i.test(url)) {
+    // If URL is valid but doesn't start with https://, add it.
+    window.open('https://' + url, '_blank');
+  } else if (url) {
+    // If it's already valid, open it.
+    window.open(url, '_blank');
+  }
+}
+
+// Attach the function to the button click event
+document.getElementById('openSupplierUrlBtn').addEventListener('click', openUrl);
+
+function setupDynamicNavigation() {
+  function activateTabFromHash() {
+    var hash = window.location.hash;
+    if (!hash) return;
+
+    var targetTabButton = document.querySelector('[data-bs-target="' + hash + '"]');
+    if (targetTabButton) {
+      var tab = new bootstrap.Tab(targetTabButton);
+      tab.show();
+    }
+  }
+
+  // Use window.onload for full page load
+  window.onload = function() {
+    activateTabFromHash();  // Ensures tab switch happens after everything is loaded
+  };
+
+  window.addEventListener('hashchange', activateTabFromHash);
+}
+
+setupDynamicNavigation();
+
+</script>
+    
+<script src="config.js"></script>
+<script src="materialmanager.js"></script>
+
+<!-- </script> -->
+
+</body>
+</html>
+

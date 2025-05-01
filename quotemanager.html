@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quote Manager</title>
+  <style>
+  </style>
+</head>
+<div class="watermark"></div>
+<!-- Notification Toasts -->
+
+<div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3"></div>
+
+<!-- Loader -->
+<div id="loadingOverlay" class="d-none">
+  <div class="text-center text-white">
+      <div class="spinner-border text-light" role="status"></div>
+      <p class="mt-2">Loading... Please wait...</p>
+  </div>
+</div>
+
+<!-- Client Management Section -->
+<section class="bg-success text-dark text-center text-sm-start">
+  <div class="container">
+    <h2 class="text-center">Quote Management</h2>
+
+<!-- Navigation Tabs -->
+<ul class="nav nav-tabs" id="quoteTabs">
+  <li class="nav-item"><button class="nav-link active text-dark fw-bold" data-bs-toggle="tab" data-bs-target="#search-quote">🔍 Search Quote</button></li>
+  <li class="nav-item"><button class="nav-link text-dark fw-bold" data-bs-toggle="tab" data-bs-target="#add-quote">➕ Add Quote</button></li>
+  <!-- <li class="nav-item"><button class="nav-link text-dark fw-bold" data-bs-toggle="tab" data-bs-target="#edit-quote">✏️ Edit Quote</button></li> Hidden tab -->
+  <li class="nav-item"><button class="nav-link text-dark fw-bold" data-bs-toggle="tab" data-bs-target="#edit-quote" style="display:none;">✏️ Edit Quote</button></li>
+</ul>
+
+
+<!-- Search Template -->
+<template id="rowTemplate">
+  <tr class="result-box">
+    <th class="qtID" scope="row"></th>
+    <th class="firstName"></th>
+    <th class="lastName"></th>
+    <th class="eventDate"></th>
+    <th class="text-center">
+      <button type="button" class="btn btn-dark edit-button btn-sm">Edit</button>
+    </th>
+    <th class="text-center">
+      <button type="button" class="btn btn-dark edit-button btn-sm d-none">View</button>
+      <div class="btn-group" role="group">
+        <button type="button" class="btn btn-danger delete-button btn-sm d-none">Confirm</button>
+        <button type="button" class="btn btn-dark btn-sm before-delete-button" data-button-state="delete">Delete</button>
+      </div>
+    </th>
+  </tr>
+</template>
+
+<!-- Tab Content -->
+<div class="tab-content">
+      
+<!-- 🔍 Search Quote -->
+<div class="tab-pane fade show active" id="search-quote">
+  <div class="input-group">
+    <input type="text" class="form-control text-dark fw-bold" id="searchInput" placeholder="🔍 search...">
+      <div class="input-group-append">
+        <span class="input-group-text fw-bold" id="searchCounter">🔍</span> 
+      </div>
+  </div>
+  <table class="table table-hover my-custom-table fw-bold">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>First Name</th>
+        <th>Last Name</th>
+        <th>Event Date</th>
+        <th></th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody id="searchResults">
+    </tbody>
+  </table>
+</div>
+
+<!-- ✏️ Edit Quote Form-->
+<div class="tab-pane fade" id="edit-quote">
+  <form id="editQuoteForm">
+    <input type="hidden" id="edit-quote-id">
+
+<div class="row g-3 mb-4">
+<!-- ROW 1 -->
+<div class="col-md-4">
+<!-- Card 1: Client Info, Row 1, Col 1-->
+<div class="accordion" id="quoteAccordionR1C1">
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="headingClient">
+      <button class="accordion-button collapsed bg-dark text-light d-flex justify-content-between align-items-center" type="button" data-bs-toggle="collapse" data-bs-target="#collapseClient" aria-expanded="false" aria-controls="collapseClient">
+        <span><i class="fa-solid fa-user me-2"></i>Client</span>
+        <span id="header-firstName" class="badge bg-info ms-2">
+          <span id="edit-firstName-display">Client Info</span>
+        </span>
+      </button>
+    </h2>
+    <input type="hidden" id="edit-qtID" name="edit-qtID"> 
+    <div id="collapseClient" class="accordion-collapse collapse" aria-labelledby="headingClient" data-bs-parent="#quoteAccordionR1C1">
+      <div class="accordion-body bg-info text-dark">
+        <div class="row g-3">
+          <div class="col-sm-6">
+            <label class="form-label fw-bold">Phone</label>
+            <input type="text" readonly class="form-control-plaintext" id="edit-phone">
+          </div>
+        </div>
+        <div class="row g-3">
+          <div class="col-sm-4">
+            <label class="form-label fw-bold">First Name</label>
+            <input type="text" readonly class="form-control-plaintext" id="edit-firstName">
+          </div>
+          <div class="col-sm-4">
+            <label class="form-label fw-bold">Last Name</label>
+            <input type="text" readonly class="form-control-plaintext" id="edit-lastName">
+          </div>
+        </div>
+        <div class="row g-3">
+          <div class="col-sm-8">
+            <label class="form-label fw-bold">Email</label>
+            <input type="text" readonly class="form-control-plaintext" id="edit-email">
+          </div>
+        </div>
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="form-label fw-bold">Street</label>
+            <input type="text" readonly class="form-control-plaintext" id="edit-street">
+          </div>
+        </div>
+        <div class="row g-3">
+          <div class="col-sm-5">
+            <label class="form-label fw-bold">City</label>
+            <input type="text" readonly class="form-control-plaintext" id="edit-city">
+          </div>
+          <div class="col-sm-3">
+            <label class="form-label fw-bold">State</label>
+            <input type="text" readonly class="form-control-plaintext" id="edit-state">
+          </div>
+          <div class="col-sm-4">
+            <label class="form-label fw-bold">Zip</label>
+            <input type="text" readonly class="form-control-plaintext" id="edit-zip">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div> <!-- end col -->
+
+<!-- Card 3 Add-Ons Total, Row 1, Col 2 -->
+<div class="col-md-4">
+  <div class="accordion" id="quoteAccordionR1C2">
+    <div class="accordion-item">
+      <h2 class="accordion-header">
+        <button class="accordion-button collapsed bg-primary text-light d-flex justify-content-between align-items-center" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAddonsTotal" aria-expanded="false" aria-controls="collapseAddonsTotal">
+          <span><i class="fa-solid fa-user me-2"></i>Add-On Fees</span>
+          <span id="header-addonsTotal" class="badge bg-info ms-2">
+            <span id="header-addonsTotal-display">Add-On Fees</span>
+          </span>
+        </button>
+      </h2>
+      <div id="collapseAddonsTotal" class="accordion-collapse collapse">
+        <div class="accordion-body">
+          <div class="container-fluid px-0">
+            
+            <!-- Delivery Fee -->
+            <div class="row py-1 border-bottom align-items-center">
+              <div class="col-6 fw-bold">Delivery Fee</div>
+              <div class="col-6 text-end">
+                <input type="text" class="form-control form-control-sm text-end" id="edit-deliveryFee">
+              </div>
+            </div>
+
+            <!-- Setup Fee -->
+            <div class="row py-1 border-bottom align-items-center">
+              <div class="col-6 fw-bold">Setup Fee</div>
+              <div class="col-6 text-end">
+                <input type="text" class="form-control form-control-sm text-end" id="edit-setupFee">
+              </div>
+            </div>
+
+            <!-- Other Fee -->
+            <div class="row py-1 border-bottom align-items-center">
+              <div class="col-6 fw-bold">Other Fee</div>
+              <div class="col-6 text-end">
+                <input type="text" class="form-control form-control-sm text-end" id="edit-otherFee">
+              </div>
+            </div>
+
+            <!-- Add-ons Total -->
+            <div class="row pt-2 mt-2 border-top align-items-center">
+              <div class="col-6 fw-bold fs-5">Add-ons Total</div>
+              <div class="col-6 text-end fw-bold fs-5 text-primary" id="edit-addonsTotal"></div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="col-md-4">
+<!-- Card 5 Totals -->
+<div class="accordion" id="quoteAccordionR1C3">
+  <div class="accordion-item">
+    <h2 class="accordion-header">
+      <button class="accordion-button collapsed bg-warning text-light d-flex justify-content-between align-items-center" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTotals" aria-expanded="false" aria-controls="collapseTotals">
+        <span><i class="fa-solid fa-calculator me-2"></i>Totals</span>
+        <span id="header-grandTotal-totals" class="badge bg-secondary ms-2">
+          <span id="edit-grandTotal-display">Grand Total</span>
+        </span>
+      </button>
+    </h2>
+    <div id="collapseTotals" class="accordion-collapse collapse" data-bs-parent="#quoteAccordionR1C3">
+      <div class="accordion-body">
+        <div class="container-fluid px-0">
+
+          <!-- Total Cost -->
+          <div class="row border-bottom py-1">
+            <div class="col-6 fw-bold">Total Cost</div>
+            <div class="col-6 text-end" id="edit-totalProductCost"></div>
+          </div>
+
+          <!-- Total Retail -->
+          <div class="row border-bottom py-1">
+            <div class="col-6 fw-bold">Total Retail</div>
+            <div class="col-6 text-end" id="edit-totalProductRetail"></div>
+          </div>
+
+          <!-- + Tax -->
+          <div class="row border-bottom py-1">
+            <div class="col-4 fw-bold">+ Tax</div>
+            <div class="col-4 text-end">
+              <input type="text" readonly class="form-control-plaintext form-control-sm text-end" id="subTotal1">
+            </div>
+            <div class="col-4 text-end">
+              <input type="text" readonly class="form-control-plaintext form-control-sm text-end" id="subTotal2">
+            </div>
+          </div>
+
+          <!-- Discount -->
+          <div class="row border-bottom py-1 align-items-center">
+            <div class="col-4 fw-bold">- Discount</div>
+            <div class="col-4 text-end">
+              <input type="text" class="form-control form-control-sm" id="edit-discount">
+            </div>
+            <div class="col-4 text-end">
+              <input type="text" readonly class="form-control-plaintext form-control-sm text-end" id="subTotal3">
+            </div>
+          </div>
+
+          <!-- Plus Add-Ons Total -->
+          <div class="row border-bottom py-1 align-items-center">
+            <div class="col-6 fw-bold">+ Add-Ons</div>
+            <div class="col-6 text-end" id="edit-addonsTotal-totals"></div>
+          </div>
+            <!-- <div class="col-4 text-end">
+              <input type="text" readonly class="form-control-plaintext form-control-sm text-end" id="subTotal3">
+            </div> -->
+              <!-- </div> -->
+          
+          <!-- Grand Total -->
+          <div class="row border-top pt-2 mt-2">
+            <div class="col-6 fw-bold fs-5">Grand Total</div>
+            <div class="col-6 text-end fw-bold fs-5 text-success" id="edit-grandTotal"></div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</div> <!-- end row 1 -->
+
+<!-- Row 2 -->
+<!-- Card 2: Event Info, Row 2, Col 1-->
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="accordion" id="quoteAccordionR2C1">
+      <div class="accordion-item">
+        <h2 class="accordion-header">
+          <button class="accordion-button collapsed bg-danger text-light d-flex justify-content-between align-items-center" type="button" data-bs-toggle="collapse" data-bs-target="#collapseEventDate" aria-expanded="false" aria-controls="collapseEventDate">
+            <span><i class="fa-solid fa-calendar-days me-2"></i></i>Event On </span>
+            <span id="header-eventDate" class="badge bg-success ms-2">
+              <span id="edit-eventDate-display">Event On</span>
+            </span>
+          </button>
+        </h2>
+        <div id="collapseEventDate" class="accordion-collapse collapse">
+          <div class="accordion-body">
+            <div class="row g-3">
+              <div class="col-sm-6">
+                <label class="form-label fw-bold">Event Date</label>
+                <input type="text" class="form-control" id="edit-eventDate">
+              </div>
+            </div>
+            <div class="row g-3">
+              <div class="col-sm-12">
+                <label class="form-label fw-bold">Event Location</label>
+                <input type="text" class="form-control" id="edit-eventLocation">
+              </div>
+            </div>
+            <div class="row g-3">
+              <div class="col-sm-12">
+                <label class="form-label fw-bold">Event Notes</label>
+                <input type="text" class="form-control" id="edit-eventNotes">
+              </div>
+            </div>
+         </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<!-- Card 4 Totals, Row 2, Col 2 -->
+<div class="col-md-4">
+  <div class="accordion" id="quoteAccordionR2C2">
+    <div class="accordion-item">
+      <h2 class="accordion-header">
+        <button class="accordion-button collapsed bg-success text-light d-flex justify-content-between align-items-center" type="button" data-bs-toggle="collapse" data-bs-target="#collapseBalance" aria-expanded="false" aria-controls="collapseBalance">
+          <span><i class="fa-solid fa-calculator me-2"></i>Balance & Deposit</span>
+          <span id="header-grandTotal-balance" class="badge bg-danger ms-2">
+            <span id="edit-grandTotal-display">Grand Total</span>
+          </span>
+        </button>
+      </h2>
+      <div id="collapseBalance" class="accordion-collapse collapse" data-bs-parent="#quoteAccordionR2C2">
+        <div class="accordion-body">
+          <div class="container-fluid px-0">
+            <!-- Deposit -->
+            <div class="row mb-2">
+              <div class="col-6 fw-bold">Deposit $</div>
+              <div class="col-6 text-end">
+                <input type="text" class="form-control form-control-sm text-end" id="edit-deposit">
+              </div>
+            </div>
+            <!-- Deposit Date / Payment Method -->
+            <div class="row mb-2">
+              <div class="col-sm-6">
+                <label class="form-label fw-bold">Deposit Date</label>
+                <input type="test" class="form-control" id="edit-depositDate">
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label fw-bold">Payment Method</label>
+                <input class="form-control text-end" list="payment-method-options" id="edit-paymentMethod" name="paymentMethod" placeholder="Select or type method">
+                <datalist id="payment-method-options"></datalist>
+              </div>
+            </div>
+            <!-- Balance Due -->
+            <div class="row mb-2">
+              <div class="col-6 fw-bold">Balance Due</div>
+              <div class="col-6 text-end">
+                <input type="text" readonly class="form-control-plaintext form-control-sm text-end" id="edit-balanceDue">
+              </div>
+            </div>
+            <!-- Balance Due Date -->
+            <div class="row">
+              <div class="col-6 fw-bold">Balance Due Date</div>
+              <div class="col-6 text-end">
+                <input type="text" class="form-control form-control-sm text-end" id="edit-balanceDueDate">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Card 6 Totals, Row 2, Col 3 -->
+<div class="col-md-4 mb-3">
+  <div class="accordion" id="accordionCard6">
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="headingCard6">
+        <button class="accordion-button collapsed bg-dark text-white" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCard6" aria-expanded="false" aria-controls="collapseCard6">
+          Card 6 - Grand Total Summary
+        </button>
+      </h2>
+      <div id="collapseCard6" class="accordion-collapse collapse" aria-labelledby="headingCard6" data-bs-parent="#accordionCard6">
+        <div class="accordion-body">
+          <div class="mb-3">
+            <label for="grandTotal" class="form-label">Grand Total</label>
+            <input type="text" class="form-control-plaintext fs-5 fw-bold" id="grandTotal" name="grandTotal" readonly>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div> <!-- end row 2 -->
+
+<!-- Product Rows Section -->
+<input type="hidden" id="edit-cost" />
+<input type="hidden" id="edit-retail" />
+
+<div class="row fw-bold mb-0 product-row-headers">
+  <div class="col-md-6 text-start">Product</div>
+  <div class="col-md-1 text-center">Qty</div>
+  <div class="col-md-2 text-end">Cost $</div>
+  <div class="col-md-2 text-end">Retail $</div>
+  <div class="col-md-1"></div>
+</div>
+<div id="product-rows-container" class="container px-0"></div>
+<datalist id="row-products-selector"></datalist>
+
+<!-- Add Row Button -->
+<div class="row g-3 mt-3">
+  <div class="col-sm-6">
+    <button type="button" class="btn btn-dark" id="add-product-btn">➕ Part</button>
+  </div>
+</div>
+
+<!-- Quote Notes and Save -->
+<div class="row">
+  <div class="row g-3 mt-3">
+    <div class="col-sm-12">
+      <label class="fw-bold">Quote Notes</label>
+      <input type="text" class="form-control" id="edit-quoteNotes">
+    </div>
+  </div>
+  <div class="row g-3 mt-3">
+    <div class="col-sm-12">
+      <button class="btn btn-dark fw-bold" id="save-changes">💾 Save</button>
+    </div>
+  </div>
+</div>
+
+</form>
+</div>
+</form>
+</div>
+
+<!-- ➕ Add Quote Tab -->
+<div class="tab-pane fade" id="add-quote">
+  <form id="addQuoteForm">
+    <input type="hidden" id="add-quote-id">
+
+    <div class="row g-3 mb-4">
+      <!-- ROW 1 -->
+      <!-- Col 1 - Client Info -->
+      <div class="col-md-4">
+        <div class="accordion" id="addAccordionR1C1">
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="add-headingClient">
+              <button class="accordion-button collapsed bg-dark text-light" type="button" data-bs-toggle="collapse" data-bs-target="#add-collapseClient" aria-expanded="false" aria-controls="add-collapseClient">
+                <span><i class="fa-solid fa-user me-2"></i>Client</span>
+                <span id="add-header-firstName" class="badge bg-info ms-2">Client Info</span>
+              </button>
+            </h2>
+            <div id="add-collapseClient" class="accordion-collapse collapse" aria-labelledby="add-headingClient" data-bs-parent="#addAccordionR1C1">
+              <div class="accordion-body bg-info text-dark">
+                <div class="row g-3">
+                  <div class="col-sm-6">
+                    <label class="form-label fw-bold">Phone</label>
+                    <input type="text" class="form-control" list="phone-options" id="add-phone">
+                    <datalist id="phone-options"></datalist>
+                  </div>
+                  <div class="col-sm-4">
+                    <label class="form-label fw-bold">First Name</label>
+                    <input type="text" readonly class="form-control-plaintext" id="add-firstName">
+                  </div>
+                  <div class="col-sm-4">
+                    <label class="form-label fw-bold">Last Name</label>
+                    <input type="text" readonly class="form-control-plaintext" id="add-lastName">
+                  </div>
+                  <div class="col-sm-8">
+                    <label class="form-label fw-bold">Email</label>
+                    <input type="text" readonly class="form-control-plaintext" id="add-email">
+                  </div>
+                  <div class="col-12">
+                    <label class="form-label fw-bold">Street</label>
+                    <input type="text" readonly class="form-control-plaintext" id="add-street">
+                  </div>
+                  <div class="col-sm-5">
+                    <label class="form-label fw-bold">City</label>
+                    <input type="text" readonly class="form-control-plaintext" id="add-city">
+                  </div>
+                  <div class="col-sm-3">
+                    <label class="form-label fw-bold">State</label>
+                    <input type="text" readonly class="form-control-plaintext" id="add-state">
+                  </div>
+                  <div class="col-sm-4">
+                    <label class="form-label fw-bold">Zip</label>
+                    <input type="text" readonly class="form-control-plaintext" id="add-zip">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Col 2 - Add-On Fees -->
+      <div class="col-md-4">
+        <div class="accordion" id="addAccordionR1C2">
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed bg-primary text-light" type="button" data-bs-toggle="collapse" data-bs-target="#add-collapseAddonsTotal" aria-expanded="false" aria-controls="add-collapseAddonsTotal">
+                <span><i class="fa-solid fa-plus me-2"></i>Add-On Fees</span>
+                <span id="add-header-addonsTotal" class="badge bg-info ms-2">Add-Ons</span>
+              </button>
+            </h2>
+            <div id="add-collapseAddonsTotal" class="accordion-collapse collapse">
+              <div class="accordion-body">
+                <div class="row py-1 border-bottom align-items-center">
+                  <div class="col-6 fw-bold">Delivery Fee</div>
+                  <div class="col-6 text-end">
+                    <input type="text" class="form-control form-control-sm text-end" id="add-deliveryFee">
+                  </div>
+                </div>
+                <div class="row py-1 border-bottom align-items-center">
+                  <div class="col-6 fw-bold">Setup Fee</div>
+                  <div class="col-6 text-end">
+                    <input type="text" class="form-control form-control-sm text-end" id="add-setupFee">
+                  </div>
+                </div>
+                <div class="row py-1 border-bottom align-items-center">
+                  <div class="col-6 fw-bold">Other Fee</div>
+                  <div class="col-6 text-end">
+                    <input type="text" class="form-control form-control-sm text-end" id="add-otherFee">
+                  </div>
+                </div>
+                <div class="row pt-2 mt-2 border-top align-items-center">
+                  <div class="col-6 fw-bold fs-5">Add-ons Total</div>
+                  <div class="col-6 text-end fw-bold fs-5 text-primary" id="add-addonsTotal"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Col 3 - Totals -->
+      <div class="col-md-4">
+        <div class="accordion" id="addAccordionR1C3">
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed bg-warning text-light" type="button" data-bs-toggle="collapse" data-bs-target="#add-collapseTotals" aria-expanded="false" aria-controls="add-collapseTotals">
+                <span><i class="fa-solid fa-calculator me-2"></i>Totals</span>
+                <span id="add-header-grandTotal-totals" class="badge bg-secondary ms-2">Totals</span>
+              </button>
+            </h2>
+            <div id="add-collapseTotals" class="accordion-collapse collapse">
+              <div class="accordion-body">
+                <div class="row border-bottom py-1">
+                  <div class="col-6 fw-bold">Total Cost</div>
+                  <div class="col-6 text-end" id="add-totalProductCost"></div>
+                </div>
+                <div class="row border-bottom py-1">
+                  <div class="col-6 fw-bold">Total Retail</div>
+                  <div class="col-6 text-end" id="add-totalProductRetail"></div>
+                </div>
+                <div class="row border-bottom py-1">
+                  <div class="col-4 fw-bold">+ Tax</div>
+                  <div class="col-4 text-end">
+                    <input type="text" readonly class="form-control-plaintext form-control-sm text-end" id="add-subTotal1">
+                  </div>
+                  <div class="col-4 text-end">
+                    <input type="text" readonly class="form-control-plaintext form-control-sm text-end" id="add-subTotal2">
+                  </div>
+                </div>
+                <div class="row border-bottom py-1">
+                  <div class="col-4 fw-bold">- Discount</div>
+                  <div class="col-4 text-end">
+                    <input type="text" class="form-control form-control-sm text-end" id="add-discount">
+                  </div>
+                  <div class="col-4 text-end">
+                    <input type="text" readonly class="form-control-plaintext form-control-sm text-end" id="add-subTotal3">
+                  </div>
+                </div>
+                <div class="row border-top pt-2 mt-2">
+                  <div class="col-6 fw-bold fs-5">Grand Total</div>
+                  <div class="col-6 text-end fw-bold fs-5 text-success" id="add-grandTotal"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROW 2 -->
+    <div class="row g-3 mb-4">
+      <!-- Col 1 - Event Info -->
+      <div class="col-md-4">
+        <div class="accordion" id="addAccordionR2C1">
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed bg-danger text-light" type="button" data-bs-toggle="collapse" data-bs-target="#add-collapseEvent" aria-expanded="false" aria-controls="add-collapseEvent">
+                <span><i class="fa-solid fa-calendar-days me-2"></i>Event Info</span>
+              </button>
+            </h2>
+            <div id="add-collapseEvent" class="accordion-collapse collapse">
+              <div class="accordion-body">
+                <div class="row g-3">
+                  <div class="col-sm-6">
+                    <label class="form-label fw-bold">Event Date</label>
+                    <input type="text" class="form-control" id="add-eventDate">
+                  </div>
+                  <div class="col-sm-12">
+                    <label class="form-label fw-bold">Event Location</label>
+                    <input type="text" class="form-control" id="add-eventLocation">
+                  </div>
+                  <div class="col-sm-12">
+                    <label class="form-label fw-bold">Event Notes</label>
+                    <input type="text" class="form-control" id="add-eventNotes">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Col 2 - Balance Info -->
+      <div class="col-md-4">
+        <div class="accordion" id="addAccordionR2C2">
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed bg-success text-light" type="button" data-bs-toggle="collapse" data-bs-target="#add-collapseBalance" aria-expanded="false" aria-controls="add-collapseBalance">
+                <span><i class="fa-solid fa-hand-holding-dollar me-2"></i>Balance Info</span>
+              </button>
+            </h2>
+            <div id="add-collapseBalance" class="accordion-collapse collapse">
+              <div class="accordion-body">
+                <div class="row mb-2">
+                  <div class="col-6 fw-bold">Deposit $</div>
+                  <div class="col-6 text-end">
+                    <input type="text" class="form-control form-control-sm text-end" id="add-deposit">
+                  </div>
+                </div>
+                <div class="row mb-2">
+                  <div class="col-sm-6">
+                    <label class="form-label fw-bold">Deposit Date</label>
+                    <input type="text" class="form-control" id="add-depositDate">
+                  </div>
+                  <div class="col-sm-6">
+                    <label class="form-label fw-bold">Payment Method</label>
+                    <input class="form-control text-end" list="payment-method-options" id="add-paymentMethod" placeholder="Select or type method">
+                  </div>
+                </div>
+                <div class="row mb-2">
+                  <div class="col-6 fw-bold">Balance Due</div>
+                  <div class="col-6 text-end">
+                    <input type="text" readonly class="form-control-plaintext form-control-sm text-end" id="add-balanceDue">
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-6 fw-bold">Balance Due Date</div>
+                  <div class="col-6 text-end">
+                    <input type="text" class="form-control form-control-sm text-end" id="add-balanceDueDate">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Col 3 - Grand Total Summary -->
+      <div class="col-md-4 mb-3">
+        <div class="accordion" id="addAccordionR2C3">
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed bg-dark text-light" type="button" data-bs-toggle="collapse" data-bs-target="#add-collapseGrandSummary" aria-expanded="false" aria-controls="add-collapseGrandSummary">
+                <i class="fa-solid fa-chart-line me-2"></i>Summary
+              </button>
+            </h2>
+            <div id="add-collapseGrandSummary" class="accordion-collapse collapse">
+              <div class="accordion-body">
+                <label class="form-label fw-bold">Grand Total</label>
+                <input type="text" readonly class="form-control-plaintext fs-5 fw-bold" id="add-grandTotalSummary">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 🔥 Product Rows Section -->
+    <input type="hidden" id="add-cost" />
+    <input type="hidden" id="add-retail" />
+    <datalist id="row-products-selector"></datalist>
+
+    <div class="row fw-bold mb-0 product-row-headers">
+      <div class="col-md-6">Product</div>
+      <div class="col-md-1 text-center">Qty</div>
+      <div class="col-md-2 text-end">Cost $</div>
+      <div class="col-md-2 text-end">Retail $</div>
+      <div class="col-md-1"></div>
+    </div>
+    <div id="add-product-rows-container" class="container px-0"></div>
+
+    <!-- ➕ Add Product Row Button -->
+    <div class="row g-3 mt-3">
+      <div class="col-sm-6">
+        <button type="button" class="btn btn-dark" id="add-product-btn">➕ Product</button>
+      </div>
+    </div>
+
+    <!-- 📝 Quote Notes and Save -->
+    <div class="row g-3 mt-3">
+      <div class="col-sm-12">
+        <label class="fw-bold">Quote Notes</label>
+        <input type="text" class="form-control" id="add-quoteNotes">
+      </div>
+    </div>
+
+    <div class="row g-3 mt-3">
+      <div class="col-sm-12">
+        <button class="btn btn-primary fw-bold" id="save-new-quote">💾 Save Quote</button>
+      </div>
+    </div>
+  </form>
+</div>
+
+</section>
+
+<script>
+
+function setupDynamicNavigation() {
+  function activateTabFromHash() {
+    var hash = window.location.hash;
+    if (!hash) return;
+
+    var targetTabButton = document.querySelector('[data-bs-target="' + hash + '"]');
+    if (targetTabButton) {
+      var tab = new bootstrap.Tab(targetTabButton);
+      tab.show();
+    }
+  }
+
+  // Use window.onload for full page load
+  window.onload = function() {
+    activateTabFromHash();  // Ensures tab switch happens after everything is loaded
+  };
+
+  window.addEventListener('hashchange', activateTabFromHash);
+}
+
+setupDynamicNavigation();
+
+</script>
+  
+<script src="config.js"></script>
+<script src="quotemanager.js"></script>
+
+<!-- </script> -->
+
+</body>
+</html>

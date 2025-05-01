@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Manager</title>
+  <style>
+  </style>
+</head>
+<body data-page-id="productManager">
+<body class="page-body" data-element="page-bg">
+  
+<div class="watermark"></div>
+
+<!-- Notification Toasts -->
+<div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3" data-element="toast-container"></div>
+
+<!-- Loader -->
+<div id="loadingOverlay" class="d-none" data-element="loading-overlay">
+  <div class="text-center text-white">
+    <div class="spinner-border text-light" role="status"></div>
+    <p class="mt-2">Loading... Please wait...</p>
+  </div>
+</div>
+
+<!-- Row Template -->
+<template id="rowTemplate">
+  <tr class="result-box" data-element="search-result-row">
+      <th class="prodID" scope="row"></th>
+      <th class="productName"></th>
+      <th class="productType"></th>
+      <th class="cost"></th>
+      <th class="retail"></th>
+      <th class="text-center">
+      <button type="button" class="btn btn-dark edit-button btn-sm" data-element="edit-button">Edit</button>
+    </th>
+    <th class="text-center">
+      <div class="btn-group" role="group">
+        <button type="button" class="btn btn-danger delete-button btn-sm d-none" data-element="delete-confirm-button">Confirm</button>
+        <button type="button" class="btn btn-dark btn-sm before-delete-button" data-button-state="delete" data-element="delete-button">Delete</button>
+      </div>
+    </th>
+  </tr>
+</template>
+
+<!-- Main Product Management Section -->
+<!-- 🔧 Main Product Manager Container -->
+<section class="product-manager-container text-dark text-center text-sm-start" data-element="main-section">
+  <div class="container" data-element="main-container">
+    <h2 class="text-center" data-element="page-header">Product Management</h2>
+<!-- 🧭 Navigation Tabs -->
+<section class="product-tabs-nav">
+  <ul class="nav nav-tabs" id="productTabs" data-element="tab-group">
+    <li class="nav-item">
+      <button class="nav-link active text-dark fw-bold" data-element="tab" data-bs-toggle="tab" data-bs-target="#search-product">🔍 Search Product</button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link text-dark fw-bold" data-element="tab" data-bs-toggle="tab" data-bs-target="#add-product">
+        <i class="bi bi-person-plus-fill"></i> Add Product
+      </button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link text-dark fw-bold" data-element="tab" data-bs-toggle="tab" data-bs-target="#edit-client" style="display:none;">✏️ Edit Product</button>
+    </li>
+  </ul>
+</section>
+
+<!-- 📑 Tab Contents -->
+<section class="product-tab-content tab-content">
+  <div class="tab-content" data-element="tab-content"></div>
+      
+<!-- 🔍 Search Section -->
+<div class="tab-pane fade show active" id="search-product" data-element="tab-pane">
+  <section class="search-product">
+  <div class="input-group mb-2" data-element="search-box">
+    <input type="text" class="form-control fw-bold" id="searchInput" placeholder="🔍 search..." data-element="search-input">
+  <div class="input-group-append">
+    <span class="input-group-text fw-bold" id="searchCounter" data-element="search-icon">🔍</span> 
+  </div>
+</div>
+<table class="table table-hover my-custom-table fw-bold" data-element="results-table">
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Cost</th>
+      <th>Retail</th>
+      <th></th>
+    </tr>
+  </thead>
+<tbody id="searchResults" data-element="search-results"></tbody>
+</table>
+</section>
+</div>
+   
+<!-- ➕ Add Product -->
+<div class="tab-pane fade" id="add-product" data-mode="add">
+  <h3>Add Product</h3>
+  <form id="addProductForm">
+    <input type="hidden" id="add-product-id">
+    <div class="row g-3">
+      <div class="col-sm-1 fw-bold"><label><b>ID#</b></label><input type="text" class="form-control" id="add-prodID" readonly></div>
+      <div class="col-sm-4 fw-bold"><label><b>Name</b></label><input type="text" class="form-control" id="add-productName"></div>
+      <div class="col-sm-2 fw-bold"><label><b>Type</b></label><input type="text" class="form-select" id="add-productType" list="product-type-options" placeholder="Select Type"><datalist id="product-type-options"></datalist></div>
+      <div class="col-sm-2 fw-bold"><label><b>Cost $</b></label><input type="text" class="form-control" id="add-totalProductCost" readonly></div>
+      <div class="col-sm-2 fw-bold"><label><b>Retail $</b></label><input type="text" class="form-control" id="add-totalProductRetail" readonly></div>
+      <div class="col-sm-1 fw-bold"><label><b>C/Time</b></label><input type="text" class="form-control" id="add-compTime"></div>
+
+      <input type="hidden" class="add-mat-id">
+      <input type="hidden" id="add-cost" />
+      <input type="hidden" id="add-retail" />
+      <datalist id="row-parts-selector"></datalist>
+
+      <div class="row fw-bold mb-0 part-row-headers">
+        <div class="col-md-5">Part</div>
+        <div class="col-md-2">Qty</div>
+        <div class="col-md-2">Cost $</div>
+        <div class="col-md-2">Retail $</div>
+        <div class="col-md-1"></div>
+      </div>
+      <div id="add-part-rows" data-mode="add"></div>
+
+      <div class="row g-3 mt-3">
+        <div class="col-sm-6"><button type="button" class="btn btn-dark" id="addAddPartRow">➕ Part</button></div>
+      </div>
+
+      <div class="row g-3 mt-3">
+        <div class="col-sm-12"><label class="fw-bold">Description</label><input type="text" class="form-control" id="add-description"></div>
+      </div>
+
+      <div class="row g-3 mt-3">
+        <div class="col-sm-12"><button class="btn btn-dark fw-bold" id="save-new-product">💾 Save</button></div>
+      </div>
+    </div>
+  </form>
+</div>
+
+<!-- ✏️ Edit Product -->
+<div class="tab-pane fade" id="edit-product">
+  <form id="editProductForm">
+    <input type="hidden" id="edit-prodID-hidden">
+    <div class="row g-3 mb-2">
+      <div class="col-sm-1"><label class="fw-bold">ID#</label><input type="text" class="form-control" id="edit-prodID" readonly></div>
+      <div class="col-sm-4"><label class="fw-bold">Name</label><input type="text" class="form-control" id="edit-productName"></div>
+      <div class="col-sm-2"><label class="fw-bold">Type</label><input type="text" class="form-select" id="edit-productType" list="product-type-options" placeholder="Select Type"><datalist id="product-type-options"></datalist></div>
+      <div class="col-sm-2"><label class="fw-bold">Total Cost $</label><input type="text" class="form-control" id="totalProductCost" readonly></div>
+      <div class="col-sm-2"><label class="fw-bold">Total Retail $</label><input type="text" class="form-control" id="totalProductRetail" readonly></div>
+      <div class="col-sm-1"><label class="fw-bold">C/Time</label><input type="text" class="form-control" id="edit-compTime"></div>
+    </div>
+
+    <input type="hidden" class="mat-id">
+    <input type="hidden" id="edit-cost" />
+    <input type="hidden" id="edit-retail" />
+    <datalist id="row-parts-selector"></datalist>
+
+    <div class="row fw-bold mb-0 part-row-headers">
+      <div class="col-md-5">Part</div>
+      <div class="col-md-2">Qty</div>
+      <div class="col-md-2">Cost $</div>
+      <div class="col-md-2">Retail $</div>
+      <div class="col-md-1"></div>
+    </div>
+    <div id="edit-part-rows"></div>
+
+    <div class="row g-3 mt-3">
+      <div class="col-sm-6"><button type="button" class="btn btn-dark" id="addEditPartRow">➕ Part</button></div>
+    </div>
+
+    <div class="row g-3 mt-3">
+      <div class="col-sm-12"><label class="fw-bold">Description</label><input type="text" class="form-control" id="edit-description"></div>
+    </div>
+
+    <div class="row g-3 mt-3">
+      <div class="col-sm-12"><button class="btn btn-dark fw-bold" id="save-changes">💾 Save</button></div>
+    </div>
+  </form>
+</div>
+
+<!-- <script> -->
+
+<script src="config.js"></script>
+<script src="productmanager.js"></script>
+
+<script>
+// Shared Constants
+let materialData = {}; // Global material map
+const maxParts = 20;
+
+// Determine active mode ('add' or 'edit') based on the container
+function getActiveFormMode() {
+  const addForm = document.querySelector('#add-product[data-mode="add"]');
+  return addForm?.classList.contains('active') ? 'add' : 'edit';
+}
+
+function getPartRowsContainer(mode) {
+  return document.getElementById(`${mode}-part-rows`);
+}
+
+function addPartRowTo(containerId, materialName = '', qty = 0) {
+  const trimmedName = materialName.trim();
+  const matID = Object.keys(materialData).find(id => materialData[id].name === trimmedName);
+  const mat = materialData[matID] || { name: '', unitPrice: 0 };
+
+  const row = document.createElement("div");
+  row.className = "row align-items-center mb-2 part-row";
+
+  row.innerHTML = `
+  <div class="col-md-5">
+    <input type="text" class="form-select part-input" list="row-parts-selector" placeholder="Select Part" value="${mat.name}" data-matid="${matID || ''}">
+  </div>
+  <div class="col-md-2">
+    <input type="number" class="form-control qty-input" value="${qty}">
+  </div>
+  <div class="col-md-2">
+    <input type="text" class="form-control totalRowCost" value="" readonly>
+  </div>
+  <div class="col-md-2">
+    <input type="text" class="form-control totalRowRetail" value="" readonly>
+  </div>
+  <div class="col-md-1 d-flex">
+    <button type="button" class="btn btn-danger btn-sm remove-part"><i class="bi bi-trash"></i></button>
+  </div>
+`;
+
+  const container = document.getElementById(containerId);
+  container.appendChild(row);
+
+  const partInput = row.querySelector(".part-input");
+  partInput.addEventListener("change", () => {
+    const name = partInput.value.trim();
+    if (name) calculateAndUpdate(row);
+  });
+
+  row.querySelector(".qty-input").addEventListener("change", () => calculateAndUpdate(row));
+  row.querySelector(".remove-part").addEventListener("click", () => {
+    row.remove();
+    calculateTotalProductCost();
+  });
+
+  if (matID) {
+    calculateAndUpdate(row);
+  }
+}
+
+document.querySelector('[data-bs-target="#add-product"]').addEventListener("click", () => {
+  initializeAddForm();
+});
+
+async function initializeAddForm() {
+  // Clear fields
+  ["add-prodID", "add-productName", "add-productType", "add-compTime",
+   "add-totalProductRetail", "add-totalProductCost",
+   "add-cost", "add-retail", "add-description"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = "";
+  });
+
+  // Ensure material data is loaded before populating dropdowns
+  if (Object.keys(materialData).length === 0) {
+    await setMaterialDataForEdit();
+  }
+
+  // Clear and add initial row
+  const partRowContainer = document.getElementById("add-part-rows");
+  if (partRowContainer) {
+    partRowContainer.innerHTML = "";
+    addPartRowTo("add-part-rows");
+  }
+}
+
+function calculateAndUpdate(row) {
+  const partInput = row.querySelector(".part-input");
+  const qtyInput = row.querySelector(".qty-input");
+  const costInput = row.querySelector(".totalRowCost");
+  const retailInput = row.querySelector(".totalRowRetail");
+
+  if (!partInput || !qtyInput || !costInput || !retailInput) {
+    console.warn("Missing expected input in row:", row);
+    return;
+  }
+
+  const name = partInput.value.trim();
+  const qty = parseFloat(qtyInput.value) || 0;
+
+  const matID = Object.keys(materialData).find(id => materialData[id].name === name);
+  const material = materialData[matID];
+
+  if (!material) {
+    costInput.value = "";
+    retailInput.value = "";
+    return;
+  }
+
+  const unitPrice = parseFloat(material.unitPrice) || 0;
+  const rowCost = qty * unitPrice;
+  const rowRetail = rowCost * 2.5;
+
+  costInput.value = rowCost.toFixed(2);
+  retailInput.value = rowRetail.toFixed(2);
+
+  calculateTotalProductCost();
+}
+
+function calculateTotalProductCost() {
+  const activePane = document.querySelector(".tab-pane.active");
+  if (!activePane) return;
+
+  let totalCost = 0;
+  let totalRetail = 0;
+
+  const costInputs = activePane.querySelectorAll(".totalRowCost");
+  const retailInputs = activePane.querySelectorAll(".totalRowRetail");
+
+  costInputs.forEach(input => {
+    totalCost += parseFloat(input.value) || 0;
+  });
+
+  retailInputs.forEach(input => {
+    totalRetail += parseFloat(input.value) || 0;
+  });
+
+  const costField = activePane.querySelector(".form-control[id$='totalProductCost']");
+  const retailField = activePane.querySelector(".form-control[id$='totalProductRetail']");
+
+  if (costField) costField.value = totalCost.toFixed(2);
+  if (retailField) retailField.value = totalRetail.toFixed(2);
+}
+
+function addEditPartRow(name = '', qty = 1) {
+  if (!materialData || typeof materialData !== 'object') {
+    console.error("❌ materialData not loaded!");
+    showToast("❌ Material data missing.", "error");
+    return;
+  }
+
+  // Just call addPartRowTo, passing the container ID for the edit form
+  addPartRowTo("edit-part-rows", name, qty);
+}
+
+function clearPartRows(containerId) {
+  const container = document.getElementById(containerId);
+  if (container) {
+    container.innerHTML = "";
+  }
+}
+
+// Wrapper buttons
+['Add', 'Edit'].forEach(mode => {
+  document.getElementById(`add${mode}PartRow`)?.addEventListener('click', () => {
+    const containerId = `${mode.toLowerCase()}-part-rows`;
+    const currentCount = document.querySelectorAll(`#${containerId} .part-row`).length;
+    if (currentCount >= maxParts) {
+      showToast("⚠️ Max 20 parts allowed", "warning");
+      return;
+    }
+    addPartRowTo(containerId);
+  });
+});
+
+async function setMaterialDataForEdit() {
+  try {
+    const response = await fetch(`${scriptURL}?action=getMatDataForSearch`);
+    if (!response.ok) throw new Error(`Fetch failed with status ${response.status}`);
+    const rawData = await response.json();
+
+    materialData = {}; // ✅ Global assignment
+
+    rawData.forEach(row => {
+      const id = row[0]?.trim();
+      const name = row[1]?.trim();
+      const unitPrice = parseFloat(row[7]?.replace(/[^0-9.]/g, '')) || 0;
+
+      if (id && name) {
+        materialData[id] = { matID: id, name, unitPrice };
+      }
+    });
+
+    const datalist = document.getElementById("row-parts-selector");
+    if (datalist) {
+      datalist.innerHTML = "";
+      Object.values(materialData).forEach(mat => {
+        const opt = document.createElement("option");
+        opt.value = mat.name;
+        datalist.appendChild(opt);
+      });
+    }
+
+    return true;
+  } catch (err) {
+    console.error("❌ Error loading materials:", err);
+    showToast("❌ Error loading materials!", "error");
+    throw err;
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const activeMode = getActiveFormMode();
+  if (activeMode === 'add') {
+    // Clear any rows and add the initial part row
+    document.getElementById('add-part-rows').innerHTML = '';
+    addPartRowTo('add-part-rows');
+  }
+});
+
+function setupDynamicNavigation() {
+  function activateTabFromHash() {
+    var hash = window.location.hash;
+    if (!hash) return;
+
+    var targetTabButton = document.querySelector('[data-bs-target="' + hash + '"]');
+    if (targetTabButton) {
+      var tab = new bootstrap.Tab(targetTabButton);
+      tab.show();
+    }
+  }
+
+  // Use window.onload for full page load
+  window.onload = function() {
+    activateTabFromHash();  // Ensures tab switch happens after everything is loaded
+  };
+
+  window.addEventListener('hashchange', activateTabFromHash);
+}
+
+setupDynamicNavigation();
+
+</script>
+
+<!-- </script> -->
+
+</body>
+</html>

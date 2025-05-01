@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Invoice Manager</title>
+  <style>
+  </style>
+</head>
+<div class="watermark"></div>
+<!-- Notification Toasts -->
+
+<div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3"></div>
+
+<!-- Loader -->
+<div id="loadingOverlay" class="d-none">
+  <div class="text-center text-white">
+      <div class="spinner-border text-light" role="status"></div>
+      <p class="mt-2">Loading... Please wait...</p>
+  </div>
+</div>
+
+<!-- Client Management Section -->
+<section class="bg-success text-dark text-center text-sm-start">
+  <div class="container">
+    <h2 class="text-center">Invoice Management</h2>
+
+<!-- Navigation Tabs -->
+<ul class="nav nav-tabs" id="invoiceTabs">
+  <li class="nav-item"><button class="nav-link active text-dark fw-bold" data-bs-toggle="tab" data-bs-target="#search-invoice">🔍 Search Invoice</button></li>
+  <li class="nav-item"><button class="nav-link text-dark fw-bold" data-bs-toggle="tab" data-bs-target="#view-invoice" style="display:none;">✏️ View Invoice</button></li>
+  <!-- <li class="nav-item"><button class="nav-link text-dark fw-bold" data-bs-toggle="tab" data-bs-target="#add-invoice">➕ Add Invoice</button></li> -->
+</ul>
+
+<!-- Search Template -->
+<template id="rowTemplate">
+  <tr class="result-box">
+    <th class="invoiceID" scope="row"></th>
+    <th class="invoiceDate"></th>
+    <th class="firstName"></th>
+    <th class="lastName"></th>
+    <th class="eventDate"></th>
+    <th class="eventLocation"></th>
+    <th class="text-center">
+      <button type="button" class="btn btn-dark view-button btn-sm fw-bold">More Info</button></th>
+  </tr>
+</template>
+
+<!-- Tab Content -->
+<div class="tab-content">
+      
+<!-- 🔍 Search Invoices -->
+<div class="tab-pane fade show active" id="search-invoice">
+  <div class="input-group">
+    <input type="text" class="form-control fw-bold" id="searchInput" placeholder="🔍 search...">
+      <div class="input-group-append">
+        <span class="input-group-text fw-bold" id="searchCounter">🔍</span> 
+      </div>
+  </div>
+  <table class="table table-hover my-custom-table fw-bold">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Invoice Date</th>
+        <th>First Name</th>
+        <th>Last Name</th>
+        <th>Event Date</th>
+        <th>Event Location</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody id="searchResults"></tbody>
+</table>
+</div>
+
+<!-- ✏️ View Invoice -->
+<div class="tab-pane fade" id="view-invoice">
+  <form id="viewInvoiceForm">
+    <input type="hidden" id="view-invoice-id">
+      <div class="row g-3">
+        <div class="col-sm-2"><label><b>Inv #</b></label><input type="text" class="form-control" id="invoiceID" readonly></div>
+        <div class="col-sm-2"><label><b>Invoice Date</b></label><input type="text" class="form-control" id="invDate"></div>
+        <div class="col-sm-3"><label><b>First Name</b></label><input type="text" class="form-control" id="firstName"></div>
+        <div class="col-sm-5"><label><b>Last Name</b></label><input type="text" class="form-control" id="lastName"></div>
+        <div class="col-sm-3"><label><b>Phone #</b></label><input type="text" class="form-control" id="phone"></div>
+        <div class="col-sm-9"><label><b>Email</b></label><input type="text" class="form-control" id="email"></div>
+        <div class="col-sm-6"><label><b>Street</b></label><input type="text" class="form-control" id="street"></div>
+        <div class="col-sm-3"><label><b>City</b></label><input type="text" class="form-control" id="city"></div>
+        <div class="col-sm-1"><label><b>State</b></label><input type="text" class="form-control" id="state"></div>
+        <div class="col-sm-2"><label><b>Zip</b></label><input type="text" class="form-control" id="zip"></div>
+        <div class="col-sm-2"><label><b>Event Date</b></label><input type="text" class="form-control" id="eventDate"></div>
+        <div class="col-sm-10"><label><b>Event Location</b></label><input type="text" class="form-control" id="eventLocation"></div>
+        <div class="d-grid gap-0 d-sm-block mt-2">
+          <div>
+            <button type="button" class="btn btn-dark" id="view-Button">View PDF</button>
+            <button type="button" class="btn btn-dark" id="send-Button">Email PDF</button>
+        </div>
+              
+<!-- Email Modal -->
+<div class="modal fade" id="emailModal" tabindex="-1" aria-labelledby="emailModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-dark text-white">
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="emailForm" novalidate>
+          <div class="mb-3">
+            <label for="emailTo" class="form-label">To</label>
+            <input type="email" class="form-control" id="emailTo" >
+          </div>
+          <div class="mb-3">
+            <label for="emailSubject" class="form-label">Subject</label>
+            <input type="text" class="form-control" id="emailSubject" value="Your Invoice PDF">
+          </div>
+          <div class="mb-3">
+            <label for="emailMessage" class="form-label">Message</label>
+            <textarea class="form-control" id="emailMessage" rows="5">Dear customer, Please find your invoice attached...</textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-dark" onclick="sendEditedEmail()">Send Email</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</section>
+
+<!-- <script> -->
+
+<script>
+
+function setupDynamicNavigation() {
+  function activateTabFromHash() {
+    var hash = window.location.hash;
+    if (!hash) return;
+
+    var targetTabButton = document.querySelector('[data-bs-target="' + hash + '"]');
+    if (targetTabButton) {
+      var tab = new bootstrap.Tab(targetTabButton);
+      tab.show();
+    }
+  }
+
+  // Use window.onload for full page load
+  window.onload = function() {
+    activateTabFromHash();  // Ensures tab switch happens after everything is loaded
+  };
+
+  window.addEventListener('hashchange', activateTabFromHash);
+}
+
+setupDynamicNavigation();
+
+</script>
+
+<script src="config.js"></script>
+<script src="invoicemanager.js"></script>
+
+<!-- </script> -->
+
+</body>
+</html>
