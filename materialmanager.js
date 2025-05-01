@@ -456,7 +456,7 @@ function calculateUnitPrice(price, qty) {
 
   return parsedPrice / parsedQty;
 }
-
+//not working
 // 🔔 Reorder Alert
 function checkLowStock() {
     const total = parseFloat(document.getElementById("edit-totalStock")?.value) || 0;
@@ -611,4 +611,3 @@ async function saveInventoryData() {
     toggleLoader();
   }
   
-//this is a test
