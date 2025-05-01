@@ -611,3 +611,4 @@ async function saveInventoryData() {
     toggleLoader();
   }
   
+//this is a test
