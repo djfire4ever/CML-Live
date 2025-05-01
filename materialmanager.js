@@ -478,6 +478,7 @@ function calculateAll() {
     const unitQty = getVal("edit-unitQty");
 
     const total = calculateTotalStock(onHand, incoming, outgoing);
+    console.log("✅ Inputs:", { matPrice, unitQty });
     const unitPrice = calculateUnitPrice(matPrice, unitQty);
 
     const totalField = document.getElementById("edit-totalStock");
@@ -558,7 +559,7 @@ function handleMaterialLookup(e) {
     toggleLoader();
 }
 
-// 💾 Save All Inventory Rows
+// 💾 Save Inventory Form
 async function saveInventoryData() {
     const rows = document.querySelectorAll(".material-row");
     toggleLoader();
@@ -577,7 +578,7 @@ async function saveInventoryData() {
         unitPrice: row.querySelector(".unitPrice")?.value.trim() || "",
         onHand: row.querySelector(".totalStock")?.value.trim() || "", // ✅ totalStock overrides
         incoming: row.querySelector(".incoming")?.value.trim() || "",
-        lastUpdated: new Date() // ✅ Save proper date object (or .toISOString() if needed)
+        lastUpdated: new Date() // ✅ Save proper date object 
       };
   
       try {
