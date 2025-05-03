@@ -1,0 +1,16 @@
+/* ===============================
+   🖼 WATERMARK
+================================== */
+.watermark {
+  position: fixed;
+  left: 15%;
+  width: 65%;
+  height: 100%;
+  background-image: url('../../images/CML-Letterhead.png');
+  background-size: contain;
+  background-position: bottom;
+  background-repeat: no-repeat;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 0;
+}

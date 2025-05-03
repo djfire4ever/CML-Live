@@ -22,7 +22,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (resultsBox) resultsBox.innerHTML = "";
     toggleLoader();
     await setDataForSearch();
-    setTimeout(toggleLoader, 2000);
+    setTimeout(toggleLoader, 1000);
   });
   
   // ✅ Global Search Data

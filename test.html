@@ -5,9 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Client Manager</title>
 </head>
-<!-- <body class="page-body classic-theme" data-page-id="clientManager" data-element="page-bg"> -->
-<!-- <body class="page-body bw-theme" data-page-id="clientManager" data-element="page-bg"> -->
 <body class="theme-dark">
+<div class="watermark"></div>
+
+<!-- <body class="page-body bw-theme" data-page-id="clientManager" data-element="page-bg"> -->
+
 <!-- 💧 Watermark -->
 <div class="watermark"></div>
 
@@ -37,8 +39,6 @@
     </th>
   </tr>
 </template>
-
-<button onclick="toggleTheme()">Toggle Theme</button>
 
 <!-- ⬝ Client Manager Container -->
 <div class="container" data-element="main-container">
@@ -105,7 +105,7 @@
         <div class="col-md-1 col-lg-1 fw-bold"><label>State</label><input type="text" class="form-control" id="state"></div>
         <div class="col-md-1 col-lg-2  fw-bold"><label>Zip</label><input type="number" class="form-control" id="zip"></div>
       </div>
-      <div class="row g-3 mt-2">
+      <div class="row g-3">
         <div class="col-sm-2"><button type="submit" class="btn btn-dark">📅 Save</button></div>
       </div>
     </div>
@@ -135,7 +135,7 @@
         <div class="col-md-1 col-lg-1 fw-bold"><label>State</label><input type="text" class="form-control" id="edit-state"></div>
         <div class="col-md-2 col-lg-2 fw-bold"><label>Zip</label><input type="number" class="form-control" id="edit-zip"></div>
       </div>
-      <div class="row g-3 mt-2">
+      <div class="row g-3">
         <div class="col-sm-2"><button type="button" class="btn btn-dark" id="save-changes">📅 Save</button></div>
       </div>
   </form>
@@ -145,33 +145,8 @@
 
 <!-- 🧠 Scripts -->
 <script>
-
-function setupDynamicNavigation() {
-  function activateTabFromHash() {
-    var hash = window.location.hash;
-    if (!hash) return;
-
-    var targetTabButton = document.querySelector('[data-bs-target="' + hash + '"]');
-    if (targetTabButton) {
-      var tab = new bootstrap.Tab(targetTabButton);
-      tab.show();
-    }
-  }
-
-  // Use window.onload for full page load
-  window.onload = function() {
-    activateTabFromHash();  // Ensures tab switch happens after everything is loaded
-  };
-
-  window.addEventListener('hashchange', activateTabFromHash);
-}
-
-setupDynamicNavigation();
-toggleTheme();
-
 </script>
 
-<script src="config.js"></script>
 <script src="clientmanager.js"></script>
 
 </body>

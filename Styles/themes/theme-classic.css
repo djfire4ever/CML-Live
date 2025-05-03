@@ -1,0 +1,214 @@
+/* theme-classic.css */
+body.theme-classic {
+  --accent-color: #000;         /* ✅ Highlight color (success green) */
+  --text-color: #000;           /* ✅ Main text color (black) */
+  --input-bg: lightgrey;             /* ✅ Light background for inputs */
+  --search-bg: #198754;            /* ✅ Light background for search input */
+  --background-color: #198754;     /* ✅ Light background color for the page */
+  --border-color: 000;            /* ✅ Light border color for form elements and tables */
+  --table-hover: rgba(25, 135, 84, 0.15); /* ✅ Table row hover color (green) */
+  --nav-tab-bg: #198754;           /* ✅ Light background for tab buttons */
+  --nav-tab-active-bg: lightgrey;    /* ✅ Active tab background (matches page background) */
+}
+
+/* =============================== 
+   🌐 GLOBAL BACKGROUND & TEXT COLORS 
+================================== */
+body.theme-classic,
+body.theme-classic .section,
+body.theme-classic .container,
+body.theme-classic .tab-pane,
+body.theme-classic .tab-content {
+  background-color: var(--background-color) !important; /* 🔲 Apply light background */
+  color: var(--text-color) !important;                  /* 🔷 Apply black text */
+}
+
+/* =============================== 
+   🧭 NAVIGATION TABS (Tab Buttons)
+================================== */
+body.theme-classic .nav-tabs .nav-link {
+  background-color: var(--nav-tab-bg);       /* 🔲 Light background */
+  color: var(--text-color) !important;       /* 🔷 Black text */
+  border: 1px solid var(--border-color);     /* 🟫 Subtle border */
+  border-bottom: none;                       /* ⛔ Remove bottom border */
+  border-radius: 0.5rem 0.5rem 0 0;           /* 🔄 Rounded top corners */
+}
+
+body.theme-classic .nav-tabs .nav-link.active {
+  background-color: var(--nav-tab-active-bg); /* 🔲 Active tab background */
+  color: var(--text-color) !important;        /* 🔷 Black text */
+  border-color: var(--accent-color) var(--accent-color) transparent; /* ✅ Highlighted border */
+}
+
+/* =============================== 
+   🔍 SEARCH INPUT FIELD
+================================== */
+body.theme-classic #searchInput {
+  background-color: var(--search-bg);        /* 🔲 Light background */
+  border: 2px solid var(--accent-color);     /* ✅ Green accent border */
+  color: var(--text-color);                  /* 🔷 Black text */
+}
+body.theme-classic .counter {
+  background-color: var(--background-color) !important;
+  color: var(--text-color) !important;
+  font-weight: bold;
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.375rem;
+  border: 1px solid #ccc;
+  display: inline-block;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+/* =============================== 
+   📋 TABLE STYLING
+================================== */
+body.theme-classic table,
+body.theme-classic .table,
+body.theme-classic .my-custom-table {
+  background-color: var(--background-color); /* 🔲 Match page background */
+  color: var(--text-color);                  /* 🔷 Black text */
+}
+
+body.theme-classic .table th,
+body.theme-classic .table td,
+body.theme-classic .my-custom-table thead th,
+body.theme-classic .result-box th,
+body.theme-classic .result-box td {
+  background-color: var(--input-bg);        /* 🔲 Light background for table cells */
+  color: var(--text-color);                 /* 🔷 Black text */
+  border-color: var(--border-color);        /* 🟫 Subtle border */
+}
+
+body.theme-classic .table thead th {
+  background-color: var(--nav-tab-bg);      /* 🔲 Match nav tab background */
+}
+
+body.theme-classic .result-box {
+  transition: background-color 0.2s ease-in-out; /* ⏱ Smooth hover effect */
+  cursor: pointer;                               /* 👆 Clickable rows */
+}
+
+body.theme-classic .result-box:hover th,
+body.theme-classic .result-box:hover td {
+  background-color: var(--table-hover) !important; /* ✅ Subtle green hover */
+}
+
+/* =============================== 
+   🧾 FORM ELEMENTS
+================================== */
+body.theme-classic input.form-control,
+body.theme-classic select.form-select {
+  background-color: var(--input-bg);        /* 🔲 Light background */
+  border: 1px solid var(--border-color);    /* 🟫 Subtle border */
+  color: var(--text-color);                 /* 🔷 Black text */
+}
+
+/* =============================== 
+   🖼 WATERMARK BACKGROUND (Optional)
+================================== */
+body.theme-classic .watermark {
+  position: fixed;                             /* 📌 Fixed in place */
+  left: 15%;                                   /* ⬅️ Center horizontally */
+  width: 65%;                                  /* 📏 Width across middle */
+  height: 100%;                                /* 📐 Full height */
+  background-image: url('../../images/CML-Letterhead.png'); /* 🖼 Image path */
+  background-size: contain;                    /* ✨ Scale image properly */
+  background-position: bottom;                 /* 🔽 Stick to bottom */
+  background-repeat: no-repeat;                /* 🚫 No repeating */
+  opacity: 0;                                  /* 👻 Invisible by default */
+  pointer-events: none;                        /* 🚫 No interaction */
+  z-index: 0;                                  /* 🔽 Behind everything */
+}
+
+/* =============================== 
+   📂 DROPDOWNS (Menu + Items)
+================================== */
+body.theme-classic .dropdown-menu {
+  background-color: var(--input-bg);         /* 🖤 Light background for dropdown */
+  color: var(--text-color);                  /* 🔷 Black text */
+  border: 1px solid var(--border-color);     /* 🟫 Subtle border */
+}
+
+body.theme-classic .dropdown-item {
+  color: var(--text-color);                  /* 🔷 Black text for items */
+}
+
+body.theme-classic .dropdown-item:hover,
+body.theme-classic .dropdown-item:focus {
+  background-color: var(--nav-tab-active-bg); /* 🔲 Slightly darker hover */
+  color: var(--accent-color);                /* ✅ Highlight with success green on hover */
+}
+
+/* =============================== 
+   🔘 BUTTONS (General)
+================================== */
+body.theme-classic .btn {
+  background-color: #000;         /* 🖤 Match input background */
+  color: lightgrey;                  /* 🔷 Black text */
+  border: 1px solid var(--border-color);     /* 🟫 Subtle border */
+}
+
+body.theme-classic .btn:hover,
+body.theme-classic .btn:focus {
+  background-color: var(--nav-tab-active-bg); /* 🔲 Darker on hover */
+  color: var(--accent-color);                /* ✅ Highlight with green */
+  border-color: var(--accent-color);         /* ✅ Green border */
+}
+
+/* =============================== 
+   🪟 MODALS (Header, Body, Footer)
+================================== */
+body.theme-classic .modal-header,
+body.theme-classic .modal-footer {
+  background-color: var(--input-bg);         /* 🖤 Light background */
+  color: var(--text-color);                  /* 🔷 Black text */
+  border-bottom: 1px solid var(--border-color); /* 🟫 Subtle divider */
+  border-top: 1px solid var(--border-color);    /* 🟫 Footer divider */
+}
+
+body.theme-classic .modal-body {
+  background-color: var(--background-color); /* ⚪ Match main light background */
+  color: var(--text-color);                  /* 🔷 Black text */
+}
+
+/* =============================== 
+   🏷️ FORM LABELS
+================================== */
+body.theme-classic label,
+body.theme-classic .form-label {
+  color: var(--text-color);                  /* 🔷 Black for labels */
+}
+
+/* =============================== 
+   🃏 CARD HEADERS
+================================== */
+body.theme-classic .card-header {
+  background-color: var(--input-bg);         /* 🖤 Light background */
+  color: var(--text-color);                  /* 🔷 Black text */
+  border-bottom: 1px solid var(--border-color); /* 🟫 Subtle divider */
+}
+
+/* =============================== 
+   🚨 ALERTS (Success, Info, Warning, Danger)
+================================== */
+body.theme-classic .alert {
+  background-color: var(--input-bg);         /* 🖤 Light background */
+  color: var(--text-color);                  /* 🔷 Black text */
+  border: 1px solid var(--border-color);     /* 🟫 Consistent border */
+}
+
+body.theme-classic .alert-success {
+  border-left: 4px solid var(--accent-color); /* ✅ Green accent strip */
+}
+
+body.theme-classic .alert-info {
+  border-left: 4px solid #0dcaf0;            /* 🔷 Info cyan accent */
+}
+
+body.theme-classic .alert-warning {
+  border-left: 4px solid #ffc107;           /* ⚠️ Warning yellow accent */
+}
+
+body.theme-classic .alert-danger {
+  border-left: 4px solid #dc3545;           /* ❌ Danger red accent */
+}

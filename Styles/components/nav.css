@@ -1,0 +1,7 @@
+/* ===============================
+   📑 NAVIGATION TABS
+================================== */
+.nav-tabs .nav-link {
+  background-color: var(--accent-color) ;
+  color: var(--text-color) ;
+}

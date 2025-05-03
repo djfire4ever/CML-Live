@@ -237,3 +237,16 @@ function applyTheme(themeName) {
   document.body.classList.remove("classic-theme", "dark-theme", "modern-theme");
   document.body.classList.add(themeName);
 }
+
+// Theme Switcher
+function toggleTheme() {
+  const body = document.body;
+  if (body.classList.contains('theme-classic')) {
+    body.classList.remove('theme-classic');
+    body.classList.add('theme-dark');
+  } else {
+    body.classList.remove('theme-dark');
+    body.classList.add('theme-classic');
+  }
+}
+ 

@@ -1,0 +1,36 @@
+/* ===============================
+   🔲 HEADER & FOOTER PLACEHOLDERS
+================================== */
+#header-placeholder {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: var(--header-height);
+  z-index: 1000;
+}
+
+#footer-placeholder {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: var(--footer-height);
+  background-color: transparent;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+/* ===============================
+   🖼️ IFRAME WRAPPER
+================================== */
+iframe {
+  position: absolute;
+  top: var(--header-height);
+  left: 0;
+  width: 100%;
+  height: calc(100vh - var(--header-height) - var(--footer-height) + 1px); /* 1px safety buffer */
+  border: none;
+  background-color: transparent;
+  z-index: 0;
+}

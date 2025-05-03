@@ -11,10 +11,10 @@ document.querySelectorAll(".view-button").forEach(button => {
         populateViewForm(invoiceID);
 
         // Use Bootstrap's Tab system to switch to the Edit tab
-        const viewTab = document.querySelector('[data-bs-target="#view-invoice"]');
+        const viewTab = document.querySelector('[data-bs-target="#tab-view"]');
         if (viewTab) {
             const tab = new bootstrap.Tab(viewTab);
-            tab.show(); // Switch to the view-invoice tab
+            tab.show(); // Switch to the tab-view tab
         }
     });
 });
@@ -29,7 +29,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
 // ✅ Handle search tab functionality (shown event)
-const searchTabButton = document.querySelector('button[data-bs-target="#search-invoice"]');
+const searchTabButton = document.querySelector('button[data-bs-target="#tab-search"]');
   if (searchTabButton) {
       searchTabButton.addEventListener("shown.bs.tab", function () {
         const searchInput = document.getElementById("searchInput");
@@ -134,19 +134,26 @@ function search() {
 
     const template = document.getElementById("rowTemplate").content;
 
-    resultsArray.forEach(function (r) {
-        const row = template.cloneNode(true);
-        row.querySelector(".invoiceID").textContent = r[0];
-        row.querySelector(".invoiceDate").textContent = r[1];
-        row.querySelector(".firstName").textContent = r[2];
-        row.querySelector(".lastName").textContent = r[3];
-        row.querySelector(".eventDate").textContent = r[10];
-        row.querySelector(".eventLocation").textContent = r[11];
+    resultsArray.forEach(r => {
+        const row = document.getElementById("rowTemplate").content.cloneNode(true);
+        const tr = row.querySelector("tr");
+        tr.querySelector(".invoiceID").textContent = r[0];
+        tr.querySelector(".invoiceDate").textContent = r[1];
+        tr.querySelector(".firstName").textContent = r[2];
+        tr.querySelector(".lastName").textContent = r[3];
+        tr.querySelector(".eventDate").textContent = r[10];
+        tr.querySelector(".eventLocation").textContent = r[11];
+        tr.dataset.invoiceID = r[0];
 
-        row.querySelector(".view-button").dataset.invoiceid = r[0];
-        // row.querySelector(".delete-button").dataset.invoiceid = r[0];
+            
+        tr.addEventListener("click", async () => {
+            toggleLoader(true);
+            await populateViewForm(r[0]);
+            new bootstrap.Tab(document.querySelector('[data-bs-target="#tab-view"]')).show();
+            toggleLoader(false);
+          });
 
-        searchResultsBox.appendChild(row);
+          searchResultsBox.appendChild(row);
     });
 
     // ✅ Hide Loader after the search results are displayed
@@ -166,7 +173,7 @@ document.getElementById("searchResults").addEventListener("click", async functio
             await populateViewForm(invoiceID); // Wait until data loads
 
             // Switch tabs *after* data is populated
-            const viewTab = document.querySelector('[data-bs-target="#view-invoice"]');
+            const viewTab = document.querySelector('[data-bs-target="#tab-view"]');
             if (viewTab) {
                 const tab = new bootstrap.Tab(viewTab);
                 tab.show();
@@ -235,10 +242,10 @@ document.getElementById("searchResults").addEventListener("click", function (eve
         populateViewForm(invoiceID);
 
         // Use Bootstrap's Tab system to switch to the Edit tab
-        const viewTab = document.querySelector('[data-bs-target="#view-invoice"]');
+        const viewTab = document.querySelector('[data-bs-target="#tab-view"]');
         if (viewTab) {
             const tab = new bootstrap.Tab(viewTab);
-            tab.show(); // Switch to the view-invoice tab
+            tab.show(); // Switch to the tab-view tab
         }
     }
 });

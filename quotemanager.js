@@ -179,16 +179,12 @@ function setField(id, value) {
   }
 }
 
-function formatPhoneNumber(number) {
-  const digits = number.replace(/\D/g, ""); // strip all non-digits
-  if (digits.length !== 10) return number; // fallback if it's not a full 10-digit number
-  const area = digits.slice(0, 3);
-  const mid = digits.slice(3, 6);
-  const last = digits.slice(6);
-  return `(${area}) ${mid}-${last}`;
-}
+// ✅ Populate Edit Form
+// For Edit form
+document.getElementById("edit-product-btn")?.addEventListener("click", () =>
+  addProductRow("", 1, "product-rows-container", "edit")
+);
 
-// ✅ Populate edit form
 async function populateEditForm(qtID) {
   try {
     toggleLoader(true);
@@ -362,41 +358,45 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
-  
+
+// Add Quote Form
 // 1) Initialize Add-Quote Form
+// For Add form
+document.getElementById("add-product-btn")?.addEventListener("click", () =>
+  addProductRow("", 1, "add-product-rows-container", "add")
+);
+
+function resetProductRows(containerId = "add-product-rows-container") {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.innerHTML = "";
+  addProductRow("", 1, containerId); // starts with one blank row
+}
+
 async function initializeAddForm() {
   try {
     toggleLoader(true);
 
-    // 1.a) Clear all add-mode fields
+    // Clear all add-mode fields
     const addFields = [
-      "add-phone","add-firstName","add-lastName","add-email","add-street","add-city","add-state","add-zip",
-      "add-deliveryFee","add-setupFee","add-otherFee","add-addonsTotal",
-      "add-discount","add-subTotal1","add-subTotal2","add-subTotal3","add-grandTotal",
-      "add-eventDate","add-eventLocation","add-eventNotes",
-      "add-deposit","add-depositDate","add-paymentMethod","add-balanceDue","add-balanceDueDate",
-      "add-grandTotalSummary","add-quoteNotes"
+      "phone", "firstName", "lastName", "email", "street", "city", "state", "zip",
+      "deliveryFee", "setupFee", "otherFee",
+      "addonsTotal", "discount", "deposit", "depositDate", "balanceDue", "balanceDueDate",
+      "paymentMethod", "quoteNotes", "grandTotal", "totalProductCost", "totalProductRetail",
+      "eventDate", "eventLocation", "eventNotes", "grandTotalSummary"
     ];
-    addFields.forEach(id => setField(id, ""));
+    addFields.forEach(field => setField(`add-${field}`, ""));
 
-    // 1.b) Load all dropdowns (products, payment methods, etc.)
+    // Load all dropdowns
     await Promise.all([
-      getProdDataForSearch(),    // repopulates row-products-selector
-      setQuoteDataForSearch(),   // if you have any other datalists
-      loadDropdowns()            // your existing function for other selects
+      getProdDataForSearch(),
+      setQuoteDataForSearch(),
+      loadDropdowns()
     ]);
-    
-    // 1.c) Clear existing add-product rows & add first blank row
-    const ctr = document.getElementById("add-product-rows-container");
-    if (ctr) {
-      ctr.innerHTML = "";
-      addProductRow();           // your existing addProductRow() will append into add-product-rows-container
-    }
 
-    // 1.d) Wire up listeners on this fresh form
-    setupAddFormListeners();
+    // Clear product rows and add one fresh row
+    resetProductRows("add-product-rows-container");
 
-    // trigger one calc so totals read “$0.00”
     calculateAllTotals();
 
   } catch (err) {
@@ -405,26 +405,6 @@ async function initializeAddForm() {
   } finally {
     toggleLoader(false);
   }
-}
-
-// 2) Setup listeners in Add form to auto-recalculate
-function setupAddFormListeners() {
-  const addPane = document.getElementById("add-quote");
-  if (!addPane) return;
-
-  // any input inside addPane that should recalc
-  const selectors = [
-    ".product-name", ".product-quantity",
-    "#add-deliveryFee", "#add-setupFee", "#add-otherFee",
-    "#add-discount",
-    "#add-deposit"
-  ];
-  selectors.forEach(sel => {
-    addPane.querySelectorAll(sel).forEach(el => {
-      el.removeEventListener("input", calculateAllTotals);
-      el.addEventListener("input", calculateAllTotals);
-    });
-  });
 }
 
 // 3) When “Add Quote” tab is shown, run initializeAddForm
@@ -502,123 +482,129 @@ async function getProdDataForSearch() {
 }
   
 function calculateAllTotals() {
-let totalProductCost = 0;
-let totalProductRetail = 0;
+  let totalProductCost = 0;
+  let totalProductRetail = 0;
 
-// Parse currency safely
-const parseCurrency = (val) => parseFloat(String(val || "0").replace(/[^0-9.-]+/g, "")) || 0;
+  // Helper: safely parse currency
+  const parseCurrency = (val) =>
+    parseFloat(String(val || "0").replace(/[^0-9.-]+/g, "")) || 0;
 
-// Sum product rows
-document.querySelectorAll(".product-row").forEach(row => {
-  const name = row.querySelector(".product-name")?.value.trim() || "";
-  const qty = parseInt(row.querySelector(".product-quantity")?.value) || 0;
-  const prod = Object.values(productData).find(p => p.name === name);
-  if (prod && qty > 0) {
-    totalProductCost += prod.cost * qty;
-    totalProductRetail += prod.retail * qty;
+  // Helper: try multiple ID prefixes
+  function getInputValueBySuffix(suffix) {
+    const prefixes = ["edit-", "add-", ""];
+    for (const prefix of prefixes) {
+      const el = document.getElementById(prefix + suffix);
+      if (el) return el.value;
+    }
+    return "";
   }
-});
 
-// Clean + parse fee and form inputs
-const deliveryFee = parseCurrency(document.getElementById("edit-deliveryFee")?.value || document.getElementById("deliveryFee")?.value);
-const setupFee = parseCurrency(document.getElementById("edit-setupFee")?.value || document.getElementById("setupFee")?.value);
-const otherFee = parseCurrency(document.getElementById("edit-otherFee")?.value || document.getElementById("otherFee")?.value);
-const discount = parseCurrency(document.getElementById("edit-discount")?.value || document.getElementById("discount")?.value);
-const deposit = parseCurrency(document.getElementById("edit-deposit")?.value || document.getElementById("deposit")?.value);
-
-const addonsTotal = deliveryFee + setupFee + otherFee;
-const subTotal1 = totalProductRetail * 0.08875;
-const subTotal2 = totalProductRetail + subTotal1;
-const subTotal3 = totalProductRetail * (discount / 100);
-const grandTotal = subTotal2 - subTotal3 + addonsTotal;
-const balanceDue = grandTotal - deposit;
-
-// Currency formatting helper
-const formatCurrency = (val) =>
-  val.toLocaleString("en-US", { style: "currency", currency: "USD" });
-
-// Update display/input values
-const updateField = (id, val) => {
-  const el = document.getElementById(id);
-  if (!el) return;
-  const formatted = formatCurrency(val);
-  if (el.tagName === "INPUT") {
-    el.value = formatted;
-  } else {
-    el.textContent = formatted;
+  // Helper: update any matching fields with currency-formatted value
+  function updateField(suffix, val) {
+    const prefixes = ["edit-", "add-", "header-", "edit-header-", "add-header-", ""];
+    const formatted = val.toLocaleString("en-US", {
+      style: "currency",
+      currency: "USD",
+    });
+    prefixes.forEach(prefix => {
+      const el = document.getElementById(prefix + suffix);
+      if (el) {
+        if (el.tagName === "INPUT") el.value = formatted;
+        else el.textContent = formatted;
+      }
+    });
   }
-};
 
-updateField("totalRowCost", totalProductCost);
-updateField("edit-totalProductCost", totalProductCost);
-updateField("totalRowRetail", totalProductRetail);
-updateField("edit-totalProductRetail", totalProductRetail);
-updateField("addonsTotal", addonsTotal);
-updateField("edit-addonsTotal", addonsTotal);
-updateField("header-addonsTotal", addonsTotal);
-updateField("edit-addonsTotal-totals", addonsTotal);
-updateField("subTotal1", subTotal1);
-updateField("subTotal2", subTotal2);
-updateField("subTotal3", subTotal3);
-updateField("grandTotal", grandTotal);
-updateField("edit-grandTotal", grandTotal);
-updateField("edit-grandTotal-display", grandTotal);
-updateField("header-grandTotal-totals", grandTotal);
-updateField("balanceDue", balanceDue);
-updateField("edit-balanceDue", balanceDue);
+  // Sum up product rows
+  document.querySelectorAll(".product-row").forEach(row => {
+    const name = row.querySelector(".product-name")?.value.trim() || "";
+    const qty = parseFloat(row.querySelector(".product-quantity")?.value) || 0;
+    const prod = productData?.[name] || Object.values(productData).find(p => p.name === name);
+    if (prod && qty > 0) {
+      totalProductCost += prod.cost * qty;
+      totalProductRetail += prod.retail * qty;
+    }
+  });
+
+  // Fees and discounts
+  const deliveryFee = parseCurrency(getInputValueBySuffix("deliveryFee"));
+  const setupFee    = parseCurrency(getInputValueBySuffix("setupFee"));
+  const otherFee    = parseCurrency(getInputValueBySuffix("otherFee"));
+  const discount    = parseCurrency(getInputValueBySuffix("discount"));
+  const deposit     = parseCurrency(getInputValueBySuffix("deposit"));
+
+  // Totals calculations
+  const addonsTotal = deliveryFee + setupFee + otherFee;
+  const subTotal1   = totalProductRetail * 0.08875; // tax
+  const subTotal2   = totalProductRetail + subTotal1;
+  const subTotal3   = totalProductRetail * (discount / 100);
+  const grandTotal  = subTotal2 - subTotal3 + addonsTotal;
+  const balanceDue  = grandTotal - deposit;
+
+  // Update all UI fields
+  updateField("totalProductCost", totalProductCost);
+  updateField("totalProductRetail", totalProductRetail);
+  updateField("addonsTotal", addonsTotal);
+  updateField("subTotal1", subTotal1);
+  updateField("subTotal2", subTotal2);
+  updateField("subTotal3", subTotal3);
+  updateField("grandTotal", grandTotal);
+  updateField("balanceDue", balanceDue);
+  updateField("grandTotalSummary", grandTotal); // for Summary tab (add)
+}
+  
+// Initialize product row events
+function attachRowEvents(row) {
+  const nameInput = row.querySelector(".product-name");
+  const qtyInput = row.querySelector(".product-quantity");
+  const costOutput = row.querySelector(".totalRowCost");
+  const retailOutput = row.querySelector(".totalRowRetail");
+  const deleteBtn = row.querySelector(".remove-part");
+
+  function updateTotals() {
+    const name = nameInput.value.trim();
+    const qty = parseInt(qtyInput.value) || 0;
+    const prod = productData?.[name] || Object.values(productData).find(p => p.name === name);
+
+    if (prod && qty > 0) {
+      costOutput.value = `$${(prod.cost * qty).toFixed(2)}`;
+      retailOutput.value = `$${(prod.retail * qty).toFixed(2)}`;
+    } else {
+      costOutput.value = "$0.00";
+      retailOutput.value = "$0.00";
+    }
+
+    calculateAllTotals();
+  }
+
+  nameInput.addEventListener("change", updateTotals);
+  qtyInput.addEventListener("change", updateTotals);
+  deleteBtn.addEventListener("click", () => {
+    row.remove();
+    calculateAllTotals();
+  });
+
+  updateTotals(); // Auto-trigger
 }
 
-// Auto-trigger calculations
-document.addEventListener("DOMContentLoaded", () => {
-  const selectors = [
-    ".product-name", ".product-quantity",
-    "#deliveryFee", "#setupFee", "#otherFee",
-    "#edit-deliveryFee", "#edit-setupFee", "#edit-otherFee",
-    "#discount", "#edit-discount",
-    "#deposit", "#edit-deposit"
-  ];
-
-  selectors.forEach(selector => {
-    document.querySelectorAll(selector).forEach(el => {
-      el.addEventListener("input", calculateAllTotals);
-    });
-  });
-
-  calculateAllTotals(); // Initial run
-});
-
-// Auto-trigger on all relevant fields
-document.addEventListener("DOMContentLoaded", () => {
-  const selectors = [
-    ".product-name", ".product-quantity",
-    "#deliveryFee", "#setupFee", "#otherFee",
-    "#edit-deliveryFee", "#edit-setupFee", "#edit-otherFee",
-    "#discount", "#edit-discount",
-    "#deposit", "#edit-deposit"
-  ];
-
-  selectors.forEach(selector => {
-    document.querySelectorAll(selector).forEach(el => {
-      el.addEventListener("input", calculateAllTotals);
-    });
-  });
-
-  calculateAllTotals(); // Run once on load
-});
-  
-function addProductRow(name = "", qty = 1) {
-  const container = document.getElementById("product-rows-container");
+// Add product row dynamically
+function addProductRow(name = "", qty = 1, containerId = "product-rows-container", mode = "edit") {
+  const container = document.getElementById(containerId);
   if (!container) return;
 
   const row = document.createElement("div");
   row.classList.add("row", "g-2", "align-items-center", "mb-1", "product-row");
+
+  const optionsHTML = Object.values(productData).map(p => {
+    const selected = p.name === name ? ' selected' : '';
+    return `<option value="${p.name.replace(/"/g, '&quot;')}"${selected}>${p.name}</option>`;
+  }).join("");
+
   row.innerHTML = `
     <div class="col-md-6">
-      <select class="form-select product-name">
+      <select class="form-select product-name" list="row-products-selector">
         <option value="">Choose a product...</option>
-        ${Object.values(productData).map(p => `
-          <option value="${p.name}" ${p.name === name ? "selected" : ""}>${p.name}</option>
-        `).join("")}
+        ${optionsHTML}
       </select>
     </div>
     <div class="col-md-1">
@@ -631,16 +617,16 @@ function addProductRow(name = "", qty = 1) {
       <input type="text" class="form-control text-end totalRowRetail" value="$0.00" readonly>
     </div>
     <div class="col-md-1">
-      <button type="button" class="btn btn-danger btn-sm remove-part"><i class="bi bi-trash"></i></button>
+      <button type="button" class="btn btn-danger btn-sm remove-part">
+        <i class="bi bi-trash"></i>
+      </button>
     </div>
   `;
 
   container.appendChild(row);
-
-  // ✅ Attach event listeners and auto-trigger totals
   attachRowEvents(row);
-
-  // ✅ Trigger calculation immediately with pre-filled values
+  console.log("🧪 Row added", document.querySelectorAll(".product-row").length);
+  // Auto-calculate
   const nameInput = row.querySelector(".product-name");
   const qtyInput = row.querySelector(".product-quantity");
   if (nameInput && qtyInput) {
@@ -648,47 +634,15 @@ function addProductRow(name = "", qty = 1) {
     qtyInput.dispatchEvent(new Event("change"));
   }
 }
-  
-  function attachRowEvents(row) {
-    const nameInput = row.querySelector(".product-name");
-    const qtyInput = row.querySelector(".product-quantity");
-    const costOutput = row.querySelector(".totalRowCost");
-    const retailOutput = row.querySelector(".totalRowRetail");
-    const deleteBtn = row.querySelector(".remove-part");
-  
-    function updateTotals() {
-      const name = nameInput.value.trim();
-      const qty = parseInt(qtyInput.value) || 0;
-      const prod = Object.values(productData).find(p => p.name === name);
-  
-      if (prod && qty > 0) {
-        costOutput.value = `$${(prod.cost * qty).toFixed(2)}`;
-        retailOutput.value = `$${(prod.retail * qty).toFixed(2)}`;
-      } else {
-        costOutput.value = "$0.00";
-        retailOutput.value = "$0.00";
-      }
-  
-      calculateAllTotals();
-    }
-  
-    nameInput.addEventListener("change", updateTotals);
-    qtyInput.addEventListener("change", updateTotals);
-    deleteBtn.addEventListener("click", () => {
-      row.remove();
-      calculateAllTotals();
-    });
-  }
 
-  document.getElementById("edit-discount").addEventListener("input", calculateAllTotals);
 
-  window.addEventListener("DOMContentLoaded", async () => {
-    await getProdDataForSearch();
-    document.getElementById("add-product-btn")?.addEventListener("click", () => addProductRow());
-    addProductRow(); // Add initial row
-  });
+// work to remove this
+function formatPhoneNumber(number) {
+  const digits = number.replace(/\D/g, ""); // strip all non-digits
+  if (digits.length !== 10) return number; // fallback if it's not a full 10-digit number
+  const area = digits.slice(0, 3);
+  const mid = digits.slice(3, 6);
+  const last = digits.slice(6);
+  return `(${area}) ${mid}-${last}`;
+}
 
-  // Ensure the form is fully loaded before running calculations
-window.addEventListener("DOMContentLoaded", () => {
-  calculateAllTotals(); // Auto-run calculations on form load
-});

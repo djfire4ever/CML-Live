@@ -7,6 +7,7 @@
   <style>
   </style>
 </head>
+<body class="theme-dark">
 <div class="watermark"></div>
 <!-- Notification Toasts -->
 
@@ -154,6 +155,9 @@
 <div class="tab-pane fade" id="add-inventory">
   <form id="addInventoryForm">
     <div id="materialRows">
+      <input type="hidden" class="matID">
+      <input type="hidden" class="matName">
+      <input type="hidden" class="unitQty">
       <!-- 🔁 Template Material Row -->
       <div class="row g-3 material-row mb-3 border rounded p-3">
         <div class="col-12 text-center mt-2">
@@ -161,53 +165,16 @@
         </div>
         
         <!-- Material Dropdown & Hidden matID -->
-        <div class="col-md-4 fw-bold">
-          <label><b>Material</b></label>
-          <input type="text" class="form-select materials" list="parts-options" placeholder="Select Material">
-          <datalist id="parts-options"></datalist>
-          <input type="hidden" class="matID">
-          <input type="hidden" class="matName">
-        </div>
-
-        <div class="col-md-2 fw-bold">
-          <label><b>Unit Type</b></label>
-          <input type="text" class="form-control unitType" readonly>
-        </div>
-
-        <div class="col-md-2 fw-bold">
-          <label><b>Unit Price</b></label>
-          <input type="text" class="form-control unitPrice" readonly>
-        </div>
-
-        <div class="col-md-2 fw-bold">
-          <label><b>Qty On Hand</b></label>
-          <input type="text" class="form-control onHand">
-        </div>
-
-        <div class="col-md-4 fw-bold">
-          <label><b>Supplier</b></label>
-          <input type="text" class="form-control supplier">
-        </div>
-
-        <div class="col-md-8 fw-bold">
-          <label><b>Supplier URL</b></label>
-          <input type="text" class="form-control supplierUrl">
-        </div>
-
-        <div class="col-md-2 fw-bold">
-          <label><b>Last Updated</b></label>
-          <input type="text" class="form-control lastUpdated" readonly>
-        </div>
-
-        <div class="col-md-2 fw-bold">
-          <label><b>Package Price</b></label>
-          <input type="text" class="form-control matPrice">
-        </div>
-
-        <div class="col-md-2 fw-bold">
-          <label><b>Package Qty</b></label>
-          <input type="text" class="form-control incoming">
-        </div>
+        <div class="col-md-4 fw-bold"><label><b>Material</b></label><input type="text" class="form-select materials" list="parts-options" placeholder="Select Material">
+          <datalist id="parts-options"></datalist></div>
+        <div class="col-md-2 fw-bold"><label><b>Unit Type</b></label><input type="text" class="form-control unitType" readonly></div>
+        <div class="col-md-2 fw-bold"><label><b>Unit Price</b></label><input type="text" class="form-control unitPrice" readonly></div>
+        <div class="col-md-2 fw-bold"><label><b>Qty On Hand</b></label><input type="text" class="form-control onHand"></div>
+        <div class="col-md-4 fw-bold"><label><b>Supplier</b></label><input type="text" class="form-control supplier"></div>
+        <div class="col-md-8 fw-bold"><label><b>Supplier URL</b></label><input type="text" class="form-control supplierUrl"></div>
+        <div class="col-md-2 fw-bold"><label><b>Last Updated</b></label><input type="text" class="form-control lastUpdated" readonly></div>
+        <div class="col-md-2 fw-bold"><label><b>Package Price</b></label><input type="text" class="form-control matPrice"></div>
+        <div class="col-md-2 fw-bold"><label><b>Package Qty</b></label><input type="text" class="form-control incoming"></div>
 
         <!-- Row Control Buttons -->
         <div class="col-md-6 d-flex align-items-end gap-2">
@@ -275,6 +242,7 @@ function setupDynamicNavigation() {
 }
 
 setupDynamicNavigation();
+toggleTheme();
 
 </script>
     

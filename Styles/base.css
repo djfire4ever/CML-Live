@@ -1,0 +1,20 @@
+/* ===============================
+   🌐 GLOBAL RESET & BASE STYLES
+================================== */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: auto;
+  font-family: "Courgette", cursive;
+  background-color: var(--accent-color);
+  color: var(--text-color);
+  position: relative;
+  z-index: 1;
+}
+
+/* Centered Containers */
+.container, .tab-pane {
+  max-width: 1000px;
+  margin: 0 auto;
+}

@@ -7,6 +7,7 @@
   <style>
   </style>
 </head>
+<body class="theme-dark">
 <div class="watermark"></div>
 <!-- Notification Toasts -->
 
@@ -27,8 +28,8 @@
 
 <!-- Navigation Tabs -->
 <ul class="nav nav-tabs" id="invoiceTabs">
-  <li class="nav-item"><button class="nav-link active text-dark fw-bold" data-bs-toggle="tab" data-bs-target="#search-invoice">🔍 Search Invoice</button></li>
-  <li class="nav-item"><button class="nav-link text-dark fw-bold" data-bs-toggle="tab" data-bs-target="#view-invoice" style="display:none;">✏️ View Invoice</button></li>
+  <li class="nav-item"><button class="nav-link active text-dark fw-bold" data-bs-toggle="tab" data-bs-target="#tab-search">🔍 Search Invoice</button></li>
+  <li class="nav-item"><button class="nav-link text-dark fw-bold" data-bs-toggle="tab" data-bs-target="#tab-view" style="display:none;">✏️ View Invoice</button></li>
   <!-- <li class="nav-item"><button class="nav-link text-dark fw-bold" data-bs-toggle="tab" data-bs-target="#add-invoice">➕ Add Invoice</button></li> -->
 </ul>
 
@@ -50,7 +51,7 @@
 <div class="tab-content">
       
 <!-- 🔍 Search Invoices -->
-<div class="tab-pane fade show active" id="search-invoice">
+<div class="tab-pane fade show active" id="tab-search">
   <div class="input-group">
     <input type="text" class="form-control fw-bold" id="searchInput" placeholder="🔍 search...">
       <div class="input-group-append">
@@ -74,27 +75,36 @@
 </div>
 
 <!-- ✏️ View Invoice -->
-<div class="tab-pane fade" id="view-invoice">
-  <form id="viewInvoiceForm">
-    <input type="hidden" id="view-invoice-id">
+<div class="container">
+<div class="tab-pane fade" id="tab-view">
+    <form id="viewInvoiceForm">
+    <!-- <input type="hidden" id="tab-view-id"> -->
       <div class="row g-3">
-        <div class="col-sm-2"><label><b>Inv #</b></label><input type="text" class="form-control" id="invoiceID" readonly></div>
-        <div class="col-sm-2"><label><b>Invoice Date</b></label><input type="text" class="form-control" id="invDate"></div>
-        <div class="col-sm-3"><label><b>First Name</b></label><input type="text" class="form-control" id="firstName"></div>
-        <div class="col-sm-5"><label><b>Last Name</b></label><input type="text" class="form-control" id="lastName"></div>
-        <div class="col-sm-3"><label><b>Phone #</b></label><input type="text" class="form-control" id="phone"></div>
-        <div class="col-sm-9"><label><b>Email</b></label><input type="text" class="form-control" id="email"></div>
-        <div class="col-sm-6"><label><b>Street</b></label><input type="text" class="form-control" id="street"></div>
-        <div class="col-sm-3"><label><b>City</b></label><input type="text" class="form-control" id="city"></div>
-        <div class="col-sm-1"><label><b>State</b></label><input type="text" class="form-control" id="state"></div>
-        <div class="col-sm-2"><label><b>Zip</b></label><input type="text" class="form-control" id="zip"></div>
-        <div class="col-sm-2"><label><b>Event Date</b></label><input type="text" class="form-control" id="eventDate"></div>
-        <div class="col-sm-10"><label><b>Event Location</b></label><input type="text" class="form-control" id="eventLocation"></div>
-        <div class="d-grid gap-0 d-sm-block mt-2">
+        <div class="col-sm-1"><label><b>#</b></label><input type="text" class="form-control" id="invoiceID" readonly></div>
+        <div class="col-sm-2"><label><b>Invoice Date</b></label><input type="text" class="form-control" id="invDate" readonly></div>
+        <div class="col-sm-2"><label><b>First Name</b></label><input type="text" class="form-control" id="firstName" readonly></div>
+        <div class="col-sm-3"><label><b>Last Name</b></label><input type="text" class="form-control" id="lastName" readonly></div>
+      </div>
+      <div class="row g-3">
+        <div class="col-sm-3"><label><b>Phone #</b></label><input type="text" class="form-control" id="phone" readonly></div>
+        <div class="col-sm-5"><label><b>Email</b></label><input type="text" class="form-control" id="email" readonly></div>
+      </div>
+      <div class="row g-3">
+       <div class="col-sm-3"><label><b>Street</b></label><input type="text" class="form-control" id="street" readonly></div>
+        <div class="col-sm-2"><label><b>City</b></label><input type="text" class="form-control" id="city" readonly></div>
+        <div class="col-sm-1"><label><b>State</b></label><input type="text" class="form-control" id="state" readonly></div>
+        <div class="col-sm-2"><label><b>Zip</b></label><input type="text" class="form-control" id="zip" readonly></div>
+      </div>
+      <div class="row g-3">
+        <div class="col-sm-2"><label><b>Event Date</b></label><input type="text" class="form-control" id="eventDate" readonly></div>
+        <div class="col-sm-6"><label><b>Event Location</b></label><input type="text" class="form-control" id="eventLocation" readonly></div>
+        <div class="d-grid gap-0 d-sm-block mt-3">
           <div>
             <button type="button" class="btn btn-dark" id="view-Button">View PDF</button>
             <button type="button" class="btn btn-dark" id="send-Button">Email PDF</button>
         </div>
+      </div>
+    </div>
               
 <!-- Email Modal -->
 <div class="modal fade" id="emailModal" tabindex="-1" aria-labelledby="emailModalLabel" aria-hidden="true">
@@ -105,18 +115,9 @@
       </div>
       <div class="modal-body">
         <form id="emailForm" novalidate>
-          <div class="mb-3">
-            <label for="emailTo" class="form-label">To</label>
-            <input type="email" class="form-control" id="emailTo" >
-          </div>
-          <div class="mb-3">
-            <label for="emailSubject" class="form-label">Subject</label>
-            <input type="text" class="form-control" id="emailSubject" value="Your Invoice PDF">
-          </div>
-          <div class="mb-3">
-            <label for="emailMessage" class="form-label">Message</label>
-            <textarea class="form-control" id="emailMessage" rows="5">Dear customer, Please find your invoice attached...</textarea>
-          </div>
+          <div class="mb-3"><label for="emailTo" class="form-label">To</label><input type="email" class="form-control" id="emailTo" ></div>
+          <div class="mb-3"><label for="emailSubject" class="form-label">Subject</label><input type="text" class="form-control" id="emailSubject" value="Your Invoice PDF"></div>
+          <div class="mb-3"><label for="emailMessage" class="form-label">Message</label><textarea class="form-control" id="emailMessage" rows="5">Dear customer, Please find your invoice attached...</textarea></div>
         </form>
       </div>
       <div class="modal-footer">
@@ -154,6 +155,7 @@ function setupDynamicNavigation() {
 }
 
 setupDynamicNavigation();
+toggleTheme();
 
 </script>
 
