@@ -1,10 +1,10 @@
-  const scriptURL = "https://script.google.com/macros/s/AKfycbzd_0wJUUB8AyjmBd_Z5ZMjkch3RTWR66qbBFen_0li0KwcoVZVGBgRQWKzwePFRDjZ/exec";
+  // const scriptURL = "https://script.google.com/macros/s/AKfycbzd_0wJUUB8AyjmBd_Z5ZMjkch3RTWR66qbBFen_0li0KwcoVZVGBgRQWKzwePFRDjZ/exec";
 
-  // const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+  const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
 
-  // const scriptURL = isLocal
-  //   ? "https://script.google.com/macros/s/AKfycbzd_0wJUUB8AyjmBd_Z5ZMjkch3RTWR66qbBFen_0li0KwcoVZVGBgRQWKzwePFRDjZ/exec"
-  //   : "/.netlify/functions/leadProxy";
+  const scriptURL = isLocal
+    ? "https://script.google.com/macros/s/AKfycbzd_0wJUUB8AyjmBd_Z5ZMjkch3RTWR66qbBFen_0li0KwcoVZVGBgRQWKzwePFRDjZ/exec"
+    : "/.netlify/functions/leadProxy";
 
   // Dynamically load Courgette font from Google Fonts
   (function loadCourgetteFont() {
