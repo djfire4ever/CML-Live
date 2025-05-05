@@ -1,0 +1,215 @@
+/* theme-pastel.css */
+body.theme-pastel {
+  --accent-color: #f29a9a;             /* Soft pink accent color */
+  --text-color: #333;                  /* Dark text color for readability */
+  --input-bg: #f9f9f9;                /* Light pastel background for inputs */
+  --search-bg: #a0d1d1;               /* Soft teal background for search */
+  --background-color: #f2e6f5;        /* Soft pastel background color for the page */
+  --border-color: #ddd;               /* Subtle light grey border for elements */
+  --table-hover: rgba(242, 154, 154, 0.3); /* Soft pink table row hover effect */
+  --nav-tab-bg: #f2d1d1;              /* Soft pink background for tab buttons */
+  --nav-tab-active-bg: #f9f9f9;       /* Light background for active tab */
+}
+
+/* =============================== 
+   🌐 GLOBAL BACKGROUND & TEXT COLORS 
+================================== */
+body.theme-pastel,
+body.theme-pastel .section,
+body.theme-pastel .container,
+body.theme-pastel .tab-pane,
+body.theme-pastel .tab-content {
+  background-color: var(--background-color) !important; /* Apply soft pastel background */
+  color: var(--text-color) !important;                  /* Apply dark text color */
+}
+
+/* =============================== 
+   🧭 NAVIGATION TABS (Tab Buttons)
+================================== */
+body.theme-pastel .nav-tabs .nav-link {
+  background-color: var(--nav-tab-bg);       /* Soft pastel pink background */
+  color: var(--text-color) !important;       /* Dark text */
+  border: 1px solid var(--border-color);     /* Light border */
+  border-bottom: none;                       /* No bottom border */
+  border-radius: 0.5rem 0.5rem 0 0;           /* Rounded top corners */
+}
+
+body.theme-pastel .nav-tabs .nav-link.active {
+  background-color: var(--nav-tab-active-bg); /* Light background for active tab */
+  color: var(--text-color) !important;        /* Dark text */
+  border-color: var(--accent-color) var(--accent-color) transparent; /* Accent border */
+}
+
+/* =============================== 
+   🔍 SEARCH INPUT FIELD
+================================== */
+body.theme-pastel #searchInput {
+  background-color: var(--search-bg);        /* Soft pastel teal background */
+  border: 2px solid var(--accent-color);     /* Pink accent border */
+  color: var(--text-color);                  /* Dark text */
+}
+
+body.theme-pastel .counter {
+  background-color: var(--background-color) !important;
+  color: var(--text-color) !important;
+  font-weight: bold;
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.375rem;
+  border: 1px solid #ccc;
+  display: inline-block;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+/* =============================== 
+   📋 TABLE STYLING
+================================== */
+body.theme-pastel table,
+body.theme-pastel .table,
+body.theme-pastel .my-custom-table {
+  background-color: var(--background-color); /* Soft pastel background for tables */
+  color: var(--text-color);                  /* Dark text */
+}
+
+body.theme-pastel .table th,
+body.theme-pastel .table td,
+body.theme-pastel .my-custom-table thead th,
+body.theme-pastel .result-box th,
+body.theme-pastel .result-box td {
+  background-color: var(--input-bg);        /* Light background for table cells */
+  color: var(--text-color);                 /* Dark text */
+  border-color: var(--border-color);        /* Subtle border */
+}
+
+body.theme-pastel .table thead th {
+  background-color: var(--nav-tab-bg);      /* Match nav tab background */
+}
+
+body.theme-pastel .result-box {
+  transition: background-color 0.2s ease-in-out; /* Smooth hover effect */
+  cursor: pointer;                            /* Clickable rows */
+}
+
+body.theme-pastel .result-box:hover th,
+body.theme-pastel .result-box:hover td {
+  background-color: var(--table-hover) !important; /* Soft pink hover */
+}
+
+/* =============================== 
+   🧾 FORM ELEMENTS
+================================== */
+body.theme-pastel input.form-control,
+body.theme-pastel select.form-select {
+  background-color: var(--input-bg);        /* Soft pastel input background */
+  border: 1px solid var(--border-color);    /* Subtle border */
+  color: var(--text-color);                 /* Dark text */
+}
+
+/* =============================== 
+   🖼 WATERMARK BACKGROUND (Optional)
+================================== */
+body.theme-pastel .watermark {
+  position: fixed;                             /* Fixed in place */
+  left: 15%;                                   /* Center horizontally */
+  width: 65%;                                  /* Width across the middle */
+  height: 100%;                                /* Full height */
+  background-image: url('../../images/CML-Letterhead.png'); /* Image path */
+  background-size: contain;                    /* Scale image properly */
+  background-position: bottom;                 /* Stick to bottom */
+  background-repeat: no-repeat;                /* No repeating */
+  opacity: 0;                                  /* Invisible by default */
+  pointer-events: none;                        /* No interaction */
+  z-index: 0;                                  /* Behind everything */
+}
+
+/* =============================== 
+   📂 DROPDOWNS (Menu + Items)
+================================== */
+body.theme-pastel .dropdown-menu {
+  background-color: var(--input-bg);         /* Light background for dropdown */
+  color: var(--text-color);                  /* Dark text */
+  border: 1px solid var(--border-color);     /* Subtle border */
+}
+
+body.theme-pastel .dropdown-item {
+  color: var(--text-color);                  /* Dark text for items */
+}
+
+body.theme-pastel .dropdown-item:hover,
+body.theme-pastel .dropdown-item:focus {
+  background-color: var(--nav-tab-active-bg); /* Slightly darker on hover */
+  color: var(--accent-color);                /* Highlight with pink accent */
+}
+
+/* =============================== 
+   🔘 BUTTONS (General)
+================================== */
+body.theme-pastel .btn {
+  background-color: var(--accent-color);         /* Soft pink button background */
+  color: white;                                  /* White text */
+  border: 1px solid var(--border-color);         /* Subtle border */
+}
+
+body.theme-pastel .btn:hover,
+body.theme-pastel .btn:focus {
+  background-color: #e67e6e;                     /* Slightly darker pink on hover */
+  color: white;                                  /* White text */
+  border-color: var(--accent-color);             /* Pink border */
+}
+
+/* =============================== 
+   🪟 MODALS (Header, Body, Footer)
+================================== */
+body.theme-pastel .modal-header,
+body.theme-pastel .modal-footer {
+  background-color: var(--input-bg);            /* Light background */
+  color: var(--text-color);                     /* Dark text */
+  border-bottom: 1px solid var(--border-color); /* Subtle divider */
+  border-top: 1px solid var(--border-color);    /* Divider at the top of modal footer */
+}
+
+body.theme-pastel .modal-body {
+  background-color: var(--background-color);    /* Match page background */
+  color: var(--text-color);                     /* Dark text */
+}
+
+/* =============================== 
+   🏷️ FORM LABELS
+================================== */
+body.theme-pastel label,
+body.theme-pastel .form-label {
+  color: var(--text-color);                     /* Dark color for labels */
+}
+
+/* =============================== 
+   🃏 CARD HEADERS
+================================== */
+body.theme-pastel .card-header {
+  background-color: var(--input-bg);            /* Light background */
+  color: var(--text-color);                     /* Dark text */
+  border-bottom: 1px solid var(--border-color); /* Subtle divider */
+}
+
+/* =============================== 
+   🚨 ALERTS (Success, Info, Warning, Danger)
+================================== */
+body.theme-pastel .alert {
+  background-color: var(--input-bg);            /* Light background */
+  color: var(--text-color);                     /* Dark text */
+  border: 1px solid var(--border-color);        /* Subtle border */
+}
+
+body.theme-pastel .alert-success {
+  border-left: 4px solid var(--accent-color);   /* Pink accent for success */
+}
+
+body.theme-pastel .alert-info {
+  border-left: 4px solid #81c3d7;               /* Info cyan accent */
+}
+
+body.theme-pastel .alert-warning {
+  border-left: 4px solid #f0b658;               /* Warning yellow accent */
+}
+
+body.theme-pastel .alert-danger {
+  border-left: 4px solid #f3a1a1;               /* Danger red accent */
+}

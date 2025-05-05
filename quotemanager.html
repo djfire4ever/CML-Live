@@ -22,7 +22,7 @@
 </div>
 
 <!-- Client Management Section -->
-<section class="bg-success text-dark text-center text-sm-start">
+<section class="text-center text-sm-start">
   <div class="container">
     <h2 class="text-center">Quote Management</h2>
 
@@ -103,16 +103,16 @@
     </h2>
     <input type="hidden" id="edit-qtID" name="edit-qtID"> 
     <div id="edit-collapseClient" class="accordion-collapse collapse" aria-labelledby="edit-headingClient" data-bs-parent="#edit-AccordionR1C1">
-      <div class="accordion-body bg-info text-dark">
+      <div class="accordion-body">
         <div class="row g-3">
           <div class="col-sm-6"><label class="form-label fw-bold">Phone</label><input type="text" readonly class="form-control-plaintext" id="edit-phone"></div>
         </div>
         <div class="row g-3">
           <div class="col-sm-4"><label class="form-label fw-bold">First Name</label><input type="text" readonly class="form-control-plaintext" id="edit-firstName"></div>
-          <div class="col-sm-4"><label class="form-label fw-bold">Last Name</label><input type="text" readonly class="form-control-plaintext" id="edit-lastName"></div>
+          <div class="col-sm-8"><label class="form-label fw-bold">Last Name</label><input type="text" readonly class="form-control-plaintext" id="edit-lastName"></div>
         </div>
         <div class="row g-3">
-          <div class="col-sm-8"><label class="form-label fw-bold">Email</label><input type="text" readonly class="form-control-plaintext" id="edit-email"></div>
+          <div class="col-sm-12"><label class="form-label fw-bold">Email</label><input type="text" readonly class="form-control-plaintext" id="edit-email"></div>
         </div>
         <div class="row g-3">
           <div class="col-12"><label class="form-label fw-bold">Street</label><input type="text" readonly class="form-control-plaintext" id="edit-street"></div>
@@ -133,7 +133,7 @@
   <div class="accordion" id="edit-AccordionR1C2">
     <div class="accordion-item">
       <h2 class="accordion-header" id="edit-headingAddonsTotal">
-        <button class="accordion-button collapsed bg-primary text-light d-flex justify-content-between align-items-center" type="button" data-bs-toggle="collapse" data-bs-target="#edit-collapseAddonsTotal" aria-expanded="false" aria-controls="edit-collapseAddonsTotal">
+        <button class="accordion-button collapsed bg-info text-light d-flex justify-content-between align-items-center" type="button" data-bs-toggle="collapse" data-bs-target="#edit-collapseAddonsTotal" aria-expanded="false" aria-controls="edit-collapseAddonsTotal">
           <span><i class="fa-solid fa-user me-2"></i>Add-On Fees</span>
             <span id="card3-header" class="badge bg-info ms-2">
               <span id="edit-card3-header-display">Add-On Fees</span>
@@ -212,10 +212,6 @@
             <div class="col-6 fw-bold">+ Add-Ons</div>
             <div class="col-6 text-end" id="edit-addonsTotal-totals"></div>
           </div>
-            <!-- <div class="col-4 text-end">
-              <input type="text" readonly class="form-control-plaintext form-control-sm text-end" id="subTotal3">
-            </div> -->
-              <!-- </div> -->
           <!-- Grand Total -->
           <div class="row border-top pt-2 mt-2">
             <div class="col-6 fw-bold fs-5">Grand Total</div>
@@ -329,7 +325,7 @@
   <div class="accordion" id="edit-AccordionR2C3">
     <div class="accordion-item">
       <h2 class="accordion-header" id="edit-headingSummary">
-        <button class="accordion-button collapsed bg-success text-white d-flex justify-content-between align-items-center" type="button" data-bs-toggle="collapse" data-bs-target="#edit-collapseGrandTotal" aria-expanded="false" aria-controls="edit-collapseGrandTotal">
+        <button class="accordion-button collapsed bg-secondary text-white d-flex justify-content-between align-items-center" type="button" data-bs-toggle="collapse" data-bs-target="#edit-collapseGrandTotal" aria-expanded="false" aria-controls="edit-collapseGrandTotal">
           <span><i class="fa-solid fa-calculator me-2"></i>Summary</span>
             <span id="card6-header" class="badge bg-danger ms-2">
             <span id="edit-card6-header-display">Grand Total</span>
@@ -351,6 +347,7 @@
 <!-- Edit Form-Product Rows Section -->
 <input type="hidden" id="edit-cost" />
 <input type="hidden" id="edit-retail" />
+<datalist id="row-products-selector"></datalist>
 
 <div class="row fw-bold mb-0 product-row-headers">
   <div class="col-md-6 text-start">Product</div>
@@ -359,7 +356,7 @@
   <div class="col-md-2 text-end">Retail $</div>
   <div class="col-md-1"></div>
 </div>
-<div id="product-rows-container" class="container px-0"></div>
+<div id="edit-product-rows-container" class="container px-0"></div>
 <datalist id="row-products-selector"></datalist>
 
 <!-- Edit Form-Add Row Button -->
@@ -602,7 +599,8 @@
     <div class="col-md-1"></div>
   </div>
   <div id="add-product-rows-container" class="container px-0"></div>
-
+  <datalist id="row-products-selector"></datalist>
+  
   <!-- ➕ Add Product Row Button -->
   <div class="row g-3 mt-3">
     <div class="col-sm-6"><button type="button" class="btn btn-dark" id="add-product-btn">➕ Product</button></div>
@@ -644,7 +642,6 @@ function setupDynamicNavigation() {
 }
 
 setupDynamicNavigation();
-toggleTheme();
 
 </script>
   

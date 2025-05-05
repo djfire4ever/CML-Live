@@ -46,7 +46,7 @@
 
 <!-- Main Product Management Section -->
 <!-- 🔧 Main Product Manager Container -->
-<section class="product-manager-container text-dark text-center text-sm-start" data-element="main-section">
+<section class="text-center text-sm-start" data-element="main-section">
   <div class="container" data-element="main-container">
     <h2 class="text-center" data-element="page-header">Product Management</h2>
 <!-- 🧭 Navigation Tabs -->
@@ -180,10 +180,18 @@
 
 <!-- <script> -->
 
-<script src="config.js"></script>
-<script src="productmanager.js"></script>
+<script src="config.js" defer></script>
+<script src="productmanager.js" defer></script>
 
 <script>
+// document.addEventListener("DOMContentLoaded", () => {
+//   const stored = localStorage.getItem("theme");
+//   console.log("🧠 DOMContentLoaded – current theme in localStorage:", stored);
+//   console.log("🌐 Page is:", location.href);
+// });
+
+// console.log("Start - BODY class is:", document.body.className);
+
 // Shared Constants
 let materialData = {}; // Global material map
 const maxParts = 20;
@@ -425,9 +433,9 @@ function setupDynamicNavigation() {
 }
 
 setupDynamicNavigation();
-toggleTheme();
 
-
+// document.addEventListener("DOMContentLoaded", applyThemeFromPage);
+ 
 </script>
 
 <!-- </script> -->

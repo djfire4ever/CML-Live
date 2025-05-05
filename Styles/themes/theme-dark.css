@@ -2,15 +2,15 @@
    🎨 THEME VARIABLES FOR DARK MODE
 ========================================== */
 body.theme-dark {
-  --accent-color: #198754;           /* ✅ Optional highlight color (success green) */
+  --accent-color: #17a2b8;           /* ✅ Optional highlight color (success green) */
   --text-color: #17a2b8;             /* ✅ Main text color (Bootstrap info blue) */
-  --input-bg: #343a40;               /* ✅ Form input background (dark gray) */
-  --search-bg: #495057;              /* ✅ Search input background (slightly lighter gray) */
-  --background-color: #212529;       /* ✅ Primary background color (very dark gray) */
+  --input-bg: #000;               /* ✅ Form input background (dark gray) */
+  --search-bg: #000;              /* ✅ Search input background (slightly lighter gray) */
+  --background-color: #000;       /* ✅ Primary background color (very dark gray) */
   --border-color: #444c56;           /* ✅ Border color for form elements and tables */
-  --table-hover: rgba(25, 135, 84, 0.15); /* ✅ Table row hover color (transparent green) */
-  --nav-tab-bg: #343a40;             /* ✅ Tab button background (dark gray) */
-  --nav-tab-active-bg: #212529;      /* ✅ Active tab background (match page background) */
+  --table-hover: rgba(37, 165, 105, 0.781); /* ✅ Table row hover color (transparent green) */
+  --nav-tab-bg: #000;             /* ✅ Tab button background (dark gray) */
+  --nav-tab-active-bg: #495057;      /* ✅ Active tab background (match page background) */
 }
 
 /* =======================================
@@ -37,8 +37,8 @@ body.theme-dark .nav-tabs .nav-link {
 }
 
 body.theme-dark .nav-tabs .nav-link.active {
-  background-color: var(--nav-tab-active-bg);   /* 🔲 Slightly darker for active tab */
-  color: var(--text-color) !important;          /* 🔷 Info blue text for active tab too */
+  background-color: var(--bs-info);   /* 🔲 Slightly darker for active tab */
+  color: #000 !important;          /* 🔷 Info blue text for active tab too */
   border-color: var(--accent-color) var(--accent-color) transparent; /* ✅ Highlighted border */
 }
 
@@ -47,11 +47,11 @@ body.theme-dark .nav-tabs .nav-link.active {
 ========================================== */
 body.theme-dark #searchInput {
   background-color: var(--search-bg);       /* 🔲 Slightly lighter gray */
-  border: 2px solid var(--accent-color);    /* ✅ Green accent border */
-  color: var(--text-color);                 /* 🔷 Light blue text */
+  border: 2px solid var(--bs-info);    /* ✅ Green accent border */
+  color: var(--bs-info);                 /* 🔷 Light blue text */
 }
 body.theme-dark .counter {
-  background-color: var(--background-color) !important;
+  background-color: var(--text-color) !important;
   color: var(--text-color) !important;
   font-weight: bold;
   padding: 0.25rem 0.75rem;
@@ -67,7 +67,7 @@ body.theme-dark .counter {
 body.theme-dark table,
 body.theme-dark .table,
 body.theme-dark .my-custom-table {
-  background-color: var(--background-color); /* 🔲 Match page background */
+  background-color: var(--nav-tab-bg); /* 🔲 Match page background */
   color: var(--text-color);                  /* 🔷 Info blue text */
 }
 
@@ -76,7 +76,7 @@ body.theme-dark .table td,
 body.theme-dark .my-custom-table thead th,
 body.theme-dark .result-box th,
 body.theme-dark .result-box td {
-  background-color: var(--input-bg);       /* 🔲 Dark background for table cells */
+  background-color: var(--background-color);       /* 🔲 Dark background for table cells */
   color: var(--text-color);                /* 🔷 Light text */
   border-color: var(--border-color);       /* 🟫 Subtle borders */
 }
@@ -96,15 +96,40 @@ body.theme-dark .result-box:hover td {
 }
 
 /* =======================================
-   🧾 FORM ELEMENTS
+   🧾 FORM ELEMENTS (Dark Theme)
 ========================================== */
 body.theme-dark input.form-control,
-body.theme-dark select.form-select {
+body.theme-dark select.form-select,
+body.theme-dark textarea.form-control,
+body.theme-dark textarea.form-control {
   background-color: var(--input-bg);       /* 🔲 Dark input background */
-  border: 1px solid var(--border-color);   /* 🟫 Subtle input border */
+  border: 1px solid var(--bs-info);        /* 🔷 Info border */
   color: var(--text-color);                /* 🔷 Light text */
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
+/* Hover state */
+body.theme-dark input.form-control:hover,
+body.theme-dark select.form-select:hover,
+body.theme-dark textarea.form-control:hover {
+  border-color: var(--bs-info);
+}
+
+/* Focus state */
+body.theme-dark input.form-control:focus,
+body.theme-dark select.form-select:focus,
+body.theme-dark textarea.form-control:focus {
+  border-color: var(--bs-info);
+  box-shadow: 0 0 0 0.2rem rgba(13, 202, 240, 0.25); /* info glow */
+  outline: none;
+}
+body.theme-dark input.form-control-plaintext {
+  background-color: var(--input-bg);       /* Match dark input background */
+  color: var(--text-color);                /* Light text */
+  border: 1px solid var(--bs-info);        /* Same info border */
+  border-radius: 0.375rem;                 /* Match Bootstrap default */
+  padding: 0.375rem 0.75rem;               /* Bootstrap input padding */
+}
 /* =======================================
    🖼 WATERMARK BACKGROUND (Optional)
 ========================================== */
@@ -141,20 +166,21 @@ body.theme-dark .dropdown-item:focus {
   color: var(--accent-color);                 /* ✅ Highlight with success green on hover */
 }
 
-/* ====================================
-   🔘 BUTTONS (General)
-======================================= */
+/* =======================================
+   🔘 BUTTONS (Dark Theme)
+========================================== */
 body.theme-dark .btn {
-  background-color: var(--input-bg);          /* 🖤 Match input background */
-  color: var(--text-color);                   /* 🔷 Info blue text */
-  border: 1px solid var(--border-color);      /* 🟫 Subtle border */
+  background-color: var(--bs-info);     /* 🔷 Bootstrap info color */
+  color: #000;                          /* ⚫ Dark text */
+  border: none;
 }
 
 body.theme-dark .btn:hover,
 body.theme-dark .btn:focus {
-  background-color: var(--nav-tab-active-bg); /* 🔲 Darker on hover */
-  color: var(--accent-color);                 /* ✅ Highlight with green */
-  border-color: var(--accent-color);          /* ✅ Green border */
+  background-color: #31d2f2;            /* Lighter info for hover */
+  color: #000;
+  box-shadow: 0 0 0 0.2rem rgba(13, 202, 240, 0.25); /* glow */
+  outline: none;
 }
 
 /* ====================================
@@ -182,12 +208,20 @@ body.theme-dark .form-label {
 }
 
 /* ====================================
-   🃏 CARD HEADERS
+   🃏 CARDS
 ======================================= */
 body.theme-dark .card-header {
   background-color: var(--input-bg);  /* 🖤 Dark background to match inputs */
   color: var(--text-color);           /* 🔷 Info blue text */
   border-bottom: 1px solid var(--border-color); /* 🟫 Subtle divider */
+}
+body.theme-dark .accordion-body {
+  background-color: var(--background-color);   /* Match input background in dark mode */
+  color: var(--text-color);            /* Match text color */
+  border-top: 1px solid var(--border-color); /* Optional subtle divider */
+}
+body.theme-dark .accordion-body .row {
+  background-color: transparent; /* or use var(--input-bg) if needed */
 }
 
 /* ====================================
