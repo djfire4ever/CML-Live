@@ -208,6 +208,7 @@
     }
   });
 
+  
   // function applyThemeFromPage() {
   //   const theme = document.body.dataset.theme; // e.g., "theme-dark"
   //   if (theme) {

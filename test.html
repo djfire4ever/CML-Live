@@ -1,153 +1,79 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Client Manager</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Navbar Collapse and Hover</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    /* Navbar link hover effect */
+    .nav-link:hover {
+      opacity: 0.8;
+      text-decoration: underline;
+      transition: all 0.2s ease-in-out;
+    }
+  </style>
 </head>
-<body class="theme-dark">
-<div class="watermark"></div>
 
-<!-- <body class="page-body bw-theme" data-page-id="clientManager" data-element="page-bg"> -->
-
-<!-- 💧 Watermark -->
-<div class="watermark"></div>
-
-<!-- 🔔 Toast Notifications -->
-<div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3"></div>
-
-<!-- ⏳ Loader -->
-<div id="loadingOverlay" class="d-none">
-  <div class="text-center text-white">
-    <div class="spinner-border text-light" role="status"></div>
-    <p class="mt-2">Loading... Please wait...</p>
-  </div>
-</div>
-
-<!-- ⬝ Row Template -->
-<template id="rowTemplate">
-  <tr class="result-box" data-element="search-result-box">
-    <th class="clientID" scope="row"></th>
-    <th class="firstName"></th>
-    <th class="lastName"></th>
-    <th class="nickName"></th>
-    <th class="text-center">
-      <div class="btn-group" role="group">
-        <button type="button" class="btn btn-danger delete-confirm-button btn-sm d-none">Confirm</button>
-        <button type="button" class="btn btn-dark btn-sm before-delete-button" data-button-state="delete">Delete</button>
-      </div>
-    </th>
-  </tr>
-</template>
-
-<!-- ⬝ Client Manager Container -->
-<div class="container" data-element="main-container">
-  <h2 class="text-center" data-element="page-title">Client Management</h2>
-
-<!-- 📍 Navigation Tabs -->
-  <ul class="nav nav-tabs" id="clientTabs">
-    <li class="nav-item">
-      <button class="nav-link active text-dark fw-bold" data-element="nav-tab-button" data-bs-toggle="tab" data-bs-target="#tab-search">🔍 Search Client</button>
-    </li>
-    <li class="nav-item">
-      <button class="nav-link text-dark fw-bold" data-element="nav-tab-button" data-bs-toggle="tab" data-bs-target="#tab-add">➕ Add Client</button>
-    </li>
-    <li class="nav-item">
-      <button class="nav-link text-dark fw-bold" data-element="nav-tab-button" data-bs-toggle="tab" data-bs-target="#tab-edit" style="display:none;">✏️ Edit Client</button>
-    </li>
-  </ul>
-
-<!-- 📁 Tab Content -->
-<div class="tab-content client-tab-content" data-element="tab-content">
-
-<!-- 🔍 Search Tab -->
-<div class="tab-pane fade show active" id="tab-search" data-element="tab-group">
-  <div class="input-group mb-2">
-    <input type="text" class="form-control fw-bold" id="searchInput" placeholder="🔍 search..." data-element="search-input-box">
-    <div class="input-group-append">
-      <span class="counter fw-bold" id="searchCounter" data-element="search-counter">🔍</span>
-      <span class="counter fw-bold" id="totalCounter" data-element="search-counter">0</span>
-    </div>
-  </div>
-  <table class="table table-hover my-custom-table fw-bold" data-element="results-table">
-    <thead>
-      <tr>
-        <th>Phone #</th>
-        <th>First Name</th>
-        <th>Last Name</th>
-        <th>Nick Name</th>
-        <th></th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody id="searchResults" data-element="search-results"></tbody>
-  </table>
-</div>
-
-<!-- ➕ Add Client Tab -->
-<div class="tab-pane fade" id="tab-add">
-  <form id="addClientForm">
-    <div class="container"></div>
-      <div class="row g-3">
-        <div class="col-md-2 col-lg-2 fw-bold"><label>Phone Number</label><input type="tel" class="form-control" id="clientID"></div>
-        <div class="col-md-2 col-lg-4 fw-bold"><label>Email</label><input type="email" class="form-control" id="email"></div>
-      </div>
-      <div class="row g-3">
-        <div class="col-md-2 col-lg-2 fw-bold"><label>First Name</label><input type="text" class="form-control" id="firstName"></div>
-        <div class="col-md-2 col-lg-2 fw-bold"><label>Last Name</label><input type="text" class="form-control" id="lastName"></div>
-        <div class="col-md-2 col-lg-2 fw-bold"><label>Nick Name</label><input type="text" class="form-control" id="nickName"></div>
-      </div>
-      <div class="row g-3">
-        <div class="col-md-2 col-lg-6 fw-bold"><label>Street</label><input type="text" class="form-control" id="street"></div>
-      </div>
-      <div class="row g-3">
-        <div class="col-md-2 col-lg-3 fw-bold"><label>City</label><input type="text" class="form-control" id="city"></div>
-        <div class="col-md-1 col-lg-1 fw-bold"><label>State</label><input type="text" class="form-control" id="state"></div>
-        <div class="col-md-1 col-lg-2  fw-bold"><label>Zip</label><input type="number" class="form-control" id="zip"></div>
-      </div>
-      <div class="row g-3">
-        <div class="col-sm-2"><button type="submit" class="btn btn-dark">📅 Save</button></div>
+<body>
+  <!-- Navigation Tabs -->
+  <nav class="navbar navbar-expand-md bg-dark navbar-dark fixed-top">
+    <div class="container-fluid">
+      <a href="index.html" class="navbar-brand text-info">
+        <img src="https://drive.google.com/thumbnail?id=10PMFJh0Yeoin65J5ub6bkH5RY0wSEdf2&sz=w25" alt="Logo"> CraftyMamaaLab
+      </a>
+      <button id="navToggler" class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navmenu" aria-controls="navmenu" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navmenu">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a href="#" class="nav-link text-info" onclick="collapseMenu()">Dashboard</a></li>
+          <li class="nav-item"><a href="#" class="nav-link text-primary" onclick="collapseMenu()">Clients</a></li>
+          <li class="nav-item"><a href="#" class="nav-link text-success" onclick="collapseMenu()">Invoice</a></li>
+          <li class="nav-item"><a href="#" class="nav-link text-info" onclick="collapseMenu()">Materials</a></li>
+          <li class="nav-item"><a href="#" class="nav-link text-danger" onclick="collapseMenu()">Products</a></li>
+          <li class="nav-item"><a href="#" class="nav-link text-warning" onclick="collapseMenu()">Quotes</a></li>
+          <li class="nav-item"><a href="#" class="nav-link text-info" onclick="collapseMenu()">Leads</a></li>
+        </ul>
       </div>
     </div>
-  </div>
-  </form>
-</div>
+  </nav>
 
-<!-- ✏️ Edit Client Tab -->
-<div class="tab-pane fade" id="tab-edit">
-  <form id="editClientForm">
-    <input type="hidden" id="edit-clientID-hidden">
-    <div class="container"></div>
-      <div class="row g-3">
-        <div class="col-md-2 col-lg-2 fw-bold"><label>Phone Number</label><input type="text" class="form-control" id="edit-clientID" readonly></div>
-        <div class="col-md-2 col-lg-4 fw-bold"><label>Email</label><input type="email" class="form-control" id="edit-email"></div>
-      </div>
-      <div class="row g-3">
-        <div class="col-md-2 col-lg-2 fw-bold"><label>First Name</label><input type="text" class="form-control" id="edit-firstName"></div>
-        <div class="col-md-2 col-lg-2 fw-bold"><label>Last Name</label><input type="text" class="form-control" id="edit-lastName"></div>
-        <div class="col-md-2 col-lg-2 fw-bold"><label>Nick Name</label><input type="text" class="form-control" id="edit-nickName"></div>
-      </div>
-      <div class="row g-3">
-        <div class="col-md-2 col-lg-6 fw-bold"><label>Street</label><input type="text" class="form-control" id="edit-street"></div>
-      </div>
-      <div class="row g-3">
-        <div class="col-md-2 col-lg-3 fw-bold"><label>City</label><input type="text" class="form-control" id="edit-city"></div>
-        <div class="col-md-1 col-lg-1 fw-bold"><label>State</label><input type="text" class="form-control" id="edit-state"></div>
-        <div class="col-md-2 col-lg-2 fw-bold"><label>Zip</label><input type="number" class="form-control" id="edit-zip"></div>
-      </div>
-      <div class="row g-3">
-        <div class="col-sm-2"><button type="button" class="btn btn-dark" id="save-changes">📅 Save</button></div>
-      </div>
-  </form>
-  </div>
-</div> <!-- End tab-content -->
-</div> <!-- End container -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- 🧠 Scripts -->
-<script>
-</script>
+  <script>
+    // Function to collapse the navbar when a link is clicked
+    function collapseMenu() {
+      const navMenu = document.getElementById('navmenu');
+      const bsCollapse = new bootstrap.Collapse(navMenu, { toggle: false });
+      if (navMenu.classList.contains('show')) {
+        bsCollapse.hide(); // Collapse the menu
+      }
+    }
 
-<script src="clientmanager.js"></script>
+    // Add hover functionality to show and hide the menu (only for desktop)
+    document.addEventListener('DOMContentLoaded', function () {
+      const navToggler = document.getElementById('navToggler');
+      const navMenu = document.getElementById('navmenu');
 
+      // Open the menu when hovering over the toggler (only for desktop)
+      navToggler.addEventListener('mouseenter', function () {
+        if (window.innerWidth >= 768 && !navMenu.classList.contains('show')) {
+          const bsCollapse = new bootstrap.Collapse(navMenu, { toggle: false });
+          bsCollapse.show(); // Show the menu
+        }
+      });
+
+      // Close the menu when mouse leaves the navMenu (only for desktop)
+      navMenu.addEventListener('mouseleave', function () {
+        if (window.innerWidth >= 768 && navMenu.classList.contains('show')) {
+          const bsCollapse = new bootstrap.Collapse(navMenu, { toggle: false });
+          bsCollapse.hide(); // Hide the menu
+        }
+      });
+    });
+  </script>
 </body>
+
 </html>
