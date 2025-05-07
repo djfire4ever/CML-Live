@@ -60,7 +60,7 @@
     setTimeout(() => {
       toast.classList.remove("show");
       setTimeout(() => toast.remove(), 500);
-    }, 10000);
+    }, 1000);
   }
 
   function toggleLoader() {
@@ -154,35 +154,43 @@
       })
       .then(data => {
         const dropdowns = {
-          productTypeDatalist: "product-type-options",
-          partsDatalist: "parts-options",
-          phoneDatalist: "phone-options",
-          unitTypeDatalist: "unit-type-options",
-          paymentMethodDatalist: "payment-method-options",
-          productDatalist: "product-options"
+          productTypeDropdown: "product-type-options",
+          partsDropdown: "parts-options",
+          phoneDropdown: "phone-options",
+          unitTypeDropdown: "unit-type-options",
+          paymentMethodDropdown: "payment-method-options",
+          productDropdown: "product-options"
         };
-
-        for (const [key, datalistId] of Object.entries(dropdowns)) {
-          const datalistElement = document.getElementById(datalistId);
-          if (datalistElement) {
-            datalistElement.innerHTML = "";
-
+  
+        for (const [key, selectId] of Object.entries(dropdowns)) {
+          const selectElement = document.getElementById(selectId);
+          if (selectElement) {
+            selectElement.innerHTML = ""; // Clear existing options
+  
+            // Add a default "Select" option
+            const defaultOption = document.createElement("option");
+            defaultOption.value = "";
+            defaultOption.textContent = "Select an option";
+            selectElement.appendChild(defaultOption);
+  
             let values = [];
-            if (key === "productTypeDatalist") values = data.productTypes || [];
-            else if (key === "partsDatalist") values = data.parts || [];
-            else if (key === "phoneDatalist") values = data.phoneList || [];
-            else if (key === "unitTypeDatalist") values = data.unitTypes || [];
-            else if (key === "paymentMethodDatalist") values = data.paymentMethods || [];
-            else if (key === "productDatalist") values = data.products || [];
-
+            if (key === "productTypeDropdown") values = data.productTypes || [];
+            else if (key === "partsDropdown") values = data.parts || [];
+            else if (key === "phoneDropdown") values = data.phoneList || [];
+            else if (key === "unitTypeDropdown") values = data.unitTypes || [];
+            else if (key === "paymentMethodDropdown") values = data.paymentMethods || [];
+            else if (key === "productDropdown") values = data.products || [];
+  
+            // Populate the dropdown with options
             values.forEach(val => {
               const option = document.createElement("option");
               option.value = val;
-              datalistElement.appendChild(option);
+              option.textContent = val;
+              selectElement.appendChild(option);
             });
           }
         }
-
+  
         console.log("✅ Dropdowns loaded successfully");
       })
       .catch(error => {

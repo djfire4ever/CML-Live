@@ -1,9 +1,3 @@
-// ✅ Utility: Show Edit Tab
-function showEditTab() {
-    const editTab = document.querySelector('[data-bs-target="#edit-quote"]');
-    if (editTab) new bootstrap.Tab(editTab).show();
-}
-
 // ✅ Utility: Create or get counter elements
 function getOrCreateCounter(id, classList, parent, insertAfter = null) {
     let el = document.getElementById(id);
@@ -20,6 +14,12 @@ function getOrCreateCounter(id, classList, parent, insertAfter = null) {
     return el;
 }
 
+// ✅ Utility: Show Edit Tab
+function showEditTab() {
+  const editTab = document.querySelector('[data-bs-target="#edit-quote"]');
+  if (editTab) new bootstrap.Tab(editTab).show();
+}
+
 // ✅ DOM Ready
 document.addEventListener("DOMContentLoaded", () => {
     const searchInput = document.getElementById("searchInput");
@@ -32,7 +32,6 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
         console.error("❌ Search input not found!");
     }
-
     if (searchTabButton) {
         searchTabButton.addEventListener("shown.bs.tab", () => {
             if (searchInput) {
@@ -44,15 +43,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 searchCounter.textContent = "";
                 searchCounter.classList.add("text-success", "text-dark", "fw-bold");
             }
-            
-        });
+          });
     }
 
     if (searchResultsBox) searchResultsBox.innerHTML = "";
 
     toggleLoader();
     setQuoteDataForSearch();
-    setTimeout(toggleLoader, 2000);
+    setTimeout(toggleLoader, 500);
     // Add event listener for the discount field
     document.getElementById("edit-discount")?.addEventListener("change", calculateAllTotals);
 });
@@ -82,8 +80,8 @@ function search() {
         searchInputEl.parentNode.insertBefore(counterContainer, searchInputEl.nextSibling);
     }
 
-    const searchCounter = getOrCreateCounter("searchCounter", ["px-2", "py-1", "border", "rounded", "fw-bold", "bg-success", "text-dark"], counterContainer);
-    const totalCounter = getOrCreateCounter("totalCounter", ["px-3", "py-1", "border", "rounded", "fw-bold", "bg-light", "text-dark"], counterContainer, searchCounter);
+    const searchCounter = getOrCreateCounter("searchCounter", ["px-2", "py-1", "border", "rounded", "fw-bold", "bg-dark", "text-info"], counterContainer);
+    const totalCounter = getOrCreateCounter("totalCounter", ["px-2", "py-1", "border", "rounded", "fw-bold", "bg-dark", "text-info"], counterContainer, searchCounter);
 
     toggleLoader();
 
@@ -103,68 +101,78 @@ function search() {
 
     const template = document.getElementById("rowTemplate").content;
     results.forEach(r => {
-        const row = template.cloneNode(true);
-        row.querySelector(".qtID").textContent = r[0];
-        row.querySelector(".firstName").textContent = r[2]; // change this
-        row.querySelector(".lastName").textContent = r[3];
-        row.querySelector(".eventDate").textContent = r[9];
-        row.querySelector(".edit-button").dataset.quoteid = r[0];
-        row.querySelector(".delete-button").dataset.quoteid = r[0];
-        searchResultsBox.appendChild(row);
-    });
+      const row = template.cloneNode(true);
+      row.querySelector(".qtID").textContent = r[0];
+      row.querySelector(".firstName").textContent = r[2];
+      row.querySelector(".lastName").textContent = r[3];
+      row.querySelector(".eventDate").textContent = r[9];
+  
+      // ✅ Set qtID directly on the row for click handling
+      const tr = row.querySelector("tr");
+      tr.dataset.quoteid = r[0];
+  
+      // ✅ Still set delete buttons if needed
+      const deleteBtn = row.querySelector(".delete-button");
+      const confirmBtn = row.querySelector(".before-delete-button");
+      if (deleteBtn) deleteBtn.dataset.quoteid = r[0];
+      if (confirmBtn) confirmBtn.dataset.quoteid = r[0];
+  
+      searchResultsBox.appendChild(row);
+  });
 
-    toggleLoader();
+  toggleLoader();
 }
 
 // ✅ Unified Click Handler for Search Results
 document.getElementById("searchResults").addEventListener("click", event => {
-    const target = event.target;
+  const target = event.target;
 
-    // Confirm Delete Toggle
-    if (target.classList.contains("before-delete-button")) {
-        const confirmBtn = target.previousElementSibling;
-        const isDelete = target.dataset.buttonState === "delete";
-        confirmBtn?.classList.toggle("d-none", !isDelete);
-        target.textContent = isDelete ? "Cancel" : "Delete";
-        target.dataset.buttonState = isDelete ? "cancel" : "delete";
-        return;
-    }
+  // Confirm Delete Toggle
+  if (target.classList.contains("before-delete-button")) {
+      const confirmBtn = target.previousElementSibling;
+      const isDelete = target.dataset.buttonState === "delete";
+      confirmBtn?.classList.toggle("d-none", !isDelete);
+      target.textContent = isDelete ? "Cancel" : "Delete";
+      target.dataset.buttonState = isDelete ? "cancel" : "delete";
+      return;
+  }
 
-    // Perform Delete
-    if (target.classList.contains("delete-button")) {
-        const qtID = target.dataset.quoteid?.trim();
-        if (!qtID) return showToast("⚠️ Quote ID missing", "error");
+  // Perform Delete
+  if (target.classList.contains("delete-button")) {
+      const qtID = target.dataset.quoteid?.trim();
+      if (!qtID) return showToast("⚠️ Quote ID missing", "error");
 
-        toggleLoader();
-        fetch(scriptURL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ system: "quotes", action: "delete", qtID })
-        })
-        .then(res => res.json())
-        .then(result => {
-            if (result.success) {
-                showToast("✅ Quote deleted!", "success");
-                document.getElementById("searchInput").value = "";
-                document.getElementById("searchResults").innerHTML = "";
-                setQuoteDataForSearch();
-            } else {
-                showToast("⚠️ Could not delete quote.", "error");
-            }
-        })
-        .catch(() => showToast("⚠️ Error occurred while deleting quote.", "error"))
-        .finally(toggleLoader);
-        return;
-    }
+      toggleLoader();
+      fetch(scriptURL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ system: "quotes", action: "delete", qtID })
+      })
+      .then(res => res.json())
+      .then(result => {
+          if (result.success) {
+              showToast("✅ Quote deleted!", "success");
+              document.getElementById("searchInput").value = "";
+              document.getElementById("searchResults").innerHTML = "";
+              setQuoteDataForSearch();
+          } else {
+              showToast("⚠️ Could not delete quote.", "error");
+          }
+      })
+      .catch(() => showToast("⚠️ Error occurred while deleting quote.", "error"))
+      .finally(toggleLoader);
+      return;
+  }
 
-    // Handle Edit
-    const editBtn = target.closest(".edit-button");
-    if (editBtn) {
-        const qtID = editBtn.dataset.quoteid;
-        if (!qtID) return console.error("❌ Error: Missing qtID!");
-        populateEditForm(qtID);
-        showEditTab();
-    }
+// Handle row click for editing
+const row = target.closest("tr");
+if (row && row.dataset.quoteid && !target.closest(".btn-group")) {
+    const qtID = row.dataset.quoteid;
+    populateEditForm(qtID);
+    showEditTab();
+    return;
+}
+
 });
 
 // ✅ Utility functions

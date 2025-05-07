@@ -22,7 +22,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (resultsBox) resultsBox.innerHTML = "";
     toggleLoader();
     await setDataForSearch();
-    setTimeout(toggleLoader, 1000);
+    setTimeout(toggleLoader, 500);
   });
   
   // ✅ Global Search Data
@@ -86,10 +86,10 @@ document.addEventListener("DOMContentLoaded", async () => {
           confirmBtn.dataset.clientid = r[0];
   
           tr.addEventListener("click", async () => {
-            toggleLoader(true);
+            // toggleLoader(true);
             await populateEditForm(r[0]);
             new bootstrap.Tab(document.querySelector('[data-bs-target="#tab-edit"]')).show();
-            toggleLoader(false);
+            // toggleLoader(false);
           });
   
           deleteBtn.addEventListener("click", e => {
@@ -105,7 +105,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             const clientID = e.currentTarget.dataset.clientid;
             if (!clientID) return showToast("⚠️ Client ID missing", "error");
   
-            toggleLoader(true);
+            // toggleLoader(true);
             try {
               const res = await fetch(scriptURL, {
                 method: "POST",
@@ -122,7 +122,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             } catch {
               showToast("⚠️ Error occurred while deleting client.", "error");
             } finally {
-              toggleLoader(false);
+              // toggleLoader(false);
             }
           });
   
@@ -130,7 +130,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
       }
     }
-    toggleLoader(false);
+    // toggleLoader(false);
   }
   
 // ✅ Populate Edit Form
@@ -192,6 +192,7 @@ saveEditBtn?.addEventListener("click", async () => {
   } finally {
     toggleLoader();
   }
+  window.scrollTo(0, 0);
 });
 
 // ✅ Add New Client

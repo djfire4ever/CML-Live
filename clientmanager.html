@@ -17,8 +17,8 @@
 
 <!-- ⏳ Loader -->
 <div id="loadingOverlay" class="d-none">
-  <div class="text-center text-white">
-    <div class="spinner-border text-light" role="status"></div>
+  <div class="text-center text-info">
+    <div class="spinner-border text-info" role="status"></div>
     <p class="mt-2">Loading... Please wait...</p>
   </div>
 </div>
@@ -42,19 +42,19 @@
 <button onclick="applyThemeFromPage()">Toggle Theme</button>
 
 <!-- ⬝ Client Manager Container -->
-<div class="container" data-element="main-container">
+<div class="container p-2x" data-element="main-container">
   <h2 class="text-center" data-element="page-title">Client Management</h2>
 
 <!-- 📍 Navigation Tabs -->
   <ul class="nav nav-tabs" id="clientTabs">
     <li class="nav-item">
-      <button class="nav-link active text-dark fw-bold" data-element="nav-tab-button" data-bs-toggle="tab" data-bs-target="#tab-search">🔍 Search Client</button>
+      <button class="nav-link active" data-element="nav-tab-button" data-bs-toggle="tab" data-bs-target="#tab-search">🔍 Search Client</button>
     </li>
     <li class="nav-item">
-      <button class="nav-link text-dark fw-bold" data-element="nav-tab-button" data-bs-toggle="tab" data-bs-target="#tab-add">➕ Add Client</button>
+      <button class="nav-link" data-element="nav-tab-button" data-bs-toggle="tab" data-bs-target="#tab-add">➕ Add Client</button>
     </li>
     <li class="nav-item">
-      <button class="nav-link text-dark fw-bold" data-element="nav-tab-button" data-bs-toggle="tab" data-bs-target="#tab-edit" style="display:none;">✏️ Edit Client</button>
+      <button class="nav-link" data-element="nav-tab-button" data-bs-toggle="tab" data-bs-target="#tab-edit" style="display:none;">✏️ Edit Client</button>
     </li>
   </ul>
 
@@ -64,13 +64,13 @@
 <!-- 🔍 Search Tab -->
 <div class="tab-pane fade show active" id="tab-search" data-element="tab-group">
   <div class="input-group mb-2">
-    <input type="text" class="form-control fw-bold" id="searchInput" placeholder="🔍 search..." data-element="search-input-box">
+    <input type="text" class="form-control" id="searchInput" placeholder="🔍 search..." data-element="search-input-box">
     <div class="input-group-append">
-      <span class="counter fw-bold" id="searchCounter" data-element="search-counter">🔍</span>
-      <span class="counter fw-bold" id="totalCounter" data-element="search-counter">0</span>
+      <span class="counter" id="searchCounter" data-element="search-counter">🔍</span>
+      <span class="counter" id="totalCounter" data-element="search-counter">0</span>
     </div>
   </div>
-  <table class="table table-hover my-custom-table fw-bold" data-element="results-table">
+  <table class="table table-hover my-custom-table" data-element="results-table">
     <thead>
       <tr>
         <th>Phone #</th>
@@ -86,25 +86,25 @@
 </div>
 
 <!-- ➕ Add Client Tab -->
-<div class="tab-pane fade" id="tab-add">
+<div class="tab-pane fade p-2" id="tab-add">
   <form id="addClientForm">
     <div class="container"></div>
       <div class="row g-3">
-        <div class="col-md-2 col-lg-2 fw-bold"><label>Phone Number</label><input type="tel" class="form-control" id="clientID"></div>
-        <div class="col-md-2 col-lg-4 fw-bold"><label>Email</label><input type="email" class="form-control" id="email"></div>
+        <div class="col-md-2 col-lg-2 p-2"><label>Phone Number</label><input type="tel" class="form-control" id="clientID"></div>
+        <div class="col-md-4 col-lg-4"><label>Email</label><input type="email" class="form-control" id="email"></div>
       </div>
       <div class="row g-3">
-        <div class="col-md-2 col-lg-2 fw-bold"><label>First Name</label><input type="text" class="form-control" id="firstName"></div>
-        <div class="col-md-2 col-lg-2 fw-bold"><label>Last Name</label><input type="text" class="form-control" id="lastName"></div>
-        <div class="col-md-2 col-lg-2 fw-bold"><label>Nick Name</label><input type="text" class="form-control" id="nickName"></div>
+        <div class="col-md-2 col-lg-2"><label>First Name</label><input type="text" class="form-control" id="firstName"></div>
+        <div class="col-md-2 col-lg-2"><label>Last Name</label><input type="text" class="form-control" id="lastName"></div>
+        <div class="col-md-2 col-lg-2"><label>Nick Name</label><input type="text" class="form-control" id="nickName"></div>
       </div>
       <div class="row g-3">
-        <div class="col-md-2 col-lg-6 fw-bold"><label>Street</label><input type="text" class="form-control" id="street"></div>
+        <div class="col-md-6 col-lg-6"><label>Street</label><input type="text" class="form-control" id="street"></div>
       </div>
       <div class="row g-3">
-        <div class="col-md-2 col-lg-3 fw-bold"><label>City</label><input type="text" class="form-control" id="city"></div>
-        <div class="col-md-1 col-lg-1 fw-bold"><label>State</label><input type="text" class="form-control" id="state"></div>
-        <div class="col-md-1 col-lg-2  fw-bold"><label>Zip</label><input type="number" class="form-control" id="zip"></div>
+        <div class="col-md-3 col-lg-3"><label>City</label><input type="text" class="form-control" id="city"></div>
+        <div class="col-md-1 col-lg-1"><label>State</label><input type="text" class="form-control" id="state"></div>
+        <div class="col-md-2 col-lg-2 "><label>Zip</label><input type="number" class="form-control" id="zip"></div>
       </div>
       <div class="row g-3 mt-2">
         <div class="col-sm-2"><button type="submit" class="btn btn-dark">📅 Save</button></div>
@@ -115,26 +115,26 @@
 </div>
 
 <!-- ✏️ Edit Client Tab -->
-<div class="tab-pane fade" id="tab-edit">
+<div class="tab-pane fade p-2" id="tab-edit">
   <form id="editClientForm">
     <input type="hidden" id="edit-clientID-hidden">
     <div class="container"></div>
       <div class="row g-3">
-        <div class="col-md-2 col-lg-2 fw-bold"><label>Phone Number</label><input type="text" class="form-control" id="edit-clientID" readonly></div>
-        <div class="col-md-2 col-lg-4 fw-bold"><label>Email</label><input type="email" class="form-control" id="edit-email"></div>
+        <div class="col-md-2 col-lg-2"><label>Phone Number</label><input type="text" class="form-control" id="edit-clientID" readonly></div>
+        <div class="col-md-2 col-lg-4"><label>Email</label><input type="email" class="form-control" id="edit-email"></div>
       </div>
       <div class="row g-3">
-        <div class="col-md-2 col-lg-2 fw-bold"><label>First Name</label><input type="text" class="form-control" id="edit-firstName"></div>
-        <div class="col-md-2 col-lg-2 fw-bold"><label>Last Name</label><input type="text" class="form-control" id="edit-lastName"></div>
-        <div class="col-md-2 col-lg-2 fw-bold"><label>Nick Name</label><input type="text" class="form-control" id="edit-nickName"></div>
+        <div class="col-md-2 col-lg-2"><label>First Name</label><input type="text" class="form-control" id="edit-firstName"></div>
+        <div class="col-md-2 col-lg-2"><label>Last Name</label><input type="text" class="form-control" id="edit-lastName"></div>
+        <div class="col-md-2 col-lg-2"><label>Nick Name</label><input type="text" class="form-control" id="edit-nickName"></div>
       </div>
       <div class="row g-3">
-        <div class="col-md-2 col-lg-6 fw-bold"><label>Street</label><input type="text" class="form-control" id="edit-street"></div>
+        <div class="col-md-2 col-lg-6"><label>Street</label><input type="text" class="form-control" id="edit-street"></div>
       </div>
       <div class="row g-3">
-        <div class="col-md-2 col-lg-3 fw-bold"><label>City</label><input type="text" class="form-control" id="edit-city"></div>
-        <div class="col-md-1 col-lg-1 fw-bold"><label>State</label><input type="text" class="form-control" id="edit-state"></div>
-        <div class="col-md-2 col-lg-2 fw-bold"><label>Zip</label><input type="number" class="form-control" id="edit-zip"></div>
+        <div class="col-md-2 col-lg-3"><label>City</label><input type="text" class="form-control" id="edit-city"></div>
+        <div class="col-md-1 col-lg-1"><label>State</label><input type="text" class="form-control" id="edit-state"></div>
+        <div class="col-md-2 col-lg-2"><label>Zip</label><input type="number" class="form-control" id="edit-zip"></div>
       </div>
       <div class="row g-3 mt-2">
         <div class="col-sm-2"><button type="button" class="btn btn-dark" id="save-changes">📅 Save</button></div>

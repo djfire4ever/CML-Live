@@ -18,8 +18,8 @@
 
 <!-- Loader -->
 <div id="loadingOverlay" class="d-none" data-element="loading-overlay">
-  <div class="text-center text-white">
-    <div class="spinner-border text-light" role="status"></div>
+  <div class="text-center text-info">
+    <div class="spinner-border text-info" role="status"></div>
     <p class="mt-2">Loading... Please wait...</p>
   </div>
 </div>
@@ -33,12 +33,12 @@
       <th class="cost"></th>
       <th class="retail"></th>
       <th class="text-center">
-      <button type="button" class="btn btn-dark edit-button btn-sm" data-element="edit-button">Edit</button>
+      <!-- <button type="button" class="btn btn-dark edit-button btn-sm" data-element="edit-button">Edit</button> -->
     </th>
     <th class="text-center">
       <div class="btn-group" role="group">
-        <button type="button" class="btn btn-danger delete-button btn-sm d-none" data-element="delete-confirm-button">Confirm</button>
-        <button type="button" class="btn btn-dark btn-sm before-delete-button" data-button-state="delete" data-element="delete-button">Delete</button>
+        <button type="button" class="btn delete-button btn-sm d-none" data-element="delete-confirm-button">Confirm</button>
+        <button type="button" class="btn btn-sm before-delete-button" data-button-state="delete" data-element="delete-button">Delete</button>
       </div>
     </th>
   </tr>
@@ -53,15 +53,15 @@
 <section class="product-tabs-nav">
   <ul class="nav nav-tabs" id="productTabs" data-element="tab-group">
     <li class="nav-item">
-      <button class="nav-link active text-dark fw-bold" data-element="tab" data-bs-toggle="tab" data-bs-target="#search-product">🔍 Search Product</button>
+      <button class="nav-link active" data-element="tab" data-bs-toggle="tab" data-bs-target="#search-product">🔍 Search Product</button>
     </li>
     <li class="nav-item">
-      <button class="nav-link text-dark fw-bold" data-element="tab" data-bs-toggle="tab" data-bs-target="#add-product">
+      <button class="nav-link" data-element="tab" data-bs-toggle="tab" data-bs-target="#add-product">
         <i class="bi bi-person-plus-fill"></i> Add Product
       </button>
     </li>
     <li class="nav-item">
-      <button class="nav-link text-dark fw-bold" data-element="tab" data-bs-toggle="tab" data-bs-target="#edit-client" style="display:none;">✏️ Edit Product</button>
+      <button class="nav-link" data-element="tab" data-bs-toggle="tab" data-bs-target="#edit-product" style="display:none;">✏️ Edit Product</button>
     </li>
   </ul>
 </section>
@@ -74,12 +74,12 @@
 <div class="tab-pane fade show active" id="search-product" data-element="tab-pane">
   <section class="search-product">
   <div class="input-group mb-2" data-element="search-box">
-    <input type="text" class="form-control fw-bold" id="searchInput" placeholder="🔍 search..." data-element="search-input">
+    <input type="text" class="form-control" id="searchInput" placeholder="🔍 search..." data-element="search-input">
   <div class="input-group-append">
-    <span class="input-group-text fw-bold" id="searchCounter" data-element="search-icon">🔍</span> 
+    <span class="input-group-text" id="searchCounter" data-element="search-icon">🔍</span> 
   </div>
 </div>
-<table class="table table-hover my-custom-table fw-bold" data-element="results-table">
+<table class="table table-hover my-custom-table" data-element="results-table">
   <thead>
     <tr>
       <th>#</th>
@@ -101,19 +101,19 @@
   <form id="addProductForm">
     <input type="hidden" id="add-product-id">
     <div class="row g-3">
-      <div class="col-sm-1 fw-bold"><label><b>ID#</b></label><input type="text" class="form-control" id="add-prodID" readonly></div>
-      <div class="col-sm-4 fw-bold"><label><b>Name</b></label><input type="text" class="form-control" id="add-productName"></div>
-      <div class="col-sm-2 fw-bold"><label><b>Type</b></label><input type="text" class="form-select" id="add-productType" list="product-type-options" placeholder="Select Type"><datalist id="product-type-options"></datalist></div>
-      <div class="col-sm-2 fw-bold"><label><b>Cost $</b></label><input type="text" class="form-control" id="add-totalProductCost" readonly></div>
-      <div class="col-sm-2 fw-bold"><label><b>Retail $</b></label><input type="text" class="form-control" id="add-totalProductRetail" readonly></div>
-      <div class="col-sm-1 fw-bold"><label><b>C/Time</b></label><input type="text" class="form-control" id="add-compTime"></div>
+      <div class="col-sm-1"><label><b>ID#</b></label><input type="text" class="form-control" id="add-prodID" readonly></div>
+      <div class="col-sm-4"><label><b>Name</b></label><input type="text" class="form-control" id="add-productName"></div>
+      <div class="col-sm-2"><label><b>Type</b></label><input type="text" class="form-select" id="add-productType" list="product-type-options" placeholder="Select Type"><datalist id="product-type-options"></datalist></div>
+      <div class="col-sm-2"><label><b>Cost $</b></label><input type="text" class="form-control" id="add-totalProductCost" readonly></div>
+      <div class="col-sm-2"><label><b>Retail $</b></label><input type="text" class="form-control" id="add-totalProductRetail" readonly></div>
+      <div class="col-sm-1"><label><b>C/Time</b></label><input type="text" class="form-control" id="add-compTime"></div>
 
       <input type="hidden" class="add-mat-id">
       <input type="hidden" id="add-cost" />
       <input type="hidden" id="add-retail" />
       <datalist id="row-parts-selector"></datalist>
 
-      <div class="row fw-bold mb-0 part-row-headers">
+      <div class="row mb-0 part-row-headers">
         <div class="col-md-5">Part</div>
         <div class="col-md-2">Qty</div>
         <div class="col-md-2">Cost $</div>
@@ -131,7 +131,7 @@
       </div>
 
       <div class="row g-3 mt-3">
-        <div class="col-sm-12"><button class="btn btn-dark fw-bold" id="save-new-product">💾 Save</button></div>
+        <div class="col-sm-12"><button class="btn btn-dark" id="save-new-product">💾 Save</button></div>
       </div>
     </div>
   </form>
@@ -155,7 +155,7 @@
     <input type="hidden" id="edit-retail" />
     <datalist id="row-parts-selector"></datalist>
 
-    <div class="row fw-bold mb-0 part-row-headers">
+    <div class="row mb-0 part-row-headers">
       <div class="col-md-5">Part</div>
       <div class="col-md-2">Qty</div>
       <div class="col-md-2">Cost $</div>
@@ -173,7 +173,7 @@
     </div>
 
     <div class="row g-3 mt-3">
-      <div class="col-sm-12"><button class="btn btn-dark fw-bold" id="save-changes">💾 Save</button></div>
+      <div class="col-sm-12"><button class="btn btn-dark" id="save-changes">💾 Save</button></div>
     </div>
   </form>
 </div>

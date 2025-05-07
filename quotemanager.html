@@ -15,8 +15,8 @@
 
 <!-- Loader -->
 <div id="loadingOverlay" class="d-none">
-  <div class="text-center text-white">
-      <div class="spinner-border text-light" role="status"></div>
+  <div class="text-center text-info">
+      <div class="spinner-border text-info" role="status"></div>
       <p class="mt-2">Loading... Please wait...</p>
   </div>
 </div>
@@ -28,10 +28,10 @@
 
 <!-- Navigation Tabs -->
 <ul class="nav nav-tabs" id="quoteTabs">
-  <li class="nav-item"><button class="nav-link active text-dark fw-bold" data-bs-toggle="tab" data-bs-target="#search-quote">🔍 Search Quote</button></li>
-  <li class="nav-item"><button class="nav-link text-dark fw-bold" data-bs-toggle="tab" data-bs-target="#add-quote">➕ Add Quote</button></li>
-  <!-- <li class="nav-item"><button class="nav-link text-dark fw-bold" data-bs-toggle="tab" data-bs-target="#edit-quote">✏️ Edit Quote</button></li> Hidden tab -->
-  <li class="nav-item"><button class="nav-link text-dark fw-bold" data-bs-toggle="tab" data-bs-target="#edit-quote" style="display:none;">✏️ Edit Quote</button></li>
+  <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#search-quote">🔍 Search Quote</button></li>
+  <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#add-quote">➕ Add Quote</button></li>
+  <!-- <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#edit-quote">✏️ Edit Quote</button></li> Hidden tab -->
+  <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#edit-quote" style="display:none;">✏️ Edit Quote</button></li>
 </ul>
 
 
@@ -42,14 +42,12 @@
     <th class="firstName"></th>
     <th class="lastName"></th>
     <th class="eventDate"></th>
+    <!-- <th class="text-center"><button type="button" class="btn btn-dark edit-button btn-sm">View</button></th> -->
     <th class="text-center">
-      <button type="button" class="btn btn-dark edit-button btn-sm">Edit</button>
-    </th>
-    <th class="text-center">
-      <button type="button" class="btn btn-dark edit-button btn-sm d-none">View</button>
+      <button type="button" class="btn edit-button btn-sm d-none">Edit</button>
       <div class="btn-group" role="group">
-        <button type="button" class="btn btn-danger delete-button btn-sm d-none">Confirm</button>
-        <button type="button" class="btn btn-dark btn-sm before-delete-button" data-button-state="delete">Delete</button>
+        <button type="button" class="btn delete-button btn-sm d-none">Confirm</button>
+        <button type="button" class="btn btn-sm before-delete-button" data-button-state="delete">Delete</button>
       </div>
     </th>
   </tr>
@@ -61,12 +59,12 @@
 <!-- 🔍 Search Quote -->
 <div class="tab-pane fade show active" id="search-quote">
   <div class="input-group">
-    <input type="text" class="form-control text-dark fw-bold" id="searchInput" placeholder="🔍 search...">
+    <input type="text" class="form-control" id="searchInput" placeholder="🔍 search...">
       <div class="input-group-append">
-        <span class="input-group-text fw-bold" id="searchCounter">🔍</span> 
+        <span class="input-group-text" id="searchCounter">🔍</span> 
       </div>
   </div>
-  <table class="table table-hover my-custom-table fw-bold">
+  <table class="table table-hover my-custom-table">
     <thead>
       <tr>
         <th>#</th>
@@ -105,22 +103,22 @@
     <div id="edit-collapseClient" class="accordion-collapse collapse" aria-labelledby="edit-headingClient" data-bs-parent="#edit-AccordionR1C1">
       <div class="accordion-body">
         <div class="row g-3">
-          <div class="col-sm-6"><label class="form-label fw-bold">Phone</label><input type="text" readonly class="form-control-plaintext" id="edit-phone"></div>
+          <div class="col-sm-6"><label class="form-label">Phone</label><input type="text" readonly class="form-control-plaintext" id="edit-phone"></div>
         </div>
         <div class="row g-3">
-          <div class="col-sm-4"><label class="form-label fw-bold">First Name</label><input type="text" readonly class="form-control-plaintext" id="edit-firstName"></div>
-          <div class="col-sm-8"><label class="form-label fw-bold">Last Name</label><input type="text" readonly class="form-control-plaintext" id="edit-lastName"></div>
+          <div class="col-sm-4"><label class="form-label">First Name</label><input type="text" readonly class="form-control-plaintext" id="edit-firstName"></div>
+          <div class="col-sm-8"><label class="form-label">Last Name</label><input type="text" readonly class="form-control-plaintext" id="edit-lastName"></div>
         </div>
         <div class="row g-3">
-          <div class="col-sm-12"><label class="form-label fw-bold">Email</label><input type="text" readonly class="form-control-plaintext" id="edit-email"></div>
+          <div class="col-sm-12"><label class="form-label">Email</label><input type="text" readonly class="form-control-plaintext" id="edit-email"></div>
         </div>
         <div class="row g-3">
-          <div class="col-12"><label class="form-label fw-bold">Street</label><input type="text" readonly class="form-control-plaintext" id="edit-street"></div>
+          <div class="col-12"><label class="form-label">Street</label><input type="text" readonly class="form-control-plaintext" id="edit-street"></div>
         </div>
         <div class="row g-3">
-          <div class="col-sm-5"><label class="form-label fw-bold">City</label><input type="text" readonly class="form-control-plaintext" id="edit-city"></div>
-          <div class="col-sm-3"><label class="form-label fw-bold">State</label><input type="text" readonly class="form-control-plaintext" id="edit-state"></div>
-          <div class="col-sm-4"><label class="form-label fw-bold">Zip</label><input type="text" readonly class="form-control-plaintext" id="edit-zip"></div>
+          <div class="col-sm-5"><label class="form-label">City</label><input type="text" readonly class="form-control-plaintext" id="edit-city"></div>
+          <div class="col-sm-3"><label class="form-label">State</label><input type="text" readonly class="form-control-plaintext" id="edit-state"></div>
+          <div class="col-sm-4"><label class="form-label">Zip</label><input type="text" readonly class="form-control-plaintext" id="edit-zip"></div>
         </div>
       </div>
     </div>
@@ -145,23 +143,23 @@
           <div class="container-fluid px-0">
             <!-- Delivery Fee -->
             <div class="row py-1 border-bottom align-items-center">
-              <div class="col-6 fw-bold">Delivery Fee</div>
+              <div class="col-6">Delivery Fee</div>
               <div class="col-6 text-end"><input type="text" class="form-control form-control-sm text-end" id="edit-deliveryFee"></div>
             </div>
             <!-- Setup Fee -->
             <div class="row py-1 border-bottom align-items-center">
-              <div class="col-6 fw-bold">Setup Fee</div>
+              <div class="col-6">Setup Fee</div>
               <div class="col-6 text-end"><input type="text" class="form-control form-control-sm text-end" id="edit-setupFee"></div>
             </div>
             <!-- Other Fee -->
             <div class="row py-1 border-bottom align-items-center">
-              <div class="col-6 fw-bold">Other Fee</div>
+              <div class="col-6">Other Fee</div>
               <div class="col-6 text-end"><input type="text" class="form-control form-control-sm text-end" id="edit-otherFee"></div>
             </div>
             <!-- Add-ons Total -->
             <div class="row pt-2 mt-2 border-top align-items-center">
-              <div class="col-6 fw-bold fs-5">Add-ons Total</div>
-              <div class="col-6 text-end fw-bold fs-5 text-primary" id="edit-addonsTotal"></div>
+              <div class="col-6 fs-5">Add-ons Total</div>
+              <div class="col-6 text-end fs-5 text-primary" id="edit-addonsTotal"></div>
             </div>
           </div>
         </div>
@@ -187,35 +185,35 @@
         <div class="container-fluid px-0">
           <!-- Total Cost -->
           <div class="row border-bottom py-1">
-            <div class="col-6 fw-bold">Total Cost</div>
+            <div class="col-6">Total Cost</div>
             <div class="col-6 text-end" id="edit-totalProductCost"></div>
           </div>
           <!-- Total Retail -->
           <div class="row border-bottom py-1">
-            <div class="col-6 fw-bold">Total Retail</div>
+            <div class="col-6">Total Retail</div>
             <div class="col-6 text-end" id="edit-totalProductRetail"></div>
           </div>
           <!-- + Tax -->
           <div class="row border-bottom py-1">
-            <div class="col-4 fw-bold">+ Tax</div>
+            <div class="col-4">+ Tax</div>
             <div class="col-4 text-end"><input type="text" readonly class="form-control-plaintext form-control-sm text-end" id="edit-subTotal1"></div>
             <div class="col-4 text-end"><input type="text" readonly class="form-control-plaintext form-control-sm text-end" id="edit-subTotal2"></div>
           </div>
           <!-- Discount -->
           <div class="row border-bottom py-1 align-items-center">
-            <div class="col-4 fw-bold">- Discount</div>
+            <div class="col-4">- Discount</div>
             <div class="col-4 text-end"><input type="text" class="form-control form-control-sm" id="edit-discount"></div>
             <div class="col-4 text-end"><input type="text" readonly class="form-control-plaintext form-control-sm text-end" id="edit-subTotal3"></div>
           </div>
           <!-- Plus Add-Ons Total -->
           <div class="row border-bottom py-1 align-items-center">
-            <div class="col-6 fw-bold">+ Add-Ons</div>
+            <div class="col-6">+ Add-Ons</div>
             <div class="col-6 text-end" id="edit-addonsTotal-totals"></div>
           </div>
           <!-- Grand Total -->
           <div class="row border-top pt-2 mt-2">
-            <div class="col-6 fw-bold fs-5">Grand Total</div>
-            <div class="col-6 text-end fw-bold fs-5 text-success" id="edit-grandTotal"></div>
+            <div class="col-6 fs-5">Grand Total</div>
+            <div class="col-6 text-end fs-5 text-success" id="edit-grandTotal"></div>
           </div>
         </div>
       </div>
@@ -243,19 +241,19 @@
           <div class="accordion-body">
             <div class="row g-3">
               <div class="col-sm-6">
-                <label class="form-label fw-bold">Event Date</label>
+                <label class="form-label">Event Date</label>
                 <input type="text" class="form-control" id="edit-eventDate">
               </div>
             </div>
             <div class="row g-3">
               <div class="col-sm-12">
-                <label class="form-label fw-bold">Event Location</label>
+                <label class="form-label">Event Location</label>
                 <input type="text" class="form-control" id="edit-eventLocation">
               </div>
             </div>
             <div class="row g-3">
               <div class="col-sm-12">
-                <label class="form-label fw-bold">Event Notes</label>
+                <label class="form-label">Event Notes</label>
                 <input type="text" class="form-control" id="edit-eventNotes">
               </div>
             </div>
@@ -282,7 +280,7 @@
           <div class="container-fluid px-0">
             <!-- Deposit -->
             <div class="row mb-2">
-              <div class="col-6 fw-bold">Deposit $</div>
+              <div class="col-6">Deposit $</div>
               <div class="col-6 text-end">
                 <input type="text" class="form-control form-control-sm text-end" id="edit-deposit">
               </div>
@@ -290,25 +288,25 @@
             <!-- Deposit Date / Payment Method -->
             <div class="row mb-2">
               <div class="col-sm-6">
-                <label class="form-label fw-bold">Deposit Date</label>
+                <label class="form-label">Deposit Date</label>
                 <input type="text" class="form-control" id="edit-depositDate">
               </div>
               <div class="col-sm-6">
-                <label class="form-label fw-bold">Payment Method</label>
+                <label class="form-label">Payment Method</label>
                 <input class="form-control text-end" list="payment-method-options" id="edit-paymentMethod" name="paymentMethod" placeholder="Select or type method">
                 <datalist id="payment-method-options"></datalist>
               </div>
             </div>
             <!-- Balance Due -->
             <div class="row mb-2">
-              <div class="col-6 fw-bold">Balance Due</div>
+              <div class="col-6">Balance Due</div>
               <div class="col-6 text-end">
                 <input type="text" readonly class="form-control-plaintext form-control-sm text-end" id="edit-balanceDue">
               </div>
             </div>
             <!-- Balance Due Date -->
             <div class="row">
-              <div class="col-6 fw-bold">Balance Due Date</div>
+              <div class="col-6">Balance Due Date</div>
               <div class="col-6 text-end">
                 <input type="text" class="form-control form-control-sm text-end" id="edit-balanceDueDate">
               </div>
@@ -336,7 +334,7 @@
         <div class="accordion-body">
           <div class="mb-3">
             <label for="grandTotal" class="form-label">Grand Total</label>
-            <input type="text" class="form-control-plaintext fs-5 fw-bold" id="edit-grandTotal" name="grandTotal" readonly>
+            <input type="text" class="form-control-plaintext fs-5" id="edit-grandTotal" name="grandTotal" readonly>
           </div>
         </div>
       </div>
@@ -349,7 +347,7 @@
 <input type="hidden" id="edit-retail" />
 <datalist id="row-products-selector"></datalist>
 
-<div class="row fw-bold mb-0 product-row-headers">
+<div class="row mb-0 product-row-headers">
   <div class="col-md-6 text-start">Product</div>
   <div class="col-md-1 text-center">Qty</div>
   <div class="col-md-2 text-end">Cost $</div>
@@ -376,7 +374,7 @@
   </div>
   <div class="row g-3 mt-3">
     <div class="col-sm-12">
-      <button class="btn btn-dark fw-bold" id="save-changes">💾 Save</button>
+      <button class="btn btn-dark" id="save-changes">💾 Save</button>
     </div>
   </div>
 </div>
@@ -406,15 +404,15 @@
             <div id="add-collapseClient" class="accordion-collapse collapse" aria-labelledby="add-headingClient" data-bs-parent="#add-AccordionR1C1">
               <div class="accordion-body bg-info text-dark">
                 <div class="row g-3">
-                  <div class="col-sm-6"><label class="form-label fw-bold">Phone</label><input type="text" class="form-control" list="phone-options" id="add-phone">
+                  <div class="col-sm-6"><label class="form-label">Phone</label><input type="text" class="form-control" list="phone-options" id="add-phone">
                     <datalist id="phone-options"></datalist></div>
-                  <div class="col-sm-4"><label class="form-label fw-bold">First Name</label><input type="text" readonly class="form-control-plaintext" id="add-firstName"></div>
-                  <div class="col-sm-4"><label class="form-label fw-bold">Last Name</label><input type="text" readonly class="form-control-plaintext" id="add-lastName"></div>
-                  <div class="col-sm-8"><label class="form-label fw-bold">Email</label><input type="text" readonly class="form-control-plaintext" id="add-email"></div>
-                  <div class="col-12"><label class="form-label fw-bold">Street</label><input type="text" readonly class="form-control-plaintext" id="add-street"></div>
-                  <div class="col-sm-5"><label class="form-label fw-bold">City</label><input type="text" readonly class="form-control-plaintext" id="add-city"></div>
-                  <div class="col-sm-3"><label class="form-label fw-bold">State</label><input type="text" readonly class="form-control-plaintext" id="add-state"></div>
-                  <div class="col-sm-4"><label class="form-label fw-bold">Zip</label><input type="text" readonly class="form-control-plaintext" id="add-zip"></div>
+                  <div class="col-sm-4"><label class="form-label">First Name</label><input type="text" readonly class="form-control-plaintext" id="add-firstName"></div>
+                  <div class="col-sm-4"><label class="form-label">Last Name</label><input type="text" readonly class="form-control-plaintext" id="add-lastName"></div>
+                  <div class="col-sm-8"><label class="form-label">Email</label><input type="text" readonly class="form-control-plaintext" id="add-email"></div>
+                  <div class="col-12"><label class="form-label">Street</label><input type="text" readonly class="form-control-plaintext" id="add-street"></div>
+                  <div class="col-sm-5"><label class="form-label">City</label><input type="text" readonly class="form-control-plaintext" id="add-city"></div>
+                  <div class="col-sm-3"><label class="form-label">State</label><input type="text" readonly class="form-control-plaintext" id="add-state"></div>
+                  <div class="col-sm-4"><label class="form-label">Zip</label><input type="text" readonly class="form-control-plaintext" id="add-zip"></div>
                 </div>
               </div>
             </div>
@@ -436,20 +434,20 @@
           <div id="add-collapseAddonsTotal" class="accordion-collapse collapse" aria-labelledby="add-headingAddonsTotal" data-bs-parent="#add-AccordionR1C2">
             <div class="accordion-body">
               <div class="row py-1 border-bottom align-items-center">
-                <div class="col-6 fw-bold">Delivery Fee</div>
+                <div class="col-6">Delivery Fee</div>
                 <div class="col-6 text-end"><input type="text" class="form-control form-control-sm text-end" id="add-deliveryFee"></div>
               </div>
               <div class="row py-1 border-bottom align-items-center">
-                <div class="col-6 fw-bold">Setup Fee</div>
+                <div class="col-6">Setup Fee</div>
                 <div class="col-6 text-end"><input type="text" class="form-control form-control-sm text-end" id="add-setupFee"></div>
               </div>
               <div class="row py-1 border-bottom align-items-center">
-                <div class="col-6 fw-bold">Other Fee</div>
+                <div class="col-6">Other Fee</div>
                 <div class="col-6 text-end"><input type="text" class="form-control form-control-sm text-end" id="add-otherFee"></div>
               </div>
               <div class="row pt-2 mt-2 border-top align-items-center">
-                <div class="col-6 fw-bold fs-5">Add-ons Total</div>
-                <div class="col-6 text-end fw-bold fs-5 text-primary" id="add-addonsTotal"></div>
+                <div class="col-6 fs-5">Add-ons Total</div>
+                <div class="col-6 text-end fs-5 text-primary" id="add-addonsTotal"></div>
               </div>
             </div>
           </div>
@@ -471,26 +469,26 @@
           <div id="add-collapseTotals" class="accordion-collapse collapse" aria-labelledby="add-headingTotals" data-bs-parent="#add-AccordionR1C3">
             <div class="accordion-body">
               <div class="row border-bottom py-1">
-                <div class="col-6 fw-bold">Total Cost</div>
+                <div class="col-6">Total Cost</div>
                 <div class="col-6 text-end" id="add-totalProductCost"></div>
               </div>
               <div class="row border-bottom py-1">
-                <div class="col-6 fw-bold">Total Retail</div>
+                <div class="col-6">Total Retail</div>
                 <div class="col-6 text-end" id="add-totalProductRetail"></div>
               </div>
               <div class="row border-bottom py-1">
-                <div class="col-4 fw-bold">+ Tax</div>
+                <div class="col-4">+ Tax</div>
                 <div class="col-4 text-end"><input type="text" readonly class="form-control-plaintext form-control-sm text-end" id="add-subTotal1"></div>
                 <div class="col-4 text-end"><input type="text" readonly class="form-control-plaintext form-control-sm text-end" id="add-subTotal2"></div>
               </div>
               <div class="row border-bottom py-1">
-                <div class="col-4 fw-bold">- Discount</div>
+                <div class="col-4">- Discount</div>
                 <div class="col-4 text-end"><input type="text" class="form-control form-control-sm text-end" id="add-discount"></div>
                 <div class="col-4 text-end"><input type="text" readonly class="form-control-plaintext form-control-sm text-end" id="add-subTotal3"></div>
               </div>
               <div class="row border-top pt-2 mt-2">
-                <div class="col-6 fw-bold fs-5">Grand Total</div>
-                <div class="col-6 text-end fw-bold fs-5 text-success" id="add-grandTotal"></div>
+                <div class="col-6 fs-5">Grand Total</div>
+                <div class="col-6 text-end fs-5 text-success" id="add-grandTotal"></div>
               </div>
             </div>
           </div>
@@ -516,9 +514,9 @@
           <div id="add-collapseEvent" class="accordion-collapse collapse" aria-labelledby="add-headingEventInfo" data-bs-parent="#add-AccordionR2C1">
             <div class="accordion-body">
               <div class="row g-3">
-                <div class="col-sm-6"><label class="form-label fw-bold">Event Date</label><input type="text" class="form-control" id="add-eventDate"></div>
-                <div class="col-sm-12"><label class="form-label fw-bold">Event Location</label><input type="text" class="form-control" id="add-eventLocation"></div>
-                <div class="col-sm-12"><label class="form-label fw-bold">Event Notes</label><input type="text" class="form-control" id="add-eventNotes"></div>
+                <div class="col-sm-6"><label class="form-label">Event Date</label><input type="text" class="form-control" id="add-eventDate"></div>
+                <div class="col-sm-12"><label class="form-label">Event Location</label><input type="text" class="form-control" id="add-eventLocation"></div>
+                <div class="col-sm-12"><label class="form-label">Event Notes</label><input type="text" class="form-control" id="add-eventNotes"></div>
               </div>
             </div>
           </div>
@@ -541,19 +539,19 @@
           <div id="add-collapseBalanceInfo" class="accordion-collapse collapse" aria-labelledby="add-headingBalanceInfo" data-bs-parent="#add-AccordionR2C2">
             <div class="accordion-body">
               <div class="row mb-2">
-                <div class="col-6 fw-bold">Deposit $</div>
+                <div class="col-6">Deposit $</div>
                 <div class="col-6 text-end"><input type="text" class="form-control form-control-sm text-end" id="add-deposit"></div>
               </div>
               <div class="row mb-2">
-                <div class="col-sm-6"><label class="form-label fw-bold">Deposit Date</label><input type="text" class="form-control" id="add-depositDate"></div>
-                <div class="col-sm-6"><label class="form-label fw-bold">Payment Method</label><input class="form-control text-end" list="payment-method-options" id="add-paymentMethod" placeholder="Select or type method"></div>
+                <div class="col-sm-6"><label class="form-label">Deposit Date</label><input type="text" class="form-control" id="add-depositDate"></div>
+                <div class="col-sm-6"><label class="form-label">Payment Method</label><input class="form-control text-end" list="payment-method-options" id="add-paymentMethod" placeholder="Select or type method"></div>
               </div>
               <div class="row mb-2">
-                <div class="col-6 fw-bold">Balance Due</div>
+                <div class="col-6">Balance Due</div>
                 <div class="col-6 text-end"><input type="text" readonly class="form-control-plaintext form-control-sm text-end" id="add-balanceDue"></div>
               </div>
               <div class="row">
-                <div class="col-6 fw-bold">Balance Due Date</div>
+                <div class="col-6">Balance Due Date</div>
                 <div class="col-6 text-end"><input type="text" class="form-control form-control-sm text-end" id="add-balanceDueDate"></div>
               </div>
             </div>
@@ -578,7 +576,7 @@
             <div class="accordion-body">
               <div class="mb-3">
                 <label for="grandTotal" class="form-label">Grand Total</label>
-                <input type="text" class="form-control-plaintext fs-5 fw-bold" id="add-grandTotal" name="grandTotal" readonly>
+                <input type="text" class="form-control-plaintext fs-5" id="add-grandTotal" name="grandTotal" readonly>
               </div>
             </div>
           </div>
@@ -591,7 +589,7 @@
   <input type="hidden" id="add-retail" />
   <datalist id="row-products-selector"></datalist>
 
-  <div class="row fw-bold mb-0 product-row-headers">
+  <div class="row mb-0 product-row-headers">
     <div class="col-md-6">Product</div>
     <div class="col-md-1 text-center">Qty</div>
     <div class="col-md-2 text-end">Cost $</div>
@@ -612,7 +610,7 @@
   </div>
 
   <div class="row g-3 mt-3">
-    <div class="col-sm-12"><button class="btn btn-primary fw-bold" id="submit-new-quote">💾 Save Quote</button></div>
+    <div class="col-sm-12"><button class="btn btn-primary" id="submit-new-quote">💾 Save Quote</button></div>
   </div>
 </form>
 </div>

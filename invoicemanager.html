@@ -15,22 +15,22 @@
 
 <!-- Loader -->
 <div id="loadingOverlay" class="d-none">
-  <div class="text-center text-white">
-      <div class="spinner-border text-light" role="status"></div>
+  <div class="text-center text-info">
+      <div class="spinner-border text-info" role="status"></div>
       <p class="mt-2">Loading... Please wait...</p>
   </div>
 </div>
 
 <!-- Client Management Section -->
-<section class="text-dark text-center text-sm-start">
+<section class="text-center text-sm-start">
   <div class="container">
     <h2 class="text-center">Invoice Management</h2>
 
 <!-- Navigation Tabs -->
 <ul class="nav nav-tabs" id="invoiceTabs">
-  <li class="nav-item"><button class="nav-link active text-dark fw-bold" data-bs-toggle="tab" data-bs-target="#tab-search">🔍 Search Invoice</button></li>
-  <li class="nav-item"><button class="nav-link text-dark fw-bold" data-bs-toggle="tab" data-bs-target="#tab-view" style="display:none;">✏️ View Invoice</button></li>
-  <!-- <li class="nav-item"><button class="nav-link text-dark fw-bold" data-bs-toggle="tab" data-bs-target="#add-invoice">➕ Add Invoice</button></li> -->
+  <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-search">🔍 Search Invoice</button></li>
+  <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-view" style="display:none;">✏️ View Invoice</button></li>
+  <!-- <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#add-invoice">➕ Add Invoice</button></li> -->
 </ul>
 
 <!-- Search Template -->
@@ -42,8 +42,8 @@
     <th class="lastName"></th>
     <th class="eventDate"></th>
     <th class="eventLocation"></th>
-    <th class="text-center">
-      <button type="button" class="btn btn-dark view-button btn-sm fw-bold">More Info</button></th>
+    <!-- <th class="text-center"> -->
+      <!-- <button type="button" class="btn btn-dark view-button btn-sm">More Info</button></th> -->
   </tr>
 </template>
 
@@ -53,12 +53,12 @@
 <!-- 🔍 Search Invoices -->
 <div class="tab-pane fade show active" id="tab-search">
   <div class="input-group">
-    <input type="text" class="form-control fw-bold" id="searchInput" placeholder="🔍 search...">
+    <input type="text" class="form-control" id="searchInput" placeholder="🔍 search...">
       <div class="input-group-append">
-        <span class="input-group-text fw-bold" id="searchCounter">🔍</span> 
+        <span class="input-group-text" id="searchCounter">🔍</span> 
       </div>
   </div>
-  <table class="table table-hover my-custom-table fw-bold">
+  <table class="table table-hover my-custom-table">
     <thead>
       <tr>
         <th>#</th>
@@ -110,7 +110,7 @@
 <div class="modal fade" id="emailModal" tabindex="-1" aria-labelledby="emailModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
-      <div class="modal-header bg-dark text-white">
+      <div class="modal-header">
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">

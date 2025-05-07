@@ -61,7 +61,7 @@ const searchTabButton = document.querySelector('button[data-bs-target="#tab-sear
     // Load data for search and toggle loader
     toggleLoader();
     setDataForSearch();
-    setTimeout(toggleLoader, 2000); // ⏱️ slight delay
+    setTimeout(toggleLoader, 500); // ⏱️ slight delay
 });
 
 // ✅ Global Data Storage for Searching
@@ -96,7 +96,7 @@ function search() {
     if (!searchCounter) {
         searchCounter = document.createElement("span");
         searchCounter.id = "searchCounter";
-        searchCounter.classList.add("px-2", "py-1", "border", "rounded", "fw-bold", "bg-success", "text-dark");
+        searchCounter.classList.add("px-2", "py-1", "border", "rounded", "fw-bold", "bg-dark", "text-info");
         counterContainer.appendChild(searchCounter);
     }
 
@@ -105,7 +105,7 @@ function search() {
     if (!totalCounter) {
         totalCounter = document.createElement("span");
         totalCounter.id = "totalCounter";
-        totalCounter.classList.add("px-3", "py-1", "border", "rounded", "fw-bold", "bg-light", "text-dark");
+        totalCounter.classList.add("px-2", "py-1", "border", "rounded", "fw-bold", "bg-dark", "text-info");
         searchCounter.insertAdjacentElement("afterend", totalCounter);
     }
 

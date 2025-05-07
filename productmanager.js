@@ -51,7 +51,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     toggleLoader();
     setProdDataForSearch();
-    setTimeout(toggleLoader, 2000);
+    setTimeout(toggleLoader, 500);
 });
 
 // ✅ Product Data
@@ -79,8 +79,8 @@ function search() {
         searchInputEl.parentNode.insertBefore(counterContainer, searchInputEl.nextSibling);
     }
 
-    const searchCounter = getOrCreateCounter("searchCounter", ["px-2", "py-1", "border", "rounded", "fw-bold", "bg-success", "text-dark"], counterContainer);
-    const totalCounter = getOrCreateCounter("totalCounter", ["px-3", "py-1", "border", "rounded", "fw-bold", "bg-light", "text-dark"], counterContainer, searchCounter);
+    const searchCounter = getOrCreateCounter("searchCounter", ["px-2", "py-1", "border", "rounded", "fw-bold", "bg-dark", "text-info"], counterContainer);
+    const totalCounter = getOrCreateCounter("totalCounter", ["px-2", "py-1", "border", "rounded", "fw-bold", "bg-dark", "text-info"], counterContainer, searchCounter);
 
     toggleLoader();
 
@@ -101,13 +101,19 @@ function search() {
     const template = document.getElementById("rowTemplate").content;
     results.forEach(r => {
         const row = template.cloneNode(true);
+        const tr = row.querySelector("tr");
+        tr.classList.add("search-result-row");
+        tr.dataset.productid = r[0];
+
         row.querySelector(".prodID").textContent = r[0];
         row.querySelector(".productName").textContent = r[1];
         row.querySelector(".productType").textContent = r[2];
         row.querySelector(".cost").textContent = r[46];
         row.querySelector(".retail").textContent = r[45];
-        row.querySelector(".edit-button").dataset.productid = r[0];
+
+        // Still keep delete functionality if needed
         row.querySelector(".delete-button").dataset.productid = r[0];
+
         searchResultsBox.appendChild(row);
     });
 
@@ -116,53 +122,53 @@ function search() {
 
 // ✅ Unified Click Handler for Search Results
 document.getElementById("searchResults").addEventListener("click", event => {
-    const target = event.target;
+  const target = event.target;
 
-    // Confirm Delete Toggle
-    if (target.classList.contains("before-delete-button")) {
-        const confirmBtn = target.previousElementSibling;
-        const isDelete = target.dataset.buttonState === "delete";
-        confirmBtn?.classList.toggle("d-none", !isDelete);
-        target.textContent = isDelete ? "Cancel" : "Delete";
-        target.dataset.buttonState = isDelete ? "cancel" : "delete";
-        return;
-    }
+  // Confirm Delete Toggle
+  if (target.classList.contains("before-delete-button")) {
+      const confirmBtn = target.previousElementSibling;
+      const isDelete = target.dataset.buttonState === "delete";
+      confirmBtn?.classList.toggle("d-none", !isDelete);
+      target.textContent = isDelete ? "Cancel" : "Delete";
+      target.dataset.buttonState = isDelete ? "cancel" : "delete";
+      return;
+  }
 
-    // Perform Delete
-    if (target.classList.contains("delete-button")) {
-        const prodID = target.dataset.productid?.trim();
-        if (!prodID) return showToast("⚠️ Product ID missing", "error");
+  // Perform Delete
+  if (target.classList.contains("delete-button")) {
+      const prodID = target.dataset.productid?.trim();
+      if (!prodID) return showToast("⚠️ Product ID missing", "error");
 
-        toggleLoader();
-        fetch(scriptURL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ system: "products", action: "delete", prodID })
-        })
-        .then(res => res.json())
-        .then(result => {
-            if (result.success) {
-                showToast("✅ Product deleted!", "success");
-                document.getElementById("searchInput").value = "";
-                document.getElementById("searchResults").innerHTML = "";
-                setProdDataForSearch();
-            } else {
-                showToast("⚠️ Could not delete product.", "error");
-            }
-        })
-        .catch(() => showToast("⚠️ Error occurred while deleting product.", "error"))
-        .finally(toggleLoader);
-        return;
-    }
+      toggleLoader();
+      fetch(scriptURL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ system: "products", action: "delete", prodID })
+      })
+      .then(res => res.json())
+      .then(result => {
+          if (result.success) {
+              showToast("✅ Product deleted!", "success");
+              document.getElementById("searchInput").value = "";
+              document.getElementById("searchResults").innerHTML = "";
+              setProdDataForSearch();
+          } else {
+              showToast("⚠️ Could not delete product.", "error");
+          }
+      })
+      .catch(() => showToast("⚠️ Error occurred while deleting product.", "error"))
+      .finally(toggleLoader);
+      return;
+  }
 
-    // Handle Edit
-    const editBtn = target.closest(".edit-button");
-    if (editBtn) {
-        const prodID = editBtn.dataset.productid;
-        if (!prodID) return console.error("❌ Error: Missing prodID!");
-        populateEditForm(prodID);
-        showEditTab();
-    }
+  // ✅ Handle Row Click for Edit
+  const row = target.closest(".search-result-row");
+  if (row) {
+      const prodID = row.dataset.productid;
+      if (!prodID) return console.error("❌ Error: Missing prodID!");
+      populateEditForm(prodID);
+      showEditTab();
+  }
 });
 
 // ✅ Utility functions
