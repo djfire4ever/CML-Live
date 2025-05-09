@@ -59,8 +59,8 @@
     // Auto-remove the toast after 10 seconds
     setTimeout(() => {
       toast.classList.remove("show");
-      setTimeout(() => toast.remove(), 500);
-    }, 1000);
+      setTimeout(() => toast.remove(), 1500);
+    }, 1500);
   }
 
   function toggleLoader() {

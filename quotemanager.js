@@ -284,6 +284,7 @@ async function populateEditForm(qtID) {
     setField("edit-firstName", data.firstName || "");
     setField("edit-lastName", data.lastName || "");
     setField("edit-street", data.street || "");
+    setField("edit-email", data.email || "");
     setField("edit-city", data.city || "");
     setField("edit-state", data.state || "");
     setField("edit-zip", data.zip || "");
@@ -358,9 +359,9 @@ function updateCardHeaders(mode = "edit") {
   // Update card headers with the values from the card body fields
   updateDisplayText(`${prefix}card1-header-display`, `${firstName} ${lastName}`.trim(), "Client Info");
   updateDisplayText(`${prefix}card2-header-display`, eventDate || "Event Info");
-  updateDisplayText(`${prefix}card3-header-display`, formatCurrency(addonsTotal));
-  updateDisplayText(`${prefix}card4-header-display`, formatCurrency(balanceDue));
-  updateDisplayText(`${prefix}card5-header-display`, formatCurrency(grandTotal));
+  updateDisplayText(`${prefix}card3-header-display`, formatCurrency(grandTotal));
+  updateDisplayText(`${prefix}card4-header-display`, formatCurrency(addonsTotal));
+  updateDisplayText(`${prefix}card5-header-display`, formatCurrency(balanceDue));
   updateDisplayText(`${prefix}card6-header-display`, formatCurrency(grandTotal));
 
   // Update Card 5 body fields
@@ -629,6 +630,7 @@ function calculateAllTotals(mode = "edit") {
   const subTotal1 = totalProductRetail * 0.08875; // tax
   const subTotal2 = totalProductRetail + subTotal1;
   const subTotal3 = totalProductRetail * (discount / 100);
+  const discountTotal = subTotal2 - subTotal3;
   const grandTotal = subTotal2 - subTotal3 + addonsTotal;
   const balanceDue = grandTotal - deposit;
 
@@ -639,22 +641,33 @@ function calculateAllTotals(mode = "edit") {
       console.warn(`⚠️ Element with ID "${id}" not found.`);
       return;
     }
+    const currencyFormat = new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+    });
+    
     if (el.tagName === "INPUT") {
-      el.value = value.toFixed(2);
+      el.value = currencyFormat.format(value);
     } else {
-      el.textContent = value.toFixed(2);
+      el.textContent = currencyFormat.format(value);
     }
-  };
+ };
 
   updateField(`${prefix}addonsTotal`, addonsTotal);
+  updateField(`${prefix}addonsTotal-totals`, addonsTotal);
   updateField(`${prefix}grandTotal`, grandTotal);
+  updateField(`${prefix}grandTotal-Addons`, grandTotal);
+  // updateField(`${prefix}grandTotal-Totals`, grandTotal);
+  updateField(`${prefix}grandTotal-Summary`, grandTotal);
   updateField(`${prefix}balanceDue`, balanceDue);
   updateField(`${prefix}totalProductCost`, totalProductCost);
   updateField(`${prefix}totalProductRetail`, totalProductRetail);
   updateField(`${prefix}subTotal1`, subTotal1);
   updateField(`${prefix}subTotal2`, subTotal2);
   updateField(`${prefix}subTotal3`, subTotal3);
-
+  updateField(`${prefix}discountTotal`, discountTotal);
+  
   // Update card headers
   updateCardHeaders(mode);
 }

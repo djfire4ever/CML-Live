@@ -337,7 +337,7 @@ addProductForm?.addEventListener("submit", async (e) => {
   const fields = ["productName", "productType", "compTime", "description", "retail", "cost"];
   const productInfo = fields.map(getField);
 
-  for (let i = 1; i <= 20; i++) {
+  for (let i = 1; i <= 15; i++) {
     productInfo.push(getField(`part${i}`));
     productInfo.push(getField(`qty${i}`));
   }
