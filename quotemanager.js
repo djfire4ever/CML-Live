@@ -262,79 +262,77 @@ function handleEditProductClick() {
 }
 
 async function populateEditForm(qtID) {
-  try {
-    toggleLoader(true);
+  const response = await fetch(`/getQuoteById?id=${qtID}`);
+  const quoteData = await response.json();
 
-    // Ensure product data is loaded
-    await getProdDataForSearch();
-
-    // Set quote ID and unlock the field
-    setField("edit-qtID", qtID);
-    document.getElementById("edit-qtID")?.removeAttribute("readonly");
-
-    // Fetch quote data from backend
-    const res = await fetch(`${scriptURL}?action=getQuoteById&qtID=${qtID}`);
-    if (!res.ok) throw new Error(`Fetch failed with status ${res.status}`);
-
-    const data = await res.json();
-    if (!data || data.error) throw new Error(data?.error || "No quote data found");
-
-    // Populate fields in Card 1 (Client Info)
-    setField("edit-phone", data.phone || "");
-    setField("edit-firstName", data.firstName || "");
-    setField("edit-lastName", data.lastName || "");
-    setField("edit-street", data.street || "");
-    setField("edit-email", data.email || "");
-    setField("edit-city", data.city || "");
-    setField("edit-state", data.state || "");
-    setField("edit-zip", data.zip || "");
-
-    // Populate fields in Card 3 (Add-ons Total)
-    setField("edit-deliveryFee", data.deliveryFee || 0);
-    setField("edit-setupFee", data.setupFee || 0);
-    setField("edit-otherFee", data.otherFee || 0);
-
-    // Populate fields in Card 4 (Balance Info)
-    setField("edit-deposit", data.deposit || 0);
-    setField("edit-depositDate", data.depositDate || "");
-    setField("edit-paymentMethod", data.paymentMethod || "");
-    setField("edit-balanceDueDate", data.balanceDueDate || "");
-
-    // Populate fields in Card 5 (Totals)
-    setField("edit-discount", data.discount || 0);
-
-    // Populate fields in Card 2 (Event Info)
-    setField("edit-eventDate", data.eventDate || "");
-    setField("edit-eventLocation", data.eventLocation || "");
-    setField("edit-eventNotes", data.eventNotes || "");
-
-    // Reset and populate product rows
-    const productContainer = document.getElementById("edit-product-rows-container");
-    if (productContainer) productContainer.innerHTML = "";
-
-    if (Array.isArray(data.products)) {
-      data.products.forEach(p => {
-        addProductRow(p.name, p.quantity, "edit-product-rows-container", "edit");
-      });
-    }
-
-    // Trigger recalculation
-    calculateAllTotals("edit");
-    updateCardHeaders("edit");
-
-    // Show edit pane and scroll to it
-    const editPane = document.getElementById("edit-quote");
-    if (editPane) {
-      editPane.classList.remove("d-none");
-      editPane.scrollIntoView({ behavior: "smooth" });
-    }
-
-  } catch (err) {
-    console.error("❌ Error populating edit form:", err);
-    showToast("❌ Error loading quote data!", "error");
-  } finally {
-    toggleLoader(false);
+  if (!quoteData) {
+    console.error("❌ No quote data returned.");
+    return;
   }
+
+  const setField = (id, value) => {
+    const el = document.getElementById(id);
+    if (el) el.value = value || "";
+  };
+
+  // 🌐 General Info
+  setField("edit-qtID", quoteData.qtID);
+  setField("edit-quoteDate", quoteData.quoteDate);
+  setField("edit-phone", quoteData.phone);
+  setField("edit-firstName", quoteData.firstName);
+  setField("edit-lastName", quoteData.lastName);
+  setField("edit-email", quoteData.email);
+  setField("edit-street", quoteData.street);
+  setField("edit-city", quoteData.city);
+  setField("edit-state", quoteData.state);
+  setField("edit-zip", quoteData.zip);
+  setField("edit-eventDate", quoteData.eventDate);
+  setField("edit-eventLocation", quoteData.eventLocation);
+
+  // 📦 Product/Cost Summary
+  setField("edit-productCount", quoteData.productCount);
+  setField("edit-deliveryFee", quoteData.deliveryFee);
+  setField("edit-setupFee", quoteData.setupFee);
+  setField("edit-otherFee", quoteData.otherFee);
+  setField("edit-addonsTotal", quoteData.addonsTotal);
+  setField("edit-deposit", quoteData.deposit);
+  setField("edit-depositDate", quoteData.depositDate);
+  setField("edit-balanceDue", quoteData.balanceDue);
+  setField("edit-balanceDueDate", quoteData.balanceDueDate);
+  setField("edit-paymentMethod", quoteData.paymentMethod);
+  setField("edit-dueDate", quoteData.dueDate);
+
+  // 💵 Totals
+  setField("edit-totalProductCost", quoteData.totalProductCost);
+  setField("edit-totalProductRetail", quoteData.totalProductRetail);
+  setField("edit-subTotal1", quoteData.subTotal1);
+  setField("edit-subTotal2", quoteData.subTotal2);
+  setField("edit-subTotal3", quoteData.subTotal3);
+  setField("edit-discount", quoteData.discount);
+  setField("edit-discountedTotal", quoteData.discountedTotal);
+  setField("edit-grandTotal", quoteData.grandTotal);
+
+  // 📝 Notes & Invoice
+  setField("edit-quoteNotes", quoteData.quoteNotes);
+  setField("edit-eventNotes", quoteData.eventNotes);
+  setField("edit-invoiceID", quoteData.invoiceID);
+  setField("edit-invoiceDate", quoteData.invoiceDate);
+  setField("edit-invoiceUrl", quoteData.invoiceUrl);
+
+  // 🧾 Products
+  const container = document.getElementById("edit-product-rows-container");
+  container.innerHTML = ""; // Clear old rows
+
+  quoteData.products.forEach((product, index) => {
+    const row = createProductRow("edit", index + 1);
+    row.querySelector(".product-name").value = product.name || "";
+    row.querySelector(".product-qty").value = product.quantity || 0;
+    row.querySelector(".product-unitprice").value = product.unitPrice || 0;
+    row.querySelector(".product-total").value = product.totalRowRetail || 0;
+    container.appendChild(row);
+  });
+
+  calculateAllTotals("edit");
 }
 
 function updateCardHeaders(mode = "edit") {
@@ -394,7 +392,8 @@ document.addEventListener("DOMContentLoaded", () => {
         system: "quotes",
         action: mode,
         qtID: getField(`${mode}-qtID`),
-        phone: rawPhone, // Store raw phone number (digits only)
+        quoteDate: getField(`${mode}-quoteDate`),
+        phone: rawPhone,
         firstName: getField(`${mode}-firstName`),
         lastName: getField(`${mode}-lastName`),
         email: getField(`${mode}-email`),
@@ -404,21 +403,30 @@ document.addEventListener("DOMContentLoaded", () => {
         zip: getField(`${mode}-zip`),
         eventDate: getField(`${mode}-eventDate`),
         eventLocation: getField(`${mode}-eventLocation`),
-        totalProductCost: getField(`${mode}-totalProductCost`),
-        totalProductRetail: getField(`${mode}-totalProductRetail`),
+        productCount: getField(`${mode}-productCount`),
         deliveryFee: getField(`${mode}-deliveryFee`),
         setupFee: getField(`${mode}-setupFee`),
         otherFee: getField(`${mode}-otherFee`),
         addonsTotal: getField(`${mode}-addonsTotal`),
-        discount: getField(`${mode}-discount`),
-        grandTotal: getField(`${mode}-grandTotal`),
         deposit: getField(`${mode}-deposit`),
         depositDate: getField(`${mode}-depositDate`),
         balanceDue: getField(`${mode}-balanceDue`),
         balanceDueDate: getField(`${mode}-balanceDueDate`),
         paymentMethod: getField(`${mode}-paymentMethod`),
+        dueDate: getField(`${mode}-dueDate`),
+        totalProductCost: getField(`${mode}-totalProductCost`),
+        totalProductRetail: getField(`${mode}-totalProductRetail`),
+        subTotal1: getField(`${mode}-subTotal1`),
+        subTotal2: getField(`${mode}-subTotal2`),
+        subTotal3: getField(`${mode}-subTotal3`),
+        discount: getField(`${mode}-discount`),
+        discountedTotal: getField(`${mode}-discountedTotal`),
+        grandTotal: getField(`${mode}-grandTotal`),
         quoteNotes: getField(`${mode}-quoteNotes`),
         eventNotes: getField(`${mode}-eventNotes`),
+        invoiceID: getField(`${mode}-invoiceID`),
+        invoiceDate: getField(`${mode}-invoiceDate`),
+        invoiceUrl: getField(`${mode}-invoiceUrl`)
       };
 
       // 🔍 Parse and validate product rows
@@ -431,12 +439,17 @@ document.addEventListener("DOMContentLoaded", () => {
       partRows.forEach((row, index) => {
         const name = row.querySelector(".product-name")?.value.trim();
         const qty = row.querySelector(".product-quantity")?.value.trim();
+        const unitPrice = row.querySelector(".product-unitprice")?.value.trim();
+        const totalRetail = row.querySelector(".product-total")?.value.trim();
 
-        if (name && qty && parseFloat(qty) > 0) {
-          parts[`part${index + 1}`] = name;
-          parts[`qty${index + 1}`] = qty;
-          validCount++;
-        }
+      if (name && qty && parseFloat(qty) > 0) {
+        const i = index + 1;
+        parts[`part${i}`] = name;
+        parts[`qty${i}`] = qty;
+        parts[`unitPrice${i}`] = unitPrice;
+        parts[`totalRowRetail${i}`] = totalRetail;
+        validCount++;
+      }
       });
 
       console.log("📦 Parts to save:", parts);
@@ -474,6 +487,111 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
+
+// Preview Quote
+async function previewInvoiceFromForm() {
+  toggleLoader(true);
+
+  try {
+    const mode = "edit"; // or "add" depending on context
+
+    const phoneInput = getField(`${mode}-phone`);
+    const rawPhone = phoneInput.replace(/\D/g, "");
+
+    const formData = {
+      system: "quotes",
+      action: "preview", // not "add" or "edit"
+      qtID: getField(`${mode}-qtID`),
+      quoteDate: getField(`${mode}-quoteDate`),
+      phone: rawPhone,
+      firstName: getField(`${mode}-firstName`),
+      lastName: getField(`${mode}-lastName`),
+      email: getField(`${mode}-email`),
+      street: getField(`${mode}-street`),
+      city: getField(`${mode}-city`),
+      state: getField(`${mode}-state`),
+      zip: getField(`${mode}-zip`),
+      eventDate: getField(`${mode}-eventDate`),
+      eventLocation: getField(`${mode}-eventLocation`),
+      productCount: getField(`${mode}-productCount`),
+      deliveryFee: getField(`${mode}-deliveryFee`),
+      setupFee: getField(`${mode}-setupFee`),
+      otherFee: getField(`${mode}-otherFee`),
+      addonsTotal: getField(`${mode}-addonsTotal`),
+      deposit: getField(`${mode}-deposit`),
+      depositDate: getField(`${mode}-depositDate`),
+      balanceDue: getField(`${mode}-balanceDue`),
+      balanceDueDate: getField(`${mode}-balanceDueDate`),
+      paymentMethod: getField(`${mode}-paymentMethod`),
+      dueDate: getField(`${mode}-dueDate`),
+      totalProductCost: getField(`${mode}-totalProductCost`),
+      totalProductRetail: getField(`${mode}-totalProductRetail`),
+      subTotal1: getField(`${mode}-subTotal1`),
+      subTotal2: getField(`${mode}-subTotal2`),
+      subTotal3: getField(`${mode}-subTotal3`),
+      discount: getField(`${mode}-discount`),
+      discountedTotal: getField(`${mode}-discountedTotal`),
+      grandTotal: getField(`${mode}-grandTotal`),
+      quoteNotes: getField(`${mode}-quoteNotes`),
+      eventNotes: getField(`${mode}-eventNotes`),
+      invoiceID: getField(`${mode}-invoiceID`),
+      invoiceDate: getField(`${mode}-invoiceDate`),
+      invoiceUrl: getField(`${mode}-invoiceUrl`)
+    };
+
+    const partRows = document.querySelectorAll(
+      `#${mode === "add" ? "add-product-rows-container" : "edit-product-rows-container"} .product-row`
+    );
+
+    let validCount = 0;
+    const parts = {};
+
+    partRows.forEach((row, index) => {
+      const name = row.querySelector(".product-name")?.value.trim();
+      const qty = row.querySelector(".product-quantity")?.value.trim();
+      const unitPrice = row.querySelector(".product-unitprice")?.value.trim();
+      const totalRetail = row.querySelector(".product-total")?.value.trim();
+
+      if (name && qty && parseFloat(qty) > 0) {
+        const i = index + 1;
+        parts[`part${i}`] = name;
+        parts[`qty${i}`] = qty;
+        parts[`unitPrice${i}`] = unitPrice;
+        parts[`totalRowRetail${i}`] = totalRetail;
+        validCount++;
+      }
+    });
+
+    if (validCount === 0) {
+      showToast("⚠️ At least one product must be entered.", "error");
+      return;
+    }
+
+    Object.assign(formData, parts);
+
+    // 🔄 Send formData to the Web App preview endpoint
+    const res = await fetch("https://script.google.com/macros/s/___YOUR_DEPLOYED_URL___/exec", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData)
+    });
+
+    const result = await res.json();
+
+    if (result.status === "success") {
+      window.open(result.url, "_blank");
+    } else {
+      showToast("❌ Failed to generate invoice preview.", "error");
+      console.error(result.message);
+    }
+
+  } catch (err) {
+    console.error("❌ Preview error:", err);
+    showToast("❌ Preview failed.", "error");
+  } finally {
+    toggleLoader(false);
+  }
+}
 
 // Add Quote Form
 // 1) Initialize Add-Quote Form
@@ -630,7 +748,7 @@ function calculateAllTotals(mode = "edit") {
   const subTotal1 = totalProductRetail * 0.08875; // tax
   const subTotal2 = totalProductRetail + subTotal1;
   const subTotal3 = totalProductRetail * (discount / 100);
-  const discountTotal = subTotal2 - subTotal3;
+  const discountedTotal = subTotal2 - subTotal3;
   const grandTotal = subTotal2 - subTotal3 + addonsTotal;
   const balanceDue = grandTotal - deposit;
 
@@ -666,7 +784,7 @@ function calculateAllTotals(mode = "edit") {
   updateField(`${prefix}subTotal1`, subTotal1);
   updateField(`${prefix}subTotal2`, subTotal2);
   updateField(`${prefix}subTotal3`, subTotal3);
-  updateField(`${prefix}discountTotal`, discountTotal);
+  updateField(`${prefix}discountedTotal`, discountedTotal);
   
   // Update card headers
   updateCardHeaders(mode);

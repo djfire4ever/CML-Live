@@ -1,79 +1,205 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Navbar Collapse and Hover</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet">
-  <style>
-    /* Navbar link hover effect */
-    .nav-link:hover {
-      opacity: 0.8;
-      text-decoration: underline;
-      transition: all 0.2s ease-in-out;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice Template Test</title>
 </head>
-
 <body>
-  <!-- Navigation Tabs -->
-  <nav class="navbar navbar-expand-md bg-dark navbar-dark fixed-top">
-    <div class="container-fluid">
-      <a href="index.html" class="navbar-brand text-info">
-        <img src="https://drive.google.com/thumbnail?id=10PMFJh0Yeoin65J5ub6bkH5RY0wSEdf2&sz=w25" alt="Logo"> CraftyMamaaLab
-      </a>
-      <button id="navToggler" class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navmenu" aria-controls="navmenu" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navmenu">
-        <ul class="navbar-nav ms-auto">
-          <li class="nav-item"><a href="#" class="nav-link text-info" onclick="collapseMenu()">Dashboard</a></li>
-          <li class="nav-item"><a href="#" class="nav-link text-primary" onclick="collapseMenu()">Clients</a></li>
-          <li class="nav-item"><a href="#" class="nav-link text-success" onclick="collapseMenu()">Invoice</a></li>
-          <li class="nav-item"><a href="#" class="nav-link text-info" onclick="collapseMenu()">Materials</a></li>
-          <li class="nav-item"><a href="#" class="nav-link text-danger" onclick="collapseMenu()">Products</a></li>
-          <li class="nav-item"><a href="#" class="nav-link text-warning" onclick="collapseMenu()">Quotes</a></li>
-          <li class="nav-item"><a href="#" class="nav-link text-info" onclick="collapseMenu()">Leads</a></li>
-        </ul>
-      </div>
+    <!-- Template (Invoice HTML with Placeholders) -->
+    <div id="invoice-template" style="display:none;">
+        <h2>Invoice Details</h2>
+        <table border="1">
+            <tr>
+                <td>Quote Date</td>
+                <td>{{quoteDate}}</td>
+            </tr>
+            <tr>
+                <td>Phone</td>
+                <td>{{phone}}</td>
+            </tr>
+            <tr>
+                <td>First Name</td>
+                <td>{{firstName}}</td>
+            </tr>
+            <tr>
+                <td>Last Name</td>
+                <td>{{lastName}}</td>
+            </tr>
+            <tr>
+                <td>Email</td>
+                <td>{{email}}</td>
+            </tr>
+            <tr>
+                <td>Street</td>
+                <td>{{street}}</td>
+            </tr>
+            <tr>
+                <td>City</td>
+                <td>{{city}}</td>
+            </tr>
+            <tr>
+                <td>State</td>
+                <td>{{state}}</td>
+            </tr>
+            <tr>
+                <td>Zip</td>
+                <td>{{zip}}</td>
+            </tr>
+            <tr>
+                <td>Event Date</td>
+                <td>{{eventDate}}</td>
+            </tr>
+            <tr>
+                <td>Event Location</td>
+                <td>{{eventLocation}}</td>
+            </tr>
+            <tr>
+                <td>Addon Totals</td>
+                <td>{{addonsTotal}}</td>
+            </tr>
+            <tr>
+                <td>Deposit</td>
+                <td>{{deposit}}</td>
+            </tr>
+            <tr>
+                <td>Deposit Date</td>
+                <td>{{depositDate}}</td>
+            </tr>
+            <tr>
+                <td>Balance Due</td>
+                <td>{{balanceDue}}</td>
+            </tr>
+            <tr>
+                <td>Balance Due Date</td>
+                <td>{{balanceDueDate}}</td>
+            </tr>
+            <tr>
+                <td>Payment Method</td>
+                <td>{{paymentMethod}}</td>
+            </tr>
+            <tr>
+                <td>Total Product Retail</td>
+                <td>{{totalProductRetail}}</td>
+            </tr>
+            <tr>
+                <td>SubTotal 1</td>
+                <td>{{subTotal1}}</td>
+            </tr>
+            <tr>
+                <td>SubTotal 2</td>
+                <td>{{subTotal2}}</td>
+            </tr>
+            <tr>
+                <td>SubTotal 3</td>
+                <td>{{subTotal3}}</td>
+            </tr>
+            <tr>
+                <td>Discount</td>
+                <td>{{discount}}</td>
+            </tr>
+            <tr>
+                <td>Discounted Total</td>
+                <td>{{discountedTotal}}</td>
+            </tr>
+            <tr>
+                <td>Grand Total</td>
+                <td>{{grandTotal}}</td>
+            </tr>
+            <tr>
+                <td>Invoice ID</td>
+                <td>{{invoiceID}}</td>
+            </tr>
+            <tr>
+                <td>Invoice Date</td>
+                <td>{{invoiceDate}}</td>
+            </tr>
+        </table>
     </div>
-  </nav>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Placeholder for the generated invoice -->
+    <div id="invoice-container"></div>
 
-  <script>
-    // Function to collapse the navbar when a link is clicked
-    function collapseMenu() {
-      const navMenu = document.getElementById('navmenu');
-      const bsCollapse = new bootstrap.Collapse(navMenu, { toggle: false });
-      if (navMenu.classList.contains('show')) {
-        bsCollapse.hide(); // Collapse the menu
-      }
-    }
+    <script>
+        // Sample data object (simulate database data)
+        const data = {
+            quoteDate: "2025-05-10T15:00:00",
+            phone: "123-456-7890",
+            firstName: "John",
+            lastName: "Doe",
+            email: "johndoe@example.com",
+            street: "123 Main St",
+            city: "Sample City",
+            state: "SC",
+            zip: "12345",
+            eventDate: "2025-05-20T12:00:00",
+            eventLocation: "Sample Venue",
+            addonsTotal: 50.00,
+            deposit: 100.00,
+            depositDate: "2025-05-01T12:00:00",
+            balanceDue: 150.00,
+            balanceDueDate: "2025-05-15T12:00:00",
+            paymentMethod: "Credit Card",
+            totalProductRetail: 500.00,
+            subTotal1: 200.00,
+            subTotal2: 150.00,
+            subTotal3: 150.00,
+            discount: 50.00,
+            discountedTotal: 450.00,
+            grandTotal: 450.00,
+            invoiceID: "INV-12345",
+            invoiceDate: "2025-05-10T15:00:00"
+        };
 
-    // Add hover functionality to show and hide the menu (only for desktop)
-    document.addEventListener('DOMContentLoaded', function () {
-      const navToggler = document.getElementById('navToggler');
-      const navMenu = document.getElementById('navmenu');
+        // Function to replace placeholders in the invoice template
+        function generateInvoice(data) {
+            let invoiceTemplate = document.getElementById("invoice-template").innerHTML;
 
-      // Open the menu when hovering over the toggler (only for desktop)
-      navToggler.addEventListener('mouseenter', function () {
-        if (window.innerWidth >= 768 && !navMenu.classList.contains('show')) {
-          const bsCollapse = new bootstrap.Collapse(navMenu, { toggle: false });
-          bsCollapse.show(); // Show the menu
+            // Replace placeholders with actual data
+            invoiceTemplate = invoiceTemplate.replace(/{{quoteDate}}/g, formatDate(data.quoteDate));
+            invoiceTemplate = invoiceTemplate.replace(/{{phone}}/g, data.phone);
+            invoiceTemplate = invoiceTemplate.replace(/{{firstName}}/g, data.firstName);
+            invoiceTemplate = invoiceTemplate.replace(/{{lastName}}/g, data.lastName);
+            invoiceTemplate = invoiceTemplate.replace(/{{email}}/g, data.email);
+            invoiceTemplate = invoiceTemplate.replace(/{{street}}/g, data.street);
+            invoiceTemplate = invoiceTemplate.replace(/{{city}}/g, data.city);
+            invoiceTemplate = invoiceTemplate.replace(/{{state}}/g, data.state);
+            invoiceTemplate = invoiceTemplate.replace(/{{zip}}/g, data.zip);
+            invoiceTemplate = invoiceTemplate.replace(/{{eventDate}}/g, formatDate(data.eventDate));
+            invoiceTemplate = invoiceTemplate.replace(/{{eventLocation}}/g, data.eventLocation);
+            invoiceTemplate = invoiceTemplate.replace(/{{addonsTotal}}/g, formatCurrency(data.addonsTotal));
+            invoiceTemplate = invoiceTemplate.replace(/{{deposit}}/g, formatCurrency(data.deposit));
+            invoiceTemplate = invoiceTemplate.replace(/{{depositDate}}/g, formatDate(data.depositDate));
+            invoiceTemplate = invoiceTemplate.replace(/{{balanceDue}}/g, formatCurrency(data.balanceDue));
+            invoiceTemplate = invoiceTemplate.replace(/{{balanceDueDate}}/g, formatDate(data.balanceDueDate));
+            invoiceTemplate = invoiceTemplate.replace(/{{paymentMethod}}/g, data.paymentMethod);
+            invoiceTemplate = invoiceTemplate.replace(/{{totalProductRetail}}/g, formatCurrency(data.totalProductRetail));
+            invoiceTemplate = invoiceTemplate.replace(/{{subTotal1}}/g, formatCurrency(data.subTotal1));
+            invoiceTemplate = invoiceTemplate.replace(/{{subTotal2}}/g, formatCurrency(data.subTotal2));
+            invoiceTemplate = invoiceTemplate.replace(/{{subTotal3}}/g, formatCurrency(data.subTotal3));
+            invoiceTemplate = invoiceTemplate.replace(/{{discount}}/g, formatCurrency(data.discount));
+            invoiceTemplate = invoiceTemplate.replace(/{{discountedTotal}}/g, formatCurrency(data.discountedTotal));
+            invoiceTemplate = invoiceTemplate.replace(/{{grandTotal}}/g, formatCurrency(data.grandTotal));
+            invoiceTemplate = invoiceTemplate.replace(/{{invoiceID}}/g, data.invoiceID);
+            invoiceTemplate = invoiceTemplate.replace(/{{invoiceDate}}/g, formatDate(data.invoiceDate));
+
+            // Insert the filled template into the page
+            document.getElementById("invoice-container").innerHTML = invoiceTemplate;
         }
-      });
 
-      // Close the menu when mouse leaves the navMenu (only for desktop)
-      navMenu.addEventListener('mouseleave', function () {
-        if (window.innerWidth >= 768 && navMenu.classList.contains('show')) {
-          const bsCollapse = new bootstrap.Collapse(navMenu, { toggle: false });
-          bsCollapse.hide(); // Hide the menu
+        // Helper function to format date
+        function formatDate(date) {
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            return new Date(date).toLocaleDateString(undefined, options);
         }
-      });
-    });
-  </script>
+
+        // Helper function to format currency
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+        }
+
+        // Call the generateInvoice function to render the invoice
+        generateInvoice(data);
+    </script>
 </body>
-
 </html>
