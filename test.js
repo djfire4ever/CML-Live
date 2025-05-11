@@ -103,9 +103,9 @@ function search() {
     results.forEach(r => {
       const row = template.cloneNode(true);
       row.querySelector(".qtID").textContent = r[0];
-      row.querySelector(".firstName").textContent = r[3];
-      row.querySelector(".lastName").textContent = r[4];
-      row.querySelector(".eventDate").textContent = r[10];
+      row.querySelector(".firstName").textContent = r[2];
+      row.querySelector(".lastName").textContent = r[3];
+      row.querySelector(".eventDate").textContent = r[9];
   
       // ✅ Set qtID directly on the row for click handling
       const tr = row.querySelector("tr");
@@ -168,7 +168,6 @@ document.getElementById("searchResults").addEventListener("click", event => {
 const row = target.closest("tr");
 if (row && row.dataset.quoteid && !target.closest(".btn-group")) {
     const qtID = row.dataset.quoteid;
-    console.log("🔍 Row clicked with qtID:", qtID);
     populateEditForm(qtID);
     showEditTab();
     return;
@@ -178,8 +177,7 @@ if (row && row.dataset.quoteid && !target.closest(".btn-group")) {
 
 // ✅ Utility functions
 function getField(id) {
-  const el = document.getElementById(id);
-  return (el?.value ?? "").toString().trim();
+  return document.getElementById(id)?.value.trim() || "";
 }
 
 function setField(id, value) {
@@ -266,23 +264,22 @@ function handleEditProductClick() {
 async function populateEditForm(qtID) {
   try {
     toggleLoader(true);
+
+    // Ensure product data is loaded
     await getProdDataForSearch();
 
+    // Set quote ID and unlock the field
     setField("edit-qtID", qtID);
-    document.getElementById("edit-qtID")?.setAttribute("readonly", true);
+    document.getElementById("edit-qtID")?.removeAttribute("readonly");
 
-    console.log("🔍 Fetching quote data for qtID:", qtID);
-    
+    // Fetch quote data from backend
     const res = await fetch(`${scriptURL}?action=getQuoteById&qtID=${qtID}`);
     if (!res.ok) throw new Error(`Fetch failed with status ${res.status}`);
 
-    console.log("✅ Fetch response status:", res.status);
-
     const data = await res.json();
     if (!data || data.error) throw new Error(data?.error || "No quote data found");
-    console.log("✅ Fetch response data:", data);
 
-    // 🔹 Card 1 - Client Info
+    // 🌐 Card 1: Client Info
     setField("edit-phone", data.phone || "");
     setField("edit-firstName", data.firstName || "");
     setField("edit-lastName", data.lastName || "");
@@ -292,69 +289,62 @@ async function populateEditForm(qtID) {
     setField("edit-state", data.state || "");
     setField("edit-zip", data.zip || "");
 
-    // 🔹 Card 2 - Event Info
+    // 🧾 Card 2: Event Info
     setField("edit-eventDate", data.eventDate || "");
     setField("edit-eventLocation", data.eventLocation || "");
     setField("edit-eventNotes", data.eventNotes || "");
 
-    // 🔹 Card 3 - Add-On Fees
+    // 💸 Card 3: Add-On Fees
     setField("edit-deliveryFee", data.deliveryFee || 0);
     setField("edit-setupFee", data.setupFee || 0);
     setField("edit-otherFee", data.otherFee || 0);
     setField("edit-addonsTotal", data.addonsTotal || 0);
 
-    // 🔹 Card 4 - Balance Info
+    // 💰 Card 4: Deposit & Balance Info
     setField("edit-deposit", data.deposit || 0);
     setField("edit-depositDate", data.depositDate || "");
     setField("edit-balanceDue", data.balanceDue || 0);
     setField("edit-balanceDueDate", data.balanceDueDate || "");
     setField("edit-paymentMethod", data.paymentMethod || "");
-    setField("edit-dueDate", data.dueDate || ""); // ✅ NEW
+    setField("edit-dueDate", data.dueDate || ""); // NEW
 
-    // 🔹 Card 5 - Totals
+    // 📊 Card 5: Totals
+    setField("edit-totalProductCost", data.totalProductCost || 0); // NEW
+    setField("edit-totalProductRetail", data.totalProductRetail || 0);
+    setField("edit-subTotal1", data.subTotal1 || 0); // NEW
     setField("edit-discount", data.discount || 0);
-    setField("edit-subTotal1", data.subTotal1 || 0);           // ✅ NEW
-    setField("edit-subTotal2", data.subTotal2 || 0);           // ✅ NEW
-    setField("edit-subTotal3", data.subTotal3 || 0);           // ✅ NEW
-    setField("edit-discountedTotal", data.discountedTotal || 0); // ✅ NEW
+    setField("edit-subTotal2", data.subTotal2 || 0); // NEW
+    setField("edit-subTotal3", data.subTotal3 || 0); // NEW
+    setField("edit-discountedTotal", data.discountedTotal || 0); // NEW
     setField("edit-grandTotal", data.grandTotal || 0);
 
-    // 🔹 Products
+    // 🧾 Card 6: Invoice Info & Notes
+    setField("edit-quoteNotes", data.quoteNotes || ""); // NEW
+    setField("edit-invoiceID", data.invoiceID || ""); // NEW
+    setField("edit-invoiceDate", data.invoiceDate || ""); // NEW
+    setField("edit-invoiceUrl", data.invoiceUrl || ""); // NEW
+
+    // Reset and populate product rows
     const productContainer = document.getElementById("edit-product-rows-container");
     if (productContainer) productContainer.innerHTML = "";
 
     if (Array.isArray(data.products)) {
       data.products.forEach(p => {
-        addProductRow(
-          p.name || "", 
-          p.quantity || "", 
-          "edit-product-rows-container", 
-          "edit",
-          p.unitPrice || "",              // ✅ NEW - if supported by your addProductRow()
-          p.totalRowRetail || ""          // ✅ NEW
-        );
+        addProductRow(p.name, p.quantity, "edit-product-rows-container", "edit", p.unitPrice, p.totalRowRetail);
       });
     }
 
-    // 🔹 Hidden / Extra Fields
-    setField("edit-totalProductCost", data.totalProductCost || 0);
-    setField("edit-totalProductRetail", data.totalProductRetail || 0);
-    setField("edit-productCount", data.productCount || "");        // ✅ NEW
-    setField("edit-quoteDate", data.quoteDate || "");              // ✅ NEW
-    setField("edit-quoteNotes", data.quoteNotes || "");
-    setField("edit-invoiceID", data.invoiceID || "");              // ✅ NEW
-    setField("edit-invoiceDate", data.invoiceDate || "");          // ✅ NEW
-    setField("edit-invoiceUrl", data.invoiceUrl || "");            // ✅ NEW
-
-    // 🔁 Totals + UI
+    // Recalculate totals and update UI
     calculateAllTotals("edit");
     updateCardHeaders("edit");
 
+    // Show edit panel
     const editPane = document.getElementById("edit-quote");
     if (editPane) {
       editPane.classList.remove("d-none");
       editPane.scrollIntoView({ behavior: "smooth" });
     }
+
   } catch (err) {
     console.error("❌ Error populating edit form:", err);
     showToast("❌ Error loading quote data!", "error");
@@ -362,7 +352,6 @@ async function populateEditForm(qtID) {
     toggleLoader(false);
   }
 }
-
 
 function updateCardHeaders(mode = "edit") {
   const prefix = mode === "add" ? "add-" : "edit-";
@@ -396,6 +385,7 @@ function updateCardHeaders(mode = "edit") {
   updateDisplayText(`${prefix}totalProductRetail`, formatCurrency(totalProductRetail));
 }
 
+// ✅ Edit Quote Form Save
 document.addEventListener("DOMContentLoaded", () => {
   const saveBtn = document.getElementById("save-changes");
   if (!saveBtn) return;
@@ -405,18 +395,22 @@ document.addEventListener("DOMContentLoaded", () => {
     toggleLoader(true);
 
     try {
-      const mode = "edit"; // Use "add" for new quotes
+      // Define mode explicitly (use "add" for Add form if needed)
+      const mode = "edit"; // Change to "add" if saving for Add form
 
-      // Collect form data
+      // Get phone number (formatted or not)
       const phoneInput = getField(`${mode}-phone`);
-      const rawPhone = phoneInput.replace(/\D/g, ""); // Strip non-digits
+      let phoneValue = phoneInput.trim();
 
-      const parseCurrency = (value) => parseFloat(value.replace(/[^0-9.-]+/g, "")) || 0;
+      // Remove non-digit characters to store raw phone number in the backend
+      const rawPhone = phoneValue.replace(/\D/g, "");
 
+      // Build core form data
       const formData = {
         system: "quotes",
         action: mode,
         qtID: getField(`${mode}-qtID`),
+        quoteDate: getField(`${mode}-quoteDate`),
         phone: rawPhone,
         firstName: getField(`${mode}-firstName`),
         lastName: getField(`${mode}-lastName`),
@@ -427,94 +421,73 @@ document.addEventListener("DOMContentLoaded", () => {
         zip: getField(`${mode}-zip`),
         eventDate: getField(`${mode}-eventDate`),
         eventLocation: getField(`${mode}-eventLocation`),
-        totalProductCost: parseCurrency(getField(`${mode}-totalProductCost`)),
-        totalProductRetail: parseCurrency(getField(`${mode}-totalProductRetail`)),
-        deliveryFee: parseCurrency(getField(`${mode}-deliveryFee`)),
-        setupFee: parseCurrency(getField(`${mode}-setupFee`)),
-        otherFee: parseCurrency(getField(`${mode}-otherFee`)),
-        addonsTotal: parseCurrency(getField(`${mode}-addonsTotal`)),
-        discount: parseCurrency(getField(`${mode}-discount`)),
-        grandTotal: parseCurrency(getField(`${mode}-grandTotal`)),
-        deposit: parseCurrency(getField(`${mode}-deposit`)),
+        productCount: getField(`${mode}-productCount`),
+        deliveryFee: getField(`${mode}-deliveryFee`),
+        setupFee: getField(`${mode}-setupFee`),
+        otherFee: getField(`${mode}-otherFee`),
+        addonsTotal: getField(`${mode}-addonsTotal`),
+        deposit: getField(`${mode}-deposit`),
         depositDate: getField(`${mode}-depositDate`),
-        balanceDue: parseCurrency(getField(`${mode}-balanceDue`)),
+        balanceDue: getField(`${mode}-balanceDue`),
         balanceDueDate: getField(`${mode}-balanceDueDate`),
         paymentMethod: getField(`${mode}-paymentMethod`),
         dueDate: getField(`${mode}-dueDate`),
-        subTotal1: parseCurrency(getField(`${mode}-subTotal1`)),
-        subTotal2: parseCurrency(getField(`${mode}-subTotal2`)),
-        subTotal3: parseCurrency(getField(`${mode}-subTotal3`)),
-        discountedTotal: parseCurrency(getField(`${mode}-discountedTotal`)),
+        totalProductCost: getField(`${mode}-totalProductCost`),
+        totalProductRetail: getField(`${mode}-totalProductRetail`),
+        subTotal1: getField(`${mode}-subTotal1`),
+        subTotal2: getField(`${mode}-subTotal2`),
+        subTotal3: getField(`${mode}-subTotal3`),
+        discount: getField(`${mode}-discount`),
+        discountedTotal: getField(`${mode}-discountedTotal`),
+        grandTotal: getField(`${mode}-grandTotal`),
         quoteNotes: getField(`${mode}-quoteNotes`),
         eventNotes: getField(`${mode}-eventNotes`),
         invoiceID: getField(`${mode}-invoiceID`),
         invoiceDate: getField(`${mode}-invoiceDate`),
-        invoiceUrl: getField(`${mode}-invoiceUrl`),
-        quoteDate: new Date().toISOString().split("T")[0] // Set today's date
+        invoiceUrl: getField(`${mode}-invoiceUrl`)
       };
 
-      // Collect product row data
-      const partRows = document.querySelectorAll(`#${mode}-product-rows-container .product-row`);
-      const products = [];
+      // 🔍 Parse and validate product rows
+      const partRows = document.querySelectorAll(
+        `#${mode === "add" ? "add-product-rows-container" : "edit-product-rows-container"} .product-row`
+      );
+      const parts = {};
+      let validCount = 0;
 
-      partRows.forEach((row) => {
+      partRows.forEach((row, index) => {
         const name = row.querySelector(".product-name")?.value.trim();
-        const qty = parseFloat(row.querySelector(".product-quantity")?.value.trim() || 0);
-        const unitPrice = parseCurrency(row.querySelector(".totalRowCost")?.value || 0);
-        const totalRowRetail = parseCurrency(row.querySelector(".totalRowRetail")?.value || 0);
+        const qty = row.querySelector(".product-quantity")?.value.trim();
+        const unitPrice = row.querySelector(".product-unitprice")?.value.trim();
+        const totalRetail = row.querySelector(".product-total")?.value.trim();
 
-        if (name && qty > 0) {
-          products.push({
-            name,
-            quantity: qty,
-            unitPrice,
-            totalRowRetail
-          });
-        }
+      if (name && qty && parseFloat(qty) > 0) {
+        const i = index + 1;
+        parts[`part${i}`] = name;
+        parts[`qty${i}`] = qty;
+        parts[`unitPrice${i}`] = unitPrice;
+        parts[`totalRowRetail${i}`] = totalRetail;
+        validCount++;
+      }
       });
 
-      if (products.length === 0) {
-        showToast("⚠️ At least one valid product and quantity must be provided.", "error");
+      console.log("📦 Parts to save:", parts);
+
+      if (validCount === 0) {
+        showToast("⚠️ At least one part and quantity must be provided.", "error");
         return;
       }
 
-      // Map products to flat structure
-      products.forEach((product, index) => {
-        const idx = index + 1; // 1-based index
-        formData[`part${idx}`] = product.name || "";
-        formData[`qty${idx}`] = product.quantity || "";
-        formData[`unitPrice${idx}`] = product.unitPrice || "";
-        formData[`totalRowRetail${idx}`] = product.totalRowRetail || "";
-      });
+      // Merge parts into formData
+      Object.assign(formData, parts);
 
-      // Fill remaining product slots with empty values
-      for (let i = products.length + 1; i <= 15; i++) {
-        formData[`part${i}`] = "";
-        formData[`qty${i}`] = "";
-        formData[`unitPrice${i}`] = "";
-        formData[`totalRowRetail${i}`] = "";
-      }
-
-      formData.productCount = products.length; // Set product count
-
-      console.log("🔍 Form Data Sent to Backend:", formData);
-
-      // Send data to backend
+      // 🔄 Send data to backend
       const res = await fetch(scriptURL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          system: "quotes",
-          action: "edit",
-          qtID: formData.qtID, // Send qtID as a top-level field
-          quoteInfo: formData  // Send the rest of the form data as a nested object
-        })
+        body: JSON.stringify(formData),
       });
 
-      console.log("✅ Backend response status:", res.status);
       const result = await res.json();
-      console.log("✅ Backend response data:", result);
-
       if (result.success) {
         showToast("✅ Quote updated!");
         document.getElementById("searchInput").value = "";
@@ -532,6 +505,111 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
+
+// Preview Quote
+async function previewInvoiceFromForm() {
+  toggleLoader(true);
+
+  try {
+    const mode = "edit"; // or "add" depending on context
+
+    const phoneInput = getField(`${mode}-phone`);
+    const rawPhone = phoneInput.replace(/\D/g, "");
+
+    const formData = {
+      system: "quotes",
+      action: "preview", // not "add" or "edit"
+      qtID: getField(`${mode}-qtID`),
+      quoteDate: getField(`${mode}-quoteDate`),
+      phone: rawPhone,
+      firstName: getField(`${mode}-firstName`),
+      lastName: getField(`${mode}-lastName`),
+      email: getField(`${mode}-email`),
+      street: getField(`${mode}-street`),
+      city: getField(`${mode}-city`),
+      state: getField(`${mode}-state`),
+      zip: getField(`${mode}-zip`),
+      eventDate: getField(`${mode}-eventDate`),
+      eventLocation: getField(`${mode}-eventLocation`),
+      productCount: getField(`${mode}-productCount`),
+      deliveryFee: getField(`${mode}-deliveryFee`),
+      setupFee: getField(`${mode}-setupFee`),
+      otherFee: getField(`${mode}-otherFee`),
+      addonsTotal: getField(`${mode}-addonsTotal`),
+      deposit: getField(`${mode}-deposit`),
+      depositDate: getField(`${mode}-depositDate`),
+      balanceDue: getField(`${mode}-balanceDue`),
+      balanceDueDate: getField(`${mode}-balanceDueDate`),
+      paymentMethod: getField(`${mode}-paymentMethod`),
+      dueDate: getField(`${mode}-dueDate`),
+      totalProductCost: getField(`${mode}-totalProductCost`),
+      totalProductRetail: getField(`${mode}-totalProductRetail`),
+      subTotal1: getField(`${mode}-subTotal1`),
+      subTotal2: getField(`${mode}-subTotal2`),
+      subTotal3: getField(`${mode}-subTotal3`),
+      discount: getField(`${mode}-discount`),
+      discountedTotal: getField(`${mode}-discountedTotal`),
+      grandTotal: getField(`${mode}-grandTotal`),
+      quoteNotes: getField(`${mode}-quoteNotes`),
+      eventNotes: getField(`${mode}-eventNotes`),
+      invoiceID: getField(`${mode}-invoiceID`),
+      invoiceDate: getField(`${mode}-invoiceDate`),
+      invoiceUrl: getField(`${mode}-invoiceUrl`)
+    };
+
+    const partRows = document.querySelectorAll(
+      `#${mode === "add" ? "add-product-rows-container" : "edit-product-rows-container"} .product-row`
+    );
+
+    let validCount = 0;
+    const parts = {};
+
+    partRows.forEach((row, index) => {
+      const name = row.querySelector(".product-name")?.value.trim();
+      const qty = row.querySelector(".product-quantity")?.value.trim();
+      const unitPrice = row.querySelector(".product-unitprice")?.value.trim();
+      const totalRetail = row.querySelector(".product-total")?.value.trim();
+
+      if (name && qty && parseFloat(qty) > 0) {
+        const i = index + 1;
+        parts[`part${i}`] = name;
+        parts[`qty${i}`] = qty;
+        parts[`unitPrice${i}`] = unitPrice;
+        parts[`totalRowRetail${i}`] = totalRetail;
+        validCount++;
+      }
+    });
+
+    if (validCount === 0) {
+      showToast("⚠️ At least one product must be entered.", "error");
+      return;
+    }
+
+    Object.assign(formData, parts);
+
+    // 🔄 Send formData to the Web App preview endpoint
+    const res = await fetch("https://script.google.com/macros/s/___YOUR_DEPLOYED_URL___/exec", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData)
+    });
+
+    const result = await res.json();
+
+    if (result.status === "success") {
+      window.open(result.url, "_blank");
+    } else {
+      showToast("❌ Failed to generate invoice preview.", "error");
+      console.error(result.message);
+    }
+
+  } catch (err) {
+    console.error("❌ Preview error:", err);
+    showToast("❌ Preview failed.", "error");
+  } finally {
+    toggleLoader(false);
+  }
+}
 
 // Add Quote Form
 // 1) Initialize Add-Quote Form
@@ -781,14 +859,7 @@ function resetProductRows(containerId) {
 }
 
 // Add product row dynamically
-function addProductRow(
-  name = "",
-  qty = 1,
-  containerId = "add-product-rows-container",
-  mode = "add",
-  unitRetail = 0,
-  totalRetail = 0
-) {
+function addProductRow(name = "", qty = 1, containerId = "add-product-rows-container", mode = "add") {
   console.log(`Adding product row to container: ${containerId}`);
   const container = document.getElementById(containerId);
   if (!container) return;
@@ -801,10 +872,6 @@ function addProductRow(
     return `<option value="${p.name.replace(/"/g, '&quot;')}"${selected}>${p.name}</option>`;
   }).join("");
 
-  // Format numbers as $xx.xx strings
-  const formattedUnitRetail = `$${parseFloat(unitRetail || 0).toFixed(2)}`;
-  const formattedTotalRetail = `$${parseFloat(totalRetail || 0).toFixed(2)}`;
-
   row.innerHTML = `
     <div class="col-md-6">
       <select class="form-select product-name" list="row-products-selector">
@@ -816,10 +883,10 @@ function addProductRow(
       <input type="number" class="form-control text-center product-quantity" value="${qty}">
     </div>
     <div class="col-md-2">
-      <input type="text" class="form-control text-end totalRowCost" value="${formattedUnitRetail}" readonly>
+      <input type="text" class="form-control text-end totalRowCost" value="$0.00" readonly>
     </div>
     <div class="col-md-2">
-      <input type="text" class="form-control text-end totalRowRetail" value="${formattedTotalRetail}" readonly>
+      <input type="text" class="form-control text-end totalRowRetail" value="$0.00" readonly>
     </div>
     <div class="col-md-1">
       <button type="button" class="btn btn-danger btn-sm remove-part">
@@ -830,6 +897,8 @@ function addProductRow(
 
   container.appendChild(row);
   attachRowEvents(row, mode);
+
+  // Trigger recalculation immediately
   calculateAllTotals(mode);
 }
 
