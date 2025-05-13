@@ -263,7 +263,7 @@
                 <div class="row mb-2">
                   <div class="col-sm-6"><label class="form-label">Deposit Date</label><input type="text" class="form-control" id="edit-depositDate"></div>
                   <div class="col-sm-6"><label class="form-label">Payment Method</label><input class="form-control text-end" list="payment-method-options" id="edit-paymentMethod" name="paymentMethod" placeholder="Select or type method"></div>
-                </div>
+                <datalist id="payment-method-options"></datalist></div>
                 <div class="row">
                   <div class="col-6">Balance Due Date<input type="text" class="form-control form-control-sm text-end" id="edit-balanceDueDate"></div>
                 </div>
@@ -370,7 +370,7 @@
     </div>
     <div class="row g-3 mt-3 mb-5">
       <div class="col-sm-12">
-        <button class="btn btn-dark" id="save-changes">💾 Save Changes</button>
+        <button class="btn btn-dark" id="edit-quote-btn">💾 Save Changes</button>
         <button class="btn btn-secondary" onclick="previewInvoiceFromForm()">Preview Invoice</button>
       </div>
     </div>
@@ -382,6 +382,8 @@
 <div class="tab-pane fade" id="add-quote">
   <form id="addQuoteForm">
     <input type="hidden" id="add-qtID">
+    <input type="hidden" id="add-quoteDate">
+
     <!-- Row 1 -->
     <div class="row g-3 mt-1 mb-1">
       <!-- Add Form-Card 1: Client Info, Row 1, Col 1-->
@@ -553,8 +555,8 @@
                 <div class="col-sm-6"><label class="form-label">Deposit Date</label><input type="text" class="form-control" id="add-depositDate"></div>
               </div>
               <div class="row mb-2">
-                <div class="col-sm-6"><label class="form-label">Payment Method</label><input class="form-control text-end" list="payment-method-options" id="add-paymentMethod" placeholder="Select or type method"></div>
-              </div>
+                <div class="col-sm-6"><label class="form-label">Payment Method</label><input class="form-control text-end" list="payment-method-options" id="add-paymentMethod" name="paymentMethod" placeholder="Select or type method"></div>
+                  <datalist id="payment-method-options"></datalist></div>
               <div class="row">
                 <div class="col-6">Balance Due Date<input type="text" class="form-control form-control-sm text-end" id="add-balanceDueDate"></div>
               </div>
@@ -659,7 +661,7 @@
       <div class="col-sm-12"><label class="fw-bold">Quote Notes</label><input type="text" class="form-control" id="add-quoteNotes"></div>
     </div>
     <div class="row g-3 mt-3 mb-5">
-      <div class="col-sm-12"><button class="btn btn-dark" id="save-changes">💾 Save Changes</button></div>
+      <div class="col-sm-12"><button class="btn btn-dark" id="add-quote-btn">💾 Save Changes</button></div>
     </div>
   </form>
 </div>
