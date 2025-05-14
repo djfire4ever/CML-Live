@@ -880,7 +880,10 @@ function formatPhoneNumber(number) {
   return `(${area}) ${mid}-${last}`;
 }
 
-async function previewInvoiceFromForm() {
+document.getElementById("previewQuoteBtn").addEventListener("click", async (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+
   console.log("🔍 previewInvoiceFromForm triggered");
 
   const mode = document.querySelector("#edit-quote.show.active") ? "edit" : "add";
@@ -888,11 +891,18 @@ async function previewInvoiceFromForm() {
 
   toggleLoader(true);
 
+  // Open blank tab immediately to pass popup blocker
+  const newTab = window.open("", "_blank");
+
   try {
+    // Ensure totals are recalculated before data collection
     calculateAllTotals(mode);
+
+    // Data collection from form fields
     const quoteInfo = collectQuoteFormData(mode);
     console.log("📦 Preview data being sent to backend:", quoteInfo);
 
+    // Send request to backend
     const response = await fetch(scriptURL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -906,16 +916,27 @@ async function previewInvoiceFromForm() {
 
     const result = await response.json();
     console.log("✅ Backend preview response:", result);
+    console.log("🧾 result.data contents:", JSON.stringify(result.data, null, 2));
 
-    if (result.success && result.url) {
-      window.open(result.url, "_blank");
-    } else {
-      showToast("❌ Preview failed: " + (result.message || "No URL returned"), "error");
+  if (result.success && result.data && result.data.url) {
+    newTab.location.href = result.data.url;
+  } else {
+    newTab.document.write("<p>❌ Failed to generate preview.</p>");
+    showToast("❌ Preview failed: " + (result.data?.message || "No URL returned"), "error");
+    console.error("❌ Preview failed:", result);
+  }
+    // Close the new tab if no URL is returned
+    if (!result.data?.url) {
+      setTimeout(() => {
+        newTab.close();
+      }, 5000); // Close after 5 seconds
     }
+    
   } catch (err) {
-    console.error("❌ Preview error:", err);
+    newTab.document.write("<p>❌ Error generating preview.</p>");
+    console.error("❌ Fetch error:", err);
     showToast("❌ Error during preview request. Check console.", "error");
   } finally {
     toggleLoader(false);
   }
-}
+});
