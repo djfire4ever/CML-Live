@@ -940,3 +940,121 @@ document.getElementById("previewQuoteBtn").addEventListener("click", async (e) =
     toggleLoader(false);
   }
 });
+
+document.getElementById("finalize-invoice-btn").addEventListener("click", async (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+
+  console.log("🧾 finalizeInvoiceFromForm triggered");
+
+  const mode = document.querySelector("#edit-quote.show.active") ? "edit" : "add";
+  console.log("🛠️ Detected form mode:", mode);
+
+  toggleLoader(true);
+
+  try {
+    // Update totals before gathering data
+    calculateAllTotals(mode);
+
+    const quoteInfo = collectQuoteFormData(mode);
+    console.log("📬 Finalizing quote with data:", quoteInfo);
+
+    const qtID = mode === "edit" ? getField("edit-qtID") : null;
+    console.log("🧾 Sending qtID:", qtID);
+
+    const response = await fetch(scriptURL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        system: "quotes",
+        action: "finalize",
+        qtID,
+        quoteInfo
+      })
+    });
+
+    const result = await response.json();
+    console.log("✅ Backend finalize response:", result);
+    console.log("🧾 result.data contents:", JSON.stringify(result.data, null, 2));
+
+    const { success, data } = result;
+
+    if (success && data?.url) {
+      // Prepare email preview
+      const emailHtml = generateInvoiceEmailHtml(data.fileName, data.url, quoteInfo);
+
+      document.getElementById("invoice-email-to").value = quoteInfo.email || "";
+      document.getElementById("invoice-email-subject").value = `${data.fileName} from Your Company`;
+      document.getElementById("invoice-email-body").innerHTML = emailHtml;
+
+      const modal = new bootstrap.Modal(document.getElementById("finalInvoiceModal"));
+      modal.show();
+
+      showToast("📄 Invoice finalized and ready to send.", "success");
+    } else {
+      console.error("❌ Invoice finalization failure:", result);
+      showToast("❌ Invoice finalization failed. No URL or template generated.", "error");
+    }
+
+  } catch (err) {
+    console.error("❌ Finalize request error:", err);
+    showToast("❌ Error finalizing invoice. Check console for details.", "error");
+  } finally {
+    toggleLoader(false);
+  }
+});
+
+document.getElementById("send-invoice-email-btn").addEventListener("click", async (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+
+  toggleLoader(true);
+
+  try {
+    const to = document.getElementById("invoice-email-to").value.trim();
+    const subject = document.getElementById("invoice-email-subject").value.trim();
+    const body = document.getElementById("invoice-email-body").innerHTML;
+
+    if (!to || !subject || !body) {
+      showToast("❌ Cannot send email. Missing required fields.", "error");
+      return;
+    }
+
+    const response = await fetch(scriptURL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        system: "quotes",
+        action: "sendInvoiceEmail",
+        emailData: { to, subject, body }
+      })
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      showToast("✅ Invoice email sent successfully.", "success");
+      bootstrap.Modal.getInstance(document.getElementById("finalInvoiceModal")).hide();
+    } else {
+      console.error("❌ Email sending failed:", result);
+      showToast("❌ Failed to send invoice email.", "error");
+    }
+
+  } catch (err) {
+    console.error("❌ Error sending email:", err);
+    showToast("❌ An error occurred while sending the email.", "error");
+  } finally {
+    toggleLoader(false);
+  }
+});
+
+function generateInvoiceEmailHtml(fileName, pdfUrl, quoteData) {
+  return `
+    <p>Hi ${quoteData.firstName},</p>
+    <p>Your invoice has been finalized. Please review it below:</p>
+    <p><strong>${fileName}</strong></p>
+    <p><a href="${pdfUrl}" target="_blank">📄 View Invoice PDF</a></p>
+    <p>Let us know if you have any questions.</p>
+    <p>Best regards,<br>Your Company Team</p>
+  `;
+}

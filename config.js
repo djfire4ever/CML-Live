@@ -59,8 +59,8 @@
     // Auto-remove the toast after 10 seconds
     setTimeout(() => {
       toast.classList.remove("show");
-      setTimeout(() => toast.remove(), 1500);
-    }, 1500);
+      setTimeout(() => toast.remove(), 5000);
+    }, 5000);
   }
 
   function toggleLoader() {
@@ -208,7 +208,19 @@
     }
   });
 
-  
+document.addEventListener("keydown", function (e) {
+  const isEnter = e.key === "Enter";
+  const target = e.target;
+
+  const isTextInput = ["INPUT", "SELECT"].includes(target.tagName);
+  const isTextArea = target.tagName === "TEXTAREA";
+  const isSubmitTrigger = isEnter && isTextInput && !isTextArea;
+
+  if (isSubmitTrigger) {
+    e.preventDefault();
+  }
+});
+
   // function applyThemeFromPage() {
   //   const theme = document.body.dataset.theme; // e.g., "theme-dark"
   //   if (theme) {

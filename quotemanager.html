@@ -372,6 +372,8 @@
       <div class="col-sm-12">
         <button class="btn btn-dark" id="edit-quote-btn">💾 Save Changes</button>
         <button type="button" class="btn btn-secondary" id="previewQuoteBtn">Preview Invoice</button>
+        <button id="finalize-invoice-btn" class="btn btn-success">
+          <i class="bi bi-file-earmark-check"></i> Finalize Invoice</button>
       </div>
     </div>
   </form>
@@ -533,7 +535,7 @@
       </div>
     </div>
 
-    <!-- Add Form-Card 4 Balance Info, Row 2, Col 2 -->
+    <!-- Add Form-Card 5 Balance Info, Row 2, Col 2 -->
     <div class="col-md-4">
       <div class="accordion" id="add-AccordionR2C2">
         <div class="accordion-item border-info">
@@ -553,8 +555,6 @@
               </div>
               <div class="row mb-2">
                 <div class="col-sm-6"><label class="form-label">Deposit Date</label><input type="text" class="form-control" id="add-depositDate"></div>
-              </div>
-              <div class="row mb-2">
                 <div class="col-sm-6"><label class="form-label">Payment Method</label><input class="form-control text-end" list="payment-method-options" id="add-paymentMethod" name="paymentMethod" placeholder="Select or type method"></div>
                   <datalist id="payment-method-options"></datalist></div>
               <div class="row">
@@ -662,11 +662,41 @@
     </div>
     <div class="row g-3 mt-3 mb-5">
       <div class="col-sm-12"><button class="btn btn-dark" id="add-quote-btn">💾 Save Changes</button>
-      <button type="button" class="btn btn-secondary" id="previewQuoteBtn">Preview Invoice</button></div>
+      <button type="button" class="btn btn-secondary" id="previewQuoteBtn">Preview Invoice</button>
+      <button id="finalize-invoice-btn" class="btn btn-success">
+        <i class="bi bi-file-earmark-check"></i> Finalize Invoice</button></div>
     </div>
   </form>
 </div>
 
+<!-- Final Invoice Email Modal -->
+<div class="row g-3 mt-3 mb-5">
+  <div class="modal fade" id="finalInvoiceModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Send Final Invoice</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="invoice-email-to" class="form-label">To:</label>
+            <input type="email" class="form-control" id="invoice-email-to" readonly>
+          </div>
+          <div class="mb-3">
+            <label for="invoice-email-body" class="form-label">Email Body:</label>
+            <div id="invoice-email-body" contenteditable="true" class="form-control" style="height: 200px; overflow-y: auto;"></div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="send-invoice-email" class="btn btn-primary">Send Invoice Email</button>
+          <button id="send-invoice-email-btn" class="btn btn-primary">Send Email</button>
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 </section>
 
 <script>
