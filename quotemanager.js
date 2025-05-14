@@ -385,90 +385,7 @@ async function handleSave(event, mode) {
     // Recalculate totals before collecting data
     calculateAllTotals(mode);
 
-    const get = (id) => getField(`${mode}-${id}`);
-    const rawPhone = get("phone").replace(/\D/g, "");
-
-    // Prepare formData (note: no quoteDate in formData as backend will handle this)
-    const formData = {
-      phone: rawPhone,
-      firstName: get("firstName"),
-      lastName: get("lastName"),
-      email: get("email"),
-      street: get("street"),
-      city: get("city"),
-      state: get("state"),
-      zip: get("zip"),
-      eventDate: get("eventDate"),
-      eventLocation: get("eventLocation"),
-      deliveryFee: parseCurrency(get("deliveryFee")),
-      setupFee: parseCurrency(get("setupFee")),
-      otherFee: parseCurrency(get("otherFee")),
-      addonsTotal: parseCurrency(get("addonsTotal")),
-      deposit: parseCurrency(get("deposit")),
-      depositDate: get("depositDate"),
-      balanceDue: parseCurrency(get("balanceDue")),
-      balanceDueDate: get("balanceDueDate"),
-      paymentMethod: get("paymentMethod"),
-      dueDate: get("dueDate"),
-      totalProductCost: parseCurrency(get("totalProductCost")),
-      totalProductRetail: parseCurrency(get("totalProductRetail")),
-      subTotal1: parseCurrency(get("subTotal1")),
-      subTotal2: parseCurrency(get("subTotal2")),
-      subTotal3: parseCurrency(get("subTotal3")),
-      discount: parseCurrency(get("discount")),
-      discountedTotal: parseCurrency(get("discountedTotal")),
-      grandTotal: parseCurrency(get("grandTotal")),
-      quoteNotes: get("quoteNotes"),
-      eventNotes: get("eventNotes"),
-      invoiceID: get("invoiceID"),
-      invoiceDate: get("invoiceDate"),
-      invoiceUrl: get("invoiceUrl")
-    };
-
-    console.log("📦 Form data being collected:", formData);
-
-    // Gather products
-    const partRows = document.querySelectorAll(`#${mode}-product-rows-container .product-row`);
-    const products = [];
-
-    partRows.forEach((row) => {
-      const name = row.querySelector(".product-name")?.value.trim();
-      const qty = parseFloat(row.querySelector(".product-quantity")?.value.trim() || 0);
-      const unitPrice = parseCurrency(row.querySelector(".totalRowCost")?.value || 0);
-      const totalRowRetail = parseCurrency(row.querySelector(".totalRowRetail")?.value || 0);
-
-      if (name && qty > 0) {
-        products.push({ name, quantity: qty, unitPrice, totalRowRetail });
-      }
-    });
-
-    if (products.length === 0) {
-      showToast("⚠️ At least one valid product and quantity must be provided.", "error");
-      return;
-    }
-
-    formData.productCount = products.length;
-
-    for (let i = 1; i <= 15; i++) {
-      const p = products[i - 1] || {};
-      formData[`part${i}`] = p.name || "";
-      formData[`qty${i}`] = p.quantity || "";
-      formData[`unitPrice${i}`] = p.unitPrice || "";
-      formData[`totalRowRetail${i}`] = p.totalRowRetail || "";
-    }
-
-    delete formData.products; // Ensure no products array is passed
-
-    for (const [key, value] of Object.entries(formData)) {
-      if (Array.isArray(value)) {
-        console.warn(`⚠️ ${key} is an array — could cause setValues error.`);
-      } else if (typeof value === 'object' && value !== null) {
-        console.warn(`⚠️ ${key} is an object — could cause setValues error.`);
-      } else {
-        console.log(`🧪 ${key}:`, value, `(type: ${typeof value})`);
-      }
-    }
-
+    const formData = collectQuoteFormData(mode);
     console.log("🚀 Data being sent to backend:", formData);
 
     // Send data to the backend with 'quoteDate' handled by the backend
@@ -478,7 +395,7 @@ async function handleSave(event, mode) {
       body: JSON.stringify({
         system: "quotes",
         action: mode,
-        qtID: mode === "edit" ? get("qtID") : null,
+        qtID: mode === "edit" ? getField("edit-qtID") : null,
         quoteInfo: formData
       })
     });
@@ -502,6 +419,74 @@ async function handleSave(event, mode) {
   } finally {
     toggleLoader(false);
   }
+}
+
+function collectQuoteFormData(mode) {
+  const get = (id) => getField(`${mode}-${id}`);
+  const rawPhone = get("phone").replace(/\D/g, "");
+
+  const formData = {
+    phone: rawPhone,
+    firstName: get("firstName"),
+    lastName: get("lastName"),
+    email: get("email"),
+    street: get("street"),
+    city: get("city"),
+    state: get("state"),
+    zip: get("zip"),
+    eventDate: get("eventDate"),
+    eventLocation: get("eventLocation"),
+    deliveryFee: parseCurrency(get("deliveryFee")),
+    setupFee: parseCurrency(get("setupFee")),
+    otherFee: parseCurrency(get("otherFee")),
+    addonsTotal: parseCurrency(get("addonsTotal")),
+    deposit: parseCurrency(get("deposit")),
+    depositDate: get("depositDate"),
+    balanceDue: parseCurrency(get("balanceDue")),
+    balanceDueDate: get("balanceDueDate"),
+    paymentMethod: get("paymentMethod"),
+    dueDate: get("dueDate"),
+    totalProductCost: parseCurrency(get("totalProductCost")),
+    totalProductRetail: parseCurrency(get("totalProductRetail")),
+    subTotal1: parseCurrency(get("subTotal1")),
+    subTotal2: parseCurrency(get("subTotal2")),
+    subTotal3: parseCurrency(get("subTotal3")),
+    discount: parseCurrency(get("discount")),
+    discountedTotal: parseCurrency(get("discountedTotal")),
+    grandTotal: parseCurrency(get("grandTotal")),
+    quoteNotes: get("quoteNotes"),
+    eventNotes: get("eventNotes"),
+    invoiceID: "",
+    invoiceDate: "",
+    invoiceUrl: ""
+  };
+
+  // Gather product rows
+  const partRows = document.querySelectorAll(`#${mode}-product-rows-container .product-row`);
+  const products = [];
+
+  partRows.forEach((row) => {
+    const name = row.querySelector(".product-name")?.value.trim();
+    const qty = parseFloat(row.querySelector(".product-quantity")?.value.trim() || 0);
+    const unitPrice = parseCurrency(row.querySelector(".totalRowCost")?.value || 0);
+    const totalRowRetail = parseCurrency(row.querySelector(".totalRowRetail")?.value || 0);
+
+    if (name && qty > 0) {
+      products.push({ name, quantity: qty, unitPrice, totalRowRetail });
+    }
+  });
+
+  formData.productCount = products.length;
+
+  for (let i = 1; i <= 15; i++) {
+    const p = products[i - 1] || {};
+    formData[`part${i}`] = p.name || "";
+    formData[`qty${i}`] = p.quantity || "";
+    formData[`unitPrice${i}`] = p.unitPrice || "";
+    formData[`totalRowRetail${i}`] = p.totalRowRetail || "";
+  }
+
+  return formData;
 }
 
 let productData = {}; // Global material map
@@ -893,4 +878,44 @@ function formatPhoneNumber(number) {
   const mid = digits.slice(3, 6);
   const last = digits.slice(6);
   return `(${area}) ${mid}-${last}`;
+}
+
+async function previewInvoiceFromForm() {
+  console.log("🔍 previewInvoiceFromForm triggered");
+
+  const mode = document.querySelector("#edit-quote.show.active") ? "edit" : "add";
+  console.log("🧭 Detected form mode:", mode);
+
+  toggleLoader(true);
+
+  try {
+    calculateAllTotals(mode);
+    const quoteInfo = collectQuoteFormData(mode);
+    console.log("📦 Preview data being sent to backend:", quoteInfo);
+
+    const response = await fetch(scriptURL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        system: "quotes",
+        action: "preview",
+        qtID: mode === "edit" ? getField("edit-qtID") : null,
+        quoteInfo
+      })
+    });
+
+    const result = await response.json();
+    console.log("✅ Backend preview response:", result);
+
+    if (result.success && result.url) {
+      window.open(result.url, "_blank");
+    } else {
+      showToast("❌ Preview failed: " + (result.message || "No URL returned"), "error");
+    }
+  } catch (err) {
+    console.error("❌ Preview error:", err);
+    showToast("❌ Error during preview request. Check console.", "error");
+  } finally {
+    toggleLoader(false);
+  }
 }
