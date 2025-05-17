@@ -72,12 +72,12 @@
                   <span>Add Clients</span><i class="fa-solid fa-user-plus"></i>
                 </button>
               </div>
-              <!-- Link 2 - Add Inventory -->
-              <div class="col-12">
+              <!-- Link 2 - Add Inventory Disabled -->
+              <!-- <div class="col-12">
                 <button class="btn btn-outline-success w-100 d-flex justify-content-between align-items-center" data-link="materialmanager.html#add-inventory">
                   <span>Add Inventory</span><i class="fa-solid fa-boxes-stacked"></i>
                 </button>
-              </div>
+              </div> -->
               <!-- Link 3 - Add Material -->
               <div class="col-12">
                 <button class="btn btn-outline-info w-100 d-flex justify-content-between align-items-center" data-link="materialmanager.html#add-material">
@@ -116,7 +116,7 @@
           <div class="accordion-body bg-black text-light">
             <div class="row g-3">
               <div class="col-12"><button class="btn btn-outline-primary w-100 d-flex justify-content-between align-items-center" data-link="clientmanager.html#tab-search"><span>Total Clients:</span><span id="totalClients" class="fw-bold">--</span></button></div>
-              <div class="col-12"><button class="btn btn-outline-success w-100 d-flex justify-content-between align-items-center" data-link="invoicemanager.html#search-invoice"><span>Total Invoices:</span><span id="totalInvoices" class="fw-bold">--</span></button></div>
+              <!-- <div class="col-12"><button class="btn btn-outline-success w-100 d-flex justify-content-between align-items-center" data-link="invoicemanager.html#search-invoice"><span>Total Invoices:</span><span id="totalInvoices" class="fw-bold">--</span></button></div> -->
               <div class="col-12"><button class="btn btn-outline-info w-100 d-flex justify-content-between align-items-center" data-link="materialmanager.html#search-material"><span>Total Materials:</span><span id="totalMaterials" class="fw-bold">--</span></button></div>
               <div class="col-12"><button class="btn btn-outline-danger w-100 d-flex justify-content-between align-items-center" data-link="productmanager.html#search-product"><span>Total Products:</span><span id="totalProducts" class="fw-bold">--</span></button></div>
               <div class="col-12"><button class="btn btn-outline-warning w-100 d-flex justify-content-between align-items-center" data-link="quotemanager.html#search-quote"><span>Total Quotes:</span><span id="totalQuotes" class="fw-bold">--</span></button></div>
@@ -277,7 +277,7 @@ document.addEventListener("DOMContentLoaded", () => {
     fetchAndCount("getDataForSearch", "totalClients"),
     fetchAndCount("getProdDataForSearch", "totalProducts"),
     fetchAndCount("getMatDataForSearch", "totalMaterials"),
-    fetchAndCount("getInvDataForSearch", "totalInvoices"),
+    // fetchAndCount("getInvDataForSearch", "totalInvoices"),
     fetchAndCount("getQuoteDataForSearch", "totalQuotes"),
     fetchAndCount("getMatDataForSearch", "totalProducts"),
     fetchAndCount("getLeads", "newLeads", "leads"),

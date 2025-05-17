@@ -1,19 +1,6 @@
-// ✅ Utility: Create or get counter elements
-function getOrCreateCounter(id, classList, parent, insertAfter = null) {
-    let el = document.getElementById(id);
-    if (!el) {
-        el = document.createElement("span");
-        el.id = id;
-        el.classList.add(...classList);
-        if (insertAfter) {
-            insertAfter.insertAdjacentElement("afterend", el);
-        } else {
-            parent.appendChild(el);
-        }
-    }
-    return el;
-}
+// new quotemanager.js
 
+// bootstrap 5 tab switching and mode detection
 // ✅ Utility: Show Edit Tab
 function showEditTab() {
   const editTab = document.querySelector('[data-bs-target="#edit-quote"]');
@@ -54,74 +41,6 @@ document.addEventListener("DOMContentLoaded", () => {
     // Add event listener for the discount field
     document.getElementById("edit-discount")?.addEventListener("change", calculateAllTotals);
 });
-
-// ✅ quote Data
-let quoteData = []; 
-
-// ✅ Load Search Data
-function setQuoteDataForSearch() {
-    fetch(scriptURL + "?action=getQuoteDataForSearch")
-        .then(res => res.json())
-        .then(data => quoteData = data.slice())
-        .catch(err => console.error("❌ Error loading quote data:", err));
-}
-
-// ✅ Search Quotes
-function search() {
-    const searchInputEl = document.getElementById("searchInput");
-    const searchResultsBox = document.getElementById("searchResults");
-    if (!searchInputEl || !searchResultsBox) return;
-
-    let counterContainer = document.getElementById("counterContainer");
-    if (!counterContainer) {
-        counterContainer = document.createElement("div");
-        counterContainer.id = "counterContainer";
-        counterContainer.classList.add("d-inline-flex", "gap-3", "align-items-center", "ms-3");
-        searchInputEl.parentNode.insertBefore(counterContainer, searchInputEl.nextSibling);
-    }
-
-    const searchCounter = getOrCreateCounter("searchCounter", ["px-2", "py-1", "border", "rounded", "fw-bold", "bg-dark", "text-info"], counterContainer);
-    const totalCounter = getOrCreateCounter("totalCounter", ["px-2", "py-1", "border", "rounded", "fw-bold", "bg-dark", "text-info"], counterContainer, searchCounter);
-
-    toggleLoader();
-
-    const input = searchInputEl.value.toLowerCase().trim();
-    const searchWords = input.split(/\s+/);
-    const searchCols = [0, 1, 2];
-
-    const results = input === "" ? [] : quoteData.filter(r =>
-        searchWords.every(word =>
-            searchCols.some(i => r[i]?.toString().toLowerCase().includes(word))
-        )
-    );
-
-    searchCounter.textContent = input === "" ? "🔍" : `${results.length} Quotes Found`;
-    totalCounter.textContent = `Total Quotes: ${quoteData.length}`;
-    searchResultsBox.innerHTML = "";
-
-    const template = document.getElementById("rowTemplate").content;
-    results.forEach(r => {
-      const row = template.cloneNode(true);
-      row.querySelector(".qtID").textContent = r[0];
-      row.querySelector(".firstName").textContent = r[3];
-      row.querySelector(".lastName").textContent = r[4];
-      row.querySelector(".eventDate").textContent = r[10];
-  
-      // ✅ Set qtID directly on the row for click handling
-      const tr = row.querySelector("tr");
-      tr.dataset.quoteid = r[0];
-  
-      // ✅ Still set delete buttons if needed
-      const deleteBtn = row.querySelector(".delete-button");
-      const confirmBtn = row.querySelector(".before-delete-button");
-      if (deleteBtn) deleteBtn.dataset.quoteid = r[0];
-      if (confirmBtn) confirmBtn.dataset.quoteid = r[0];
-  
-      searchResultsBox.appendChild(row);
-  });
-
-  toggleLoader();
-}
 
 // ✅ Unified Click Handler for Search Results
 document.getElementById("searchResults").addEventListener("click", event => {
@@ -178,6 +97,35 @@ document.getElementById("searchResults").addEventListener("click", event => {
 
 });
 
+document.addEventListener("DOMContentLoaded", () => {
+  // Save button for Edit Form
+  const editQuoteBtn = document.getElementById("edit-quote-btn");
+  if (editQuoteBtn) {
+    editQuoteBtn.addEventListener("click", async (e) => {
+      console.log("✅ Save Quote button clicked (Edit Form)");
+      e.preventDefault();
+      e.stopPropagation();
+      await handleSave(e, "edit");  // ✅ FIXED: pass event!
+    });
+  }
+
+  // Save button for Add Form
+  const addQuoteBtn = document.getElementById("add-quote-btn");
+  if (addQuoteBtn) {
+    addQuoteBtn.addEventListener("click", async (e) => {
+      console.log("✅ Add Quote button clicked (Add Form)");
+      e.preventDefault();
+      e.stopPropagation();
+      await handleSave(e, "add");  // already good
+    });
+  }
+
+  // Initialize Add Form when the tab is shown
+  document.querySelector('button[data-bs-target="#add-quote"]')
+    ?.addEventListener("shown.bs.tab", initializeAddForm);
+});
+
+// Part 1-mode detection
 // ✅ Populate Edit Form
 document.addEventListener("DOMContentLoaded", () => {
   // Watch all fields that affect calculations
@@ -234,6 +182,35 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
+document.addEventListener("DOMContentLoaded", () => {
+  // Save button for Edit Form
+  const editQuoteBtn = document.getElementById("edit-quote-btn");
+  if (editQuoteBtn) {
+    editQuoteBtn.addEventListener("click", async (e) => {
+      console.log("✅ Save Quote button clicked (Edit Form)");
+      e.preventDefault();
+      e.stopPropagation();
+      await handleSave(e, "edit");  // ✅ FIXED: pass event!
+    });
+  }
+
+  // Save button for Add Form
+  const addQuoteBtn = document.getElementById("add-quote-btn");
+  if (addQuoteBtn) {
+    addQuoteBtn.addEventListener("click", async (e) => {
+      console.log("✅ Add Quote button clicked (Add Form)");
+      e.preventDefault();
+      e.stopPropagation();
+      await handleSave(e, "add");  // already good
+    });
+  }
+
+  // Initialize Add Form when the tab is shown
+  document.querySelector('button[data-bs-target="#add-quote"]')
+    ?.addEventListener("shown.bs.tab", initializeAddForm);
+});
+
+// Part 2-only uses bs-tabs logic and mode detection
 async function populateEditForm(qtID) {
   try {
     toggleLoader(true);
@@ -334,212 +311,136 @@ async function populateEditForm(qtID) {
   }
 }
 
-// Unified Event listener for Save buttons in Both Forms
-document.addEventListener("DOMContentLoaded", () => {
-  // Save button for Edit Form
-  const saveQuoteBtn = document.getElementById("save-quote-btn");
-  if (saveQuoteBtn) {
-    saveQuoteBtn.addEventListener("click", async (e) => {
-      console.log("✅ Save Quote button clicked (Edit Form)");
-      e.preventDefault();
-      e.stopPropagation(); // Prevent event from propagating to parent elements
-      await handleSave("edit");
-    });
-  }
-
-  // Save button for Add Form
-  const addQuoteBtn = document.getElementById("add-quote-btn");
-  if (addQuoteBtn) {
-    addQuoteBtn.addEventListener("click", async (e) => {
-      console.log("✅ Add Quote button clicked (Add Form)");
-      e.preventDefault(); // Prevent default form submission
-      e.stopPropagation(); // Stop the event from propagating further
-      await handleSave(e, "add"); // Pass the event object explicitly
-    });
-  }
-
-  // Initialize Add Form when the tab is shown
-  document.querySelector('button[data-bs-target="#add-quote"]')
-    .addEventListener("shown.bs.tab", initializeAddForm);
-});
-
-// Unified save handler for both Add and Edit forms
 async function handleSave(event, mode) {
-  const eventSource = event?.target;
-  console.log("Event source:", eventSource); // Log the source of the event
-  console.log("Event type:", event?.type); // Log the type of the event
+  if (!event || !mode) {
+    console.error("❌ handleSave requires both event and mode.");
+    return;
+  }
 
-  if (!eventSource || eventSource.id !== "add-quote-btn") {
-    console.warn("⚠️ handleSave triggered by an unintended element:", eventSource);
-    return; // Exit if the source is not the Add Quote button
+  const eventSource = event.target;
+  console.log("Event source:", eventSource);
+  console.log("Event type:", event.type);
+
+  const expectedButtonId = mode === "add" ? "add-quote-btn" : "edit-quote-btn";
+  if (eventSource?.id !== expectedButtonId) {
+    console.warn(`⚠️ handleSave triggered by unintended element:`, eventSource);
+    return;
   }
 
   console.log(`🔍 handleSave triggered for mode: ${mode}`);
-  console.log("Event source:", eventSource); // Log the source of the event
-  console.log("Event type:", event.type); // Log the type of the event
-  toggleLoader(true); // Show loader during saving process
-
+  toggleLoader(true);
 
   try {
-    const get = (id) => getField(`${mode}-${id}`);
-    const rawPhone = get("phone").replace(/\D/g, "");
+    // Recalculate totals before collecting data
+    calculateAllTotals(mode);
 
-    const formData = {
-      quoteDate: new Date(),
-      phone: rawPhone,
-      firstName: get("firstName"),
-      lastName: get("lastName"),
-      email: get("email"),
-      street: get("street"),
-      city: get("city"),
-      state: get("state"),
-      zip: get("zip"),
-      eventDate: get("eventDate"),
-      eventLocation: get("eventLocation"),
-      deliveryFee: parseCurrency(get("deliveryFee")),
-      setupFee: parseCurrency(get("setupFee")),
-      otherFee: parseCurrency(get("otherFee")),
-      addonsTotal: parseCurrency(get("addonsTotal")),
-      deposit: parseCurrency(get("deposit")),
-      depositDate: get("depositDate"),
-      balanceDue: parseCurrency(get("balanceDue")),
-      balanceDueDate: get("balanceDueDate"),
-      paymentMethod: get("paymentMethod"),
-      dueDate: get("dueDate"),
-      totalProductCost: parseCurrency(get("totalProductCost")),
-      totalProductRetail: parseCurrency(get("totalProductRetail")),
-      subTotal1: parseCurrency(get("subTotal1")),
-      subTotal2: parseCurrency(get("subTotal2")),
-      subTotal3: parseCurrency(get("subTotal3")),
-      discount: parseCurrency(get("discount")),
-      discountedTotal: parseCurrency(get("discountedTotal")),
-      grandTotal: parseCurrency(get("grandTotal")),
-      quoteNotes: get("quoteNotes"),
-      eventNotes: get("eventNotes"),
-      invoiceID: get("invoiceID"),
-      invoiceDate: get("invoiceDate"),
-      invoiceUrl: get("invoiceUrl")
-    };
-    console.log("Form data being collected:", formData);
+    const formData = collectQuoteFormData(mode);
+    console.log("🚀 Data being sent to backend:", formData);
 
-    // Collect product rows
-    const partRows = document.querySelectorAll(`#${mode}-product-rows-container .product-row`);
-    const products = [];
-    partRows.forEach((row) => {
-      const name = row.querySelector(".product-name")?.value.trim();
-      const qty = parseFloat(row.querySelector(".product-quantity")?.value.trim() || 0);
-      const unitPrice = parseCurrency(row.querySelector(".totalRowCost")?.value || 0);
-      const totalRowRetail = parseCurrency(row.querySelector(".totalRowRetail")?.value || 0);
-
-      if (name && qty > 0) {
-        products.push({ name, quantity: qty, unitPrice, totalRowRetail });
-      }
-    });
-    console.log("Products being collected:", products);
-
-    if (products.length === 0) {
-      showToast("⚠️ At least one valid product and quantity must be provided.", "error");
-      return;
-    }
-
-    formData.productCount = products.length;
-
-    // Add product data to formData
-    for (let i = 1; i <= 15; i++) {
-      const p = products[i - 1] || {};
-      formData[`part${i}`] = p.name || "";
-      formData[`qty${i}`] = p.quantity || "";
-      formData[`unitPrice${i}`] = p.unitPrice || "";
-      formData[`totalRowRetail${i}`] = p.totalRowRetail || "";
-    }
-
-    const dataArray = [
-      formData.quoteDate,
-      formData.phone,
-      formData.firstName,
-      formData.lastName,
-      formData.email,
-      formData.street,
-      formData.city,
-      formData.state,
-      formData.zip,
-      formData.eventDate,
-      formData.eventLocation,
-      formData.productCount,
-      formData.deliveryFee,
-      formData.setupFee,
-      formData.otherFee,
-      formData.addonsTotal,
-      formData.deposit,
-      formData.depositDate,
-      formData.balanceDue,
-      formData.balanceDueDate,
-      formData.paymentMethod,
-      formData.dueDate,
-      formData.totalProductCost,
-      formData.totalProductRetail,
-      formData.subTotal1,
-      formData.subTotal2,
-      formData.subTotal3,
-      formData.discount,
-      formData.discountedTotal,
-      formData.grandTotal,
-    ];
-
-    for (let i = 1; i <= 15; i++) {
-      dataArray.push(
-        formData[`part${i}`],
-        formData[`qty${i}`],
-        formData[`unitPrice${i}`],
-        formData[`totalRowRetail${i}`]
-      );
-    }
-
-    dataArray.push(
-      formData.quoteNotes,
-      formData.eventNotes,
-      formData.invoiceID,
-      formData.invoiceDate,
-      formData.invoiceUrl
-    );
-
-    console.log("Data being sent to backend:", dataArray);
-
+    // Send data to the backend with 'quoteDate' handled by the backend
     const res = await fetch(scriptURL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         system: "quotes",
-        action: mode, // Dynamically set to "add" or "edit"
-        qtID: mode === "edit" ? get("qtID") : null,
-        quoteInfo: dataArray
+        action: mode,
+        qtID: mode === "edit" ? getField("edit-qtID") : null,
+        quoteInfo: formData
       })
     });
 
     const result = await res.json();
-    console.log("Backend response:", result);
+    console.log("✅ Backend response:", result);
 
     if (result.success) {
-      showToast("✅ Quote updated!");
+      showToast("✅ Quote saved successfully!");
       document.getElementById("searchInput").value = "";
       document.getElementById("searchResults").innerHTML = "";
       setQuoteDataForSearch();
-      document.querySelector('[data-bs-target="#search-quote"]')?.click(); // Switches to the search form
+      document.querySelector('[data-bs-target="#search-quote"]')?.click();
     } else {
-      showToast("❌ Error updating quote data!", "error");
+      showToast("❌ Error saving quote data!", "error");
       console.error("❌ Backend save failed:", result.message || "Unknown error");
     }
   } catch (err) {
     console.error("❌ Save error:", err);
-    showToast("❌ Error updating quote data!", "error");
+    showToast("❌ Error saving quote data!", "error");
   } finally {
     toggleLoader(false);
   }
 }
 
+function collectQuoteFormData(mode) {
+  const get = (id) => getField(`${mode}-${id}`);
+  const rawPhone = get("phone").replace(/\D/g, "");
+
+  const formData = {
+    phone: rawPhone,
+    firstName: get("firstName"),
+    lastName: get("lastName"),
+    email: get("email"),
+    street: get("street"),
+    city: get("city"),
+    state: get("state"),
+    zip: get("zip"),
+    eventDate: get("eventDate"),
+    eventLocation: get("eventLocation"),
+    deliveryFee: parseCurrency(get("deliveryFee")),
+    setupFee: parseCurrency(get("setupFee")),
+    otherFee: parseCurrency(get("otherFee")),
+    addonsTotal: parseCurrency(get("addonsTotal")),
+    deposit: parseCurrency(get("deposit")),
+    depositDate: get("depositDate"),
+    balanceDue: parseCurrency(get("balanceDue")),
+    balanceDueDate: get("balanceDueDate"),
+    paymentMethod: get("paymentMethod"),
+    dueDate: get("dueDate"),
+    totalProductCost: parseCurrency(get("totalProductCost")),
+    totalProductRetail: parseCurrency(get("totalProductRetail")),
+    subTotal1: parseCurrency(get("subTotal1")),
+    subTotal2: parseCurrency(get("subTotal2")),
+    subTotal3: parseCurrency(get("subTotal3")),
+    discount: parseCurrency(get("discount")),
+    discountedTotal: parseCurrency(get("discountedTotal")),
+    grandTotal: parseCurrency(get("grandTotal")),
+    quoteNotes: get("quoteNotes"),
+    eventNotes: get("eventNotes"),
+    invoiceID: "",
+    invoiceDate: "",
+    invoiceUrl: ""
+  };
+
+  // Gather product rows
+  const partRows = document.querySelectorAll(`#${mode}-product-rows-container .product-row`);
+  const products = [];
+
+  partRows.forEach((row) => {
+    const name = row.querySelector(".product-name")?.value.trim();
+    const qty = parseFloat(row.querySelector(".product-quantity")?.value.trim() || 0);
+    const unitPrice = parseCurrency(row.querySelector(".totalRowCost")?.value || 0);
+    const totalRowRetail = parseCurrency(row.querySelector(".totalRowRetail")?.value || 0);
+
+    if (name && qty > 0) {
+      products.push({ name, quantity: qty, unitPrice, totalRowRetail });
+    }
+  });
+
+  formData.productCount = products.length;
+
+  for (let i = 1; i <= 15; i++) {
+    const p = products[i - 1] || {};
+    formData[`part${i}`] = p.name || "";
+    formData[`qty${i}`] = p.quantity || "";
+    formData[`unitPrice${i}`] = p.unitPrice || "";
+    formData[`totalRowRetail${i}`] = p.totalRowRetail || "";
+  }
+
+  return formData;
+}
+
 let productData = {}; // Global material map
 const maxProducts = 15;
-  
+
 // Initialize Add Form
 async function initializeAddForm() {
   try {
@@ -554,19 +455,19 @@ async function initializeAddForm() {
       "eventDate", "eventLocation", "eventNotes"
     ];
 
-    addFields.forEach(field => setField(`add-${field}`, ""));
+    addFields.forEach(field => setField(`add-${field}`, "")); // Mode-specific field clearing ("add" mode)
 
-    // Load all dropdowns
+    // Load all dropdowns (products, clients, etc.)
     await Promise.all([
       getProdDataForSearch(),
       setQuoteDataForSearch(),
       loadDropdowns()
     ]);
 
-    // Clear product rows and add one fresh row
+    // Reset and add a blank product row for "add" mode
     resetProductRows("add-product-rows-container");
 
-    // Trigger calculations and header updates
+    // Recalculate totals and update headers (specific to "add" mode)
     calculateAllTotals("add");
     updateCardHeaders("add");
 
@@ -578,43 +479,45 @@ async function initializeAddForm() {
   }
 }
 
-// 3) When “Add Quote” tab is shown, run initializeAddForm
+// ✅ Bootstrap 5 tab switch listener: runs only when "Add Quote" tab is shown
 document.querySelector('button[data-bs-target="#add-quote"]')
   .addEventListener("shown.bs.tab", initializeAddForm);
 
-  document.getElementById("add-phone").addEventListener("change", async (e) => {
-    e.stopPropagation(); // Prevent event from propagating
-    const phone = getField("add-phone"); // Phone is actually ClientID
-  
-    if (!phone) return;
-  
-    try {
-      const res = await fetch(`${scriptURL}?action=getClientById&clientID=${encodeURIComponent(phone)}`);
-      const client = await res.json();
-  
-      if (!client.error) {
-        setField("add-firstName", client.firstName);
-        setField("add-lastName", client.lastName);
-        setField("add-email", client.email);
-        setField("add-street", client.street);
-        setField("add-city", client.city);
-        setField("add-state", client.state);
-        setField("add-zip", client.zip);
-      } else {
-        // Clear if not found
-        ["add-firstName", "add-lastName", "add-email", "add-street", "add-city", "add-state", "add-zip"]
-          .forEach(id => setField(id, ""));
-        showToast(client.error, "warning");
-      }
-  
-      // Trigger header updates after populating fields
-      updateCardHeaders("add");
-  
-    } catch (err) {
-      console.error("❌ Error loading client by ID:", err);
-      showToast("❌ Could not load client info!", "error");
+// Populate client info in "add" mode based on selected phone/clientID
+document.getElementById("add-phone").addEventListener("change", async (e) => {
+  e.stopPropagation();
+  const phone = getField("add-phone");
+
+  if (!phone) return;
+
+  try {
+    const res = await fetch(`${scriptURL}?action=getClientById&clientID=${encodeURIComponent(phone)}`);
+    const client = await res.json();
+
+    if (!client.error) {
+      // Fill in all matching add-mode fields
+      setField("add-firstName", client.firstName);
+      setField("add-lastName", client.lastName);
+      setField("add-email", client.email);
+      setField("add-street", client.street);
+      setField("add-city", client.city);
+      setField("add-state", client.state);
+      setField("add-zip", client.zip);
+    } else {
+      // Clear all fields if client not found
+      ["add-firstName", "add-lastName", "add-email", "add-street", "add-city", "add-state", "add-zip"]
+        .forEach(id => setField(id, ""));
+      showToast(client.error, "warning");
     }
-  });
+
+    // Update card headers for "add" mode
+    updateCardHeaders("add");
+
+  } catch (err) {
+    console.error("❌ Error loading client by ID:", err);
+    showToast("❌ Could not load client info!", "error");
+  }
+});
 
 async function getProdDataForSearch() {
   try {
@@ -622,7 +525,7 @@ async function getProdDataForSearch() {
     if (!response.ok) throw new Error(`Fetch failed with status ${response.status}`);
     const rawData = await response.json();
 
-    productData = {}; // ✅ Global assignment
+    productData = {}; // ✅ Assign global product map
 
     rawData.forEach(row => {
       const id = typeof row[0] === 'string' ? row[0].trim() : String(row[0]);
@@ -641,33 +544,35 @@ async function getProdDataForSearch() {
     throw err;
   }
 }
-  
-// Initialize product row events
+
+// Handle add product button (Add Mode)
 function handleAddProductClick() {
   console.log("✅ Add Product button clicked");
-  addProductRow("", 1, "add-product-rows-container", "add");
+  addProductRow("", 1, "add-product-rows-container", "add"); // Mode = "add"
 }
 
+// Improve UX for dropdown clicks (prevent unwanted bubbling)
 document.querySelectorAll(".product-name").forEach((dropdown) => {
   dropdown.addEventListener("click", (e) => {
     console.log("✅ Product dropdown clicked");
-    e.stopPropagation(); // Prevent event from propagating to parent elements
+    e.stopPropagation();
   });
 });
 
+// Collapse toggles (prevent bubbling)
 document.querySelectorAll('[data-bs-toggle="collapse"]').forEach((btn) => {
   btn.addEventListener("click", (e) => {
     console.log("✅ Collapse button clicked");
-    e.stopPropagation(); // Prevent event from propagating to parent elements
+    e.stopPropagation();
   });
 });
 
-// Add product row dynamically
+// Dynamically add a product row to Add or Edit container
 function addProductRow(
   name = "",
   qty = 1,
   containerId = "add-product-rows-container",
-  mode = "add",
+  mode = "add", // ✅ Default is "add" mode
   unitRetail = 0,
   totalRetail = 0
 ) {
@@ -678,12 +583,12 @@ function addProductRow(
   const row = document.createElement("div");
   row.classList.add("row", "g-2", "align-items-center", "mb-1", "product-row");
 
+  // Build options dropdown
   const optionsHTML = Object.values(productData).map(p => {
     const selected = p.name === name ? ' selected' : '';
     return `<option value="${p.name.replace(/"/g, '&quot;')}"${selected}>${p.name}</option>`;
   }).join("");
 
-  // Format numbers as $xx.xx strings
   const formattedUnitRetail = `$${parseFloat(unitRetail || 0).toFixed(2)}`;
   const formattedTotalRetail = `$${parseFloat(totalRetail || 0).toFixed(2)}`;
 
@@ -711,16 +616,20 @@ function addProductRow(
   `;
 
   container.appendChild(row);
-  attachRowEvents(row, mode);
-  calculateAllTotals(mode);
+
+  attachRowEvents(row, mode);       // ✅ Attach events with correct mode
+  calculateAllTotals(mode);         // ✅ Recalculate totals based on mode
 }
 
+// Edit product button (Edit Mode)
 function handleEditProductClick() {
-  addProductRow("", 1, "edit-product-rows-container", "edit");
+  addProductRow("", 1, "edit-product-rows-container", "edit"); // ✅ Mode = "edit"
 }
 
+// Attach input/change/delete events to row
 function attachRowEvents(row, mode = "edit") {
-  const prefix = mode === "add" ? "add-" : "edit-";
+  const prefix = mode === "add" ? "add-" : "edit-"; // ✅ Mode-based field handling
+
   const nameInput = row.querySelector(".product-name");
   const qtyInput = row.querySelector(".product-quantity");
   const costOutput = row.querySelector(".totalRowCost");
@@ -740,20 +649,20 @@ function attachRowEvents(row, mode = "edit") {
       retailOutput.value = "$0.00";
     }
 
-    // Trigger recalculation
-    calculateAllTotals(mode);
+    calculateAllTotals(mode); // ✅ Recalculate using correct mode
   }
 
   nameInput.addEventListener("change", updateTotals);
   qtyInput.addEventListener("change", updateTotals);
   deleteBtn.addEventListener("click", () => {
     row.remove();
-    calculateAllTotals(mode);
+    calculateAllTotals(mode); // ✅ Remove and recalc based on mode
   });
 
-  updateTotals(); // Auto-trigger
+  updateTotals(); // ✅ Initial calc
 }
 
+// Clear and reset product row section
 function resetProductRows(containerId) {
   const container = document.getElementById(containerId);
   if (!container) {
@@ -761,166 +670,9 @@ function resetProductRows(containerId) {
     return;
   }
 
-  // Clear all existing product rows
-  container.innerHTML = "";
+  container.innerHTML = ""; // Remove all rows
 
-  // Add one fresh product row
+  // ✅ Infer mode from containerId prefix
   addProductRow("", 1, containerId, containerId.startsWith("add") ? "add" : "edit");
 }
 
-// ✅ Utility functions
-function calculateAllTotals(mode = "edit") {
-  const prefix = mode === "add" ? "add-" : "edit-";
-
-  let totalProductCost = 0;
-  let totalProductRetail = 0;
-
-  // Helper: safely parse currency
-  const parseCurrency = (val) =>
-    parseFloat(String(val || "0").replace(/[^0-9.-]+/g, "")) || 0;
-
-  // Sum up product rows
-  document.querySelectorAll(`#${prefix}product-rows-container .product-row`).forEach(row => {
-    const name = row.querySelector(".product-name")?.value.trim() || "";
-    const qty = parseFloat(row.querySelector(".product-quantity")?.value) || 0;
-    const prod = productData?.[name] || Object.values(productData).find(p => p.name === name);
-
-    if (prod && qty > 0) {
-      totalProductCost += prod.cost * qty;
-      totalProductRetail += prod.retail * qty;
-    }
-  });
-
-  // 🔥 Auto-update productCount field
-  const productCount = document.querySelectorAll(`#${prefix}product-rows-container .product-row`).length;
-  const countEl = document.getElementById(`${prefix}productCount`);
-  if (countEl) countEl.value = productCount;
-
-
-  // Fees and discounts
-  const deliveryFee = parseCurrency(document.getElementById(`${prefix}deliveryFee`)?.value);
-  const setupFee = parseCurrency(document.getElementById(`${prefix}setupFee`)?.value);
-  const otherFee = parseCurrency(document.getElementById(`${prefix}otherFee`)?.value);
-  const discount = parseCurrency(document.getElementById(`${prefix}discount`)?.value);
-  const deposit = parseCurrency(document.getElementById(`${prefix}deposit`)?.value);
-
-  // Totals calculations
-  const addonsTotal = deliveryFee + setupFee + otherFee;
-  const subTotal1 = totalProductRetail * 0.08875; // tax
-  const subTotal2 = totalProductRetail + subTotal1;
-  const subTotal3 = totalProductRetail * (discount / 100);
-  const discountedTotal = subTotal2 - subTotal3;
-  const grandTotal = subTotal2 - subTotal3 + addonsTotal;
-  const balanceDue = grandTotal - deposit;
-
-  // Update all UI fields
-  const updateField = (id, value) => {
-    const el = document.getElementById(id);
-    if (!el) {
-      console.warn(`⚠️ Element with ID "${id}" not found.`);
-      return;
-    }
-    const currencyFormat = new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2,
-    });
-    
-    if (el.tagName === "INPUT") {
-      el.value = currencyFormat.format(value);
-    } else {
-      el.textContent = currencyFormat.format(value);
-    }
- };
-
-  updateField(`${prefix}addonsTotal`, addonsTotal);
-  updateField(`${prefix}addonsTotal-totals`, addonsTotal);
-  updateField(`${prefix}grandTotal`, grandTotal);
-  updateField(`${prefix}grandTotal-Addons`, grandTotal);
-  // updateField(`${prefix}grandTotal-Totals`, grandTotal);
-  updateField(`${prefix}grandTotal-Summary`, grandTotal);
-  updateField(`${prefix}balanceDue`, balanceDue);
-  updateField(`${prefix}totalProductCost`, totalProductCost);
-  updateField(`${prefix}totalProductRetail`, totalProductRetail);
-  updateField(`${prefix}subTotal1`, subTotal1);
-  updateField(`${prefix}subTotal2`, subTotal2);
-  updateField(`${prefix}subTotal3`, subTotal3);
-  updateField(`${prefix}discountedTotal`, discountedTotal);
-  
-  // Update card headers
-  updateCardHeaders(mode);
-}
-
-function getField(id) {
-  const el = document.getElementById(id);
-  return (el?.value ?? "").toString().trim();
-}
-
-function setField(id, value) {
-  const el = document.getElementById(id);
-  if (el) {
-    el.value = value;
-  } else {
-    console.warn(`⚠️ Element with ID "${id}" not found.`);
-  }
-}
-
-function recalculateAndUpdateHeaders(mode = "edit") {
-  calculateAllTotals(mode);
-  updateCardHeaders(mode);
-}
-
-function updateDisplayText(id, value, fallback = "") {
-  const el = document.getElementById(id);
-  if (el) {
-    el.textContent = value || fallback;
-  } else {
-    console.warn(`⚠️ Element with ID "${id}" not found.`);
-  }
-}
-
-function updateCardHeaders(mode = "edit") {
-  const prefix = mode === "add" ? "add-" : "edit-";
-
-  // Retrieve values directly from the card body fields
-  const addonsTotal = document.getElementById(`${prefix}addonsTotal`)?.textContent || "0.00";
-  const grandTotal = document.getElementById(`${prefix}grandTotal`)?.textContent || "0.00";
-  const balanceDue = document.getElementById(`${prefix}balanceDue`)?.value || "0.00";
-  const totalProductCost = document.getElementById(`${prefix}totalProductCost`)?.textContent || "0.00";
-  const totalProductRetail = document.getElementById(`${prefix}totalProductRetail`)?.textContent || "0.00";
-  const firstName = document.getElementById(`${prefix}firstName`)?.value || "";
-  const lastName = document.getElementById(`${prefix}lastName`)?.value || "";
-  const eventDate = document.getElementById(`${prefix}eventDate`)?.value || "";
-
-  // Format values as currency
-  const formatCurrency = (value) => {
-    const parsedValue = parseFloat(value.replace(/[^0-9.-]+/g, "")) || 0;
-    return parsedValue.toLocaleString("en-US", { style: "currency", currency: "USD" });
-  };
-
-  // Update card headers with the values from the card body fields
-  updateDisplayText(`${prefix}card1-header-display`, `${firstName} ${lastName}`.trim(), "Client Info");
-  updateDisplayText(`${prefix}card2-header-display`, eventDate || "Event Info");
-  updateDisplayText(`${prefix}card3-header-display`, formatCurrency(grandTotal));
-  updateDisplayText(`${prefix}card4-header-display`, formatCurrency(addonsTotal));
-  updateDisplayText(`${prefix}card5-header-display`, formatCurrency(balanceDue));
-  updateDisplayText(`${prefix}card6-header-display`, formatCurrency(grandTotal));
-
-  // Update Card 5 body fields
-  updateDisplayText(`${prefix}totalProductCost`, formatCurrency(totalProductCost));
-  updateDisplayText(`${prefix}totalProductRetail`, formatCurrency(totalProductRetail));
-}
-
-function parseCurrency(value) {
-  return parseFloat(String(value || "0").replace(/[^0-9.-]+/g, "")) || 0;
-}
-
-// work to remove this
-function formatPhoneNumber(number) {
-  const digits = number.replace(/\D/g, ""); // strip all non-digits
-  if (digits.length !== 10) return number; // fallback if it's not a full 10-digit number
-  const area = digits.slice(0, 3);
-  const mid = digits.slice(3, 6);
-  const last = digits.slice(6);
-  return `(${area}) ${mid}-${last}`;
-}

@@ -234,6 +234,34 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
+document.addEventListener("DOMContentLoaded", () => {
+  // Save button for Edit Form
+  const editQuoteBtn = document.getElementById("edit-quote-btn");
+  if (editQuoteBtn) {
+    editQuoteBtn.addEventListener("click", async (e) => {
+      console.log("✅ Save Quote button clicked (Edit Form)");
+      e.preventDefault();
+      e.stopPropagation();
+      await handleSave(e, "edit");  // ✅ FIXED: pass event!
+    });
+  }
+
+  // Save button for Add Form
+  const addQuoteBtn = document.getElementById("add-quote-btn");
+  if (addQuoteBtn) {
+    addQuoteBtn.addEventListener("click", async (e) => {
+      console.log("✅ Add Quote button clicked (Add Form)");
+      e.preventDefault();
+      e.stopPropagation();
+      await handleSave(e, "add");  // already good
+    });
+  }
+
+  // Initialize Add Form when the tab is shown
+  document.querySelector('button[data-bs-target="#add-quote"]')
+    ?.addEventListener("shown.bs.tab", initializeAddForm);
+});
+
 async function populateEditForm(qtID) {
   try {
     toggleLoader(true);
@@ -333,34 +361,6 @@ async function populateEditForm(qtID) {
     toggleLoader(false);
   }
 }
-
-document.addEventListener("DOMContentLoaded", () => {
-  // Save button for Edit Form
-  const editQuoteBtn = document.getElementById("edit-quote-btn");
-  if (editQuoteBtn) {
-    editQuoteBtn.addEventListener("click", async (e) => {
-      console.log("✅ Save Quote button clicked (Edit Form)");
-      e.preventDefault();
-      e.stopPropagation();
-      await handleSave(e, "edit");  // ✅ FIXED: pass event!
-    });
-  }
-
-  // Save button for Add Form
-  const addQuoteBtn = document.getElementById("add-quote-btn");
-  if (addQuoteBtn) {
-    addQuoteBtn.addEventListener("click", async (e) => {
-      console.log("✅ Add Quote button clicked (Add Form)");
-      e.preventDefault();
-      e.stopPropagation();
-      await handleSave(e, "add");  // already good
-    });
-  }
-
-  // Initialize Add Form when the tab is shown
-  document.querySelector('button[data-bs-target="#add-quote"]')
-    ?.addEventListener("shown.bs.tab", initializeAddForm);
-});
 
 async function handleSave(event, mode) {
   if (!event || !mode) {
@@ -720,6 +720,7 @@ function resetProductRows(containerId) {
   addProductRow("", 1, containerId, containerId.startsWith("add") ? "add" : "edit");
 }
 
+// Part 4-quotemanager.js
 // ✅ Utility functions
 function calculateAllTotals(mode = "edit") {
   const prefix = mode === "add" ? "add-" : "edit-";
@@ -999,50 +1000,6 @@ document.getElementById("finalize-invoice-btn").addEventListener("click", async 
   } catch (err) {
     console.error("❌ Finalize request error:", err);
     showToast("❌ Error finalizing invoice. Check console for details.", "error");
-  } finally {
-    toggleLoader(false);
-  }
-});
-
-document.getElementById("send-invoice-email-btn").addEventListener("click", async (e) => {
-  e.preventDefault();
-  e.stopPropagation();
-
-  toggleLoader(true);
-
-  try {
-    const to = document.getElementById("invoice-email-to").value.trim();
-    const subject = document.getElementById("invoice-email-subject").value.trim();
-    const body = document.getElementById("invoice-email-body").innerHTML;
-
-    if (!to || !subject || !body) {
-      showToast("❌ Cannot send email. Missing required fields.", "error");
-      return;
-    }
-
-    const response = await fetch(scriptURL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        system: "quotes",
-        action: "sendInvoiceEmail",
-        emailData: { to, subject, body }
-      })
-    });
-
-    const result = await response.json();
-
-    if (result.success) {
-      showToast("✅ Invoice email sent successfully.", "success");
-      bootstrap.Modal.getInstance(document.getElementById("finalInvoiceModal")).hide();
-    } else {
-      console.error("❌ Email sending failed:", result);
-      showToast("❌ Failed to send invoice email.", "error");
-    }
-
-  } catch (err) {
-    console.error("❌ Error sending email:", err);
-    showToast("❌ An error occurred while sending the email.", "error");
   } finally {
     toggleLoader(false);
   }
