@@ -27,10 +27,19 @@
     <h2 class="text-center">Quote Management</h2>
 
 <!-- Navigation Tabs -->
-<ul class="nav nav-tabs" id="quoteTabs">
-  <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#search-quote">🔍 Search Quote</button></li>
-  <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#add-quote">➕ Add Quote</button></li>
-  <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#edit-quote" style="display:none;">✏️ Edit Quote</button></li>
+<ul class="nav nav-tabs" id="quoteTabs" role="tablist">
+  <li class="nav-item" role="presentation">
+    <button class="nav-link active" id="search-tab" data-bs-toggle="tab" data-bs-target="#search-quote" type="button" role="tab" aria-controls="search-quote" aria-selected="true">🔍 Search</button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="add-tab" data-bs-toggle="tab" data-bs-target="#add-quote" type="button" role="tab" aria-controls="add-quote" aria-selected="false">➕ Add</button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="payments-tab" data-bs-toggle="tab" data-bs-target="#payments" type="button" role="tab" aria-controls="payments" aria-selected="false">Payments</button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="edit-tab" data-bs-toggle="tab" data-bs-target="#edit-quote" type="button" role="tab" aria-controls="edit-quote" aria-selected="false" style="display: none;">✏️ Edit</button>
+  </li>
 </ul>
   <!-- <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#edit-quote">✏️ Edit Quote</button></li> Hidden tab -->
 
@@ -54,10 +63,9 @@
 </template>
 
 <!-- Tab Content -->
-<div class="tab-content">
-      
 <!-- 🔍 Search Quote -->
-<div class="tab-pane fade show active" id="search-quote">
+<div class="tab-content" id="quoteTabsContent">
+  <div class="tab-pane fade show active" id="search-quote" role="tabpanel" aria-labelledby="search-tab">
   <div class="input-group">
     <input type="text" class="form-control" id="searchInput" placeholder="🔍 search...">
       <div class="input-group-append">
@@ -81,7 +89,7 @@
 </div>
 
 <!-- ✏️ Edit Quote Form-->
-<div class="tab-pane fade" id="edit-quote">
+<div class="tab-pane fade" id="edit-quote" role="tabpanel" aria-labelledby="edit-tab">
   <form id="editQuoteForm">
     <input type="hidden" id="edit-qtID">
     <input type="hidden" id="edit-quoteDate">
@@ -387,7 +395,7 @@
       <div class="col-sm-12">
         <button class="btn btn-dark" id="edit-quote-btn">💾 Save Changes</button>
         <button type="button" class="btn btn-secondary" id="edit-previewQuoteBtn">Preview Invoice</button>
-        <button id="edit-finalize-invoice-btn" class="btn btn-success">
+        <button type="button" class="btn btn-success" id="edit-finalizeInvoiceBtn">
           <i class="bi bi-file-earmark-check"></i> Finalize Invoice</button>
       </div>
     </div>
@@ -396,7 +404,7 @@
 
 
 <!-- ➕ Add Quote Tab -->
-<div class="tab-pane fade" id="add-quote">
+<div class="tab-pane fade" id="add-quote" role="tabpanel" aria-labelledby="add-tab">
   <form id="addQuoteForm">
     <input type="hidden" id="add-qtID">
     <input type="hidden" id="add-quoteDate">
@@ -689,12 +697,18 @@
       <div class="col-sm-12">
         <button class="btn btn-dark" id="add-quote-btn">💾 Save Changes</button>
         <button type="button" class="btn btn-secondary" id="add-previewQuoteBtn">Preview Invoice</button>
-        <button id="add-finalize-invoice-btn" class="btn btn-success">
+        <button type="button" class="btn btn-success" id="add-finalizeInvoiceBtn">
           <i class="bi bi-file-earmark-check"></i> Finalize Invoice</button>
       </div>
     </div>
   </form>
 </div>
+
+<!-- Payments Tab -->
+<div class="tab-pane fade" id="payments" role="tabpanel" aria-labelledby="payments-tab">
+  <form id="paymentsForm">
+    <input type="hidden" id="add-qtID">
+    <input type="hidden" id="add-quoteDate">
 
 <!-- Final Invoice Email Modal -->
 <div class="row g-3 mt-3 mb-5">
@@ -711,6 +725,10 @@
             <input type="email" class="form-control" id="invoice-email-to" readonly>
           </div>
           <div class="mb-3">
+            <label for="invoice-email-subject" class="form-label">Subject:</label>
+            <input type="text" class="form-control" id="invoice-email-subject">
+          </div>
+          <div class="mb-3">
             <label for="invoice-email-body" class="form-label">Email Body:</label>
             <div id="invoice-email-body" contenteditable="true" class="form-control" style="height: 200px; overflow-y: auto;"></div>
           </div>
@@ -724,6 +742,46 @@
     </div>
   </div>
 </div>
+
+<!-- Log Payment Modal -->
+<div class="modal fade" id="logPaymentModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content shadow">
+      <div class="modal-header">
+        <h5 class="modal-title">Log Invoice Payment</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="logPaymentForm">
+          <input type="hidden" id="log-payment-invoiceID">
+          <div class="mb-3">
+            <label for="log-payment-amount" class="form-label">Amount Received</label>
+            <input type="number" class="form-control" id="log-payment-amount" min="0.01" step="0.01" required>
+          </div>
+          <div class="mb-3">
+            <label for="log-payment-method" class="form-label">Payment Method</label>
+            <select class="form-select" id="log-payment-method" required>
+              <option value="">Choose...</option>
+              <option value="Cash">Cash</option>
+              <option value="Zelle">Zelle</option>
+              <option value="Venmo">Venmo</option>
+              <option value="CashApp">Cash App</option>
+              <option value="Check">Check</option>
+              <option value="Card">Card</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="form-text text-muted">Partial payments are supported. Balance will update accordingly.</div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button id="submitLogPaymentBtn" class="btn btn-success">Log Payment</button>
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 </section>
 
 <script>

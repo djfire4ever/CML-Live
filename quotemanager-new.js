@@ -20,6 +20,7 @@ function showEditTab() {
 
 // ✅ Data store
 let quoteData = [];
+let productData = [];
 
 // ✅ Load search data from backend
 function setQuoteDataForSearch() {
@@ -201,31 +202,48 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-// ✅ Save button handlers
-document.addEventListener("DOMContentLoaded", () => {
-  const editBtn = document.getElementById("edit-quote-btn");
-  const addBtn = document.getElementById("add-quote-btn");
-
-  editBtn?.addEventListener("click", async (e) => {
-    e.preventDefault(); e.stopPropagation();
-    console.log("✅ Save Quote (Edit)");
-    await handleSave(e, "edit");
-  });
-
-  addBtn?.addEventListener("click", async (e) => {
-    e.preventDefault(); e.stopPropagation();
-    console.log("✅ Save Quote (Add)");
-    await handleSave(e, "add");
-  });
-
-  document.querySelector('button[data-bs-target="#add-quote"]')
-    ?.addEventListener("shown.bs.tab", initializeAddForm);
-});
-
 // 🔄 Populates the Edit Form when a quote is selected
-// quotemanager-new.js
-
 document.addEventListener("DOMContentLoaded", () => {
+    console.log("📦 DOMContentLoaded fired");
+
+  // Check for all relevant button elements
+  console.log("🔍 DOMContentLoaded: add-quote-btn", document.getElementById("add-quote-btn"));
+  console.log("🔍 DOMContentLoaded: add-previewQuoteBtn", document.getElementById("add-previewQuoteBtn"));
+  console.log("🔍 DOMContentLoaded: add-finalizeInvoiceBtn", document.getElementById("add-finalizeInvoiceBtn"));
+
+  // Watch fields and recalculate totals
+  const fieldsToWatch = [
+    "edit-deliveryFee", "edit-setupFee", "edit-otherFee", "edit-discount", "edit-deposit",
+    "add-deliveryFee", "add-setupFee", "add-otherFee", "add-discount", "add-deposit",
+    "add-phone", "add-eventDate", "edit-eventDate", "edit-phone"
+  ];
+  fieldsToWatch.forEach(id => {
+    document.getElementById(id)?.addEventListener("change", () => {
+      const mode = id.startsWith("add") ? "add" : "edit";
+      calculateAllTotals(mode);
+    });
+  });
+
+  // Attach events to each product row
+  document.querySelectorAll(".product-row").forEach(row => {
+    const mode = row.closest("#add-product-rows-container") ? "add" : "edit";
+    attachRowEvents(row, mode);
+  });
+
+  // Bind product row buttons
+  const addProductBtn = document.getElementById("add-product-btn");
+  if (addProductBtn) {
+    addProductBtn.removeEventListener("click", handleAddProductClick); // in case reloaded
+    addProductBtn.addEventListener("click", handleAddProductClick);
+  }
+
+  const editProductBtn = document.getElementById("edit-product-btn");
+  if (editProductBtn) {
+    editProductBtn.removeEventListener("click", handleEditProductClick);
+    editProductBtn.addEventListener("click", handleEditProductClick);
+  }
+
+  // Bind save buttons
   const addQuoteBtn = document.querySelector("#add-quote-btn");
   const editQuoteBtn = document.querySelector("#edit-quote-btn");
 
@@ -247,15 +265,41 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Bootstrap 5 tab event: initialize Add form when tab is shown
-  const addTabTrigger = document.querySelector('button[data-bs-target="#add-quote"]');
-  if (addTabTrigger) {
-    addTabTrigger.addEventListener("shown.bs.tab", () => {
-      console.log("📌 Add Quote tab shown — initializing form");
-      initializeAddForm();
+  // Bootstrap tab shown event
+  const addTabButton = document.querySelector('button[data-bs-target="#add-quote"]');
+  if (addTabButton) {
+    addTabButton.addEventListener("shown.bs.tab", () => {
+    console.log("🟢 [Add Tab] Shown");
+
+    // Confirm DOM elements after switching
+    console.log("🟢 [Add Tab] add-quote-btn:", document.getElementById("add-quote-btn"));
+    console.log("🟢 [Add Tab] add-previewQuoteBtn:", document.getElementById("add-previewQuoteBtn"));
+    console.log("🟢 [Add Tab] add-finalizeInvoiceBtn:", document.getElementById("add-finalizeInvoiceBtn"));
+
+      if (typeof productData === "undefined") {
+        console.warn("⏳ Skipping form init — productData not ready");
+      } else {
+        initializeAddForm();
+      }
+
+      const previewBtn = document.getElementById("add-previewQuoteBtn");
+      if (previewBtn && !previewBtn.dataset.bound) {
+        previewBtn.addEventListener("click", previewQuoteBtnHandler);
+        previewBtn.dataset.bound = "true";
+      }
+
+      const finalizeBtn = document.getElementById("add-finalizeInvoiceBtn");
+      if (finalizeBtn && !finalizeBtn.dataset.bound) {
+        finalizeBtn.addEventListener("click", finalizeInvoiceBtnHandler);
+        finalizeBtn.dataset.bound = "true";
+      }
     });
+  } else {
+    console.warn("❌ Add tab button not found in DOM");
   }
 });
+
+console.log("🌍 [Global Scope] Page script executing");
 
 async function populateEditForm(qtID) {
   try {
@@ -317,16 +361,33 @@ async function populateEditForm(qtID) {
       "quoteNotes", "invoiceID", "invoiceDate", "invoiceUrl"
     ].forEach(id => setField(`edit-${id}`, data[id] || ""));
 
+    // 🔢 Totals and Header Updates
     calculateAllTotals("edit");
     updateCardHeaders("edit");
 
+    // 👁️ Ensure Edit Tab is visible and focused
     const tabPane = document.querySelector("#edit-quote");
     if (tabPane) {
       tabPane.classList.remove("d-none");
       tabPane.scrollIntoView({ behavior: "smooth" });
     }
 
-    console.log("✅ Edit form populated");
+    // 🧷 Bind buttons safely (only once)
+    const previewBtn = document.getElementById("edit-previewQuoteBtn");
+    const finalizeBtn = document.getElementById("edit-finalizeInvoiceBtn");
+
+    if (previewBtn && !previewBtn.dataset.bound) {
+      previewBtn.addEventListener("click", previewQuoteBtnHandler);
+      previewBtn.dataset.bound = "true";
+    }
+
+    if (finalizeBtn && !finalizeBtn.dataset.bound) {
+      finalizeBtn.addEventListener("click", finalizeInvoiceBtnHandler);
+      finalizeBtn.dataset.bound = "true";
+    }
+
+    console.log("✅ Edit form populated and buttons bound");
+
   } catch (error) {
     console.error("❌ Failed to populate edit form:", error);
     showToast("❌ Error loading quote data!", "error");
@@ -381,8 +442,6 @@ async function handleSave(event, mode) {
     toggleLoader(false);
   }
 }
-
-// quotemanager-new.js — continued section
 
 // 🔁 1. Collect Quote Form Data (for saving)
 function collectQuoteFormData(mode) {
@@ -452,11 +511,16 @@ function collectQuoteFormData(mode) {
   return formData;
 }
 
-// 🔁 2. Initialize Add Form (called when "Add Quote" tab is shown)
+// 🔁 Initialize Add Form (called when "Add Quote" tab is shown)
 async function initializeAddForm() {
   try {
     toggleLoader(true);
     console.log("📋 Initializing Add Quote form");
+
+    // 🛡️ Ensure critical dependencies exist
+    if (typeof productData === "undefined" || !Array.isArray(productData)) {
+      throw new Error("productData is not loaded yet.");
+    }
 
     const fieldsToClear = [
       "phone", "firstName", "lastName", "email", "street", "city", "state", "zip",
@@ -469,29 +533,54 @@ async function initializeAddForm() {
 
     fieldsToClear.forEach(id => setField(`add-${id}`, ""));
 
-    // Reset product rows
+    // 🧼 Reset product rows safely
     resetProductRows("add-product-rows-container");
 
-    // Load supporting data
+    // 📦 Ensure all quote-related dropdowns and data are loaded
     await Promise.all([
       getProdDataForSearch(),
       setQuoteDataForSearch(),
       loadDropdowns()
     ]);
 
+    // 🧮 Recalculate totals for a clean slate
     calculateAllTotals("add");
     updateCardHeaders("add");
+
+    console.log("✅ Add Quote form initialized");
 
   } catch (err) {
     console.error("❌ Error initializing Add Quote form:", err);
     showToast("❌ Could not initialize form", "error");
+// 🧩 Bind event listeners to Add form buttons
+const previewBtn = document.getElementById("add-previewQuoteBtn");
+const finalizeBtn = document.getElementById("add-finalizeInvoiceBtn");
+
+if (previewBtn && !previewBtn.dataset.bound) {
+  previewBtn.addEventListener("click", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log("👁️ Preview button clicked (add)");
+    await previewQuote("add");
+  });
+  previewBtn.dataset.bound = "true";
+  console.log("🔗 Bound add-previewQuoteBtn");
+}
+
+if (finalizeBtn && !finalizeBtn.dataset.bound) {
+  finalizeBtn.addEventListener("click", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log("✅ Finalize button clicked (add)");
+    await finalizeInvoice("add");
+  });
+  finalizeBtn.dataset.bound = "true";
+  console.log("🔗 Bound add-finalizeInvoiceBtn");
+}
   } finally {
     toggleLoader(false);
   }
 }
-
-// 🔁 3. Add tab trigger: show Add form
-document.querySelector('button[data-bs-target="#add-quote"]')?.addEventListener("shown.bs.tab", initializeAddForm);
 
 // 🔁 4. Client autofill on phone change
 document.querySelector("#add-phone")?.addEventListener("change", async (e) => {
@@ -567,15 +656,6 @@ document.querySelectorAll(".product-name")?.forEach((el) =>
     console.log("🟢 Product dropdown clicked");
   })
 );
-
-document.querySelectorAll('[data-bs-toggle="collapse"]')?.forEach((btn) =>
-  btn.addEventListener("click", (e) => {
-    e.stopPropagation();
-    console.log("🟢 Collapse button clicked");
-  })
-);
-
-// === Part 4: Product Row Management & Totals ===
 
 function addProductRow(
   name = "",
@@ -786,29 +866,18 @@ function formatPhoneNumber(number) {
   return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
 }
 
-// --- Mode Tracking via Bootstrap Tabs ---
-let currentQuoteMode = "add"; // Default mode
-
-document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(btn => {
-  btn.addEventListener("shown.bs.tab", (e) => {
-    const targetId = e.target.getAttribute("data-bs-target");
-    currentQuoteMode = targetId.includes("edit") ? "edit" : "add";
-    console.log("🧭 Tab switched. Current mode is now:", currentQuoteMode);
-  });
-});
-
 function parseCurrency(val) {
   return parseFloat(String(val || "0").replace(/[^0-9.-]+/g, "")) || 0;
 }
 
-// Legacy — planned for removal
-document.getElementById("previewQuoteBtn").addEventListener("click", async (e) => {
+// === Preview Quote Handler ===
+function previewQuoteBtnHandler(e) {
   e.preventDefault();
   e.stopPropagation();
 
-  console.log("🔍 previewInvoiceFromForm triggered");
-  const mode = currentQuoteMode;
-  console.log("🧭 Detected form mode:", mode);
+  const btnID = e.target.id;
+  const mode = btnID.startsWith("edit") ? "edit" : "add";
+  console.log("🔍 previewQuoteBtnHandler triggered for mode:", mode);
 
   toggleLoader(true);
   const newTab = window.open("", "_blank");
@@ -818,7 +887,7 @@ document.getElementById("previewQuoteBtn").addEventListener("click", async (e) =
     const quoteInfo = collectQuoteFormData(mode);
     console.log("📦 Preview data being sent to backend:", quoteInfo);
 
-    const response = await fetch(scriptURL, {
+    fetch(scriptURL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -827,48 +896,50 @@ document.getElementById("previewQuoteBtn").addEventListener("click", async (e) =
         qtID: mode === "edit" ? getField("edit-qtID") : null,
         quoteInfo
       })
-    });
+    })
+    .then(response => response.json())
+    .then(result => {
+      console.log("✅ Backend preview response:", result);
 
-    const result = await response.json();
-    console.log("✅ Backend preview response:", result);
-    console.log("🧾 result.data contents:", JSON.stringify(result.data, null, 2));
-
-    if (result.success && result.data?.url) {
-      newTab.location.href = result.data.url;
-    } else {
-      newTab.document.write("<p>❌ Failed to generate preview.</p>");
-      showToast("❌ Preview failed: " + (result.data?.message || "No URL returned"), "error");
-      console.error("❌ Preview failed:", result);
-      setTimeout(() => newTab.close(), 5000);
-    }
+      if (result.success && result.data?.url) {
+        newTab.location.href = result.data.url;
+      } else {
+        newTab.document.write("<p>❌ Failed to generate preview.</p>");
+        showToast("❌ Preview failed: " + (result.data?.message || "No URL returned"), "error");
+        setTimeout(() => newTab.close(), 5000);
+      }
+    })
+    .catch(err => {
+      newTab.document.write("<p>❌ Error generating preview.</p>");
+      console.error("❌ Fetch error:", err);
+      showToast("❌ Error during preview request. Check console.", "error");
+    })
+    .finally(() => toggleLoader(false));
   } catch (err) {
     newTab.document.write("<p>❌ Error generating preview.</p>");
-    console.error("❌ Fetch error:", err);
-    showToast("❌ Error during preview request. Check console.", "error");
-  } finally {
+    console.error("❌ Unexpected error:", err);
+    showToast("❌ Unexpected error. Check console.", "error");
     toggleLoader(false);
   }
-});
+}
 
-document.getElementById("finalize-invoice-btn").addEventListener("click", async (e) => {
+// === Finalize Quote Handler ===
+function finalizeInvoiceBtnHandler(e) {
   e.preventDefault();
   e.stopPropagation();
 
-  console.log("🧾 finalizeInvoiceFromForm triggered");
-  const mode = currentQuoteMode;
-  console.log("🛠️ Detected form mode:", mode);
+  const btnID = e.target.id;
+  const mode = btnID.startsWith("edit") ? "edit" : "add";
+  console.log("🧾 finalizeInvoiceBtnHandler triggered for mode:", mode);
 
   toggleLoader(true);
 
   try {
     calculateAllTotals(mode);
     const quoteInfo = collectQuoteFormData(mode);
-    console.log("📬 Finalizing quote with data:", quoteInfo);
-
     const qtID = mode === "edit" ? getField("edit-qtID") : null;
-    console.log("🧾 Sending qtID:", qtID);
 
-    const response = await fetch(scriptURL, {
+    fetch(scriptURL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -877,37 +948,41 @@ document.getElementById("finalize-invoice-btn").addEventListener("click", async 
         qtID,
         quoteInfo
       })
-    });
+    })
+    .then(response => response.json())
+    .then(result => {
+      console.log("✅ Backend finalize response:", result);
 
-    const result = await response.json();
-    console.log("✅ Backend finalize response:", result);
-    console.log("🧾 result.data contents:", JSON.stringify(result.data, null, 2));
+      // Unwrap nested response (because doPost wraps everything in { success: true, data: response })
+      const nested = result?.data;
+      const finalData = nested?.success ? nested.data : nested;
+      const { url, fileName } = finalData || {};
 
-    const { success, data } = result;
+      if (url && fileName) {
+        const emailHtml = generateInvoiceEmailHtml(fileName, url, quoteInfo);
 
-    if (success && data?.url) {
-      const emailHtml = generateInvoiceEmailHtml(data.fileName, data.url, quoteInfo);
+        document.getElementById("invoice-email-to").value = quoteInfo.email || "";
+        document.getElementById("invoice-email-subject").value = `${fileName} from Your Company`;
+        document.getElementById("invoice-email-body").innerHTML = emailHtml;
 
-      document.getElementById("invoice-email-to").value = quoteInfo.email || "";
-      document.getElementById("invoice-email-subject").value = `${data.fileName} from Your Company`;
-      document.getElementById("invoice-email-body").innerHTML = emailHtml;
-
-      const modal = new bootstrap.Modal(document.getElementById("finalInvoiceModal"));
-      modal.show();
-
-      showToast("📄 Invoice finalized and ready to send.", "success");
-    } else {
-      console.error("❌ Invoice finalization failure:", result);
-      showToast("❌ Invoice finalization failed. No URL or template generated.", "error");
-    }
-
+        new bootstrap.Modal(document.getElementById("finalInvoiceModal")).show();
+        showToast("📄 Invoice finalized and ready to send.", "success");
+      } else {
+        console.error("❌ Missing URL or fileName in finalize response:", finalData);
+        showToast("❌ Invoice finalization failed. No preview data returned.", "error");
+      }
+    })
+    .catch(err => {
+      console.error("❌ Finalize request error:", err);
+      showToast("❌ Error finalizing invoice. Check console.", "error");
+    })
+    .finally(() => toggleLoader(false));
   } catch (err) {
-    console.error("❌ Finalize request error:", err);
-    showToast("❌ Error finalizing invoice. Check console for details.", "error");
-  } finally {
+    console.error("❌ Fatal error:", err);
+    showToast("❌ Finalize error. Check console.", "error");
     toggleLoader(false);
   }
-});
+}
 
 function generateInvoiceEmailHtml(fileName, pdfUrl, quoteData) {
   return `
@@ -919,3 +994,103 @@ function generateInvoiceEmailHtml(fileName, pdfUrl, quoteData) {
     <p>Best regards,<br>Your Company Team</p>
   `;
 }
+
+async function sendInvoiceEmailBtnHandler(event) {
+  try {
+    const qtID = getField("edit-qtID");
+    if (!qtID) throw new Error("Missing qtID for sending invoice email");
+
+    const emailTo = document.getElementById("invoice-email-to")?.value?.trim();
+    const emailSubject = document.getElementById("invoice-email-subject")?.value?.trim();
+    const emailBody = document.getElementById("invoice-email-body")?.innerHTML?.trim();
+
+    if (!emailTo || !emailBody) {
+      showToast("⚠️ Please ensure both email and body are filled in.", "warning");
+      return;
+    }
+
+    toggleLoader(true);
+    console.log(`📤 Sending finalized invoice to: ${emailTo}`);
+
+    const response = await fetch(scriptURL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        system: "quotes",
+        action: "sendInvoiceEmail",
+        to: emailTo,
+        subject: emailSubject,
+        body: emailBody,
+        qtID: qtID
+      })
+    });
+
+    const result = await response.json();
+    console.log("✅ Email send result:", result);
+
+    if (result.success) {
+      showToast("✅ Invoice email sent successfully!");
+      const modalEl = document.getElementById("finalInvoiceModal");
+      if (modalEl) bootstrap.Modal.getInstance(modalEl)?.hide();
+    } else {
+      throw new Error(result.message || "Unknown backend error");
+    }
+
+  } catch (error) {
+    console.error("❌ Failed to send invoice email:", error);
+    showToast("❌ Failed to send invoice email", "error");
+  } finally {
+    toggleLoader(false);
+  }
+}
+
+// Open the log payment modal with the invoice ID preloaded
+function openLogPaymentModal(invoiceID) {
+  document.getElementById("log-payment-invoiceID").value = invoiceID;
+  document.getElementById("log-payment-amount").value = "";
+  document.getElementById("log-payment-method").value = "";
+  const modal = new bootstrap.Modal(document.getElementById("logPaymentModal"));
+  modal.show();
+}
+
+// Handle form submission
+document.getElementById("submitLogPaymentBtn").addEventListener("click", async () => {
+  const invoiceID = document.getElementById("log-payment-invoiceID").value;
+  const amount = parseFloat(document.getElementById("log-payment-amount").value);
+  const method = document.getElementById("log-payment-method").value;
+
+  if (!invoiceID || isNaN(amount) || !method) {
+    showToast("⚠️ Please complete all fields before submitting.", "warning");
+    return;
+  }
+
+  try {
+    toggleLoader(true);
+    const response = await fetch(scriptURL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        system: "quotes",
+        action: "logPayment",
+        invoiceID,
+        amount,
+        method
+      })
+    });
+
+    const result = await response.json();
+    if (result.success) {
+      showToast("✅ Payment logged successfully!");
+      bootstrap.Modal.getInstance(document.getElementById("logPaymentModal")).hide();
+      // Optional: refresh totals or reload quote
+    } else {
+      throw new Error(result.message || "Unknown error");
+    }
+  } catch (error) {
+    console.error("❌ Error logging payment:", error);
+    showToast("❌ Failed to log payment", "error");
+  } finally {
+    toggleLoader(false);
+  }
+});
+

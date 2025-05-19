@@ -1,361 +1,387 @@
-// ✅ Utility: Create or get counter elements
+// ✅ Utility: Get or create reusable counter elements
 function getOrCreateCounter(id, classList, parent, insertAfter = null) {
-    let el = document.getElementById(id);
-    if (!el) {
-        el = document.createElement("span");
-        el.id = id;
-        el.classList.add(...classList);
-        if (insertAfter) {
-            insertAfter.insertAdjacentElement("afterend", el);
-        } else {
-            parent.appendChild(el);
-        }
-    }
-    return el;
+  let el = document.getElementById(id);
+  if (!el) {
+    el = document.createElement("span");
+    el.id = id;
+    el.classList.add(...classList);
+    insertAfter
+      ? insertAfter.insertAdjacentElement("afterend", el)
+      : parent.appendChild(el);
+  }
+  return el;
 }
 
-// ✅ Utility: Show Edit Tab
+// ✅ Utility: Switch to Edit Tab
 function showEditTab() {
   const editTab = document.querySelector('[data-bs-target="#edit-quote"]');
   if (editTab) new bootstrap.Tab(editTab).show();
 }
 
-// ✅ DOM Ready
-document.addEventListener("DOMContentLoaded", () => {
-    const searchInput = document.getElementById("searchInput");
-    const searchTabButton = document.querySelector('button[data-bs-target="#search-quote"]');
-    const searchResultsBox = document.getElementById("searchResults");
-    const searchCounter = document.getElementById("searchCounter");
+// ✅ Data store
+let quoteData = [];
+let productData = [];
 
-    if (searchInput) {
-        searchInput.addEventListener("input", search);
-    } else {
-        console.error("❌ Search input not found!");
-    }
-    if (searchTabButton) {
-        searchTabButton.addEventListener("shown.bs.tab", () => {
-            if (searchInput) {
-                searchInput.value = "";
-                searchInput.focus();
-            }
-            if (searchResultsBox) searchResultsBox.innerHTML = "";
-            if (searchCounter) {
-                searchCounter.textContent = "";
-                searchCounter.classList.add("text-success", "text-dark", "fw-bold");
-            }
-          });
-    }
-
-    if (searchResultsBox) searchResultsBox.innerHTML = "";
-
-    toggleLoader();
-    setQuoteDataForSearch();
-    setTimeout(toggleLoader, 500);
-    // Add event listener for the discount field
-    document.getElementById("edit-discount")?.addEventListener("change", calculateAllTotals);
-});
-
-// ✅ quote Data
-let quoteData = []; 
-
-// ✅ Load Search Data
+// ✅ Load search data from backend
 function setQuoteDataForSearch() {
-    fetch(scriptURL + "?action=getQuoteDataForSearch")
-        .then(res => res.json())
-        .then(data => quoteData = data.slice())
-        .catch(err => console.error("❌ Error loading quote data:", err));
+  fetch(scriptURL + "?action=getQuoteDataForSearch")
+    .then(res => res.json())
+    .then(data => quoteData = data.slice())
+    .catch(err => console.error("❌ Failed to load quote data:", err));
 }
 
-// ✅ Search Quotes
+// ✅ Perform live search
 function search() {
-    const searchInputEl = document.getElementById("searchInput");
-    const searchResultsBox = document.getElementById("searchResults");
-    if (!searchInputEl || !searchResultsBox) return;
+  const inputEl = document.getElementById("searchInput");
+  const resultsBox = document.getElementById("searchResults");
+  if (!inputEl || !resultsBox) return;
 
-    let counterContainer = document.getElementById("counterContainer");
-    if (!counterContainer) {
-        counterContainer = document.createElement("div");
-        counterContainer.id = "counterContainer";
-        counterContainer.classList.add("d-inline-flex", "gap-3", "align-items-center", "ms-3");
-        searchInputEl.parentNode.insertBefore(counterContainer, searchInputEl.nextSibling);
-    }
+  let counterContainer = document.getElementById("counterContainer");
+  if (!counterContainer) {
+    counterContainer = document.createElement("div");
+    counterContainer.id = "counterContainer";
+    counterContainer.classList.add("d-inline-flex", "gap-3", "align-items-center", "ms-3");
+    inputEl.parentNode.insertBefore(counterContainer, inputEl.nextSibling);
+  }
 
-    const searchCounter = getOrCreateCounter("searchCounter", ["px-2", "py-1", "border", "rounded", "fw-bold", "bg-dark", "text-info"], counterContainer);
-    const totalCounter = getOrCreateCounter("totalCounter", ["px-2", "py-1", "border", "rounded", "fw-bold", "bg-dark", "text-info"], counterContainer, searchCounter);
+  const searchCounter = getOrCreateCounter("searchCounter", ["px-2", "py-1", "border", "rounded", "fw-bold", "bg-dark", "text-info"], counterContainer);
+  const totalCounter = getOrCreateCounter("totalCounter", ["px-2", "py-1", "border", "rounded", "fw-bold", "bg-dark", "text-info"], counterContainer, searchCounter);
 
-    toggleLoader();
+  toggleLoader();
 
-    const input = searchInputEl.value.toLowerCase().trim();
-    const searchWords = input.split(/\s+/);
-    const searchCols = [0, 1, 2, 3, 4, 5];
+  const input = inputEl.value.toLowerCase().trim();
+  const words = input.split(/\s+/);
+  const cols = [0, 1, 2, 3, 4, 5];
 
-    const results = input === "" ? [] : quoteData.filter(r =>
-        searchWords.every(word =>
-            searchCols.some(i => r[i]?.toString().toLowerCase().includes(word))
-        )
-    );
+  const results = input === "" ? [] : quoteData.filter(row =>
+    words.every(word => cols.some(i => row[i]?.toString().toLowerCase().includes(word)))
+  );
 
-    searchCounter.textContent = input === "" ? "🔍" : `${results.length} Quotes Found`;
-    totalCounter.textContent = `Total Quotes: ${quoteData.length}`;
-    searchResultsBox.innerHTML = "";
+  searchCounter.textContent = input === "" ? "🔍" : `${results.length} Quotes Found`;
+  totalCounter.textContent = `Total Quotes: ${quoteData.length}`;
+  resultsBox.innerHTML = "";
 
-    const template = document.getElementById("rowTemplate").content;
-    results.forEach(r => {
-      const row = template.cloneNode(true);
-      row.querySelector(".qtID").textContent = r[0];
-      row.querySelector(".firstName").textContent = r[3];
-      row.querySelector(".lastName").textContent = r[4];
-      row.querySelector(".eventDate").textContent = r[10];
-  
-      // ✅ Set qtID directly on the row for click handling
-      const tr = row.querySelector("tr");
-      tr.dataset.quoteid = r[0];
-  
-      // ✅ Still set delete buttons if needed
-      const deleteBtn = row.querySelector(".delete-button");
-      const confirmBtn = row.querySelector(".before-delete-button");
-      if (deleteBtn) deleteBtn.dataset.quoteid = r[0];
-      if (confirmBtn) confirmBtn.dataset.quoteid = r[0];
-  
-      searchResultsBox.appendChild(row);
+  const template = document.getElementById("rowTemplate").content;
+  results.forEach(r => {
+    const row = template.cloneNode(true);
+    row.querySelector(".qtID").textContent = r[0];
+    row.querySelector(".firstName").textContent = r[3];
+    row.querySelector(".lastName").textContent = r[4];
+    row.querySelector(".eventDate").textContent = r[10];
+
+    const tr = row.querySelector("tr");
+    tr.dataset.quoteid = r[0];
+
+    const deleteBtn = row.querySelector(".delete-button");
+    const confirmBtn = row.querySelector(".before-delete-button");
+    if (deleteBtn) deleteBtn.dataset.quoteid = r[0];
+    if (confirmBtn) confirmBtn.dataset.quoteid = r[0];
+
+    resultsBox.appendChild(row);
   });
 
   toggleLoader();
 }
 
-// ✅ Unified Click Handler for Search Results
+// ✅ Handle search result interactions
 document.getElementById("searchResults").addEventListener("click", event => {
   const target = event.target;
 
-  // Confirm Delete Toggle
   if (target.classList.contains("before-delete-button")) {
-      const confirmBtn = target.previousElementSibling;
-      const isDelete = target.dataset.buttonState === "delete";
-      confirmBtn?.classList.toggle("d-none", !isDelete);
-      target.textContent = isDelete ? "Cancel" : "Delete";
-      target.dataset.buttonState = isDelete ? "cancel" : "delete";
-      return;
-  }
-
-  // Perform Delete
-  if (target.classList.contains("delete-button")) {
-      const qtID = target.dataset.quoteid?.trim();
-      if (!qtID) return showToast("⚠️ Quote ID missing", "error");
-
-      toggleLoader();
-      fetch(scriptURL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ system: "quotes", action: "delete", qtID })
-      })
-      .then(res => res.json())
-      .then(result => {
-          if (result.success) {
-            showToast("✅ Quote updated!");
-            document.getElementById("searchInput").value = "";
-            document.getElementById("searchResults").innerHTML = "";
-            setQuoteDataForSearch();
-            document.querySelector('[data-bs-target="#search-quote"]')?.click(); // Switches to the search form
-          } else {
-            showToast("❌ Error updating quote data!", "error");
-            console.error("❌ Backend save failed:", result.message || "Unknown error");
-          }
-      })
-      .catch(() => showToast("⚠️ Error occurred while deleting quote.", "error"))
-      .finally(toggleLoader);
-      return;
-  }
-
-// Handle row click for editing
-  const row = target.closest("tr");
-  if (row && row.dataset.quoteid && !target.closest(".btn-group")) {
-    const qtID = row.dataset.quoteid;
-    console.log("🔍 Row clicked with qtID:", qtID); // Add this log
-    populateEditForm(qtID);
-    showEditTab();
+    const confirmBtn = target.previousElementSibling;
+    const isDelete = target.dataset.buttonState === "delete";
+    confirmBtn?.classList.toggle("d-none", !isDelete);
+    target.textContent = isDelete ? "Cancel" : "Delete";
+    target.dataset.buttonState = isDelete ? "cancel" : "delete";
     return;
   }
 
+  if (target.classList.contains("delete-button")) {
+    const qtID = target.dataset.quoteid?.trim();
+    if (!qtID) return showToast("⚠️ Quote ID missing", "error");
+
+    toggleLoader();
+    fetch(scriptURL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ system: "quotes", action: "delete", qtID })
+    })
+      .then(res => res.json())
+      .then(result => {
+        if (result.success) {
+          showToast("✅ Quote deleted!");
+          document.getElementById("searchInput").value = "";
+          document.getElementById("searchResults").innerHTML = "";
+          setQuoteDataForSearch();
+          document.querySelector('[data-bs-target="#search-quote"]')?.click();
+        } else {
+          showToast("❌ Error deleting quote!", "error");
+          console.error("❌ Backend error:", result.message || "Unknown");
+        }
+      })
+      .catch(() => showToast("⚠️ Delete failed", "error"))
+      .finally(toggleLoader);
+    return;
+  }
+
+  const row = target.closest("tr");
+  if (row && row.dataset.quoteid && !target.closest(".btn-group")) {
+    const qtID = row.dataset.quoteid;
+    console.log("🔍 Selected quote ID:", qtID);
+    populateEditForm(qtID);
+    showEditTab();
+  }
 });
 
-// ✅ Populate Edit Form
+// ✅ DOM Ready Initialization
 document.addEventListener("DOMContentLoaded", () => {
-  // Watch all fields that affect calculations
+  const searchInput = document.getElementById("searchInput");
+  const searchTabButton = document.querySelector('button[data-bs-target="#search-quote"]');
+  const searchResultsBox = document.getElementById("searchResults");
+  const searchCounter = document.getElementById("searchCounter");
+
+  if (searchInput) {
+    searchInput.addEventListener("input", search);
+  } else {
+    console.error("❌ Search input not found!");
+  }
+
+  if (searchTabButton) {
+    searchTabButton.addEventListener("shown.bs.tab", () => {
+      if (searchInput) {
+        searchInput.value = "";
+        searchInput.focus();
+      }
+      if (searchResultsBox) searchResultsBox.innerHTML = "";
+      if (searchCounter) {
+        searchCounter.textContent = "";
+        searchCounter.classList.add("text-success", "text-dark", "fw-bold");
+      }
+    });
+  }
+
+  if (searchResultsBox) searchResultsBox.innerHTML = "";
+
+  toggleLoader();
+  setQuoteDataForSearch();
+  setTimeout(toggleLoader, 500);
+
+  document.getElementById("edit-discount")?.addEventListener("change", () => calculateAllTotals("edit"));
+});
+
+// ✅ Form field listeners (Edit/Add)
+document.addEventListener("DOMContentLoaded", () => {
   const fieldsToWatch = [
-    "edit-deliveryFee",
-    "edit-setupFee",
-    "edit-otherFee",
-    "edit-discount",
-    "edit-deposit",
-    "add-deliveryFee",
-    "add-setupFee",
-    "add-otherFee",
-    "add-discount",
-    "add-deposit",
-    "add-phone",
-    "add-eventDate",
-    "edit-eventDate",
-    "edit-phone",
+    "edit-deliveryFee", "edit-setupFee", "edit-otherFee", "edit-discount", "edit-deposit",
+    "add-deliveryFee", "add-setupFee", "add-otherFee", "add-discount", "add-deposit",
+    "add-phone", "add-eventDate", "edit-eventDate", "edit-phone"
   ];
 
-  fieldsToWatch.forEach(fieldId => {
-    document.getElementById(fieldId)?.addEventListener("change", () => {
-      const mode = fieldId.startsWith("add") ? "add" : "edit";
+  fieldsToWatch.forEach(id => {
+    document.getElementById(id)?.addEventListener("change", () => {
+      const mode = id.startsWith("add") ? "add" : "edit";
       calculateAllTotals(mode);
     });
   });
 
-  // Attach event listeners to existing product rows dynamically based on mode
   document.querySelectorAll(".product-row").forEach(row => {
     const mode = row.closest("#add-product-rows-container") ? "add" : "edit";
     attachRowEvents(row, mode);
   });
 
-  // Add specific listeners for Add and Edit product buttons
-  const addProductBtn = document.getElementById("add-product-btn");
-  if (addProductBtn) {
-    addProductBtn.addEventListener("click", (e) => {
-      console.log("✅ Add Product button clicked");
-      e.stopPropagation(); // Prevent event from propagating
-      addProductRow("", 1, "add-product-rows-container", "add");
-    });
-  }
-  const editProductBtn = document.getElementById("edit-product-btn");
-
-  if (addProductBtn) {
-    console.log("🔍 Adding event listener to Add Product button");
-    addProductBtn.removeEventListener("click", handleAddProductClick); // Remove any existing listener
-    addProductBtn.addEventListener("click", handleAddProductClick); // Add the new listener
+  const addBtn = document.getElementById("add-product-btn");
+  if (addBtn) {
+    addBtn.removeEventListener("click", handleAddProductClick);
+    addBtn.addEventListener("click", handleAddProductClick);
   }
 
-  if (editProductBtn) {
-    editProductBtn.removeEventListener("click", handleEditProductClick); // Remove any existing listener
-    editProductBtn.addEventListener("click", handleEditProductClick);
+  const editBtn = document.getElementById("edit-product-btn");
+  if (editBtn) {
+    editBtn.removeEventListener("click", handleEditProductClick);
+    editBtn.addEventListener("click", handleEditProductClick);
   }
 });
 
+// 🔄 Populates the Edit Form when a quote is selected
 document.addEventListener("DOMContentLoaded", () => {
-  // Save button for Edit Form
-  const editQuoteBtn = document.getElementById("edit-quote-btn");
-  if (editQuoteBtn) {
-    editQuoteBtn.addEventListener("click", async (e) => {
-      console.log("✅ Save Quote button clicked (Edit Form)");
-      e.preventDefault();
-      e.stopPropagation();
-      await handleSave(e, "edit");  // ✅ FIXED: pass event!
+
+  // Watch fields and recalculate totals
+  const fieldsToWatch = [
+    "edit-deliveryFee", "edit-setupFee", "edit-otherFee", "edit-discount", "edit-deposit",
+    "add-deliveryFee", "add-setupFee", "add-otherFee", "add-discount", "add-deposit",
+    "add-phone", "add-eventDate", "edit-eventDate", "edit-phone"
+  ];
+  fieldsToWatch.forEach(id => {
+    document.getElementById(id)?.addEventListener("change", () => {
+      const mode = id.startsWith("add") ? "add" : "edit";
+      calculateAllTotals(mode);
     });
+  });
+
+  // Attach events to each product row
+  document.querySelectorAll(".product-row").forEach(row => {
+    const mode = row.closest("#add-product-rows-container") ? "add" : "edit";
+    attachRowEvents(row, mode);
+  });
+
+  // Bind product row buttons
+  const addProductBtn = document.getElementById("add-product-btn");
+  if (addProductBtn) {
+    addProductBtn.removeEventListener("click", handleAddProductClick); // in case reloaded
+    addProductBtn.addEventListener("click", handleAddProductClick);
   }
 
-  // Save button for Add Form
-  const addQuoteBtn = document.getElementById("add-quote-btn");
+  const editProductBtn = document.getElementById("edit-product-btn");
+  if (editProductBtn) {
+    editProductBtn.removeEventListener("click", handleEditProductClick);
+    editProductBtn.addEventListener("click", handleEditProductClick);
+  }
+
+  // Bind save buttons
+  const addQuoteBtn = document.querySelector("#add-quote-btn");
+  const editQuoteBtn = document.querySelector("#edit-quote-btn");
+
   if (addQuoteBtn) {
     addQuoteBtn.addEventListener("click", async (e) => {
-      console.log("✅ Add Quote button clicked (Add Form)");
       e.preventDefault();
       e.stopPropagation();
-      await handleSave(e, "add");  // already good
+      console.log("🟢 Add Quote button clicked");
+      await handleSave(e, "add");
     });
   }
 
-  // Initialize Add Form when the tab is shown
-  document.querySelector('button[data-bs-target="#add-quote"]')
-    ?.addEventListener("shown.bs.tab", initializeAddForm);
+  if (editQuoteBtn) {
+    editQuoteBtn.addEventListener("click", async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      console.log("🟢 Edit Quote button clicked");
+      await handleSave(e, "edit");
+    });
+  }
+
+  // Bootstrap tab shown event
+  const addTabButton = document.querySelector('button[data-bs-target="#add-quote"]');
+  if (addTabButton) {
+    addTabButton.addEventListener("shown.bs.tab", () => {
+    console.log("🟢 [Add Tab] Shown");
+
+    // Confirm DOM elements after switching
+    console.log("🟢 [Add Tab] add-quote-btn:", document.getElementById("add-quote-btn"));
+    console.log("🟢 [Add Tab] add-previewQuoteBtn:", document.getElementById("add-previewQuoteBtn"));
+    console.log("🟢 [Add Tab] add-finalizeInvoiceBtn:", document.getElementById("add-finalizeInvoiceBtn"));
+
+      if (typeof productData === "undefined") {
+        console.warn("⏳ Skipping form init — productData not ready");
+      } else {
+        initializeAddForm();
+      }
+
+      const previewBtn = document.getElementById("add-previewQuoteBtn");
+      if (previewBtn && !previewBtn.dataset.bound) {
+        previewBtn.addEventListener("click", previewQuoteBtnHandler);
+        previewBtn.dataset.bound = "true";
+      }
+
+      const finalizeBtn = document.getElementById("add-finalizeInvoiceBtn");
+      if (finalizeBtn && !finalizeBtn.dataset.bound) {
+        finalizeBtn.addEventListener("click", finalizeInvoiceBtnHandler);
+        finalizeBtn.dataset.bound = "true";
+      }
+    });
+  } else {
+    console.warn("❌ Add tab button not found in DOM");
+  }
 });
 
 async function populateEditForm(qtID) {
   try {
     toggleLoader(true);
+    console.log("🔄 Loading quote data for qtID:", qtID);
+
     await getProdDataForSearch();
-
     setField("edit-qtID", qtID);
-    document.getElementById("edit-qtID")?.setAttribute("readonly", true);
+    document.querySelector("#edit-qtID")?.setAttribute("readonly", true);
 
-    console.log("🔍 Fetching quote data for qtID:", qtID);
-    
-    const res = await fetch(`${scriptURL}?action=getQuoteById&qtID=${qtID}`);
-    if (!res.ok) throw new Error(`Fetch failed with status ${res.status}`);
+    const response = await fetch(`${scriptURL}?action=getQuoteById&qtID=${qtID}`);
+    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
 
-    console.log("✅ Fetch response status:", res.status);
+    const data = await response.json();
+    if (!data || data.error) throw new Error(data.error || "No data returned");
 
-    const data = await res.json();
-    if (!data || data.error) throw new Error(data?.error || "No quote data found");
-    console.log("✅ Fetch response data:", data);
+    // ✅ Fill form fields — grouped by card
 
-    // 🔹 Card 1 - Client Info
-    setField("edit-phone", data.phone || "");
-    setField("edit-firstName", data.firstName || "");
-    setField("edit-lastName", data.lastName || "");
-    setField("edit-street", data.street || "");
-    setField("edit-email", data.email || "");
-    setField("edit-city", data.city || "");
-    setField("edit-state", data.state || "");
-    setField("edit-zip", data.zip || "");
+    // Card 1: Client Info
+    ["phone", "firstName", "lastName", "street", "email", "city", "state", "zip"]
+      .forEach(id => setField(`edit-${id}`, data[id] || ""));
 
-    // 🔹 Card 2 - Event Info
-    setField("edit-eventDate", data.eventDate || "");
-    setField("edit-eventLocation", data.eventLocation || "");
-    setField("edit-eventNotes", data.eventNotes || "");
+    // Card 2: Event Info
+    ["eventDate", "eventLocation", "eventNotes"]
+      .forEach(id => setField(`edit-${id}`, data[id] || ""));
 
-    // 🔹 Card 3 - Add-On Fees
-    setField("edit-deliveryFee", data.deliveryFee || 0);
-    setField("edit-setupFee", data.setupFee || 0);
-    setField("edit-otherFee", data.otherFee || 0);
-    setField("edit-addonsTotal", data.addonsTotal || 0);
+    // Card 3: Add-On Fees
+    ["deliveryFee", "setupFee", "otherFee", "addonsTotal"]
+      .forEach(id => setField(`edit-${id}`, data[id] || 0));
 
-    // 🔹 Card 4 - Balance Info
-    setField("edit-deposit", data.deposit || 0);
-    setField("edit-depositDate", data.depositDate || "");
-    setField("edit-balanceDue", data.balanceDue || 0);
-    setField("edit-balanceDueDate", data.balanceDueDate || "");
-    setField("edit-paymentMethod", data.paymentMethod || "");
-    setField("edit-dueDate", data.dueDate || ""); // ✅ NEW
+    // Card 4: Balance & Payment
+    ["deposit", "depositDate", "balanceDue", "balanceDueDate", "paymentMethod", "dueDate"]
+      .forEach(id => setField(`edit-${id}`, data[id] || ""));
 
-    // 🔹 Card 5 - Totals
-    setField("edit-discount", data.discount || 0);
-    setField("edit-subTotal1", data.subTotal1 || 0);           // ✅ NEW
-    setField("edit-subTotal2", data.subTotal2 || 0);           // ✅ NEW
-    setField("edit-subTotal3", data.subTotal3 || 0);           // ✅ NEW
-    setField("edit-discountedTotal", data.discountedTotal || 0); // ✅ NEW
-    setField("edit-grandTotal", data.grandTotal || 0);
+    // Card 5: Totals
+    ["discount", "subTotal1", "subTotal2", "subTotal3", "discountedTotal", "grandTotal"]
+      .forEach(id => setField(`edit-${id}`, data[id] || 0));
 
-    // 🔹 Products
-    const productContainer = document.getElementById("edit-product-rows-container");
-    if (productContainer) productContainer.innerHTML = "";
+    // Products
+    const container = document.querySelector("#edit-product-rows-container");
+    if (container) container.innerHTML = "";
 
     if (Array.isArray(data.products)) {
-      data.products.forEach(p => {
+      data.products.forEach(product => {
         addProductRow(
-          p.name || "", 
-          p.quantity || "", 
-          "edit-product-rows-container", 
+          product.name || "",
+          product.quantity || "",
+          "edit-product-rows-container",
           "edit",
-          p.unitPrice || "",              // ✅ NEW - if supported by your addProductRow()
-          p.totalRowRetail || ""          // ✅ NEW
+          product.unitPrice || "",
+          product.totalRowRetail || ""
         );
       });
     }
 
-    // 🔹 Hidden / Extra Fields
-    setField("edit-totalProductCost", data.totalProductCost || 0);
-    setField("edit-totalProductRetail", data.totalProductRetail || 0);
-    setField("edit-productCount", data.productCount || "");        // ✅ NEW
-    setField("edit-quoteDate", data.quoteDate || "");              // ✅ NEW
-    setField("edit-quoteNotes", data.quoteNotes || "");
-    setField("edit-invoiceID", data.invoiceID || "");              // ✅ NEW
-    setField("edit-invoiceDate", data.invoiceDate || "");          // ✅ NEW
-    setField("edit-invoiceUrl", data.invoiceUrl || "");            // ✅ NEW
+    // Hidden/Meta Fields
+    [
+      "totalProductCost", "totalProductRetail", "productCount", "quoteDate",
+      "quoteNotes", "invoiceID", "invoiceDate", "invoiceUrl"
+    ].forEach(id => setField(`edit-${id}`, data[id] || ""));
 
-    // 🔁 Totals + UI
+    // 🔢 Totals and Header Updates
     calculateAllTotals("edit");
     updateCardHeaders("edit");
 
-    const editPane = document.getElementById("edit-quote");
-    if (editPane) {
-      editPane.classList.remove("d-none");
-      editPane.scrollIntoView({ behavior: "smooth" });
+    // 👁️ Ensure Edit Tab is visible and focused
+    const tabPane = document.querySelector("#edit-quote");
+    if (tabPane) {
+      tabPane.classList.remove("d-none");
+      tabPane.scrollIntoView({ behavior: "smooth" });
     }
-  } catch (err) {
-    console.error("❌ Error populating edit form:", err);
+
+    // 🧷 Bind buttons safely (only once)
+    const previewBtn = document.getElementById("edit-previewQuoteBtn");
+    const finalizeBtn = document.getElementById("edit-finalizeInvoiceBtn");
+
+    if (previewBtn && !previewBtn.dataset.bound) {
+      previewBtn.addEventListener("click", previewQuoteBtnHandler);
+      previewBtn.dataset.bound = "true";
+    }
+
+    if (finalizeBtn && !finalizeBtn.dataset.bound) {
+      finalizeBtn.addEventListener("click", finalizeInvoiceBtnHandler);
+      finalizeBtn.dataset.bound = "true";
+    }
+
+    console.log("✅ Edit form populated and buttons bound");
+
+  } catch (error) {
+    console.error("❌ Failed to populate edit form:", error);
     showToast("❌ Error loading quote data!", "error");
   } finally {
     toggleLoader(false);
@@ -363,64 +389,53 @@ async function populateEditForm(qtID) {
 }
 
 async function handleSave(event, mode) {
-  if (!event || !mode) {
-    console.error("❌ handleSave requires both event and mode.");
-    return;
-  }
-
-  const eventSource = event.target;
-  console.log("Event source:", eventSource);
-  console.log("Event type:", event.type);
-
-  const expectedButtonId = mode === "add" ? "add-quote-btn" : "edit-quote-btn";
-  if (eventSource?.id !== expectedButtonId) {
-    console.warn(`⚠️ handleSave triggered by unintended element:`, eventSource);
-    return;
-  }
-
-  console.log(`🔍 handleSave triggered for mode: ${mode}`);
-  toggleLoader(true);
-
   try {
-    // Recalculate totals before collecting data
+    if (!event || !mode) throw new Error("Missing event or mode");
+
+    const btnID = event.target?.id;
+    const expectedID = mode === "add" ? "add-quote-btn" : "edit-quote-btn";
+    if (btnID !== expectedID) {
+      console.warn(`⚠️ Ignoring save triggered by unexpected element: ${btnID}`);
+      return;
+    }
+
+    toggleLoader(true);
+    console.log(`📤 Saving quote in mode: ${mode}`);
+
     calculateAllTotals(mode);
+    const quoteData = collectQuoteFormData(mode);
+    console.log("📦 Data sent to backend:", quoteData);
 
-    const formData = collectQuoteFormData(mode);
-    console.log("🚀 Data being sent to backend:", formData);
-
-    // Send data to the backend with 'quoteDate' handled by the backend
-    const res = await fetch(scriptURL, {
+    const response = await fetch(scriptURL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         system: "quotes",
         action: mode,
         qtID: mode === "edit" ? getField("edit-qtID") : null,
-        quoteInfo: formData
+        quoteInfo: quoteData
       })
     });
 
-    const result = await res.json();
-    console.log("✅ Backend response:", result);
-
+    const result = await response.json();
     if (result.success) {
       showToast("✅ Quote saved successfully!");
-      document.getElementById("searchInput").value = "";
-      document.getElementById("searchResults").innerHTML = "";
+      document.querySelector("#searchInput").value = "";
+      document.querySelector("#searchResults").innerHTML = "";
       setQuoteDataForSearch();
       document.querySelector('[data-bs-target="#search-quote"]')?.click();
     } else {
-      showToast("❌ Error saving quote data!", "error");
-      console.error("❌ Backend save failed:", result.message || "Unknown error");
+      throw new Error(result.message || "Unknown backend error");
     }
-  } catch (err) {
-    console.error("❌ Save error:", err);
-    showToast("❌ Error saving quote data!", "error");
+  } catch (error) {
+    console.error("❌ Error saving quote:", error);
+    showToast("❌ Failed to save quote!", "error");
   } finally {
     toggleLoader(false);
   }
 }
 
+// 🔁 1. Collect Quote Form Data (for saving)
 function collectQuoteFormData(mode) {
   const get = (id) => getField(`${mode}-${id}`);
   const rawPhone = get("phone").replace(/\D/g, "");
@@ -436,6 +451,7 @@ function collectQuoteFormData(mode) {
     zip: get("zip"),
     eventDate: get("eventDate"),
     eventLocation: get("eventLocation"),
+    eventNotes: get("eventNotes"),
     deliveryFee: parseCurrency(get("deliveryFee")),
     setupFee: parseCurrency(get("setupFee")),
     otherFee: parseCurrency(get("otherFee")),
@@ -446,26 +462,24 @@ function collectQuoteFormData(mode) {
     balanceDueDate: get("balanceDueDate"),
     paymentMethod: get("paymentMethod"),
     dueDate: get("dueDate"),
-    totalProductCost: parseCurrency(get("totalProductCost")),
-    totalProductRetail: parseCurrency(get("totalProductRetail")),
+    discount: parseCurrency(get("discount")),
     subTotal1: parseCurrency(get("subTotal1")),
     subTotal2: parseCurrency(get("subTotal2")),
     subTotal3: parseCurrency(get("subTotal3")),
-    discount: parseCurrency(get("discount")),
     discountedTotal: parseCurrency(get("discountedTotal")),
     grandTotal: parseCurrency(get("grandTotal")),
+    totalProductCost: parseCurrency(get("totalProductCost")),
+    totalProductRetail: parseCurrency(get("totalProductRetail")),
     quoteNotes: get("quoteNotes"),
-    eventNotes: get("eventNotes"),
     invoiceID: "",
     invoiceDate: "",
     invoiceUrl: ""
   };
 
-  // Gather product rows
-  const partRows = document.querySelectorAll(`#${mode}-product-rows-container .product-row`);
+  const rows = document.querySelectorAll(`#${mode}-product-rows-container .product-row`);
   const products = [];
 
-  partRows.forEach((row) => {
+  rows.forEach(row => {
     const name = row.querySelector(".product-name")?.value.trim();
     const qty = parseFloat(row.querySelector(".product-quantity")?.value.trim() || 0);
     const unitPrice = parseCurrency(row.querySelector(".totalRowCost")?.value || 0);
@@ -489,132 +503,152 @@ function collectQuoteFormData(mode) {
   return formData;
 }
 
-let productData = {}; // Global material map
-const maxProducts = 15;
-  
-// Initialize Add Form
+// 🔁 Initialize Add Form (called when "Add Quote" tab is shown)
 async function initializeAddForm() {
   try {
     toggleLoader(true);
+    console.log("📋 Initializing Add Quote form");
 
-    // Clear all add-mode fields
-    const addFields = [
+    // 🛡️ Ensure critical dependencies exist
+    if (typeof productData === "undefined" || !Array.isArray(productData)) {
+      throw new Error("productData is not loaded yet.");
+    }
+
+    const fieldsToClear = [
       "phone", "firstName", "lastName", "email", "street", "city", "state", "zip",
-      "eventDate", "eventLocation", "deliveryFee", "setupFee", "otherFee",
-      "addonsTotal", "discount", "deposit", "depositDate", "balanceDue", "balanceDueDate",
-      "paymentMethod", "quoteNotes", "grandTotal", "totalProductCost", "totalProductRetail",
-      "eventDate", "eventLocation", "eventNotes"
+      "eventDate", "eventLocation", "eventNotes",
+      "deliveryFee", "setupFee", "otherFee", "addonsTotal",
+      "deposit", "depositDate", "balanceDue", "balanceDueDate",
+      "paymentMethod", "quoteNotes", "discount",
+      "grandTotal", "totalProductCost", "totalProductRetail"
     ];
 
-    addFields.forEach(field => setField(`add-${field}`, ""));
+    fieldsToClear.forEach(id => setField(`add-${id}`, ""));
 
-    // Load all dropdowns
+    // 🧼 Reset product rows safely
+    resetProductRows("add-product-rows-container");
+
+    // 📦 Ensure all quote-related dropdowns and data are loaded
     await Promise.all([
       getProdDataForSearch(),
       setQuoteDataForSearch(),
       loadDropdowns()
     ]);
 
-    // Clear product rows and add one fresh row
-    resetProductRows("add-product-rows-container");
-
-    // Trigger calculations and header updates
+    // 🧮 Recalculate totals for a clean slate
     calculateAllTotals("add");
     updateCardHeaders("add");
 
+    console.log("✅ Add Quote form initialized");
+
   } catch (err) {
-    console.error("❌ Error initializing Add form", err);
-    showToast("❌ Could not prepare Add Quote form", "error");
+    console.error("❌ Error initializing Add Quote form:", err);
+    showToast("❌ Could not initialize form", "error");
+// 🧩 Bind event listeners to Add form buttons
+    const previewBtn = document.getElementById("add-previewQuoteBtn");
+    const finalizeBtn = document.getElementById("add-finalizeInvoiceBtn");
+
+if (previewBtn && !previewBtn.dataset.bound) {
+  previewBtn.addEventListener("click", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log("👁️ Preview button clicked (add)");
+    await previewQuote("add");
+  });
+  previewBtn.dataset.bound = "true";
+  console.log("🔗 Bound add-previewQuoteBtn");
+}
+
+if (finalizeBtn && !finalizeBtn.dataset.bound) {
+  finalizeBtn.addEventListener("click", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log("✅ Finalize button clicked (add)");
+    await finalizeInvoice("add");
+  });
+  finalizeBtn.dataset.bound = "true";
+  console.log("🔗 Bound add-finalizeInvoiceBtn");
+}
   } finally {
     toggleLoader(false);
   }
 }
 
-// 3) When “Add Quote” tab is shown, run initializeAddForm
-document.querySelector('button[data-bs-target="#add-quote"]')
-  .addEventListener("shown.bs.tab", initializeAddForm);
+// 🔁 4. Client autofill on phone change
+document.querySelector("#add-phone")?.addEventListener("change", async (e) => {
+  e.stopPropagation();
+  const clientID = getField("add-phone");
 
-  document.getElementById("add-phone").addEventListener("change", async (e) => {
-    e.stopPropagation(); // Prevent event from propagating
-    const phone = getField("add-phone"); // Phone is actually ClientID
-  
-    if (!phone) return;
-  
-    try {
-      const res = await fetch(`${scriptURL}?action=getClientById&clientID=${encodeURIComponent(phone)}`);
-      const client = await res.json();
-  
-      if (!client.error) {
-        setField("add-firstName", client.firstName);
-        setField("add-lastName", client.lastName);
-        setField("add-email", client.email);
-        setField("add-street", client.street);
-        setField("add-city", client.city);
-        setField("add-state", client.state);
-        setField("add-zip", client.zip);
-      } else {
-        // Clear if not found
-        ["add-firstName", "add-lastName", "add-email", "add-street", "add-city", "add-state", "add-zip"]
-          .forEach(id => setField(id, ""));
-        showToast(client.error, "warning");
-      }
-  
-      // Trigger header updates after populating fields
-      updateCardHeaders("add");
-  
-    } catch (err) {
-      console.error("❌ Error loading client by ID:", err);
-      showToast("❌ Could not load client info!", "error");
+  if (!clientID) return;
+
+  try {
+    const res = await fetch(`${scriptURL}?action=getClientById&clientID=${encodeURIComponent(clientID)}`);
+    const client = await res.json();
+
+    if (!client.error) {
+      setField("add-firstName", client.firstName);
+      setField("add-lastName", client.lastName);
+      setField("add-email", client.email);
+      setField("add-street", client.street);
+      setField("add-city", client.city);
+      setField("add-state", client.state);
+      setField("add-zip", client.zip);
+    } else {
+      ["firstName", "lastName", "email", "street", "city", "state", "zip"]
+        .forEach(field => setField(`add-${field}`, ""));
+      showToast(client.error, "warning");
     }
-  });
 
+    updateCardHeaders("add");
+
+  } catch (err) {
+    console.error("❌ Error fetching client data:", err);
+    showToast("❌ Failed to load client info", "error");
+  }
+});
+
+// 🔁 5. Load product data from backend (used globally)
 async function getProdDataForSearch() {
   try {
     const response = await fetch(`${scriptURL}?action=getProdDataForSearch`);
-    if (!response.ok) throw new Error(`Fetch failed with status ${response.status}`);
-    const rawData = await response.json();
+    if (!response.ok) throw new Error(`Status: ${response.status}`);
 
-    productData = {}; // ✅ Global assignment
+    const rawData = await response.json();
+    productData = {};
 
     rawData.forEach(row => {
-      const id = typeof row[0] === 'string' ? row[0].trim() : String(row[0]);
-      const name = typeof row[1] === 'string' ? row[1].trim() : String(row[1]);
-      const cost = parseFloat(row[46]?.toString().replace(/[^0-9.]/g, '')) || 0;
-      const retail = parseFloat(row[45]?.toString().replace(/[^0-9.]/g, '')) || 0;
+      const id = String(row[0] || "").trim();
+      const name = String(row[1] || "").trim();
+      const cost = parseFloat(row[46]?.toString().replace(/[^\d.]/g, "")) || 0;
+      const retail = parseFloat(row[45]?.toString().replace(/[^\d.]/g, "")) || 0;
 
       if (id && name) {
         productData[id] = { prodID: id, name, cost, retail };
       }
     });
 
-    console.log("✅ productData loaded successfully.");
+    console.log("✅ Product data loaded");
+
   } catch (err) {
-    console.error("❌ Error loading products:", err);
+    console.error("❌ Failed to load product data:", err);
     throw err;
   }
 }
-  
-// Initialize product row events
+
+// 🔁 6. Add Product Row Handler
 function handleAddProductClick() {
-  console.log("✅ Add Product button clicked");
+  console.log("➕ Add Product clicked");
   addProductRow("", 1, "add-product-rows-container", "add");
 }
 
-document.querySelectorAll(".product-name").forEach((dropdown) => {
-  dropdown.addEventListener("click", (e) => {
-    console.log("✅ Product dropdown clicked");
-    e.stopPropagation(); // Prevent event from propagating to parent elements
-  });
-});
+// 🔁 7. Prevent propagation from dropdown/collapse elements
+document.querySelectorAll(".product-name")?.forEach((el) =>
+  el.addEventListener("click", (e) => {
+    e.stopPropagation();
+    console.log("🟢 Product dropdown clicked");
+  })
+);
 
-document.querySelectorAll('[data-bs-toggle="collapse"]').forEach((btn) => {
-  btn.addEventListener("click", (e) => {
-    console.log("✅ Collapse button clicked");
-    e.stopPropagation(); // Prevent event from propagating to parent elements
-  });
-});
-
-// Add product row dynamically
 function addProductRow(
   name = "",
   qty = 1,
@@ -623,25 +657,23 @@ function addProductRow(
   unitRetail = 0,
   totalRetail = 0
 ) {
-  console.log(`Adding product row to container: ${containerId}`);
   const container = document.getElementById(containerId);
   if (!container) return;
 
   const row = document.createElement("div");
   row.classList.add("row", "g-2", "align-items-center", "mb-1", "product-row");
 
-  const optionsHTML = Object.values(productData).map(p => {
-    const selected = p.name === name ? ' selected' : '';
+  const optionsHTML = Object.values(productData || {}).map(p => {
+    const selected = p.name === name ? " selected" : "";
     return `<option value="${p.name.replace(/"/g, '&quot;')}"${selected}>${p.name}</option>`;
   }).join("");
 
-  // Format numbers as $xx.xx strings
   const formattedUnitRetail = `$${parseFloat(unitRetail || 0).toFixed(2)}`;
   const formattedTotalRetail = `$${parseFloat(totalRetail || 0).toFixed(2)}`;
 
   row.innerHTML = `
     <div class="col-md-6">
-      <select class="form-select product-name" list="row-products-selector">
+      <select class="form-select product-name">
         <option value="">Choose a product...</option>
         ${optionsHTML}
       </select>
@@ -672,7 +704,6 @@ function handleEditProductClick() {
 }
 
 function attachRowEvents(row, mode = "edit") {
-  const prefix = mode === "add" ? "add-" : "edit-";
   const nameInput = row.querySelector(".product-name");
   const qtyInput = row.querySelector(".product-quantity");
   const costOutput = row.querySelector(".totalRowCost");
@@ -692,7 +723,6 @@ function attachRowEvents(row, mode = "edit") {
       retailOutput.value = "$0.00";
     }
 
-    // Trigger recalculation
     calculateAllTotals(mode);
   }
 
@@ -703,94 +733,73 @@ function attachRowEvents(row, mode = "edit") {
     calculateAllTotals(mode);
   });
 
-  updateTotals(); // Auto-trigger
+  updateTotals();
 }
 
 function resetProductRows(containerId) {
   const container = document.getElementById(containerId);
-  if (!container) {
-    console.error(`❌ Container with ID "${containerId}" not found.`);
-    return;
-  }
+  if (!container) return;
 
-  // Clear all existing product rows
   container.innerHTML = "";
-
-  // Add one fresh product row
-  addProductRow("", 1, containerId, containerId.startsWith("add") ? "add" : "edit");
+  const mode = containerId.startsWith("add") ? "add" : "edit";
+  addProductRow("", 1, containerId, mode);
 }
 
-// Part 4-quotemanager.js
-// ✅ Utility functions
 function calculateAllTotals(mode = "edit") {
   const prefix = mode === "add" ? "add-" : "edit-";
 
   let totalProductCost = 0;
   let totalProductRetail = 0;
 
-  // Helper: safely parse currency
-  const parseCurrency = (val) =>
-    parseFloat(String(val || "0").replace(/[^0-9.-]+/g, "")) || 0;
+  const parseCurrency = val => parseFloat(String(val || "0").replace(/[^0-9.-]+/g, "")) || 0;
 
-  // Sum up product rows
   document.querySelectorAll(`#${prefix}product-rows-container .product-row`).forEach(row => {
     const name = row.querySelector(".product-name")?.value.trim() || "";
     const qty = parseFloat(row.querySelector(".product-quantity")?.value) || 0;
     const prod = productData?.[name] || Object.values(productData).find(p => p.name === name);
-
     if (prod && qty > 0) {
       totalProductCost += prod.cost * qty;
       totalProductRetail += prod.retail * qty;
     }
   });
 
-  // 🔥 Auto-update productCount field
   const productCount = document.querySelectorAll(`#${prefix}product-rows-container .product-row`).length;
   const countEl = document.getElementById(`${prefix}productCount`);
   if (countEl) countEl.value = productCount;
 
-
-  // Fees and discounts
   const deliveryFee = parseCurrency(document.getElementById(`${prefix}deliveryFee`)?.value);
   const setupFee = parseCurrency(document.getElementById(`${prefix}setupFee`)?.value);
   const otherFee = parseCurrency(document.getElementById(`${prefix}otherFee`)?.value);
   const discount = parseCurrency(document.getElementById(`${prefix}discount`)?.value);
   const deposit = parseCurrency(document.getElementById(`${prefix}deposit`)?.value);
 
-  // Totals calculations
   const addonsTotal = deliveryFee + setupFee + otherFee;
-  const subTotal1 = totalProductRetail * 0.08875; // tax
+  const subTotal1 = totalProductRetail * 0.08875;
   const subTotal2 = totalProductRetail + subTotal1;
   const subTotal3 = totalProductRetail * (discount / 100);
   const discountedTotal = subTotal2 - subTotal3;
-  const grandTotal = subTotal2 - subTotal3 + addonsTotal;
+  const grandTotal = discountedTotal + addonsTotal;
   const balanceDue = grandTotal - deposit;
 
-  // Update all UI fields
   const updateField = (id, value) => {
     const el = document.getElementById(id);
-    if (!el) {
-      console.warn(`⚠️ Element with ID "${id}" not found.`);
-      return;
-    }
-    const currencyFormat = new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
+    if (!el) return;
+    const formatter = new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
       minimumFractionDigits: 2,
     });
-    
     if (el.tagName === "INPUT") {
-      el.value = currencyFormat.format(value);
+      el.value = formatter.format(value);
     } else {
-      el.textContent = currencyFormat.format(value);
+      el.textContent = formatter.format(value);
     }
- };
+  };
 
   updateField(`${prefix}addonsTotal`, addonsTotal);
   updateField(`${prefix}addonsTotal-totals`, addonsTotal);
   updateField(`${prefix}grandTotal`, grandTotal);
   updateField(`${prefix}grandTotal-Addons`, grandTotal);
-  // updateField(`${prefix}grandTotal-Totals`, grandTotal);
   updateField(`${prefix}grandTotal-Summary`, grandTotal);
   updateField(`${prefix}balanceDue`, balanceDue);
   updateField(`${prefix}totalProductCost`, totalProductCost);
@@ -799,12 +808,34 @@ function calculateAllTotals(mode = "edit") {
   updateField(`${prefix}subTotal2`, subTotal2);
   updateField(`${prefix}subTotal3`, subTotal3);
   updateField(`${prefix}discountedTotal`, discountedTotal);
-  
-  // Update card headers
+
   updateCardHeaders(mode);
 }
 
-// 🔧 Helper: getField handles both <input> and <div> elements
+function updateCardHeaders(mode = "edit") {
+  const prefix = mode === "add" ? "add-" : "edit-";
+
+  const formatCurrency = val => {
+    const parsed = parseFloat(val.replace(/[^0-9.-]+/g, "")) || 0;
+    return parsed.toLocaleString("en-US", { style: "currency", currency: "USD" });
+  };
+
+  updateDisplayText(`${prefix}card1-header-display`, `${getField(`${prefix}firstName`)} ${getField(`${prefix}lastName`)}`.trim(), "Client Info");
+  updateDisplayText(`${prefix}card2-header-display`, getField(`${prefix}eventDate`) || "Event Info");
+  updateDisplayText(`${prefix}card3-header-display`, formatCurrency(getField(`${prefix}grandTotal`)));
+  updateDisplayText(`${prefix}card4-header-display`, formatCurrency(getField(`${prefix}addonsTotal`)));
+  updateDisplayText(`${prefix}card5-header-display`, formatCurrency(getField(`${prefix}balanceDue`)));
+  updateDisplayText(`${prefix}card6-header-display`, formatCurrency(getField(`${prefix}grandTotal`)));
+
+  updateDisplayText(`${prefix}totalProductCost`, formatCurrency(getField(`${prefix}totalProductCost`)));
+  updateDisplayText(`${prefix}totalProductRetail`, formatCurrency(getField(`${prefix}totalProductRetail`)));
+}
+
+function updateDisplayText(id, value, fallback = "") {
+  const el = document.getElementById(id);
+  if (el) el.textContent = value || fallback;
+}
+
 function getField(id) {
   const el = document.getElementById(id);
   if (!el) return "0";
@@ -813,11 +844,7 @@ function getField(id) {
 
 function setField(id, value) {
   const el = document.getElementById(id);
-  if (el) {
-    el.value = value;
-  } else {
-    console.warn(`⚠️ Element with ID "${id}" not found.`);
-  }
+  if (el) el.value = value;
 }
 
 function recalculateAndUpdateHeaders(mode = "edit") {
@@ -825,86 +852,34 @@ function recalculateAndUpdateHeaders(mode = "edit") {
   updateCardHeaders(mode);
 }
 
-function updateDisplayText(id, value, fallback = "") {
-  const el = document.getElementById(id);
-  if (el) {
-    el.textContent = value || fallback;
-  } else {
-    console.warn(`⚠️ Element with ID "${id}" not found.`);
-  }
+function formatPhoneNumber(number) {
+  const digits = number.replace(/\D/g, "");
+  if (digits.length !== 10) return number;
+  return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
 }
 
-function updateCardHeaders(mode = "edit") {
-  const prefix = mode === "add" ? "add-" : "edit-";
-
-  // Retrieve values directly from the card body fields
-  const addonsTotal = document.getElementById(`${prefix}addonsTotal`)?.textContent || "0.00";
-  const grandTotal = document.getElementById(`${prefix}grandTotal`)?.textContent || "0.00";
-  const balanceDue = document.getElementById(`${prefix}balanceDue`)?.value || "0.00";
-  const totalProductCost = document.getElementById(`${prefix}totalProductCost`)?.textContent || "0.00";
-  const totalProductRetail = document.getElementById(`${prefix}totalProductRetail`)?.textContent || "0.00";
-  const firstName = document.getElementById(`${prefix}firstName`)?.value || "";
-  const lastName = document.getElementById(`${prefix}lastName`)?.value || "";
-  const eventDate = document.getElementById(`${prefix}eventDate`)?.value || "";
-
-  // Format values as currency
-  const formatCurrency = (value) => {
-    const parsedValue = parseFloat(value.replace(/[^0-9.-]+/g, "")) || 0;
-    return parsedValue.toLocaleString("en-US", { style: "currency", currency: "USD" });
-  };
-
-  // Update card headers with the values from the card body fields
-  updateDisplayText(`${prefix}card1-header-display`, `${firstName} ${lastName}`.trim(), "Client Info");
-  updateDisplayText(`${prefix}card2-header-display`, eventDate || "Event Info");
-  updateDisplayText(`${prefix}card3-header-display`, formatCurrency(grandTotal));
-  updateDisplayText(`${prefix}card4-header-display`, formatCurrency(addonsTotal));
-  updateDisplayText(`${prefix}card5-header-display`, formatCurrency(balanceDue));
-  updateDisplayText(`${prefix}card6-header-display`, formatCurrency(grandTotal));
-
-  // Update Card 5 body fields
-  updateDisplayText(`${prefix}totalProductCost`, formatCurrency(totalProductCost));
-  updateDisplayText(`${prefix}totalProductRetail`, formatCurrency(totalProductRetail));
-}
-
-// 🔧 Helper: safely parse currency values
 function parseCurrency(val) {
   return parseFloat(String(val || "0").replace(/[^0-9.-]+/g, "")) || 0;
 }
 
-// work to remove this
-function formatPhoneNumber(number) {
-  const digits = number.replace(/\D/g, ""); // strip all non-digits
-  if (digits.length !== 10) return number; // fallback if it's not a full 10-digit number
-  const area = digits.slice(0, 3);
-  const mid = digits.slice(3, 6);
-  const last = digits.slice(6);
-  return `(${area}) ${mid}-${last}`;
-}
-
-document.getElementById("previewQuoteBtn").addEventListener("click", async (e) => {
+// === Preview Quote Handler ===
+function previewQuoteBtnHandler(e) {
   e.preventDefault();
   e.stopPropagation();
 
-  console.log("🔍 previewInvoiceFromForm triggered");
-
-  const mode = document.querySelector("#edit-quote.show.active") ? "edit" : "add";
-  console.log("🧭 Detected form mode:", mode);
+  const btnID = e.target.id;
+  const mode = btnID.startsWith("edit") ? "edit" : "add";
+  console.log("🔍 previewQuoteBtnHandler triggered for mode:", mode);
 
   toggleLoader(true);
-
-  // Open blank tab immediately to pass popup blocker
   const newTab = window.open("", "_blank");
 
   try {
-    // Ensure totals are recalculated before data collection
     calculateAllTotals(mode);
-
-    // Data collection from form fields
     const quoteInfo = collectQuoteFormData(mode);
     console.log("📦 Preview data being sent to backend:", quoteInfo);
 
-    // Send request to backend
-    const response = await fetch(scriptURL, {
+    fetch(scriptURL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -913,57 +888,50 @@ document.getElementById("previewQuoteBtn").addEventListener("click", async (e) =
         qtID: mode === "edit" ? getField("edit-qtID") : null,
         quoteInfo
       })
-    });
+    })
+    .then(response => response.json())
+    .then(result => {
+      console.log("✅ Backend preview response:", result);
 
-    const result = await response.json();
-    console.log("✅ Backend preview response:", result);
-    console.log("🧾 result.data contents:", JSON.stringify(result.data, null, 2));
-
-  if (result.success && result.data && result.data.url) {
-    newTab.location.href = result.data.url;
-  } else {
-    newTab.document.write("<p>❌ Failed to generate preview.</p>");
-    showToast("❌ Preview failed: " + (result.data?.message || "No URL returned"), "error");
-    console.error("❌ Preview failed:", result);
-  }
-    // Close the new tab if no URL is returned
-    if (!result.data?.url) {
-      setTimeout(() => {
-        newTab.close();
-      }, 5000); // Close after 5 seconds
-    }
-    
+      if (result.success && result.data?.url) {
+        newTab.location.href = result.data.url;
+      } else {
+        newTab.document.write("<p>❌ Failed to generate preview.</p>");
+        showToast("❌ Preview failed: " + (result.data?.message || "No URL returned"), "error");
+        setTimeout(() => newTab.close(), 5000);
+      }
+    })
+    .catch(err => {
+      newTab.document.write("<p>❌ Error generating preview.</p>");
+      console.error("❌ Fetch error:", err);
+      showToast("❌ Error during preview request. Check console.", "error");
+    })
+    .finally(() => toggleLoader(false));
   } catch (err) {
     newTab.document.write("<p>❌ Error generating preview.</p>");
-    console.error("❌ Fetch error:", err);
-    showToast("❌ Error during preview request. Check console.", "error");
-  } finally {
+    console.error("❌ Unexpected error:", err);
+    showToast("❌ Unexpected error. Check console.", "error");
     toggleLoader(false);
   }
-});
+}
 
-document.getElementById("finalize-invoice-btn").addEventListener("click", async (e) => {
+// === Finalize Quote Handler ===
+function finalizeInvoiceBtnHandler(e) {
   e.preventDefault();
   e.stopPropagation();
 
-  console.log("🧾 finalizeInvoiceFromForm triggered");
-
-  const mode = document.querySelector("#edit-quote.show.active") ? "edit" : "add";
-  console.log("🛠️ Detected form mode:", mode);
+  const btnID = e.target.id;
+  const mode = btnID.startsWith("edit") ? "edit" : "add";
+  console.log("🧾 finalizeInvoiceBtnHandler triggered for mode:", mode);
 
   toggleLoader(true);
 
   try {
-    // Update totals before gathering data
     calculateAllTotals(mode);
-
     const quoteInfo = collectQuoteFormData(mode);
-    console.log("📬 Finalizing quote with data:", quoteInfo);
-
     const qtID = mode === "edit" ? getField("edit-qtID") : null;
-    console.log("🧾 Sending qtID:", qtID);
 
-    const response = await fetch(scriptURL, {
+    fetch(scriptURL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -972,38 +940,41 @@ document.getElementById("finalize-invoice-btn").addEventListener("click", async 
         qtID,
         quoteInfo
       })
-    });
+    })
+    .then(response => response.json())
+    .then(result => {
+      console.log("✅ Backend finalize response:", result);
 
-    const result = await response.json();
-    console.log("✅ Backend finalize response:", result);
-    console.log("🧾 result.data contents:", JSON.stringify(result.data, null, 2));
+      // Unwrap nested response (because doPost wraps everything in { success: true, data: response })
+      const nested = result?.data;
+      const finalData = nested?.success ? nested.data : nested;
+      const { url, fileName } = finalData || {};
 
-    const { success, data } = result;
+      if (url && fileName) {
+        const emailHtml = generateInvoiceEmailHtml(fileName, url, quoteInfo);
 
-    if (success && data?.url) {
-      // Prepare email preview
-      const emailHtml = generateInvoiceEmailHtml(data.fileName, data.url, quoteInfo);
+        document.getElementById("invoice-email-to").value = quoteInfo.email || "";
+        document.getElementById("invoice-email-subject").value = `${fileName} from Your Company`;
+        document.getElementById("invoice-email-body").innerHTML = emailHtml;
 
-      document.getElementById("invoice-email-to").value = quoteInfo.email || "";
-      document.getElementById("invoice-email-subject").value = `${data.fileName} from Your Company`;
-      document.getElementById("invoice-email-body").innerHTML = emailHtml;
-
-      const modal = new bootstrap.Modal(document.getElementById("finalInvoiceModal"));
-      modal.show();
-
-      showToast("📄 Invoice finalized and ready to send.", "success");
-    } else {
-      console.error("❌ Invoice finalization failure:", result);
-      showToast("❌ Invoice finalization failed. No URL or template generated.", "error");
-    }
-
+        new bootstrap.Modal(document.getElementById("finalInvoiceModal")).show();
+        showToast("📄 Invoice finalized and ready to send.", "success");
+      } else {
+        console.error("❌ Missing URL or fileName in finalize response:", finalData);
+        showToast("❌ Invoice finalization failed. No preview data returned.", "error");
+      }
+    })
+    .catch(err => {
+      console.error("❌ Finalize request error:", err);
+      showToast("❌ Error finalizing invoice. Check console.", "error");
+    })
+    .finally(() => toggleLoader(false));
   } catch (err) {
-    console.error("❌ Finalize request error:", err);
-    showToast("❌ Error finalizing invoice. Check console for details.", "error");
-  } finally {
+    console.error("❌ Fatal error:", err);
+    showToast("❌ Finalize error. Check console.", "error");
     toggleLoader(false);
   }
-});
+}
 
 function generateInvoiceEmailHtml(fileName, pdfUrl, quoteData) {
   return `
@@ -1015,3 +986,103 @@ function generateInvoiceEmailHtml(fileName, pdfUrl, quoteData) {
     <p>Best regards,<br>Your Company Team</p>
   `;
 }
+
+async function sendInvoiceEmailBtnHandler(event) {
+  try {
+    const qtID = getField("edit-qtID");
+    if (!qtID) throw new Error("Missing qtID for sending invoice email");
+
+    const emailTo = document.getElementById("invoice-email-to")?.value?.trim();
+    const emailSubject = document.getElementById("invoice-email-subject")?.value?.trim();
+    const emailBody = document.getElementById("invoice-email-body")?.innerHTML?.trim();
+
+    if (!emailTo || !emailBody) {
+      showToast("⚠️ Please ensure both email and body are filled in.", "warning");
+      return;
+    }
+
+    toggleLoader(true);
+    console.log(`📤 Sending finalized invoice to: ${emailTo}`);
+
+    const response = await fetch(scriptURL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        system: "quotes",
+        action: "sendInvoiceEmail",
+        to: emailTo,
+        subject: emailSubject,
+        body: emailBody,
+        qtID: qtID
+      })
+    });
+
+    const result = await response.json();
+    console.log("✅ Email send result:", result);
+
+    if (result.success) {
+      showToast("✅ Invoice email sent successfully!");
+      const modalEl = document.getElementById("finalInvoiceModal");
+      if (modalEl) bootstrap.Modal.getInstance(modalEl)?.hide();
+    } else {
+      throw new Error(result.message || "Unknown backend error");
+    }
+
+  } catch (error) {
+    console.error("❌ Failed to send invoice email:", error);
+    showToast("❌ Failed to send invoice email", "error");
+  } finally {
+    toggleLoader(false);
+  }
+}
+
+// Open the log payment modal with the invoice ID preloaded
+function openLogPaymentModal(invoiceID) {
+  document.getElementById("log-payment-invoiceID").value = invoiceID;
+  document.getElementById("log-payment-amount").value = "";
+  document.getElementById("log-payment-method").value = "";
+  const modal = new bootstrap.Modal(document.getElementById("logPaymentModal"));
+  modal.show();
+}
+
+// Handle form submission
+document.getElementById("submitLogPaymentBtn").addEventListener("click", async () => {
+  const invoiceID = document.getElementById("log-payment-invoiceID").value;
+  const amount = parseFloat(document.getElementById("log-payment-amount").value);
+  const method = document.getElementById("log-payment-method").value;
+
+  if (!invoiceID || isNaN(amount) || !method) {
+    showToast("⚠️ Please complete all fields before submitting.", "warning");
+    return;
+  }
+
+  try {
+    toggleLoader(true);
+    const response = await fetch(scriptURL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        system: "quotes",
+        action: "logPayment",
+        invoiceID,
+        amount,
+        method
+      })
+    });
+
+    const result = await response.json();
+    if (result.success) {
+      showToast("✅ Payment logged successfully!");
+      bootstrap.Modal.getInstance(document.getElementById("logPaymentModal")).hide();
+      // Optional: refresh totals or reload quote
+    } else {
+      throw new Error(result.message || "Unknown error");
+    }
+  } catch (error) {
+    console.error("❌ Error logging payment:", error);
+    showToast("❌ Failed to log payment", "error");
+  } finally {
+    toggleLoader(false);
+  }
+});
+
