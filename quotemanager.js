@@ -204,6 +204,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // 🔄 Populates the Edit Form when a quote is selected
 document.addEventListener("DOMContentLoaded", () => {
+    console.log("📦 DOMContentLoaded fired");
+
+  // Check for all relevant button elements
+  console.log("🔍 DOMContentLoaded: add-quote-btn", document.getElementById("add-quote-btn"));
+  console.log("🔍 DOMContentLoaded: add-previewQuoteBtn", document.getElementById("add-previewQuoteBtn"));
+  console.log("🔍 DOMContentLoaded: add-finalizeInvoiceBtn", document.getElementById("add-finalizeInvoiceBtn"));
 
   // Watch fields and recalculate totals
   const fieldsToWatch = [
@@ -292,6 +298,8 @@ document.addEventListener("DOMContentLoaded", () => {
     console.warn("❌ Add tab button not found in DOM");
   }
 });
+
+// console.log("🌍 [Global Scope] Page script executing");
 
 async function populateEditForm(qtID) {
   try {
@@ -545,8 +553,8 @@ async function initializeAddForm() {
     console.error("❌ Error initializing Add Quote form:", err);
     showToast("❌ Could not initialize form", "error");
 // 🧩 Bind event listeners to Add form buttons
-    const previewBtn = document.getElementById("add-previewQuoteBtn");
-    const finalizeBtn = document.getElementById("add-finalizeInvoiceBtn");
+const previewBtn = document.getElementById("add-previewQuoteBtn");
+const finalizeBtn = document.getElementById("add-finalizeInvoiceBtn");
 
 if (previewBtn && !previewBtn.dataset.bound) {
   previewBtn.addEventListener("click", async (e) => {
@@ -883,7 +891,7 @@ function previewQuoteBtnHandler(e) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        system: "quotes",
+        system: "invoice",
         action: "preview",
         qtID: mode === "edit" ? getField("edit-qtID") : null,
         quoteInfo
@@ -916,173 +924,135 @@ function previewQuoteBtnHandler(e) {
 }
 
 // === Finalize Quote Handler ===
-function finalizeInvoiceBtnHandler(e) {
+async function finalizeInvoiceBtnHandler(e) {
   e.preventDefault();
   e.stopPropagation();
 
   const btnID = e.target.id;
   const mode = btnID.startsWith("edit") ? "edit" : "add";
-  console.log("🧾 finalizeInvoiceBtnHandler triggered for mode:", mode);
+  const qtID = mode === "edit" ? getField("edit-qtID") : null;
+  console.log("🧾 Finalizing invoice, mode:", mode);
 
   toggleLoader(true);
 
   try {
+    // Step 1: Calculate totals and collect form data
     calculateAllTotals(mode);
     const quoteInfo = collectQuoteFormData(mode);
-    const qtID = mode === "edit" ? getField("edit-qtID") : null;
 
-    fetch(scriptURL, {
+    if (!quoteInfo || typeof quoteInfo !== "object") {
+      throw new Error("❌ Invalid quote data returned.");
+    }
+
+    // Step 2: Save quote
+    const quoteSaveRes = await fetch(scriptURL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         system: "quotes",
-        action: "finalize",
+        action: mode,
         qtID,
         quoteInfo
       })
-    })
-    .then(response => response.json())
-    .then(result => {
-      console.log("✅ Backend finalize response:", result);
+    });
 
-      // Unwrap nested response (because doPost wraps everything in { success: true, data: response })
-      const nested = result?.data;
-      const finalData = nested?.success ? nested.data : nested;
-      const { url, fileName } = finalData || {};
+    const quoteSaveData = await quoteSaveRes.json();
+    console.log("✅ Quote saved:", quoteSaveData);
 
-      if (url && fileName) {
-        const emailHtml = generateInvoiceEmailHtml(fileName, url, quoteInfo);
+    const savedQtID = quoteSaveData?.qtID || qtID;
+    if (!savedQtID) throw new Error("❌ No qtID returned after saving quote");
 
-        document.getElementById("invoice-email-to").value = quoteInfo.email || "";
-        document.getElementById("invoice-email-subject").value = `${fileName} from Your Company`;
-        document.getElementById("invoice-email-body").innerHTML = emailHtml;
+    // Step 3: Finalize invoice
+    const finalizeRes = await fetch(scriptURL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        system: "invoice",
+        action: "finalize",
+        qtID: savedQtID,
+        quoteInfo
+      })
+    });
 
-        new bootstrap.Modal(document.getElementById("finalInvoiceModal")).show();
-        showToast("📄 Invoice finalized and ready to send.", "success");
-      } else {
-        console.error("❌ Missing URL or fileName in finalize response:", finalData);
-        showToast("❌ Invoice finalization failed. No preview data returned.", "error");
-      }
-    })
-    .catch(err => {
-      console.error("❌ Finalize request error:", err);
-      showToast("❌ Error finalizing invoice. Check console.", "error");
-    })
-    .finally(() => toggleLoader(false));
+    const finalizeData = await finalizeRes.json();
+    const finalData = finalizeData?.data?.success ? finalizeData.data.data : finalizeData.data;
+    const { url } = finalData || {};
+
+    if (url) {
+      const displayName = `${quoteInfo.firstName} ${quoteInfo.lastName}'s Invoice`;
+      const emailHtml = generateInvoiceEmailHtml(displayName, url, quoteInfo);
+
+      document.getElementById("invoice-email-to").value = quoteInfo.email || "";
+      document.getElementById("invoice-email-subject").value = `Your Final Invoice from Your Company`;
+      document.getElementById("invoice-email-body").innerHTML = emailHtml;
+
+      new bootstrap.Modal(document.getElementById("finalInvoiceModal")).show();
+      showToast("📄 Invoice finalized and ready to send.", "success");
+    } else {
+      throw new Error("❌ Invoice PDF URL missing from finalization response.");
+    }
+
   } catch (err) {
-    console.error("❌ Fatal error:", err);
-    showToast("❌ Finalize error. Check console.", "error");
+    console.error("❌ Finalization failed:", err);
+    showToast("❌ Error finalizing invoice. See console.", "error");
+  } finally {
     toggleLoader(false);
   }
 }
 
-function generateInvoiceEmailHtml(fileName, pdfUrl, quoteData) {
+
+function generateInvoiceEmailHtml(displayName, pdfUrl, quoteData) {
   return `
     <p>Hi ${quoteData.firstName},</p>
     <p>Your invoice has been finalized. Please review it below:</p>
-    <p><strong>${fileName}</strong></p>
+    <p><strong>${displayName}</strong></p>
     <p><a href="${pdfUrl}" target="_blank">📄 View Invoice PDF</a></p>
     <p>Let us know if you have any questions.</p>
     <p>Best regards,<br>Your Company Team</p>
   `;
 }
 
-async function sendInvoiceEmailBtnHandler(event) {
-  try {
-    const qtID = getField("edit-qtID");
-    if (!qtID) throw new Error("Missing qtID for sending invoice email");
+document.getElementById("send-invoice-email").addEventListener("click", async function (e) {
+  e.preventDefault();
 
-    const emailTo = document.getElementById("invoice-email-to")?.value?.trim();
-    const emailSubject = document.getElementById("invoice-email-subject")?.value?.trim();
-    const emailBody = document.getElementById("invoice-email-body")?.innerHTML?.trim();
+  const to = document.getElementById("invoice-email-to")?.value?.trim();
+  const body = document.getElementById("invoice-email-body")?.innerHTML?.trim();
+  const qtID = document.getElementById("edit-qtID")?.value?.trim();
 
-    if (!emailTo || !emailBody) {
-      showToast("⚠️ Please ensure both email and body are filled in.", "warning");
-      return;
-    }
-
-    toggleLoader(true);
-    console.log(`📤 Sending finalized invoice to: ${emailTo}`);
-
-    const response = await fetch(scriptURL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        system: "quotes",
-        action: "sendInvoiceEmail",
-        to: emailTo,
-        subject: emailSubject,
-        body: emailBody,
-        qtID: qtID
-      })
-    });
-
-    const result = await response.json();
-    console.log("✅ Email send result:", result);
-
-    if (result.success) {
-      showToast("✅ Invoice email sent successfully!");
-      const modalEl = document.getElementById("finalInvoiceModal");
-      if (modalEl) bootstrap.Modal.getInstance(modalEl)?.hide();
-    } else {
-      throw new Error(result.message || "Unknown backend error");
-    }
-
-  } catch (error) {
-    console.error("❌ Failed to send invoice email:", error);
-    showToast("❌ Failed to send invoice email", "error");
-  } finally {
-    toggleLoader(false);
-  }
-}
-
-// Open the log payment modal with the invoice ID preloaded
-function openLogPaymentModal(invoiceID) {
-  document.getElementById("log-payment-invoiceID").value = invoiceID;
-  document.getElementById("log-payment-amount").value = "";
-  document.getElementById("log-payment-method").value = "";
-  const modal = new bootstrap.Modal(document.getElementById("logPaymentModal"));
-  modal.show();
-}
-
-// Handle form submission
-document.getElementById("submitLogPaymentBtn").addEventListener("click", async () => {
-  const invoiceID = document.getElementById("log-payment-invoiceID").value;
-  const amount = parseFloat(document.getElementById("log-payment-amount").value);
-  const method = document.getElementById("log-payment-method").value;
-
-  if (!invoiceID || isNaN(amount) || !method) {
-    showToast("⚠️ Please complete all fields before submitting.", "warning");
+  if (!to || !body) {
+    showToast("⚠️ Please complete the email fields before sending.", "warning");
     return;
   }
 
+  toggleLoader(true);
+
   try {
-    toggleLoader(true);
-    const response = await fetch(scriptURL, {
+    const res = await fetch(scriptURL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        system: "quotes",
-        action: "logPayment",
-        invoiceID,
-        amount,
-        method
+        system: "invoice",
+        action: "sendInvoiceEmail",
+        to,
+        body,
+        qtID
       })
     });
 
-    const result = await response.json();
+    const result = await res.json();
+    console.log("📬 Email send response:", result);
+
     if (result.success) {
-      showToast("✅ Payment logged successfully!");
-      bootstrap.Modal.getInstance(document.getElementById("logPaymentModal")).hide();
-      // Optional: refresh totals or reload quote
+      showToast("✅ Email sent successfully");
+      bootstrap.Modal.getInstance(document.getElementById("finalInvoiceModal"))?.hide();
     } else {
-      throw new Error(result.message || "Unknown error");
+      showToast(`❌ ${result.data?.error || "Email failed to send."}`, "error");
     }
-  } catch (error) {
-    console.error("❌ Error logging payment:", error);
-    showToast("❌ Failed to log payment", "error");
+
+  } catch (err) {
+    console.error("❌ Send email request failed:", err);
+    showToast("❌ Failed to send email. Check console.", "error");
   } finally {
     toggleLoader(false);
   }
 });
-

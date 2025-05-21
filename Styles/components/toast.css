@@ -11,8 +11,8 @@
   align-items: center;
   visibility: hidden;
   opacity: 0;
-  transition: opacity 3s ease-in-out;
-  z-index: 1050;
+  transition: opacity .3s ease-in-out;
+  z-index: 2000;
 }
 
 #loadingOverlay.show {
@@ -24,6 +24,7 @@
   width: 8rem;
   height: 8rem;
   margin-bottom: 0;
+  color: white;
 }
 
 /* ===============================

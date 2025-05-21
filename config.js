@@ -63,20 +63,20 @@
     }, 5000);
   }
 
-  function toggleLoader() {
-    const loader = document.getElementById("loadingOverlay");
+function toggleLoader() {
+  const loader = document.getElementById("loadingOverlay");
 
-    if (loader) {
-      loader.classList.toggle("show");
+  if (loader) {
+    loader.classList.toggle("show");
 
-      // Make sure to remove d-none when showing
-      if (loader.classList.contains("show")) {
-        loader.classList.remove("d-none");
-      } else {
-        loader.classList.add("d-none");
-      }
+    // Also toggle d-none to remove from layout
+    if (loader.classList.contains("show")) {
+      loader.classList.remove("d-none");
+    } else {
+      loader.classList.add("d-none");
     }
   }
+}
 
   function loadStylesheets() {
     const head = document.head;
