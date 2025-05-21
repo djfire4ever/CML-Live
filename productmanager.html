@@ -21,10 +21,11 @@
 </div>
 
 <!-- Product Management Section -->
-<section class="text-center text-sm-start">
+<section class="text-sm-start py-4">
   <div class="container">
-    <h2 class="text-center">Product Management</h2>
-    <!-- Navigation Tabs -->
+    <h2 class="text-center mb-4">Product Management</h2>
+
+    <!-- Nav Tabs -->
     <ul class="nav nav-tabs" id="productTabs" role="tablist">
       <li class="nav-item" role="presentation">
         <button class="nav-link active" id="search-tab" data-bs-toggle="tab" data-bs-target="#search-product" type="button" role="tab" aria-controls="search-product" aria-selected="true">🔍 Search</button>
@@ -33,7 +34,7 @@
         <button class="nav-link" id="add-tab" data-bs-toggle="tab" data-bs-target="#add-product" type="button" role="tab" aria-controls="add-product" aria-selected="false">➕ Add</button>
       </li>
       <li class="nav-item" role="presentation">
-        <button class="nav-link" id="edit-tab" data-bs-toggle="tab" data-bs-target="#edit-product" type="button" role="tab" aria-controls="edit-product" aria-selected="false" style="display: none;">✏️ Edit</button>
+        <button class="nav-link" id="edit-tab" data-bs-toggle="tab" data-bs-target="#edit-product" type="button" role="tab" aria-controls="edit-product" aria-selected="false" hidden>✏️ Edit</button>
       </li>
     </ul>
 
@@ -55,7 +56,7 @@
   </template>
 
   <!-- Tab Content -->
-  <div class="tab-content">
+  <div class="tab-content pt-3" id="productTabsContent">
     <!-- Search Tab -->
     <div class="tab-pane fade show active" id="search-product" role="tabpanel" aria-labelledby="search-tab">
       <div class="input-group mb-2">
@@ -79,342 +80,128 @@
       </table>
     </div>
 
-    <!-- Edit Tab -->
-        <div class="tab-pane fade" id="edit-product" role="tabpanel" aria-labelledby="edit-tab">
-          <form id="editProductForm">
-            <input type="hidden" id="edit-prodID-hidden" />
-            <!-- Shared Form Fields -->
-            <div class="row g-3 mb-2">
-              <div class="col-sm-1"><label class="fw-bold">ID#</label><input type="text" class="form-control" id="edit-prodID" readonly></div>
-              <div class="col-sm-4"><label class="fw-bold">Name</label><input type="text" class="form-control" id="edit-productName"></div>
-              <div class="col-sm-2"><label class="fw-bold">Type</label>
-                <input type="text" class="form-control" id="edit-productType" list="product-type-options-edit" placeholder="Select Type">
-                <datalist id="product-type-options-edit"></datalist>
-              </div>
-              <div class="col-sm-2"><label class="fw-bold">Total Cost $</label><input type="text" class="form-control" id="totalProductCostEdit" readonly></div>
-              <div class="col-sm-2"><label class="fw-bold">Total Retail $</label><input type="text" class="form-control" id="totalProductRetailEdit" readonly></div>
-              <div class="col-sm-1"><label class="fw-bold">C/Time</label><input type="text" class="form-control" id="edit-compTime"></div>
-            </div>
+<!-- Edit Tab -->
+<div class="tab-pane fade" id="edit-product" role="tabpanel" aria-labelledby="edit-tab">
+  <form id="editProductForm">
+    <input type="hidden" id="edit-prodID-hidden" />
+    <div class="row g-3 mt-1 mb-3">
+      <div class="col-sm-1"><label class="fw-bold">ID#</label><input type="text" class="form-control" id="edit-prodID" readonly></div>
+      <div class="col-sm-4"><label class="fw-bold">Name</label><input type="text" class="form-control" id="edit-productName"></div>
+      <div class="col-sm-2"><label class="fw-bold">Type</label>
+        <input type="text" class="form-control" id="edit-productType" list="product-type-options-edit" placeholder="Select Type">
+        <datalist id="product-type-options-edit"></datalist>
+      </div>
+      <div class="col-sm-2"><label class="fw-bold">Total Cost $</label><input type="text" class="form-control" id="edit-totalProductCost" readonly></div>
+      <div class="col-sm-2"><label class="fw-bold">Total Retail $</label><input type="text" class="form-control" id="edit-totalProductRetail" readonly></div>
+      <div class="col-sm-1"><label class="fw-bold">C/Time</label><input type="text" class="form-control" id="edit-compTime"></div>
+    </div>
 
-            <!-- Accordion -->
-            <div class="accordion mb-4" id="edit-AccordionPR">
-              <div class="accordion-item border-info">
-                <h2 class="accordion-header" id="edit-headingProductsRows">
-                  <button class="accordion-button collapsed bg-black text-info" type="button" data-bs-toggle="collapse" data-bs-target="#edit-collapseProductsRows" aria-expanded="false" aria-controls="edit-collapseProductsRows">
-                    <span><i class="fa-solid fa-boxes-stacked me-2 text-info"></i> Products</span>
-                    <span class="badge bg-black fs-6 text-info ms-2" id="edit-card7-header-display">Products</span>
-                  </button>
-                </h2>
-                <div id="edit-collapseProductsRows" class="accordion-collapse collapse" data-bs-parent="#edit-AccordionPR">
-                  <div class="accordion-body">
-                    <input type="hidden" id="edit-mat-id">
-                    <input type="hidden" id="edit-cost">
-                    <input type="hidden" id="edit-retail">
-                    <div class="container-fluid px-0">
-                      <div class="row mb-0 part-row-headers">
-                        <div class="col-md-5">Part</div>
-                        <div class="col-md-2">Qty</div>
-                        <div class="col-md-2">Cost $</div>
-                        <div class="col-md-2">Retail $</div>
-                        <div class="col-md-1"></div>
-                      </div>
-                      <div id="edit-part-rows" data-mode="edit"></div>
-                      <div class="row g-3 mt-3">
-                        <div class="col-sm-6"><button type="button" class="btn btn-dark" id="editAddPartRow">➕ Part</button></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+    <div class="accordion mt-1 mb-1" id="edit-AccordionPR">
+      <div class="accordion-item border-info">
+        <h2 class="accordion-header" id="edit-headingProductsRows">
+          <button class="accordion-button collapsed bg-black text-info" type="button" data-bs-toggle="collapse" data-bs-target="#edit-collapseProductsRows" aria-expanded="false" aria-controls="edit-collapseProductsRows">
+            <span><i class="fa-solid fa-boxes-stacked me-2 text-info"></i></span>
+            <span class="badge bg-black fs-6 text-info ms-2" id="edit-partrow-header-display">Parts</span>
+          </button>
+        </h2>
+        <div id="edit-collapseProductsRows" class="accordion-collapse collapse" data-bs-parent="#edit-AccordionPR">
+          <div class="accordion-body">
+            <input type="hidden" id="edit-mat-id">
+            <input type="hidden" id="edit-cost">
+            <input type="hidden" id="edit-retail">
+            <div class="container-fluid px-0">
+              <div class="row mb-0 part-row-headers">
+                <div class="col-md-5">Part</div>
+                <div class="col-md-2">Qty</div>
+                <div class="col-md-2">Cost $</div>
+                <div class="col-md-2">Retail $</div>
+                <div class="col-md-1"></div>
+              </div>
+              <div id="edit-part-rows" data-mode="edit"></div>
+              <div class="row g-3 mt-1 mb-1">
+                <div class="col-sm-6"><button type="button" class="btn btn-dark" id="edit-partRow">➕ Part</button></div>
               </div>
             </div>
-
-            <div class="row g-3 mt-3">
-              <div class="col-sm-12"><label class="fw-bold">Description</label><input type="text" class="form-control" id="edit-description"></div>
-            </div>
-            <div class="row g-3 mt-3">
-              <div class="col-sm-12"><button type="submit" class="btn btn-dark" id="save-changes-edit">💾 Save Changes</button></div>
-            </div>
-          </form>
-        </div>
-
-        <!-- Add Tab -->
-        <div class="tab-pane fade" id="add-product" role="tabpanel" aria-labelledby="add-tab">
-          <form id="addProductForm">
-            <input type="hidden" id="add-prodID-hidden" />
-            <div class="row g-3 mb-2">
-              <div class="col-sm-1"><label class="fw-bold">ID#</label><input type="text" class="form-control" id="add-prodID" readonly></div>
-              <div class="col-sm-4"><label class="fw-bold">Name</label><input type="text" class="form-control" id="add-productName"></div>
-              <div class="col-sm-2"><label class="fw-bold">Type</label>
-                <input type="text" class="form-control" id="add-productType" list="product-type-options-add" placeholder="Select Type">
-                <datalist id="product-type-options-add"></datalist>
-              </div>
-              <div class="col-sm-2"><label class="fw-bold">Total Cost $</label><input type="text" class="form-control" id="totalProductCostAdd" readonly></div>
-              <div class="col-sm-2"><label class="fw-bold">Total Retail $</label><input type="text" class="form-control" id="totalProductRetailAdd" readonly></div>
-              <div class="col-sm-1"><label class="fw-bold">C/Time</label><input type="text" class="form-control" id="add-compTime"></div>
-            </div>
-
-            <div class="accordion mb-4" id="add-AccordionPR">
-              <div class="accordion-item border-info">
-                <h2 class="accordion-header" id="add-headingProductsRows">
-                  <button class="accordion-button collapsed bg-black text-info" type="button" data-bs-toggle="collapse" data-bs-target="#add-collapseProductsRows" aria-expanded="false" aria-controls="add-collapseProductsRows">
-                    <span><i class="fa-solid fa-boxes-stacked me-2 text-info"></i> Products</span>
-                    <span class="badge bg-black fs-6 text-info ms-2" id="add-card7-header-display">Products</span>
-                  </button>
-                </h2>
-                <div id="add-collapseProductsRows" class="accordion-collapse collapse" data-bs-parent="#add-AccordionPR">
-                  <div class="accordion-body">
-                    <input type="hidden" id="add-mat-id">
-                    <input type="hidden" id="add-cost">
-                    <input type="hidden" id="add-retail">
-                    <div class="container-fluid px-0">
-                      <div class="row mb-0 part-row-headers">
-                        <div class="col-md-5">Part</div>
-                        <div class="col-md-2">Qty</div>
-                        <div class="col-md-2">Cost $</div>
-                        <div class="col-md-2">Retail $</div>
-                        <div class="col-md-1"></div>
-                      </div>
-                      <div id="add-part-rows" data-mode="add"></div>
-                      <div class="row g-3 mt-3">
-                        <div class="col-sm-6"><button type="button" class="btn btn-dark" id="addAddPartRow">➕ Part</button></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="row g-3 mt-3">
-              <div class="col-sm-12"><label class="fw-bold">Description</label><input type="text" class="form-control" id="add-description"></div>
-            </div>
-          </form>
+          </div>
         </div>
       </div>
     </div>
-  </section>
+
+    <div class="row g-3 mt-1 mb-1">
+      <div class="col-sm-12"><label class="fw-bold">Description</label><input type="text" class="form-control" id="edit-description"></div>
+    </div>
+    <div class="row g-3 mt-1 mb-5">
+      <div class="col-sm-12"><button type="submit" class="btn btn-dark" id="save-changes">💾 Save Changes</button></div>
+    </div>
+  </form>
+</div>
+
+<!-- Shared Part Options Datalist -->
+<datalist id="row-parts-selector"></datalist>
+
+<!-- Add Tab -->
+<div class="tab-pane fade" id="add-product" role="tabpanel" aria-labelledby="add-tab">
+  <form id="addProductForm">
+    <input type="hidden" id="add-prodID-hidden" />
+    <div class="row g-3 mt-1 mb-3">
+      <div class="col-sm-1"><label class="fw-bold">ID#</label><input type="text" class="form-control" id="add-prodID" readonly></div>
+      <div class="col-sm-4"><label class="fw-bold">Name</label><input type="text" class="form-control" id="add-productName"></div>
+      <div class="col-sm-2"><label class="fw-bold">Type</label>
+        <input type="text" class="form-control" id="add-productType" list="product-type-options-add" placeholder="Select Type">
+        <datalist id="product-type-options-add"></datalist>
+      </div>
+      <div class="col-sm-2"><label class="fw-bold">Total Cost $</label><input type="text" class="form-control" id="add-totalProductCost" readonly></div>
+      <div class="col-sm-2"><label class="fw-bold">Total Retail $</label><input type="text" class="form-control" id="add-totalProductRetail" readonly></div>
+      <div class="col-sm-1"><label class="fw-bold">C/Time</label><input type="text" class="form-control" id="add-compTime"></div>
+    </div>
+
+    <div class="accordion mt-1 mb-1" id="add-AccordionPR">
+      <div class="accordion-item border-info">
+        <h2 class="accordion-header" id="add-headingProductsRows">
+          <button class="accordion-button collapsed bg-black text-info" type="button" data-bs-toggle="collapse" data-bs-target="#add-collapseProductsRows" aria-expanded="false" aria-controls="add-collapseProductsRows">
+            <span><i class="fa-solid fa-boxes-stacked me-2 text-info"></i></span>
+            <span class="badge bg-black fs-6 text-info ms-2" id="add-partrow-header-display">Parts</span>
+          </button>
+        </h2>
+        <div id="add-collapseProductsRows" class="accordion-collapse collapse" data-bs-parent="#add-AccordionPR">
+          <div class="accordion-body">
+            <input type="hidden" id="add-mat-id">
+            <input type="hidden" id="add-cost">
+            <input type="hidden" id="add-retail">
+            <div class="container-fluid px-0">
+              <div class="row mb-0 part-row-headers">
+                <div class="col-md-5">Part</div>
+                <div class="col-md-2">Qty</div>
+                <div class="col-md-2">Cost $</div>
+                <div class="col-md-2">Retail $</div>
+                <div class="col-md-1"></div>
+              </div>
+              <div id="add-part-rows" data-mode="add"></div>
+              <div class="row g-3 mt-1 mb-1">
+                <div class="col-sm-6"><button type="button" class="btn btn-dark" id="add-partRow">➕ Part</button></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-3 mt-1 mb-1">
+      <div class="col-sm-12"><label class="fw-bold">Description</label><input type="text" class="form-control" id="add-description"></div>
+    </div>
+    <div class="row g-3 mt-1 mb-5">
+      <div class="col-sm-12"><button type="submit" class="btn btn-dark" id="submit">💾 Save</button></div>
+    </div>
+
+  </form>
+</div>
+
+</section>
 
 <script src="config.js" defer></script>
 <script src="productmanager.js" defer></script>
 
 <script>
-let materialData = {}; // Global material map
-const maxParts = 20;
-
-// Determine active mode ('add' or 'edit') based on the container
-function getActiveFormMode() {
-  const addForm = document.querySelector('#add-product[data-mode="add"]');
-  return addForm?.classList.contains('active') ? 'add' : 'edit';
-}
-
-function getPartRowsContainer(mode) {
-  return document.getElementById(`${mode}-part-rows`);
-}
-
-function addPartRowTo(containerId, materialName = '', qty = 0) {
-  const trimmedName = materialName.trim();
-  const matID = Object.keys(materialData).find(id => materialData[id].name === trimmedName);
-  const mat = materialData[matID] || { name: '', unitPrice: 0 };
-
-  const row = document.createElement("div");
-  row.className = "row align-items-center mb-2 part-row";
-
-  row.innerHTML = `
-  <div class="col-md-5">
-    <input type="text" class="form-select part-input" list="row-parts-selector" placeholder="Select Part" value="${mat.name}" data-matid="${matID || ''}">
-  </div>
-  <div class="col-md-2">
-    <input type="number" class="form-control qty-input" value="${qty}">
-  </div>
-  <div class="col-md-2">
-    <input type="text" class="form-control totalRowCost" value="" readonly>
-  </div>
-  <div class="col-md-2">
-    <input type="text" class="form-control totalRowRetail" value="" readonly>
-  </div>
-  <div class="col-md-1 d-flex">
-    <button type="button" class="btn btn-danger btn-sm remove-part"><i class="bi bi-trash"></i></button>
-  </div>
-`;
-
-  const container = document.getElementById(containerId);
-  container.appendChild(row);
-
-  const partInput = row.querySelector(".part-input");
-  partInput.addEventListener("change", () => {
-    const name = partInput.value.trim();
-    if (name) calculateAndUpdate(row);
-  });
-
-  row.querySelector(".qty-input").addEventListener("change", () => calculateAndUpdate(row));
-  row.querySelector(".remove-part").addEventListener("click", () => {
-    row.remove();
-    calculateTotalProductCost();
-  });
-
-  if (matID) {
-    calculateAndUpdate(row);
-  }
-}
-
-document.querySelector('[data-bs-target="#add-product"]').addEventListener("click", () => {
-  initializeAddForm();
-});
-
-async function initializeAddForm() {
-  // Clear fields
-  ["add-prodID", "add-productName", "add-productType", "add-compTime",
-   "add-totalProductRetail", "add-totalProductCost",
-   "add-cost", "add-retail", "add-description"].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.value = "";
-  });
-
-  // Ensure material data is loaded before populating dropdowns
-  if (Object.keys(materialData).length === 0) {
-    await setMaterialDataForEdit();
-  }
-
-  // Clear and add initial row
-  const partRowContainer = document.getElementById("add-part-rows");
-  if (partRowContainer) {
-    partRowContainer.innerHTML = "";
-    addPartRowTo("add-part-rows");
-  }
-}
-
-function calculateAndUpdate(row) {
-  const partInput = row.querySelector(".part-input");
-  const qtyInput = row.querySelector(".qty-input");
-  const costInput = row.querySelector(".totalRowCost");
-  const retailInput = row.querySelector(".totalRowRetail");
-
-  if (!partInput || !qtyInput || !costInput || !retailInput) {
-    console.warn("Missing expected input in row:", row);
-    return;
-  }
-
-  const name = partInput.value.trim();
-  const qty = parseFloat(qtyInput.value) || 0;
-
-  const matID = Object.keys(materialData).find(id => materialData[id].name === name);
-  const material = materialData[matID];
-
-  if (!material) {
-    costInput.value = "";
-    retailInput.value = "";
-    return;
-  }
-
-  const unitPrice = parseFloat(material.unitPrice) || 0;
-  const rowCost = qty * unitPrice;
-  const rowRetail = rowCost * 2.5;
-
-  costInput.value = rowCost.toFixed(2);
-  retailInput.value = rowRetail.toFixed(2);
-
-  calculateTotalProductCost();
-}
-
-function calculateTotalProductCost() {
-  const activePane = document.querySelector(".tab-pane.active");
-  if (!activePane) return;
-
-  let totalCost = 0;
-  let totalRetail = 0;
-
-  const costInputs = activePane.querySelectorAll(".totalRowCost");
-  const retailInputs = activePane.querySelectorAll(".totalRowRetail");
-
-  costInputs.forEach(input => {
-    totalCost += parseFloat(input.value) || 0;
-  });
-
-  retailInputs.forEach(input => {
-    totalRetail += parseFloat(input.value) || 0;
-  });
-
-  const costField = activePane.querySelector(".form-control[id$='totalProductCost']");
-  const retailField = activePane.querySelector(".form-control[id$='totalProductRetail']");
-
-  if (costField) costField.value = totalCost.toFixed(2);
-  if (retailField) retailField.value = totalRetail.toFixed(2);
-}
-
-function addEditPartRow(name = '', qty = 1) {
-  if (!materialData || typeof materialData !== 'object') {
-    console.error("❌ materialData not loaded!");
-    showToast("❌ Material data missing.", "error");
-    return;
-  }
-
-  // Just call addPartRowTo, passing the container ID for the edit form
-  addPartRowTo("edit-part-rows", name, qty);
-}
-
-function clearPartRows(containerId) {
-  const container = document.getElementById(containerId);
-  if (container) {
-    container.innerHTML = "";
-  }
-}
-
-// Wrapper buttons
-['Add', 'Edit'].forEach(mode => {
-  document.getElementById(`add${mode}PartRow`)?.addEventListener('click', () => {
-    const containerId = `${mode.toLowerCase()}-part-rows`;
-    const currentCount = document.querySelectorAll(`#${containerId} .part-row`).length;
-    if (currentCount >= maxParts) {
-      showToast("⚠️ Max 20 parts allowed", "warning");
-      return;
-    }
-    addPartRowTo(containerId);
-  });
-});
-
-async function setMaterialDataForEdit() {
-  try {
-    const response = await fetch(`${scriptURL}?action=getMatDataForSearch`);
-    if (!response.ok) throw new Error(`Fetch failed with status ${response.status}`);
-    const rawData = await response.json();
-
-    materialData = {}; // ✅ Global assignment
-
-    rawData.forEach(row => {
-      const id = row[0]?.trim();
-      const name = row[1]?.trim();
-      const unitPrice = parseFloat(row[7]?.replace(/[^0-9.]/g, '')) || 0;
-
-      if (id && name) {
-        materialData[id] = { matID: id, name, unitPrice };
-      }
-    });
-
-    const datalist = document.getElementById("row-parts-selector");
-    if (datalist) {
-      datalist.innerHTML = "";
-      Object.values(materialData).forEach(mat => {
-        const opt = document.createElement("option");
-        opt.value = mat.name;
-        datalist.appendChild(opt);
-      });
-    }
-
-    return true;
-  } catch (err) {
-    console.error("❌ Error loading materials:", err);
-    showToast("❌ Error loading materials!", "error");
-    throw err;
-  }
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  const activeMode = getActiveFormMode();
-  if (activeMode === 'add') {
-    // Clear any rows and add the initial part row
-    document.getElementById('add-part-rows').innerHTML = '';
-    addPartRowTo('add-part-rows');
-  }
-});
 
 function setupDynamicNavigation() {
   function activateTabFromHash() {

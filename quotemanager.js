@@ -293,8 +293,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-// console.log("🌍 [Global Scope] Page script executing");
-
 async function populateEditForm(qtID) {
   try {
     toggleLoader(true);
@@ -831,7 +829,15 @@ function calculateAllTotals(mode = "edit") {
   updateField(`${prefix}subTotal2`, subTotal2);
   updateField(`${prefix}subTotal3`, subTotal3);
   updateField(`${prefix}discountedTotal`, discountedTotal);
-
+  const card7Header = document.getElementById(`${prefix}card7-header-display`);
+    if (card7Header) {
+      const retailFormatted = totalProductRetail.toLocaleString("en-US", {
+        style: "currency",
+        currency: "USD",
+        minimumFractionDigits: 2,
+      });
+      card7Header.textContent = `Products - ${productCount} • ${retailFormatted}`;
+    }
   updateCardHeaders(mode);
 }
 
