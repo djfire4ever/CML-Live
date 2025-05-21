@@ -1,198 +1,202 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Product Manager</title>
-  <style>
-  </style>
+  <style></style>
 </head>
-<!-- <body data-page-id="productManager"> -->
-<!-- <body class="page-body" data-element="page-bg"> -->
 <body class="theme-dark">
-  
 <div class="watermark"></div>
 
 <!-- Notification Toasts -->
-<div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3" data-element="toast-container"></div>
+<div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3"></div>
 
 <!-- Loader -->
-<div id="loadingOverlay" class="d-none" data-element="loading-overlay">
+<div id="loadingOverlay" class="d-none">
   <div class="text-center text-info">
     <div class="spinner-border text-info" role="status"></div>
     <p class="mt-2">Loading... Please wait...</p>
   </div>
 </div>
 
-<!-- Row Template -->
-<template id="rowTemplate">
-  <tr class="result-box" data-element="search-result-row">
-      <th class="prodID" scope="row"></th>
-      <th class="productName"></th>
-      <th class="productType"></th>
-      <th class="cost"></th>
-      <th class="retail"></th>
-      <th class="text-center">
-      <!-- <button type="button" class="btn btn-dark edit-button btn-sm" data-element="edit-button">Edit</button> -->
-    </th>
-    <th class="text-center">
-      <div class="btn-group" role="group">
-        <button type="button" class="btn delete-button btn-sm d-none" data-element="delete-confirm-button">Confirm</button>
-        <button type="button" class="btn btn-sm before-delete-button" data-button-state="delete" data-element="delete-button">Delete</button>
-      </div>
-    </th>
-  </tr>
-</template>
+<!-- Product Management Section -->
+<section class="text-center text-sm-start">
+  <div class="container">
+    <h2 class="text-center">Product Management</h2>
+    <!-- Navigation Tabs -->
+    <ul class="nav nav-tabs" id="productTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="search-tab" data-bs-toggle="tab" data-bs-target="#search-product" type="button" role="tab" aria-controls="search-product" aria-selected="true">🔍 Search</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="add-tab" data-bs-toggle="tab" data-bs-target="#add-product" type="button" role="tab" aria-controls="add-product" aria-selected="false">➕ Add</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="edit-tab" data-bs-toggle="tab" data-bs-target="#edit-product" type="button" role="tab" aria-controls="edit-product" aria-selected="false" style="display: none;">✏️ Edit</button>
+      </li>
+    </ul>
 
-<!-- Main Product Management Section -->
-<!-- 🔧 Main Product Manager Container -->
-<section class="text-center text-sm-start" data-element="main-section">
-  <div class="container" data-element="main-container">
-    <h2 class="text-center" data-element="page-header">Product Management</h2>
-<!-- 🧭 Navigation Tabs -->
-<section class="product-tabs-nav">
-  <ul class="nav nav-tabs" id="productTabs" data-element="tab-group">
-    <li class="nav-item">
-      <button class="nav-link active" data-element="tab" data-bs-toggle="tab" data-bs-target="#search-product">🔍 Search Product</button>
-    </li>
-    <li class="nav-item">
-      <button class="nav-link" data-element="tab" data-bs-toggle="tab" data-bs-target="#add-product">
-        <i class="bi bi-person-plus-fill"></i> Add Product
-      </button>
-    </li>
-    <li class="nav-item">
-      <button class="nav-link" data-element="tab" data-bs-toggle="tab" data-bs-target="#edit-product" style="display:none;">✏️ Edit Product</button>
-    </li>
-  </ul>
-</section>
-
-<!-- 📑 Tab Contents -->
-<section class="product-tab-content tab-content">
-  <div class="tab-content" data-element="tab-content"></div>
-      
-<!-- 🔍 Search Section -->
-<div class="tab-pane fade show active" id="search-product" data-element="tab-pane">
-  <section class="search-product">
-  <div class="input-group mb-2" data-element="search-box">
-    <input type="text" class="form-control" id="searchInput" placeholder="🔍 search..." data-element="search-input">
-  <div class="input-group-append">
-    <span class="input-group-text" id="searchCounter" data-element="search-icon">🔍</span> 
-  </div>
-</div>
-<table class="table table-hover my-custom-table" data-element="results-table">
-  <thead>
-    <tr>
-      <th>#</th>
-      <th>Name</th>
-      <th>Type</th>
-      <th>Cost</th>
-      <th>Retail</th>
-      <th></th>
+  <!-- Row Template -->
+  <template id="rowTemplate">
+    <tr class="result-box">
+      <td class="prodID"></td>
+      <td class="productName"></td>
+      <td class="productType"></td>
+      <td class="cost"></td>
+      <td class="retail"></td>
+      <td class="text-center">
+        <div class="btn-group" role="group">
+          <button type="button" class="btn delete-button btn-sm d-none">Confirm</button>
+          <button type="button" class="btn btn-sm before-delete-button" data-button-state="delete">Delete</button>
+        </div>
+      </td>
     </tr>
-  </thead>
-<tbody id="searchResults" data-element="search-results"></tbody>
-</table>
-</section>
-</div>
-   
-<!-- ➕ Add Product -->
-<div class="tab-pane fade" id="add-product" data-mode="add">
-  <h3>Add Product</h3>
-  <form id="addProductForm">
-    <input type="hidden" id="add-product-id">
-    <div class="row g-3">
-      <div class="col-sm-1"><label><b>ID#</b></label><input type="text" class="form-control" id="add-prodID" readonly></div>
-      <div class="col-sm-4"><label><b>Name</b></label><input type="text" class="form-control" id="add-productName"></div>
-      <div class="col-sm-2"><label><b>Type</b></label><input type="text" class="form-select" id="add-productType" list="product-type-options" placeholder="Select Type"><datalist id="product-type-options"></datalist></div>
-      <div class="col-sm-2"><label><b>Cost $</b></label><input type="text" class="form-control" id="add-totalProductCost" readonly></div>
-      <div class="col-sm-2"><label><b>Retail $</b></label><input type="text" class="form-control" id="add-totalProductRetail" readonly></div>
-      <div class="col-sm-1"><label><b>C/Time</b></label><input type="text" class="form-control" id="add-compTime"></div>
+  </template>
 
-      <input type="hidden" class="add-mat-id">
-      <input type="hidden" id="add-cost" />
-      <input type="hidden" id="add-retail" />
-      <datalist id="row-parts-selector"></datalist>
-
-      <div class="row mb-0 part-row-headers">
-        <div class="col-md-5">Part</div>
-        <div class="col-md-2">Qty</div>
-        <div class="col-md-2">Cost $</div>
-        <div class="col-md-2">Retail $</div>
-        <div class="col-md-1"></div>
+  <!-- Tab Content -->
+  <div class="tab-content">
+    <!-- Search Tab -->
+    <div class="tab-pane fade show active" id="search-product" role="tabpanel" aria-labelledby="search-tab">
+      <div class="input-group mb-2">
+        <input type="text" class="form-control" id="searchInput" placeholder="🔍 search...">
+        <div class="input-group-append">
+          <span class="input-group-text" id="searchCounter">🔍</span>
+        </div>
       </div>
-      <div id="add-part-rows" data-mode="add"></div>
+      <table class="table table-hover my-custom-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Cost</th>
+            <th>Retail</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="searchResults"></tbody>
+      </table>
+    </div>
 
-      <div class="row g-3 mt-3">
-        <div class="col-sm-6"><button type="button" class="btn btn-dark" id="addAddPartRow">➕ Part</button></div>
+    <!-- Edit Tab -->
+        <div class="tab-pane fade" id="edit-product" role="tabpanel" aria-labelledby="edit-tab">
+          <form id="editProductForm">
+            <input type="hidden" id="edit-prodID-hidden" />
+            <!-- Shared Form Fields -->
+            <div class="row g-3 mb-2">
+              <div class="col-sm-1"><label class="fw-bold">ID#</label><input type="text" class="form-control" id="edit-prodID" readonly></div>
+              <div class="col-sm-4"><label class="fw-bold">Name</label><input type="text" class="form-control" id="edit-productName"></div>
+              <div class="col-sm-2"><label class="fw-bold">Type</label>
+                <input type="text" class="form-control" id="edit-productType" list="product-type-options-edit" placeholder="Select Type">
+                <datalist id="product-type-options-edit"></datalist>
+              </div>
+              <div class="col-sm-2"><label class="fw-bold">Total Cost $</label><input type="text" class="form-control" id="totalProductCostEdit" readonly></div>
+              <div class="col-sm-2"><label class="fw-bold">Total Retail $</label><input type="text" class="form-control" id="totalProductRetailEdit" readonly></div>
+              <div class="col-sm-1"><label class="fw-bold">C/Time</label><input type="text" class="form-control" id="edit-compTime"></div>
+            </div>
+
+            <!-- Accordion -->
+            <div class="accordion mb-4" id="edit-AccordionPR">
+              <div class="accordion-item border-info">
+                <h2 class="accordion-header" id="edit-headingProductsRows">
+                  <button class="accordion-button collapsed bg-black text-info" type="button" data-bs-toggle="collapse" data-bs-target="#edit-collapseProductsRows" aria-expanded="false" aria-controls="edit-collapseProductsRows">
+                    <span><i class="fa-solid fa-boxes-stacked me-2 text-info"></i> Products</span>
+                    <span class="badge bg-black fs-6 text-info ms-2" id="edit-card7-header-display">Products</span>
+                  </button>
+                </h2>
+                <div id="edit-collapseProductsRows" class="accordion-collapse collapse" data-bs-parent="#edit-AccordionPR">
+                  <div class="accordion-body">
+                    <input type="hidden" id="edit-mat-id">
+                    <input type="hidden" id="edit-cost">
+                    <input type="hidden" id="edit-retail">
+                    <div class="container-fluid px-0">
+                      <div class="row mb-0 part-row-headers">
+                        <div class="col-md-5">Part</div>
+                        <div class="col-md-2">Qty</div>
+                        <div class="col-md-2">Cost $</div>
+                        <div class="col-md-2">Retail $</div>
+                        <div class="col-md-1"></div>
+                      </div>
+                      <div id="edit-part-rows" data-mode="edit"></div>
+                      <div class="row g-3 mt-3">
+                        <div class="col-sm-6"><button type="button" class="btn btn-dark" id="editAddPartRow">➕ Part</button></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row g-3 mt-3">
+              <div class="col-sm-12"><label class="fw-bold">Description</label><input type="text" class="form-control" id="edit-description"></div>
+            </div>
+            <div class="row g-3 mt-3">
+              <div class="col-sm-12"><button type="submit" class="btn btn-dark" id="save-changes-edit">💾 Save Changes</button></div>
+            </div>
+          </form>
+        </div>
+
+        <!-- Add Tab -->
+        <div class="tab-pane fade" id="add-product" role="tabpanel" aria-labelledby="add-tab">
+          <form id="addProductForm">
+            <input type="hidden" id="add-prodID-hidden" />
+            <div class="row g-3 mb-2">
+              <div class="col-sm-1"><label class="fw-bold">ID#</label><input type="text" class="form-control" id="add-prodID" readonly></div>
+              <div class="col-sm-4"><label class="fw-bold">Name</label><input type="text" class="form-control" id="add-productName"></div>
+              <div class="col-sm-2"><label class="fw-bold">Type</label>
+                <input type="text" class="form-control" id="add-productType" list="product-type-options-add" placeholder="Select Type">
+                <datalist id="product-type-options-add"></datalist>
+              </div>
+              <div class="col-sm-2"><label class="fw-bold">Total Cost $</label><input type="text" class="form-control" id="totalProductCostAdd" readonly></div>
+              <div class="col-sm-2"><label class="fw-bold">Total Retail $</label><input type="text" class="form-control" id="totalProductRetailAdd" readonly></div>
+              <div class="col-sm-1"><label class="fw-bold">C/Time</label><input type="text" class="form-control" id="add-compTime"></div>
+            </div>
+
+            <div class="accordion mb-4" id="add-AccordionPR">
+              <div class="accordion-item border-info">
+                <h2 class="accordion-header" id="add-headingProductsRows">
+                  <button class="accordion-button collapsed bg-black text-info" type="button" data-bs-toggle="collapse" data-bs-target="#add-collapseProductsRows" aria-expanded="false" aria-controls="add-collapseProductsRows">
+                    <span><i class="fa-solid fa-boxes-stacked me-2 text-info"></i> Products</span>
+                    <span class="badge bg-black fs-6 text-info ms-2" id="add-card7-header-display">Products</span>
+                  </button>
+                </h2>
+                <div id="add-collapseProductsRows" class="accordion-collapse collapse" data-bs-parent="#add-AccordionPR">
+                  <div class="accordion-body">
+                    <input type="hidden" id="add-mat-id">
+                    <input type="hidden" id="add-cost">
+                    <input type="hidden" id="add-retail">
+                    <div class="container-fluid px-0">
+                      <div class="row mb-0 part-row-headers">
+                        <div class="col-md-5">Part</div>
+                        <div class="col-md-2">Qty</div>
+                        <div class="col-md-2">Cost $</div>
+                        <div class="col-md-2">Retail $</div>
+                        <div class="col-md-1"></div>
+                      </div>
+                      <div id="add-part-rows" data-mode="add"></div>
+                      <div class="row g-3 mt-3">
+                        <div class="col-sm-6"><button type="button" class="btn btn-dark" id="addAddPartRow">➕ Part</button></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row g-3 mt-3">
+              <div class="col-sm-12"><label class="fw-bold">Description</label><input type="text" class="form-control" id="add-description"></div>
+            </div>
+          </form>
+        </div>
       </div>
-
-      <div class="row g-3 mt-3">
-        <div class="col-sm-12"><label class="fw-bold">Description</label><input type="text" class="form-control" id="add-description"></div>
-      </div>
-
-      <div class="row g-3 mt-3">
-        <div class="col-sm-12"><button class="btn btn-dark" id="save-new-product">💾 Save</button></div>
-      </div>
     </div>
-  </form>
-</div>
-
-<!-- ✏️ Edit Product -->
-<div class="tab-pane fade" id="edit-product">
-  <form id="editProductForm">
-    <input type="hidden" id="edit-prodID-hidden">
-    <div class="row g-3 mb-2">
-      <div class="col-sm-1"><label class="fw-bold">ID#</label><input type="text" class="form-control" id="edit-prodID" readonly></div>
-      <div class="col-sm-4"><label class="fw-bold">Name</label><input type="text" class="form-control" id="edit-productName"></div>
-      <div class="col-sm-2"><label class="fw-bold">Type</label><input type="text" class="form-select" id="edit-productType" list="product-type-options" placeholder="Select Type"><datalist id="product-type-options"></datalist></div>
-      <div class="col-sm-2"><label class="fw-bold">Total Cost $</label><input type="text" class="form-control" id="totalProductCost" readonly></div>
-      <div class="col-sm-2"><label class="fw-bold">Total Retail $</label><input type="text" class="form-control" id="totalProductRetail" readonly></div>
-      <div class="col-sm-1"><label class="fw-bold">C/Time</label><input type="text" class="form-control" id="edit-compTime"></div>
-    </div>
-
-    <input type="hidden" class="mat-id">
-    <input type="hidden" id="edit-cost" />
-    <input type="hidden" id="edit-retail" />
-    <datalist id="row-parts-selector"></datalist>
-
-    <div class="row mb-0 part-row-headers">
-      <div class="col-md-5">Part</div>
-      <div class="col-md-2">Qty</div>
-      <div class="col-md-2">Cost $</div>
-      <div class="col-md-2">Retail $</div>
-      <div class="col-md-1"></div>
-    </div>
-    <div id="edit-part-rows"></div>
-
-    <div class="row g-3 mt-3">
-      <div class="col-sm-6"><button type="button" class="btn btn-dark" id="addEditPartRow">➕ Part</button></div>
-    </div>
-
-    <div class="row g-3 mt-3">
-      <div class="col-sm-12"><label class="fw-bold">Description</label><input type="text" class="form-control" id="edit-description"></div>
-    </div>
-
-    <div class="row g-3 mt-3">
-      <div class="col-sm-12"><button class="btn btn-dark" id="save-changes">💾 Save</button></div>
-    </div>
-  </form>
-</div>
-
-<!-- <script> -->
+  </section>
 
 <script src="config.js" defer></script>
 <script src="productmanager.js" defer></script>
 
 <script>
-// document.addEventListener("DOMContentLoaded", () => {
-//   const stored = localStorage.getItem("theme");
-//   console.log("🧠 DOMContentLoaded – current theme in localStorage:", stored);
-//   console.log("🌐 Page is:", location.href);
-// });
-
-// console.log("Start - BODY class is:", document.body.className);
-
-// Shared Constants
 let materialData = {}; // Global material map
 const maxParts = 20;
 

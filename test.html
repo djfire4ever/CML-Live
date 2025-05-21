@@ -1,205 +1,212 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Invoice Template Test</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Manager</title>
+  <style>
+  </style>
 </head>
-<body>
-    <!-- Template (Invoice HTML with Placeholders) -->
-    <div id="invoice-template" style="display:none;">
-        <h2>Invoice Details</h2>
-        <table border="1">
+<body class="theme-classic">
+  
+<div class="watermark"></div>
+
+<!-- Notification Toasts -->
+<div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3" data-element="toast-container"></div>
+
+<!-- Loader -->
+<div id="loadingOverlay" class="d-none" data-element="loading-overlay">
+  <div class="text-center text-info">
+    <div class="spinner-border text-info" role="status"></div>
+    <p class="mt-2">Loading... Please wait...</p>
+  </div>
+</div>
+
+<!-- Product Management Section -->
+<section class="text-center text-sm-start">
+  <div class="container">
+    <h2 class="text-center">Product Management</h2>
+
+<!-- Navigation Tabs -->
+<ul class="nav nav-tabs" id="productTabs" role="tablist">
+  <li class="nav-item" role="presentation">
+    <button class="nav-link active" id="search-tab" data-bs-toggle="tab" data-bs-target="#search-product" type="button" role="tab" aria-controls="search-product" aria-selected="true">🔍 Search</button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="add-tab" data-bs-toggle="tab" data-bs-target="#add-product" type="button" role="tab" aria-controls="add-product" aria-selected="false">➕ Add</button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="edit-tab" data-bs-toggle="tab" data-bs-target="#edit-product" type="button" role="tab" aria-controls="edit-product" aria-selected="false" style="display: none;">✏️ Edit</button>
+  </li>
+</ul>
+
+<!-- Row Template -->
+<template id="rowTemplate">
+  <tr class="result-box" data-element="search-result-row">
+      <th class="prodID" scope="row"></th>
+      <th class="productName"></th>
+      <th class="productType"></th>
+      <th class="cost"></th>
+      <th class="retail"></th>
+      <th class="text-center">
+    </th>
+      <div class="btn-group" role="group">
+        <button type="button" class="btn delete-button btn-sm d-none" data-element="delete-confirm-button">Confirm</button>
+        <button type="button" class="btn btn-sm before-delete-button" data-button-state="delete" data-element="delete-button">Delete</button>
+      </div>
+    </th>
+  </tr>
+</template>
+
+<!-- Tab Content -->
+<!-- 🔍 Search Quote -->
+<div class="tab-content" data-element="tab-content">
+  <div class="tab-pane fade show active" id="search-product" role="tabpanel" aria-labelledby="search-tab">
+    <div class="input-group mb-2" data-element="search-box">
+        <input type="text" class="form-control" id="searchInput" placeholder="🔍 search..." data-element="search-input">
+        <div class="input-group-append">
+            <span class="input-group-text" id="searchCounter" data-element="search-icon">🔍</span>  
+        </div>
+    </div>
+    <table class="table table-hover my-custom-table" data-element="results-table">
+        <thead>
             <tr>
-                <td>Quote Date</td>
-                <td>{{quoteDate}}</td>
+            <th>#</th>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Cost</th>
+            <th>Retail</th>
+            <th></th>
             </tr>
-            <tr>
-                <td>Phone</td>
-                <td>{{phone}}</td>
-            </tr>
-            <tr>
-                <td>First Name</td>
-                <td>{{firstName}}</td>
-            </tr>
-            <tr>
-                <td>Last Name</td>
-                <td>{{lastName}}</td>
-            </tr>
-            <tr>
-                <td>Email</td>
-                <td>{{email}}</td>
-            </tr>
-            <tr>
-                <td>Street</td>
-                <td>{{street}}</td>
-            </tr>
-            <tr>
-                <td>City</td>
-                <td>{{city}}</td>
-            </tr>
-            <tr>
-                <td>State</td>
-                <td>{{state}}</td>
-            </tr>
-            <tr>
-                <td>Zip</td>
-                <td>{{zip}}</td>
-            </tr>
-            <tr>
-                <td>Event Date</td>
-                <td>{{eventDate}}</td>
-            </tr>
-            <tr>
-                <td>Event Location</td>
-                <td>{{eventLocation}}</td>
-            </tr>
-            <tr>
-                <td>Addon Totals</td>
-                <td>{{addonsTotal}}</td>
-            </tr>
-            <tr>
-                <td>Deposit</td>
-                <td>{{deposit}}</td>
-            </tr>
-            <tr>
-                <td>Deposit Date</td>
-                <td>{{depositDate}}</td>
-            </tr>
-            <tr>
-                <td>Balance Due</td>
-                <td>{{balanceDue}}</td>
-            </tr>
-            <tr>
-                <td>Balance Due Date</td>
-                <td>{{balanceDueDate}}</td>
-            </tr>
-            <tr>
-                <td>Payment Method</td>
-                <td>{{paymentMethod}}</td>
-            </tr>
-            <tr>
-                <td>Total Product Retail</td>
-                <td>{{totalProductRetail}}</td>
-            </tr>
-            <tr>
-                <td>SubTotal 1</td>
-                <td>{{subTotal1}}</td>
-            </tr>
-            <tr>
-                <td>SubTotal 2</td>
-                <td>{{subTotal2}}</td>
-            </tr>
-            <tr>
-                <td>SubTotal 3</td>
-                <td>{{subTotal3}}</td>
-            </tr>
-            <tr>
-                <td>Discount</td>
-                <td>{{discount}}</td>
-            </tr>
-            <tr>
-                <td>Discounted Total</td>
-                <td>{{discountedTotal}}</td>
-            </tr>
-            <tr>
-                <td>Grand Total</td>
-                <td>{{grandTotal}}</td>
-            </tr>
-            <tr>
-                <td>Invoice ID</td>
-                <td>{{invoiceID}}</td>
-            </tr>
-            <tr>
-                <td>Invoice Date</td>
-                <td>{{invoiceDate}}</td>
-            </tr>
-        </table>
+        </thead>
+    <tbody id="searchResults" data-element="search-results"></tbody>
+    </table>
+</div>
+
+<!-- ✏️ Edit Quote Form-->
+<div class="tab-pane fade" id="edit-product" role="tabpanel" aria-labelledby="edit-product"></div>>
+  <form id="editProductForm">
+    <input type="hidden" id="edit-prodID-hidden">
+    <div class="row g-3 mb-2">
+      <div class="col-sm-1"><label class="fw-bold">ID#</label><input type="text" class="form-control" id="edit-prodID" readonly></div>
+      <div class="col-sm-4"><label class="fw-bold">Name</label><input type="text" class="form-control" id="edit-productName"></div>
+      <div class="col-sm-2"><label class="fw-bold">Type</label><input type="text" class="form-select" id="edit-productType" list="product-type-options" placeholder="Select Type"><datalist id="product-type-options"></datalist></div>
+      <div class="col-sm-2"><label class="fw-bold">Total Cost $</label><input type="text" class="form-control" id="totalProductCost" readonly></div>
+      <div class="col-sm-2"><label class="fw-bold">Total Retail $</label><input type="text" class="form-control" id="totalProductRetail" readonly></div>
+      <div class="col-sm-1"><label class="fw-bold">C/Time</label><input type="text" class="form-control" id="edit-compTime"></div>
     </div>
 
-    <!-- Placeholder for the generated invoice -->
-    <div id="invoice-container"></div>
+    <!-- Edit Form Material Rows -->
+    <div class="row g-3 mb-4">
+      <div class="col-12">
+        <!-- Card 7: Product Rows -->
+        <div class="accordion" id="edit-AccordionPR">
+          <div class="accordion-item border-info">
+            <h2 class="accordion-header" id="edit-headingProductsRows">
+              <button class="accordion-button collapsed bg-black text-info" type="button" data-bs-toggle="collapse" data-bs-target="#edit-collapseProductsRows" aria-expanded="false" aria-controls="edit-collapseProductsRows">
+                <span><i class="fa-solid fa-boxes-stacked me-2 text-info"></i>Products</span>
+                <span id="card7-header" class="badge bg-black fs-6 text-info ms-2">
+                <span id="edit-card7-header-display">Products</span>
+              </button>
+            </h2>
+            <div id="edit-collapseProductsRows" class="accordion-collapse collapse" aria-labelledby="edit-headingProductsRows" data-bs-parent="#edit-AccordionPR">
+              <div class="accordion-body">
+                <input type="hidden" id="add-mat-id">
+                <input type="hidden" id="add-cost">
+                <input type="hidden" id="add-retail">
+                <div class="container-fluid px-0">
+                    <div class="row mb-0 part-row-headers">
+                        <div class="col-md-5">Part</div>
+                        <div class="col-md-2">Qty</div>
+                        <div class="col-md-2">Cost $</div>
+                        <div class="col-md-2">Retail $</div>
+                        <div class="col-md-1"></div>
+                    </div>
+                <div id="add-part-rows" data-mode="edit"></div>
+                <div class="row g-3 mt-3">
+                <div class="col-sm-6"><button type="button" class="btn btn-dark" id="addAddPartRow">➕ Part</button></div>
+                </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row g-3 mt-3">
+      <div class="col-sm-12"><label class="fw-bold">Description</label><input type="text" class="form-control" id="edit-description"></div>
+    </div>
 
-    <script>
-        // Sample data object (simulate database data)
-        const data = {
-            quoteDate: "2025-05-10T15:00:00",
-            phone: "123-456-7890",
-            firstName: "John",
-            lastName: "Doe",
-            email: "johndoe@example.com",
-            street: "123 Main St",
-            city: "Sample City",
-            state: "SC",
-            zip: "12345",
-            eventDate: "2025-05-20T12:00:00",
-            eventLocation: "Sample Venue",
-            addonsTotal: 50.00,
-            deposit: 100.00,
-            depositDate: "2025-05-01T12:00:00",
-            balanceDue: 150.00,
-            balanceDueDate: "2025-05-15T12:00:00",
-            paymentMethod: "Credit Card",
-            totalProductRetail: 500.00,
-            subTotal1: 200.00,
-            subTotal2: 150.00,
-            subTotal3: 150.00,
-            discount: 50.00,
-            discountedTotal: 450.00,
-            grandTotal: 450.00,
-            invoiceID: "INV-12345",
-            invoiceDate: "2025-05-10T15:00:00"
-        };
+    <div class="row g-3 mt-3">
+      <div class="col-sm-12"><button class="btn btn-dark" id="save-changes">💾 Save</button></div>
+    </div>
+  </form>
+</div>
 
-        // Function to replace placeholders in the invoice template
-        function generateInvoice(data) {
-            let invoiceTemplate = document.getElementById("invoice-template").innerHTML;
+<!-- ✏️ Edit Quote Form-->
+<div class="tab-pane fade" id="add-product" role="tabpanel" aria-labelledby="add-product"></div>>
+  <form id="editProductForm">
+    <input type="hidden" id="add-prodID-hidden">
+    <div class="row g-3 mb-2">
+      <div class="col-sm-1"><label class="fw-bold">ID#</label><input type="text" class="form-control" id="add-prodID" readonly></div>
+      <div class="col-sm-4"><label class="fw-bold">Name</label><input type="text" class="form-control" id="add-productName"></div>
+      <div class="col-sm-2"><label class="fw-bold">Type</label><input type="text" class="form-select" id="add-productType" list="product-type-options" placeholder="Select Type"><datalist id="product-type-options"></datalist></div>
+      <div class="col-sm-2"><label class="fw-bold">Total Cost $</label><input type="text" class="form-control" id="totalProductCost" readonly></div>
+      <div class="col-sm-2"><label class="fw-bold">Total Retail $</label><input type="text" class="form-control" id="totalProductRetail" readonly></div>
+      <div class="col-sm-1"><label class="fw-bold">C/Time</label><input type="text" class="form-control" id="add-compTime"></div>
+    </div>
 
-            // Replace placeholders with actual data
-            invoiceTemplate = invoiceTemplate.replace(/{{quoteDate}}/g, formatDate(data.quoteDate));
-            invoiceTemplate = invoiceTemplate.replace(/{{phone}}/g, data.phone);
-            invoiceTemplate = invoiceTemplate.replace(/{{firstName}}/g, data.firstName);
-            invoiceTemplate = invoiceTemplate.replace(/{{lastName}}/g, data.lastName);
-            invoiceTemplate = invoiceTemplate.replace(/{{email}}/g, data.email);
-            invoiceTemplate = invoiceTemplate.replace(/{{street}}/g, data.street);
-            invoiceTemplate = invoiceTemplate.replace(/{{city}}/g, data.city);
-            invoiceTemplate = invoiceTemplate.replace(/{{state}}/g, data.state);
-            invoiceTemplate = invoiceTemplate.replace(/{{zip}}/g, data.zip);
-            invoiceTemplate = invoiceTemplate.replace(/{{eventDate}}/g, formatDate(data.eventDate));
-            invoiceTemplate = invoiceTemplate.replace(/{{eventLocation}}/g, data.eventLocation);
-            invoiceTemplate = invoiceTemplate.replace(/{{addonsTotal}}/g, formatCurrency(data.addonsTotal));
-            invoiceTemplate = invoiceTemplate.replace(/{{deposit}}/g, formatCurrency(data.deposit));
-            invoiceTemplate = invoiceTemplate.replace(/{{depositDate}}/g, formatDate(data.depositDate));
-            invoiceTemplate = invoiceTemplate.replace(/{{balanceDue}}/g, formatCurrency(data.balanceDue));
-            invoiceTemplate = invoiceTemplate.replace(/{{balanceDueDate}}/g, formatDate(data.balanceDueDate));
-            invoiceTemplate = invoiceTemplate.replace(/{{paymentMethod}}/g, data.paymentMethod);
-            invoiceTemplate = invoiceTemplate.replace(/{{totalProductRetail}}/g, formatCurrency(data.totalProductRetail));
-            invoiceTemplate = invoiceTemplate.replace(/{{subTotal1}}/g, formatCurrency(data.subTotal1));
-            invoiceTemplate = invoiceTemplate.replace(/{{subTotal2}}/g, formatCurrency(data.subTotal2));
-            invoiceTemplate = invoiceTemplate.replace(/{{subTotal3}}/g, formatCurrency(data.subTotal3));
-            invoiceTemplate = invoiceTemplate.replace(/{{discount}}/g, formatCurrency(data.discount));
-            invoiceTemplate = invoiceTemplate.replace(/{{discountedTotal}}/g, formatCurrency(data.discountedTotal));
-            invoiceTemplate = invoiceTemplate.replace(/{{grandTotal}}/g, formatCurrency(data.grandTotal));
-            invoiceTemplate = invoiceTemplate.replace(/{{invoiceID}}/g, data.invoiceID);
-            invoiceTemplate = invoiceTemplate.replace(/{{invoiceDate}}/g, formatDate(data.invoiceDate));
+    <!-- Edit Form Material Rows -->
+    <div class="row g-3 mb-4">
+      <div class="col-12">
+        <!-- Card 7: Product Rows -->
+        <div class="accordion" id="add-AccordionPR">
+          <div class="accordion-item border-info">
+            <h2 class="accordion-header" id="add-headingProductsRows">
+              <button class="accordion-button collapsed bg-black text-info" type="button" data-bs-toggle="collapse" data-bs-target="#add-collapseProductsRows" aria-expanded="false" aria-controls="add-collapseProductsRows">
+                <span><i class="fa-solid fa-boxes-stacked me-2 text-info"></i>Products</span>
+                <span id="card7-header" class="badge bg-black fs-6 text-info ms-2">
+                <span id="add-card7-header-display">Products</span>
+              </button>
+            </h2>
+            <div id="add-collapseProductsRows" class="accordion-collapse collapse" aria-labelledby="add-headingProductsRows" data-bs-parent="#add-AccordionPR">
+              <div class="accordion-body">
+                <input type="hidden" class="add-mat-id">
+                <input type="hidden" id="add-cost" />
+                <input type="hidden" id="add-retail" />
+                <div class="container-fluid px-0">
+                    <div class="row mb-0 part-row-headers">
+                        <div class="col-md-5">Part</div>
+                        <div class="col-md-2">Qty</div>
+                        <div class="col-md-2">Cost $</div>
+                        <div class="col-md-2">Retail $</div>
+                        <div class="col-md-1"></div>
+                    </div>
+                <div id="add-part-rows" data-mode="edit"></div>
+                <div class="row g-3 mt-3">
+                <div class="col-sm-6"><button type="button" class="btn btn-dark" id="addAddPartRow">➕ Part</button></div>
+                </div>
+                  <div class="row g-3 mt-3">
+                    <div class="col-sm-6">
+                      <button type="button" class="btn btn-dark" id="add-product-btn">➕ Product</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row g-3 mt-3">
+      <div class="col-sm-12"><label class="fw-bold">Description</label><input type="text" class="form-control" id="add-description"></div>
+    </div>
 
-            // Insert the filled template into the page
-            document.getElementById("invoice-container").innerHTML = invoiceTemplate;
-        }
+    <div class="row g-3 mt-3">
+      <div class="col-sm-12"><button class="btn btn-dark" id="save-changes">💾 Save</button></div>
+    </div>
+  </form>
+</div>
 
-        // Helper function to format date
-        function formatDate(date) {
-            const options = { year: 'numeric', month: 'long', day: 'numeric' };
-            return new Date(date).toLocaleDateString(undefined, options);
-        }
-
-        // Helper function to format currency
-        function formatCurrency(amount) {
-            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
-        }
-
-        // Call the generateInvoice function to render the invoice
-        generateInvoice(data);
-    </script>
-</body>
-</html>
+<script src="config.js" defer></script>
+<script src="productmanager.js" defer></script>

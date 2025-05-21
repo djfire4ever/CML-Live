@@ -204,12 +204,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // 🔄 Populates the Edit Form when a quote is selected
 document.addEventListener("DOMContentLoaded", () => {
-    console.log("📦 DOMContentLoaded fired");
-
-  // Check for all relevant button elements
-  console.log("🔍 DOMContentLoaded: add-quote-btn", document.getElementById("add-quote-btn"));
-  console.log("🔍 DOMContentLoaded: add-previewQuoteBtn", document.getElementById("add-previewQuoteBtn"));
-  console.log("🔍 DOMContentLoaded: add-finalizeInvoiceBtn", document.getElementById("add-finalizeInvoiceBtn"));
 
   // Watch fields and recalculate totals
   const fieldsToWatch = [
@@ -511,17 +505,18 @@ function collectQuoteFormData(mode) {
   return formData;
 }
 
-// 🔁 Initialize Add Form (called when "Add Quote" tab is shown)
 async function initializeAddForm() {
   try {
     toggleLoader(true);
     console.log("📋 Initializing Add Quote form");
 
-    // 🛡️ Ensure critical dependencies exist
-    if (typeof productData === "undefined" || !Array.isArray(productData)) {
-      throw new Error("productData is not loaded yet.");
+    // ✅ Make sure product data is available first
+    if (typeof productData === "undefined" || !Array.isArray(productData) || productData.length === 0) {
+      console.warn("⚠️ productData not ready, fetching...");
+      await getProdDataForSearch(); // <-- load or reload it if needed
     }
 
+    // 🧼 Clear fields
     const fieldsToClear = [
       "phone", "firstName", "lastName", "email", "street", "city", "state", "zip",
       "eventDate", "eventLocation", "eventNotes",
@@ -533,50 +528,48 @@ async function initializeAddForm() {
 
     fieldsToClear.forEach(id => setField(`add-${id}`, ""));
 
-    // 🧼 Reset product rows safely
     resetProductRows("add-product-rows-container");
 
-    // 📦 Ensure all quote-related dropdowns and data are loaded
+    // 📦 Ensure everything else is loaded
     await Promise.all([
-      getProdDataForSearch(),
       setQuoteDataForSearch(),
       loadDropdowns()
     ]);
 
-    // 🧮 Recalculate totals for a clean slate
     calculateAllTotals("add");
     updateCardHeaders("add");
 
     console.log("✅ Add Quote form initialized");
 
+    // 🧩 Bind buttons only once
+    const previewBtn = document.getElementById("add-previewQuoteBtn");
+    const finalizeBtn = document.getElementById("add-finalizeInvoiceBtn");
+
+    if (previewBtn && !previewBtn.dataset.bound) {
+      previewBtn.addEventListener("click", async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log("👁️ Preview button clicked (add)");
+        await previewQuote("add");
+      });
+      previewBtn.dataset.bound = "true";
+      console.log("🔗 Bound add-previewQuoteBtn");
+    }
+
+    if (finalizeBtn && !finalizeBtn.dataset.bound) {
+      finalizeBtn.addEventListener("click", async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log("✅ Finalize button clicked (add)");
+        await finalizeInvoice("add");
+      });
+      finalizeBtn.dataset.bound = "true";
+      console.log("🔗 Bound add-finalizeInvoiceBtn");
+    }
+
   } catch (err) {
     console.error("❌ Error initializing Add Quote form:", err);
     showToast("❌ Could not initialize form", "error");
-// 🧩 Bind event listeners to Add form buttons
-const previewBtn = document.getElementById("add-previewQuoteBtn");
-const finalizeBtn = document.getElementById("add-finalizeInvoiceBtn");
-
-if (previewBtn && !previewBtn.dataset.bound) {
-  previewBtn.addEventListener("click", async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    console.log("👁️ Preview button clicked (add)");
-    await previewQuote("add");
-  });
-  previewBtn.dataset.bound = "true";
-  console.log("🔗 Bound add-previewQuoteBtn");
-}
-
-if (finalizeBtn && !finalizeBtn.dataset.bound) {
-  finalizeBtn.addEventListener("click", async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    console.log("✅ Finalize button clicked (add)");
-    await finalizeInvoice("add");
-  });
-  finalizeBtn.dataset.bound = "true";
-  console.log("🔗 Bound add-finalizeInvoiceBtn");
-}
   } finally {
     toggleLoader(false);
   }
@@ -618,11 +611,27 @@ document.querySelector("#add-phone")?.addEventListener("change", async (e) => {
 // 🔁 5. Load product data from backend (used globally)
 async function getProdDataForSearch() {
   try {
+    // Check localStorage first
+    const cached = localStorage.getItem("productData");
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          productData = parsed.slice();  // Create a copy
+          console.log("💾 Loaded productData from localStorage");
+          return;
+        }
+      } catch (e) {
+        console.warn("⚠️ Failed to parse productData from localStorage:", e);
+      }
+    }
+
+    // Otherwise, fetch from server
     const response = await fetch(`${scriptURL}?action=getProdDataForSearch`);
     if (!response.ok) throw new Error(`Status: ${response.status}`);
 
     const rawData = await response.json();
-    productData = {};
+    productData = [];
 
     rawData.forEach(row => {
       const id = String(row[0] || "").trim();
@@ -631,11 +640,17 @@ async function getProdDataForSearch() {
       const retail = parseFloat(row[45]?.toString().replace(/[^\d.]/g, "")) || 0;
 
       if (id && name) {
-        productData[id] = { prodID: id, name, cost, retail };
+        productData.push({
+          prodID: id,
+          name,
+          cost,
+          retail
+        });
       }
     });
 
-    console.log("✅ Product data loaded");
+    localStorage.setItem("productData", JSON.stringify(productData));
+    console.log("✅ Product data loaded and cached");
 
   } catch (err) {
     console.error("❌ Failed to load product data:", err);
