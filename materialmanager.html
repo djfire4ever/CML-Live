@@ -155,25 +155,24 @@
   <form id="addInventoryForm">
     <div id="materialRows">
       <!-- 🔁 Template Material Row -->
-      <div class="row g-3 material-row mb-3 border rounded p-3">
-        <input type="hidden" class="matID">
-        <input type="hidden" class="matName">
-          <div class="col-12 text-center mt-2">
+      <div class="row g-3 material-row mb-3 border rounded p-3" data-row="1">
+        <input type="hidden" id="inv-matID-1">
+        <input type="hidden" id="inv-matName-1">
+        <div class="col-12 text-center mt-2">
           <h5 class="text">📦 Incoming Deliveries</h5>
         </div>
-        
-        <!-- Material Dropdown & Hidden matID -->
-        <div class="col-md-4"><label><b>Material</b></label><input type="text" class="form-select materials" list="parts-options" placeholder="Select Material">
-          <datalist id="parts-options"></datalist></div>
-        <div class="col-md-2"><label><b>Unit Type</b></label><input type="text" class="form-control unitType" readonly></div>
-        <div class="col-md-2"><label><b>Unit Price</b></label><input type="text" class="form-control unitPrice" readonly></div>
-        <div class="col-md-2"><label><b>Qty On Hand</b></label><input type="text" class="form-control onHand"></div>
-        <div class="col-md-2"><input type="hidden" readonly class="form-control-plaintext incoming"></div>
-        <div class="col-md-4"><label><b>Supplier</b></label><input type="text" class="form-control supplier"></div>
-        <div class="col-md-8"><label><b>Supplier URL</b></label><input type="text" class="form-control supplierUrl"></div>
-        <div class="col-md-2"><label><b>Last Updated</b></label><input type="text" class="form-control lastUpdated" readonly></div>
-        <div class="col-md-2"><label><b>Package Price</b></label><input type="text" class="form-control matPrice"></div>
-        <div class="col-md-2"><label><b>Package Qty</b></label><input type="text" class="form-control unitQty"></div>
+        <div class="col-md-4"><label><b>Material</b></label><input type="text" class="form-select" id="inv-material-1" list="parts-options" placeholder="Select Material">
+          <datalist id="parts-options"></datalist>
+        </div>
+        <div class="col-md-2"><label><b>Unit Type</b></label><input type="text" class="form-control" id="inv-unitType-1" readonly></div>
+        <div class="col-md-2"><label><b>Unit Price</b></label><input type="text" class="form-control" id="inv-unitPrice-1" readonly></div>
+        <div class="col-md-2"><label><b>Qty On Hand</b></label><input type="text" class="form-control" id="inv-onHand-1"></div>
+        <div class="col-md-2"><input type="hidden" readonly class="form-control-plaintext" id="inv-incoming-1"></div>
+        <div class="col-md-4"><label><b>Supplier</b></label><input type="text" class="form-control" id="inv-supplier-1"></div>
+        <div class="col-md-8"><label><b>Supplier URL</b></label><input type="text" class="form-control" id="inv-supplierUrl-1"></div>
+        <div class="col-md-2"><label><b>Last Updated</b></label><input type="text" class="form-control" id="inv-lastUpdated-1" readonly></div>
+        <div class="col-md-2"><label><b>Package Price</b></label><input type="text" class="form-control" id="inv-matPrice-1"></div>
+        <div class="col-md-2"><label><b>Package Qty</b></label><input type="text" class="form-control" id="inv-unitQty-1"></div>
 
         <!-- Row Control Buttons -->
         <div class="col-md-6 d-flex align-items-end gap-2">
@@ -194,7 +193,6 @@
     </div>
   </form>
 </div>
-
 
     </div>
   </div>

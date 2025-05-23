@@ -15,53 +15,53 @@
     document.head.appendChild(link);
   })();
 
-  // Show Toast Notification with different styles for Lead Form and Admin
-  function showToast(message, type = "success", forLeadForm = false) {
-    const toastContainer = document.getElementById("toastContainer");
+// Show Toast Notification with different styles for Lead Form and Admin
+function showToast(message, type = "success", forLeadForm = false) {
+  const toastContainer = document.getElementById("toastContainer");
 
-    // Define background color for different types
-    let bgColor;
-    let headerText;
+  // Define background color for different types
+  let bgColor;
+  let headerText;
     
-    if (forLeadForm) {
-      // For the lead form, use different colors for different types
-      if (type === "success") {
-        bgColor = "bg-primary"; // Lead form success message
-        headerText = "Thank You!";
-        message = "We will contact you shortly."; // Default message for success
-      } else if (type === "warning") {
-        bgColor = "bg-warning"; // Lead form warning (e.g., missing phone/email)
-        headerText = "Attention!";
-      } else if (type === "error") {
-        bgColor = "bg-danger"; // Lead form error message
-        headerText = "❌ Error!";
-      }
-    } else {
-      // Admin side (success or error)
-      bgColor = type === "success" ? "bg-success" : "bg-danger";
-      headerText = type === "success" ? "✅ Success" : "❌ Error";
+  if (forLeadForm) {
+    // For the lead form, use different colors for different types
+    if (type === "success") {
+      bgColor = "bg-primary"; // Lead form success message
+      headerText = "Thank You!";
+      message = "We will contact you shortly."; // Default message for success
+    } else if (type === "warning") {
+      bgColor = "bg-warning"; // Lead form warning (e.g., missing phone/email)
+      headerText = "Attention!";
+    } else if (type === "error") {
+      bgColor = "bg-danger"; // Lead form error message
+      headerText = "❌ Error!";
     }
-
-    const toast = document.createElement("div");
-    toast.classList.add("toast", "show", bgColor, "text-dark", "fade");
-    toast.setAttribute("role", "alert");
-    
-    toast.innerHTML = `
-      <div class="toast-header">
-          <strong class="me-auto">${headerText}</strong>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
-      </div>
-      <div class="toast-body">${message}</div>
-    `;
-    
-    toastContainer.appendChild(toast);
-
-    // Auto-remove the toast after 10 seconds
-    setTimeout(() => {
-      toast.classList.remove("show");
-      setTimeout(() => toast.remove(), 5000);
-    }, 5000);
+  } else {
+    // Admin side (success or error)
+    bgColor = type === "success" ? "bg-black" : "bg-danger";
+    headerText = type === "success" ? "✅ Success" : "❌ Error";
   }
+
+  const toast = document.createElement("div");
+  toast.classList.add("toast", "show", bgColor, "text-info", "fade");
+  toast.setAttribute("role", "alert");
+  
+  toast.innerHTML = `
+    <div class="toast-header">
+        <strong class="me-auto">${headerText}</strong>
+        <button type="button" class="btn-close btn-close-info" data-bs-dismiss="toast"></button>
+    </div>
+    <div class="toast-body">${message}</div>
+  `;
+    
+  toastContainer.appendChild(toast);
+
+  // Auto-remove the toast after 5 seconds
+  setTimeout(() => {
+    toast.classList.remove("show");
+    setTimeout(() => toast.remove(), 5000);
+  }, 5000);
+}
 
 function toggleLoader() {
   const loader = document.getElementById("loadingOverlay");

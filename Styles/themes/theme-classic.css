@@ -1,4 +1,6 @@
-/* theme-classic.css */
+/* =======================================
+   🎨 THEME VARIABLES FOR CLASSIC MODE
+========================================== */
 body.theme-classic {
   --accent-color: #000;         /* ✅ Highlight color (success green) */
   --text-color: #000;           /* ✅ Main text color (black) */

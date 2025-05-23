@@ -1,678 +1,646 @@
-// new quotemanager.js
+let materialData = [];
 
-// bootstrap 5 tab switching and mode detection
-// ✅ Utility: Show Edit Tab
-function showEditTab() {
-  const editTab = document.querySelector('[data-bs-target="#edit-quote"]');
-  if (editTab) new bootstrap.Tab(editTab).show();
+async function setMatDataForSearch() {
+  try {
+    const res = await fetch(`${scriptURL}?action=getMatDataForSearch`);
+    const data = await res.json();
+    materialData = Array.isArray(data) ? data.slice() : [];
+  } catch (err) {
+    console.error("❌ Error loading material data:", err);
+    materialData = [];
+  }
 }
 
-// ✅ DOM Ready
-document.addEventListener("DOMContentLoaded", () => {
-    const searchInput = document.getElementById("searchInput");
-    const searchTabButton = document.querySelector('button[data-bs-target="#search-quote"]');
-    const searchResultsBox = document.getElementById("searchResults");
-    const searchCounter = document.getElementById("searchCounter");
+console.log("Test call:", typeof setMatDataForSearch);
 
-    if (searchInput) {
-        searchInput.addEventListener("input", search);
-    } else {
-        console.error("❌ Search input not found!");
+document.addEventListener("DOMContentLoaded", async () => {
+  console.log("📦 MaterialManager module loaded");
+
+  const container = document.getElementById("materialRows");
+  const searchInput = document.getElementById("searchInput");
+  const resultsBox = document.getElementById("searchResults");
+  const saveBtn = document.getElementById("save-inventory-btn");
+
+  // Initial load of material data for search
+  toggleLoader(true);
+  await setMatDataForSearch(); // used by edit and search
+  toggleLoader(false);
+
+  // Live search
+  searchInput?.addEventListener("input", search);
+
+  // ⚙️ Tab Switching Logic
+  document.addEventListener("shown.bs.tab", async (e) => {
+    const target = e.target.getAttribute("data-bs-target");
+
+    if (target === "#search-material") {
+      if (searchInput) searchInput.value = "";
+      if (resultsBox) resultsBox.innerHTML = "";
+      const counter = document.getElementById("searchCounter");
+      if (counter) counter.textContent = "";
+      searchInput?.focus();
     }
-    if (searchTabButton) {
-        searchTabButton.addEventListener("shown.bs.tab", () => {
-            if (searchInput) {
-                searchInput.value = "";
-                searchInput.focus();
-            }
-            if (searchResultsBox) searchResultsBox.innerHTML = "";
-            if (searchCounter) {
-                searchCounter.textContent = "";
-                searchCounter.classList.add("text-success", "text-dark", "fw-bold");
-            }
-          });
+
+    if (target === "#add-material") {
+      const priceInput = document.getElementById("add-matPrice");
+      const qtyInput = document.getElementById("add-unitQty");
+      const unitPriceInput = document.getElementById("add-unitPrice");
+
+      const recalculate = () => {
+        const price = parseFloat(priceInput?.value) || 0;
+        const qty = parseFloat(qtyInput?.value) || 0;
+        const unitPrice = qty > 0 ? price / qty : 0;
+        if (unitPriceInput) unitPriceInput.value = unitPrice.toFixed(2);
+      };
+
+      priceInput?.addEventListener("change", recalculate);
+      qtyInput?.addEventListener("change", recalculate);
     }
 
-    if (searchResultsBox) searchResultsBox.innerHTML = "";
+    if (target === "#add-inventory") {
+      console.log("📦 Switching to Add Inventory tab");
 
-    toggleLoader();
-    setQuoteDataForSearch();
-    setTimeout(toggleLoader, 500);
-    // Add event listener for the discount field
-    document.getElementById("edit-discount")?.addEventListener("change", calculateAllTotals);
-});
+      initializeRows(); // generates the .materials row
 
-// ✅ Unified Click Handler for Search Results
-document.getElementById("searchResults").addEventListener("click", event => {
-  const target = event.target;
+    setMatDataForSearch().then(() => {
+      console.log("✅ Material data loaded before dropdown logic");
+      loadDropdowns();
+    });
+    }
+  });
 
-  // Confirm Delete Toggle
-  if (target.classList.contains("before-delete-button")) {
-      const confirmBtn = target.previousElementSibling;
-      const isDelete = target.dataset.buttonState === "delete";
-      confirmBtn?.classList.toggle("d-none", !isDelete);
-      target.textContent = isDelete ? "Cancel" : "Delete";
-      target.dataset.buttonState = isDelete ? "cancel" : "delete";
+  // ⚙️ Init inventory rows in case user starts on inventory tab
+  initializeRows();
+  loadDropdowns();
+
+  // 💾 Save inventory button
+  saveBtn?.addEventListener("click", (e) => {
+    e.preventDefault();
+    saveInventoryData();
+  });
+
+  // ➕/🗑️ Add/remove inventory material rows
+  container?.addEventListener("click", (e) => {
+    if (e.target.id === "add-material-btn") {
+      addMaterialRow(container);
+    } else if (e.target.classList.contains("remove-material-row")) {
+      removeMaterialRow(e.target, container);
+    }
+  });
+
+  // 🔍 Material selector change in inventory
+  container?.addEventListener("change", (e) => {
+    if (e.target.id === "inv-material") {
+      handleMaterialLookup({ target: e.target });
+    }
+  });
+
+  // 🧾 Search results logic (edit + delete)
+  resultsBox?.addEventListener("click", (event) => {
+    const row = event.target.closest(".search-result-row");
+
+    if (row) {
+      const matID = row.dataset.materialid;
+      if (!matID) return showToast("❌ Material ID missing", "error");
+
+      populateEditForm(matID);
+      const tabTrigger = document.querySelector('[data-bs-target="#edit-material"]');
+      tabTrigger.style.display = "inline-block";
+      bootstrap.Tab.getOrCreateInstance(tabTrigger).show();
       return;
-  }
+    }
 
-  // Perform Delete
-  if (target.classList.contains("delete-button")) {
-      const qtID = target.dataset.quoteid?.trim();
-      if (!qtID) return showToast("⚠️ Quote ID missing", "error");
+    const btn = event.target;
+    const matID = btn.dataset.materialid?.trim();
 
-      toggleLoader();
+    if (btn.classList.contains("before-delete-button")) {
+      const isDelete = btn.dataset.buttonState === "delete";
+      btn.previousElementSibling.classList.toggle("d-none", !isDelete);
+      btn.textContent = isDelete ? "Cancel" : "Delete";
+      btn.dataset.buttonState = isDelete ? "cancel" : "delete";
+    }
+
+    if (btn.classList.contains("delete-button") && matID) {
+      toggleLoader(true);
       fetch(scriptURL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ system: "quotes", action: "delete", qtID })
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ system: "materials", action: "delete", matID })
       })
-      .then(res => res.json())
-      .then(result => {
+        .then(res => res.json())
+        .then(result => {
           if (result.success) {
-            showToast("✅ Quote updated!");
-            document.getElementById("searchInput").value = "";
-            document.getElementById("searchResults").innerHTML = "";
-            setQuoteDataForSearch();
-            document.querySelector('[data-bs-target="#search-quote"]')?.click(); // Switches to the search form
+            showToast("✅ Material deleted!", "success");
+            searchInput.value = "";
+            resultsBox.innerHTML = "";
+            setMatDataForSearch();
           } else {
-            showToast("❌ Error updating quote data!", "error");
-            console.error("❌ Backend save failed:", result.message || "Unknown error");
+            showToast("⚠️ Could not delete material.", "error");
           }
-      })
-      .catch(() => showToast("⚠️ Error occurred while deleting quote.", "error"))
-      .finally(toggleLoader);
-      return;
-  }
-
-// Handle row click for editing
-  const row = target.closest("tr");
-  if (row && row.dataset.quoteid && !target.closest(".btn-group")) {
-    const qtID = row.dataset.quoteid;
-    console.log("🔍 Row clicked with qtID:", qtID); // Add this log
-    populateEditForm(qtID);
-    showEditTab();
-    return;
-  }
-
+        })
+        .catch(() => showToast("⚠️ Error occurred while deleting material.", "error"))
+        .finally(() => toggleLoader(false));
+    }
+  });
 });
 
-document.addEventListener("DOMContentLoaded", () => {
-  // Save button for Edit Form
-  const editQuoteBtn = document.getElementById("edit-quote-btn");
-  if (editQuoteBtn) {
-    editQuoteBtn.addEventListener("click", async (e) => {
-      console.log("✅ Save Quote button clicked (Edit Form)");
-      e.preventDefault();
-      e.stopPropagation();
-      await handleSave(e, "edit");  // ✅ FIXED: pass event!
-    });
+// -------------------------
+// ✅ Live Search Logic
+// -------------------------
+function search() {
+  const inputEl = document.getElementById("searchInput");
+  const resultsBox = document.getElementById("searchResults");
+  const query = inputEl.value.toLowerCase().trim();
+
+  let counterContainer = document.getElementById("counterContainer");
+  if (!counterContainer) {
+    counterContainer = document.createElement("div");
+    counterContainer.id = "counterContainer";
+    counterContainer.className = "d-inline-flex gap-3 align-items-center ms-3";
+    inputEl.insertAdjacentElement("afterend", counterContainer);
   }
 
-  // Save button for Add Form
-  const addQuoteBtn = document.getElementById("add-quote-btn");
-  if (addQuoteBtn) {
-    addQuoteBtn.addEventListener("click", async (e) => {
-      console.log("✅ Add Quote button clicked (Add Form)");
-      e.preventDefault();
-      e.stopPropagation();
-      await handleSave(e, "add");  // already good
-    });
-  }
+  const getOrCreateCounter = (id, text = "") => {
+    let el = document.getElementById(id);
+    if (!el) {
+      el = document.createElement("span");
+      el.id = id;
+      el.className = "px-2 py-1 border rounded fw-bold bg-dark text-info";
+      el.textContent = text;
+      counterContainer.appendChild(el);
+    }
+    return el;
+  };
 
-  // Initialize Add Form when the tab is shown
-  document.querySelector('button[data-bs-target="#add-quote"]')
-    ?.addEventListener("shown.bs.tab", initializeAddForm);
-});
+  const searchCounter = getOrCreateCounter("searchCounter");
+  const totalCounter = getOrCreateCounter("totalCounter");
 
-// Part 1-mode detection
+  toggleLoader(true);
+
+  const words = query.split(/\s+/);
+  const columns = [0, 1, 2, 3, 4, 5, 6];
+
+  const results = query === "" ? [] : materialData.filter(row =>
+    words.every(word =>
+      columns.some(i => row[i]?.toString().toLowerCase().includes(word))
+    )
+  );
+
+  searchCounter.textContent = query === "" ? "🔍" : `${results.length} Materials Found`;
+  totalCounter.textContent = `Total Materials: ${materialData.length}`;
+
+  resultsBox.innerHTML = "";
+  const template = document.getElementById("rowTemplate").content;
+
+  results.forEach(r => {
+    const row = template.cloneNode(true);
+    const tr = row.querySelector("tr");
+
+    tr.classList.add("search-result-row");
+    tr.dataset.materialid = r[0];
+    tr.querySelector(".matID").textContent = r[0];
+    tr.querySelector(".matName").textContent = r[1];
+    tr.querySelector(".matPrice").textContent = r[2];
+    tr.querySelector(".supplier").textContent = r[5];
+
+    resultsBox.appendChild(row);
+  });
+
+  toggleLoader(false);
+}
+
+function showEditTab() {
+  const editTab = document.querySelector('[data-bs-target="#edit-material"]');
+  if (editTab) bootstrap.Tab.getOrCreateInstance(editTab).show();
+}
+
 // ✅ Populate Edit Form
-document.addEventListener("DOMContentLoaded", () => {
-  // Watch all fields that affect calculations
-  const fieldsToWatch = [
-    "edit-deliveryFee",
-    "edit-setupFee",
-    "edit-otherFee",
-    "edit-discount",
-    "edit-deposit",
-    "add-deliveryFee",
-    "add-setupFee",
-    "add-otherFee",
-    "add-discount",
-    "add-deposit",
-    "add-phone",
-    "add-eventDate",
-    "edit-eventDate",
-    "edit-phone",
+function populateEditForm(matID) {
+  const matIDField = document.getElementById("edit-matID");
+  matIDField.value = matID;
+  matIDField.removeAttribute("readonly");
+  document.getElementById("edit-material-id").value = matID;
+
+  loadDropdowns();
+  toggleLoader(true);
+
+  fetch(`${scriptURL}?action=getMaterialById&matID=${matID}`)
+    .then(res => res.json())
+    .then(data => {
+      if (data.error) throw new Error(data.error);
+
+      const fields = [
+        "matName", "matPrice", "unitType", "unitQty",
+        "supplier", "supplierUrl", "unitPrice", "onHand",
+        "outgoing", "lastUpdated", "reorderLevel"
+      ];
+
+      fields.forEach(field => {
+        const el = document.getElementById(`edit-${field}`);
+        if (el) el.value = (data[field] !== undefined && data[field] !== null) ? String(data[field]).trim() : "";
+      });
+
+      calculateAll();
+    })
+    .catch(err => {
+      console.error("❌ Error fetching material:", err);
+      showToast("❌ Error loading material data!", "error");
+    })
+    .finally(() => toggleLoader(false));
+}
+
+// Save changes from Edit Form
+document.getElementById("save-changes").addEventListener("click", async () => {
+  const matID = document.getElementById("edit-matID").value.trim();
+  if (!matID) return showToast("❌ Material ID is missing.", "error");
+
+  const now = new Date();
+  document.getElementById("edit-lastUpdated").value = formatDateForUser(now); // UI only
+
+  const fields = [
+    "matName", "matPrice", "unitType", "unitQty", "supplier", "supplierUrl",
+    "unitPrice", "incoming", "outgoing", "lastUpdated", "reorderLevel"
   ];
 
-  fieldsToWatch.forEach(fieldId => {
-    document.getElementById(fieldId)?.addEventListener("change", () => {
-      const mode = fieldId.startsWith("add") ? "add" : "edit";
-      calculateAllTotals(mode);
-    });
-  });
+  const materialInfo = {};
 
-  // Attach event listeners to existing product rows dynamically based on mode
-  document.querySelectorAll(".product-row").forEach(row => {
-    const mode = row.closest("#add-product-rows-container") ? "add" : "edit";
-    attachRowEvents(row, mode);
-  });
-
-  // Add specific listeners for Add and Edit product buttons
-  const addProductBtn = document.getElementById("add-product-btn");
-  if (addProductBtn) {
-    addProductBtn.addEventListener("click", (e) => {
-      console.log("✅ Add Product button clicked");
-      e.stopPropagation(); // Prevent event from propagating
-      addProductRow("", 1, "add-product-rows-container", "add");
-    });
-  }
-  const editProductBtn = document.getElementById("edit-product-btn");
-
-  if (addProductBtn) {
-    console.log("🔍 Adding event listener to Add Product button");
-    addProductBtn.removeEventListener("click", handleAddProductClick); // Remove any existing listener
-    addProductBtn.addEventListener("click", handleAddProductClick); // Add the new listener
+  for (const field of fields) {
+    const el = document.getElementById(`edit-${field}`);
+    materialInfo[field] = (field === "lastUpdated") ? now : (el?.value.trim() || "");
   }
 
-  if (editProductBtn) {
-    editProductBtn.removeEventListener("click", handleEditProductClick); // Remove any existing listener
-    editProductBtn.addEventListener("click", handleEditProductClick);
-  }
-});
+  // Override onHand with totalStock calculated value
+  materialInfo.onHand = document.getElementById("edit-totalStock")?.value.trim() || "";
 
-document.addEventListener("DOMContentLoaded", () => {
-  // Save button for Edit Form
-  const editQuoteBtn = document.getElementById("edit-quote-btn");
-  if (editQuoteBtn) {
-    editQuoteBtn.addEventListener("click", async (e) => {
-      console.log("✅ Save Quote button clicked (Edit Form)");
-      e.preventDefault();
-      e.stopPropagation();
-      await handleSave(e, "edit");  // ✅ FIXED: pass event!
-    });
-  }
-
-  // Save button for Add Form
-  const addQuoteBtn = document.getElementById("add-quote-btn");
-  if (addQuoteBtn) {
-    addQuoteBtn.addEventListener("click", async (e) => {
-      console.log("✅ Add Quote button clicked (Add Form)");
-      e.preventDefault();
-      e.stopPropagation();
-      await handleSave(e, "add");  // already good
-    });
-  }
-
-  // Initialize Add Form when the tab is shown
-  document.querySelector('button[data-bs-target="#add-quote"]')
-    ?.addEventListener("shown.bs.tab", initializeAddForm);
-});
-
-// Part 2-only uses bs-tabs logic and mode detection
-async function populateEditForm(qtID) {
-  try {
-    toggleLoader(true);
-    await getProdDataForSearch();
-
-    setField("edit-qtID", qtID);
-    document.getElementById("edit-qtID")?.setAttribute("readonly", true);
-
-    console.log("🔍 Fetching quote data for qtID:", qtID);
-    
-    const res = await fetch(`${scriptURL}?action=getQuoteById&qtID=${qtID}`);
-    if (!res.ok) throw new Error(`Fetch failed with status ${res.status}`);
-
-    console.log("✅ Fetch response status:", res.status);
-
-    const data = await res.json();
-    if (!data || data.error) throw new Error(data?.error || "No quote data found");
-    console.log("✅ Fetch response data:", data);
-
-    // 🔹 Card 1 - Client Info
-    setField("edit-phone", data.phone || "");
-    setField("edit-firstName", data.firstName || "");
-    setField("edit-lastName", data.lastName || "");
-    setField("edit-street", data.street || "");
-    setField("edit-email", data.email || "");
-    setField("edit-city", data.city || "");
-    setField("edit-state", data.state || "");
-    setField("edit-zip", data.zip || "");
-
-    // 🔹 Card 2 - Event Info
-    setField("edit-eventDate", data.eventDate || "");
-    setField("edit-eventLocation", data.eventLocation || "");
-    setField("edit-eventNotes", data.eventNotes || "");
-
-    // 🔹 Card 3 - Add-On Fees
-    setField("edit-deliveryFee", data.deliveryFee || 0);
-    setField("edit-setupFee", data.setupFee || 0);
-    setField("edit-otherFee", data.otherFee || 0);
-    setField("edit-addonsTotal", data.addonsTotal || 0);
-
-    // 🔹 Card 4 - Balance Info
-    setField("edit-deposit", data.deposit || 0);
-    setField("edit-depositDate", data.depositDate || "");
-    setField("edit-balanceDue", data.balanceDue || 0);
-    setField("edit-balanceDueDate", data.balanceDueDate || "");
-    setField("edit-paymentMethod", data.paymentMethod || "");
-    setField("edit-dueDate", data.dueDate || ""); // ✅ NEW
-
-    // 🔹 Card 5 - Totals
-    setField("edit-discount", data.discount || 0);
-    setField("edit-subTotal1", data.subTotal1 || 0);           // ✅ NEW
-    setField("edit-subTotal2", data.subTotal2 || 0);           // ✅ NEW
-    setField("edit-subTotal3", data.subTotal3 || 0);           // ✅ NEW
-    setField("edit-discountedTotal", data.discountedTotal || 0); // ✅ NEW
-    setField("edit-grandTotal", data.grandTotal || 0);
-
-    // 🔹 Products
-    const productContainer = document.getElementById("edit-product-rows-container");
-    if (productContainer) productContainer.innerHTML = "";
-
-    if (Array.isArray(data.products)) {
-      data.products.forEach(p => {
-        addProductRow(
-          p.name || "", 
-          p.quantity || "", 
-          "edit-product-rows-container", 
-          "edit",
-          p.unitPrice || "",              // ✅ NEW - if supported by your addProductRow()
-          p.totalRowRetail || ""          // ✅ NEW
-        );
-      });
-    }
-
-    // 🔹 Hidden / Extra Fields
-    setField("edit-totalProductCost", data.totalProductCost || 0);
-    setField("edit-totalProductRetail", data.totalProductRetail || 0);
-    setField("edit-productCount", data.productCount || "");        // ✅ NEW
-    setField("edit-quoteDate", data.quoteDate || "");              // ✅ NEW
-    setField("edit-quoteNotes", data.quoteNotes || "");
-    setField("edit-invoiceID", data.invoiceID || "");              // ✅ NEW
-    setField("edit-invoiceDate", data.invoiceDate || "");          // ✅ NEW
-    setField("edit-invoiceUrl", data.invoiceUrl || "");            // ✅ NEW
-
-    // 🔁 Totals + UI
-    calculateAllTotals("edit");
-    updateCardHeaders("edit");
-
-    const editPane = document.getElementById("edit-quote");
-    if (editPane) {
-      editPane.classList.remove("d-none");
-      editPane.scrollIntoView({ behavior: "smooth" });
-    }
-  } catch (err) {
-    console.error("❌ Error populating edit form:", err);
-    showToast("❌ Error loading quote data!", "error");
-  } finally {
-    toggleLoader(false);
-  }
-}
-
-async function handleSave(event, mode) {
-  if (!event || !mode) {
-    console.error("❌ handleSave requires both event and mode.");
-    return;
-  }
-
-  const eventSource = event.target;
-  console.log("Event source:", eventSource);
-  console.log("Event type:", event.type);
-
-  const expectedButtonId = mode === "add" ? "add-quote-btn" : "edit-quote-btn";
-  if (eventSource?.id !== expectedButtonId) {
-    console.warn(`⚠️ handleSave triggered by unintended element:`, eventSource);
-    return;
-  }
-
-  console.log(`🔍 handleSave triggered for mode: ${mode}`);
   toggleLoader(true);
 
   try {
-    // Recalculate totals before collecting data
-    calculateAllTotals(mode);
-
-    const formData = collectQuoteFormData(mode);
-    console.log("🚀 Data being sent to backend:", formData);
-
-    // Send data to the backend with 'quoteDate' handled by the backend
-    const res = await fetch(scriptURL, {
+    const response = await fetch(scriptURL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        system: "quotes",
-        action: mode,
-        qtID: mode === "edit" ? getField("edit-qtID") : null,
-        quoteInfo: formData
-      })
+      body: JSON.stringify({ system: "materials", action: "edit", matID, materialInfo })
     });
 
-    const result = await res.json();
-    console.log("✅ Backend response:", result);
+    const result = await response.json();
 
     if (result.success) {
-      showToast("✅ Quote saved successfully!");
+      showToast("✅ Material updated successfully!", "success");
       document.getElementById("searchInput").value = "";
       document.getElementById("searchResults").innerHTML = "";
-      setQuoteDataForSearch();
-      document.querySelector('[data-bs-target="#search-quote"]')?.click();
+      await setMatDataForSearch();
+
+      bootstrap.Tab.getOrCreateInstance(document.querySelector('[data-bs-target="#search-material"]')).show();
     } else {
-      showToast("❌ Error saving quote data!", "error");
-      console.error("❌ Backend save failed:", result.message || "Unknown error");
+      showToast("❌ Error updating material data!", "error");
     }
   } catch (err) {
-    console.error("❌ Save error:", err);
-    showToast("❌ Error saving quote data!", "error");
+    console.error(err);
+    showToast("❌ Error updating material data!", "error");
   } finally {
     toggleLoader(false);
-  }
-}
-
-function collectQuoteFormData(mode) {
-  const get = (id) => getField(`${mode}-${id}`);
-  const rawPhone = get("phone").replace(/\D/g, "");
-
-  const formData = {
-    phone: rawPhone,
-    firstName: get("firstName"),
-    lastName: get("lastName"),
-    email: get("email"),
-    street: get("street"),
-    city: get("city"),
-    state: get("state"),
-    zip: get("zip"),
-    eventDate: get("eventDate"),
-    eventLocation: get("eventLocation"),
-    deliveryFee: parseCurrency(get("deliveryFee")),
-    setupFee: parseCurrency(get("setupFee")),
-    otherFee: parseCurrency(get("otherFee")),
-    addonsTotal: parseCurrency(get("addonsTotal")),
-    deposit: parseCurrency(get("deposit")),
-    depositDate: get("depositDate"),
-    balanceDue: parseCurrency(get("balanceDue")),
-    balanceDueDate: get("balanceDueDate"),
-    paymentMethod: get("paymentMethod"),
-    dueDate: get("dueDate"),
-    totalProductCost: parseCurrency(get("totalProductCost")),
-    totalProductRetail: parseCurrency(get("totalProductRetail")),
-    subTotal1: parseCurrency(get("subTotal1")),
-    subTotal2: parseCurrency(get("subTotal2")),
-    subTotal3: parseCurrency(get("subTotal3")),
-    discount: parseCurrency(get("discount")),
-    discountedTotal: parseCurrency(get("discountedTotal")),
-    grandTotal: parseCurrency(get("grandTotal")),
-    quoteNotes: get("quoteNotes"),
-    eventNotes: get("eventNotes"),
-    invoiceID: "",
-    invoiceDate: "",
-    invoiceUrl: ""
-  };
-
-  // Gather product rows
-  const partRows = document.querySelectorAll(`#${mode}-product-rows-container .product-row`);
-  const products = [];
-
-  partRows.forEach((row) => {
-    const name = row.querySelector(".product-name")?.value.trim();
-    const qty = parseFloat(row.querySelector(".product-quantity")?.value.trim() || 0);
-    const unitPrice = parseCurrency(row.querySelector(".totalRowCost")?.value || 0);
-    const totalRowRetail = parseCurrency(row.querySelector(".totalRowRetail")?.value || 0);
-
-    if (name && qty > 0) {
-      products.push({ name, quantity: qty, unitPrice, totalRowRetail });
-    }
-  });
-
-  formData.productCount = products.length;
-
-  for (let i = 1; i <= 15; i++) {
-    const p = products[i - 1] || {};
-    formData[`part${i}`] = p.name || "";
-    formData[`qty${i}`] = p.quantity || "";
-    formData[`unitPrice${i}`] = p.unitPrice || "";
-    formData[`totalRowRetail${i}`] = p.totalRowRetail || "";
-  }
-
-  return formData;
-}
-
-let productData = {}; // Global material map
-const maxProducts = 15;
-
-// Initialize Add Form
-async function initializeAddForm() {
-  try {
-    toggleLoader(true);
-
-    // Clear all add-mode fields
-    const addFields = [
-      "phone", "firstName", "lastName", "email", "street", "city", "state", "zip",
-      "eventDate", "eventLocation", "deliveryFee", "setupFee", "otherFee",
-      "addonsTotal", "discount", "deposit", "depositDate", "balanceDue", "balanceDueDate",
-      "paymentMethod", "quoteNotes", "grandTotal", "totalProductCost", "totalProductRetail",
-      "eventDate", "eventLocation", "eventNotes"
-    ];
-
-    addFields.forEach(field => setField(`add-${field}`, "")); // Mode-specific field clearing ("add" mode)
-
-    // Load all dropdowns (products, clients, etc.)
-    await Promise.all([
-      getProdDataForSearch(),
-      setQuoteDataForSearch(),
-      loadDropdowns()
-    ]);
-
-    // Reset and add a blank product row for "add" mode
-    resetProductRows("add-product-rows-container");
-
-    // Recalculate totals and update headers (specific to "add" mode)
-    calculateAllTotals("add");
-    updateCardHeaders("add");
-
-  } catch (err) {
-    console.error("❌ Error initializing Add form", err);
-    showToast("❌ Could not prepare Add Quote form", "error");
-  } finally {
-    toggleLoader(false);
-  }
-}
-
-// ✅ Bootstrap 5 tab switch listener: runs only when "Add Quote" tab is shown
-document.querySelector('button[data-bs-target="#add-quote"]')
-  .addEventListener("shown.bs.tab", initializeAddForm);
-
-// Populate client info in "add" mode based on selected phone/clientID
-document.getElementById("add-phone").addEventListener("change", async (e) => {
-  e.stopPropagation();
-  const phone = getField("add-phone");
-
-  if (!phone) return;
-
-  try {
-    const res = await fetch(`${scriptURL}?action=getClientById&clientID=${encodeURIComponent(phone)}`);
-    const client = await res.json();
-
-    if (!client.error) {
-      // Fill in all matching add-mode fields
-      setField("add-firstName", client.firstName);
-      setField("add-lastName", client.lastName);
-      setField("add-email", client.email);
-      setField("add-street", client.street);
-      setField("add-city", client.city);
-      setField("add-state", client.state);
-      setField("add-zip", client.zip);
-    } else {
-      // Clear all fields if client not found
-      ["add-firstName", "add-lastName", "add-email", "add-street", "add-city", "add-state", "add-zip"]
-        .forEach(id => setField(id, ""));
-      showToast(client.error, "warning");
-    }
-
-    // Update card headers for "add" mode
-    updateCardHeaders("add");
-
-  } catch (err) {
-    console.error("❌ Error loading client by ID:", err);
-    showToast("❌ Could not load client info!", "error");
   }
 });
 
-async function getProdDataForSearch() {
+// Add Material Form Save Logic
+addMaterialForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  const fields = [
+    "matName", "matPrice", "unitType", "unitQty", "supplier",
+    "supplierUrl", "unitPrice", "onHand", "lastUpdated", "reorderLevel"
+  ];
+
+  const materialInfo = {};
+  for (const field of fields) {
+    const el = document.getElementById(`add-${field}`);
+    materialInfo[field] = el?.value.trim() || "";
+  }
+
+  toggleLoader(true);
+
   try {
-    const response = await fetch(`${scriptURL}?action=getProdDataForSearch`);
-    if (!response.ok) throw new Error(`Fetch failed with status ${response.status}`);
-    const rawData = await response.json();
-
-    productData = {}; // ✅ Assign global product map
-
-    rawData.forEach(row => {
-      const id = typeof row[0] === 'string' ? row[0].trim() : String(row[0]);
-      const name = typeof row[1] === 'string' ? row[1].trim() : String(row[1]);
-      const cost = parseFloat(row[46]?.toString().replace(/[^0-9.]/g, '')) || 0;
-      const retail = parseFloat(row[45]?.toString().replace(/[^0-9.]/g, '')) || 0;
-
-      if (id && name) {
-        productData[id] = { prodID: id, name, cost, retail };
-      }
+    const response = await fetch(`${scriptURL}?action=add`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ system: "materials", action: "add", materialInfo })
     });
 
-    console.log("✅ productData loaded successfully.");
-  } catch (err) {
-    console.error("❌ Error loading products:", err);
-    throw err;
-  }
-}
+    const result = await response.json();
 
-// Handle add product button (Add Mode)
-function handleAddProductClick() {
-  console.log("✅ Add Product button clicked");
-  addProductRow("", 1, "add-product-rows-container", "add"); // Mode = "add"
-}
+    if (result.success) {
+      showToast("✅ Material added successfully!", "success");
+      addMaterialForm.reset();
+      await setMatDataForSearch();
 
-// Improve UX for dropdown clicks (prevent unwanted bubbling)
-document.querySelectorAll(".product-name").forEach((dropdown) => {
-  dropdown.addEventListener("click", (e) => {
-    console.log("✅ Product dropdown clicked");
-    e.stopPropagation();
-  });
-});
-
-// Collapse toggles (prevent bubbling)
-document.querySelectorAll('[data-bs-toggle="collapse"]').forEach((btn) => {
-  btn.addEventListener("click", (e) => {
-    console.log("✅ Collapse button clicked");
-    e.stopPropagation();
-  });
-});
-
-// Dynamically add a product row to Add or Edit container
-function addProductRow(
-  name = "",
-  qty = 1,
-  containerId = "add-product-rows-container",
-  mode = "add", // ✅ Default is "add" mode
-  unitRetail = 0,
-  totalRetail = 0
-) {
-  console.log(`Adding product row to container: ${containerId}`);
-  const container = document.getElementById(containerId);
-  if (!container) return;
-
-  const row = document.createElement("div");
-  row.classList.add("row", "g-2", "align-items-center", "mb-1", "product-row");
-
-  // Build options dropdown
-  const optionsHTML = Object.values(productData).map(p => {
-    const selected = p.name === name ? ' selected' : '';
-    return `<option value="${p.name.replace(/"/g, '&quot;')}"${selected}>${p.name}</option>`;
-  }).join("");
-
-  const formattedUnitRetail = `$${parseFloat(unitRetail || 0).toFixed(2)}`;
-  const formattedTotalRetail = `$${parseFloat(totalRetail || 0).toFixed(2)}`;
-
-  row.innerHTML = `
-    <div class="col-md-6">
-      <select class="form-select product-name" list="row-products-selector">
-        <option value="">Choose a product...</option>
-        ${optionsHTML}
-      </select>
-    </div>
-    <div class="col-md-1">
-      <input type="number" class="form-control text-center product-quantity" value="${qty}">
-    </div>
-    <div class="col-md-2">
-      <input type="text" class="form-control text-end totalRowCost" value="${formattedUnitRetail}" readonly>
-    </div>
-    <div class="col-md-2">
-      <input type="text" class="form-control text-end totalRowRetail" value="${formattedTotalRetail}" readonly>
-    </div>
-    <div class="col-md-1">
-      <button type="button" class="btn btn-danger btn-sm remove-part">
-        <i class="bi bi-trash"></i>
-      </button>
-    </div>
-  `;
-
-  container.appendChild(row);
-
-  attachRowEvents(row, mode);       // ✅ Attach events with correct mode
-  calculateAllTotals(mode);         // ✅ Recalculate totals based on mode
-}
-
-// Edit product button (Edit Mode)
-function handleEditProductClick() {
-  addProductRow("", 1, "edit-product-rows-container", "edit"); // ✅ Mode = "edit"
-}
-
-// Attach input/change/delete events to row
-function attachRowEvents(row, mode = "edit") {
-  const prefix = mode === "add" ? "add-" : "edit-"; // ✅ Mode-based field handling
-
-  const nameInput = row.querySelector(".product-name");
-  const qtyInput = row.querySelector(".product-quantity");
-  const costOutput = row.querySelector(".totalRowCost");
-  const retailOutput = row.querySelector(".totalRowRetail");
-  const deleteBtn = row.querySelector(".remove-part");
-
-  function updateTotals() {
-    const name = nameInput.value.trim();
-    const qty = parseInt(qtyInput.value) || 0;
-    const prod = productData?.[name] || Object.values(productData).find(p => p.name === name);
-
-    if (prod && qty > 0) {
-      costOutput.value = `$${(prod.cost * qty).toFixed(2)}`;
-      retailOutput.value = `$${(prod.retail * qty).toFixed(2)}`;
+      bootstrap.Tab.getOrCreateInstance(document.querySelector('[data-bs-target="#search-material"]')).show();
     } else {
-      costOutput.value = "$0.00";
-      retailOutput.value = "$0.00";
+      showToast("❌ Error adding material.", "error");
+      console.error(result);
     }
-
-    calculateAllTotals(mode); // ✅ Recalculate using correct mode
+  } catch (error) {
+    console.error("Fetch error:", error);
+    showToast("❌ Error adding material.", "error");
+  } finally {
+    toggleLoader(false);
   }
+});
 
-  nameInput.addEventListener("change", updateTotals);
-  qtyInput.addEventListener("change", updateTotals);
-  deleteBtn.addEventListener("click", () => {
-    row.remove();
-    calculateAllTotals(mode); // ✅ Remove and recalc based on mode
-  });
+// Autocomplete material lookup handler
+function handleMaterialLookup(e) {
+  const input = e.target;
+  const row = input.closest(".material-row");
+  const name = input.value.trim();
+  // console.log("🧪 Material Lookup:", name);
+  // console.log("🧪 materialData:", materialData);
 
-  updateTotals(); // ✅ Initial calc
-}
+  if (!name || !row) return showToast("❌ Enter a material name", "warning");
 
-// Clear and reset product row section
-function resetProductRows(containerId) {
-  const container = document.getElementById(containerId);
-  if (!container) {
-    console.error(`❌ Container with ID "${containerId}" not found.`);
+  toggleLoader(true);
+
+  const match = materialData.find(m => m[1].trim() === name);
+  if (!match) {
+    showToast(`No match found for "${name}"`, "warning");
+    toggleLoader(false);
     return;
   }
 
-  container.innerHTML = ""; // Remove all rows
+  const fieldMap = {
+    "inv-matID":        match[0],
+    "inv-matName":      match[1],
+    "inv-matPrice":     match[2],
+    "inv-unitType":     match[3],
+    "inv-unitQty":      match[4],
+    "inv-supplier":     match[5],
+    "inv-supplierUrl":  match[6],
+    "inv-unitPrice":    match[7],
+    "inv-onHand":       match[8],
+    "inv-incoming":     match[9],
+    "inv-lastUpdated":  match[11], // skip index 10 (outgoing)
+  };
 
-  // ✅ Infer mode from containerId prefix
-  addProductRow("", 1, containerId, containerId.startsWith("add") ? "add" : "edit");
+  for (const [id, value] of Object.entries(fieldMap)) {
+    const el = row.querySelector(`#${id}`);
+    if (el) el.value = value;
+  }
+
+  toggleLoader(false);
 }
 
+// ✅ Add a new Material Row
+function addMaterialRow(container) {
+  const rows = container.querySelectorAll(".material-row");
+  if (rows.length >= 10) {
+    showToast("🚫 Max 10 materials allowed.", "warning");
+    return;
+  }
+
+  const firstRow = rows[0];
+  const newRow = firstRow.cloneNode(true);
+
+  // Clear inputs for new row
+  clearMaterialInputs(newRow);
+
+  // Always show remove button on cloned rows
+  const removeBtn = newRow.querySelector(".remove-material-row");
+  if (removeBtn) removeBtn.style.display = "inline-block";
+
+  container.appendChild(newRow);
+
+  // Reattach listeners for calculation
+  attachAutoCalcListeners(newRow);
+  refreshDeleteButtons();
+}
+
+// ✅ Remove a Material Row
+function removeMaterialRow(target, container) {
+  const rows = container.querySelectorAll(".material-row");
+  if (rows.length > 1) {
+    target.closest(".material-row").remove();
+    refreshDeleteButtons();
+  } else {
+    showToast("⚠️ At least one row must remain.", "info");
+  }
+}
+
+// ✅ Initialize all rows on page load or tab switch
+function initializeRows() {
+  document.querySelectorAll(".material-row").forEach((row, index) => {
+    const updatedInput = row.querySelector("#inv-lastUpdated");
+    if (updatedInput && !updatedInput.value) {
+      updatedInput.value = formatDateForUser(new Date());
+    }
+
+    const removeBtn = row.querySelector(".remove-material-row");
+    if (removeBtn) {
+      removeBtn.style.display = index === 0 ? "none" : "inline-block";
+    }
+
+    attachAutoCalcListeners(row);
+  });
+}
+
+// ✅ Clear all editable inputs in a material row
+function clearMaterialInputs(row) {
+  const inputSelectors = [
+    "#inv-matID",
+    "#inv-matName",
+    "#inv-material",
+    "#inv-unitPrice",
+    "#inv-onHand",
+    "#inv-incoming",
+    "#inv-supplier",
+    "#inv-supplierUrl",
+    "#inv-matPrice",
+    "#inv-unitQty"
+  ];
+
+  inputSelectors.forEach(selector => {
+    const input = row.querySelector(selector);
+    if (input) input.value = ""; // ✅ Always clear, even if readonly
+  });
+
+  const lastUpdatedInput = row.querySelector("#inv-lastUpdated");
+  if (lastUpdatedInput) lastUpdatedInput.value = formatDateForUser(new Date());
+}
+
+// ✅ Show/hide delete buttons depending on row count
+function refreshDeleteButtons() {
+  const rows = document.querySelectorAll(".material-row");
+  rows.forEach((row, i) => {
+    const btn = row.querySelector(".remove-material-row");
+    if (btn) btn.style.display = i === 0 ? "none" : "inline-block";
+  });
+}
+
+// Save All Inventory Rows
+async function saveInventoryData() {
+  const rows = document.querySelectorAll(".material-row");
+  const updates = [];
+
+  rows.forEach((row, i) => {
+    const matID = row.querySelector("#inv-matID")?.value.trim();
+    if (!matID) {
+      console.warn(`⏭️ Skipping row ${i + 1}: Missing matID`);
+      return;
+    }
+
+    // Get editable fields
+    const parseCurrency = (val) => parseFloat((val || "").replace(/[^0-9.-]+/g, ""));
+    const matPrice = parseCurrency(row.querySelector("#inv-matPrice")?.value);
+    const unitQty = parseFloat(row.querySelector("#inv-unitQty")?.value) || 0;
+    const onHandInput = parseFloat(row.querySelector("#inv-onHand")?.value) || 0;
+    const supplier = row.querySelector("#inv-supplier")?.value.trim() || "";
+    const supplierUrl = row.querySelector("#inv-supplierUrl")?.value.trim() || "";
+
+    // Derived values
+    const onHandFinal = onHandInput + unitQty;
+    const unitType = row.querySelector("#inv-unitType")?.value.trim() || "";
+    const unitPrice = parseCurrency(row.querySelector("#inv-unitPrice")?.value);
+
+    const now = new Date(); // Backend should parse this to date object
+
+    updates.push({
+      matID,
+      matName: row.querySelector("#inv-matName")?.value.trim() || "",
+      matPrice,
+      unitQty,
+      supplier,
+      supplierUrl,
+      unitType,
+      unitPrice,
+      onHand: onHandFinal,
+      incoming: 0, // Reset to 0 after processing (assumed)
+      outgoing: 0, // No change
+      lastUpdated: now.toISOString(),
+      reorderLevel: parseFloat(row.querySelector("#inv-reorderLevel")?.value) || 0,
+    });
+  });
+
+  if (!updates.length) {
+    return showToast("⚠️ No valid inventory rows to save.", "warning");
+  }
+
+  toggleLoader(true);
+
+  try {
+    const response = await fetch(scriptURL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        system: "materials",
+        action: "editInventory",
+        materialArray: updates,
+      }),
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      showToast("✅ All inventory data saved!", "success");
+      document.getElementById("addInventoryForm")?.reset();
+      await setMatDataForSearch();
+      bootstrap.Tab.getOrCreateInstance(document.querySelector('[data-bs-target="#search-material"]')).show();
+      // Optionally refresh material data or clear form
+    } else {
+      showToast("❌ Failed to save inventory data.", "error");
+    }
+
+  } catch (err) {
+    console.error("Fetch error:", err);
+    showToast("❌ Error saving inventory data!", "error");
+  } finally {
+    toggleLoader(false);
+  }
+}
+
+// ✅ Format Date for UI Display
+function formatDateForUser(date) {
+  if (!date) return "";
+  return new Date(date).toLocaleDateString("en-US");
+}
+
+// ✅ Set value in a row safely
+function setValue(row, selector, value) {
+  const input = row.querySelector(selector);
+  if (!input) {
+    const matName = row.querySelector(".materials")?.value || "unknown";
+    console.warn(`⚠️ Missing field ${selector} in row with material: ${matName}`);
+    return;
+  }
+  input.value = value || "";
+}
+
+// ✅ Calculate inventory fields
+function calculateInventoryFields({ matPrice, unitQty, onHand = 0, incoming = 0, outgoing = 0 } = {}) {
+  const clean = val => parseFloat(val?.toString().replace(/[^0-9.]/g, "")) || 0;
+
+  const price = clean(matPrice);
+  const qty = clean(unitQty);
+  const stockOnHand = clean(onHand);
+  const incomingStock = clean(incoming);
+  const outgoingStock = clean(outgoing);
+
+  const unitPrice = qty !== 0 ? price / qty : 0;
+  const totalStock = stockOnHand + incomingStock - outgoingStock;
+
+  return {
+    unitPrice: +unitPrice.toFixed(2),
+    totalStock: +totalStock.toFixed(2)
+  };
+}
+
+// ✅ Recalculate edit form + alert
+function calculateAll() {
+  const get = id => document.getElementById(`edit-${id}`)?.value;
+
+  const { unitPrice, totalStock } = calculateInventoryFields({
+    matPrice: get("matPrice"),
+    unitQty: get("unitQty"),
+    onHand: get("onHand"),
+    incoming: get("incoming"),
+    outgoing: get("outgoing")
+  });
+
+  const totalField = document.getElementById("edit-totalStock");
+  if (totalField) totalField.value = totalStock;
+
+  const unitField = document.getElementById("edit-unitPrice");
+  if (unitField) unitField.value = unitPrice;
+
+  checkLowStock();
+}
+
+// ✅ Auto-calc listeners for dynamic rows
+function attachAutoCalcListeners(row) {
+  const priceInput = row.querySelector('#inv-matPrice');
+  const qtyInput = row.querySelector('#inv-unitQty');
+  const unitPriceInput = row.querySelector('#inv-unitPrice');
+
+  if (!priceInput || !qtyInput || !unitPriceInput) return;
+
+  const update = () => {
+    const { unitPrice } = calculateInventoryFields({
+      matPrice: priceInput.value,
+      unitQty: qtyInput.value
+    });
+    unitPriceInput.value = unitPrice ? unitPrice.toFixed(2) : "";
+  };
+
+  priceInput.addEventListener("change", update);
+  qtyInput.addEventListener("change", update);
+}
+
+// ✅ Highlight low stock alert
+function checkLowStock() {
+  const total = parseFloat(document.getElementById("edit-totalStock")?.value) || 0;
+  const reorder = parseFloat(document.getElementById("edit-reorderLevel")?.value) || 0;
+  const alert = document.getElementById("reorderAlert");
+
+  if (alert) alert.classList.toggle("d-none", total >= reorder);
+}
+
+// ✅ One-time listener setup for edit form
+["onHand", "incoming", "outgoing", "matPrice", "unitQty", "reorderLevel"].forEach(field => {
+  const el = document.getElementById(`edit-${field}`);
+  if (el) el.addEventListener("change", calculateAll);
+});

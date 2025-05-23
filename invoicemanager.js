@@ -172,29 +172,22 @@ async function populateViewForm(logID) {
     // ✅ Store globally
     window.currentInvoiceData = invoiceInfo;
 
-    // ✅ Map all invoice fields to matching form fields (must exist in DOM)
+    // ✅ Map fields to DOM
     const fieldMap = [
-      "logID",
-      "invoiceID",
-      "qtID",
-      "firstName",
-      "lastName",
-      "email",
-      "invoiceDate",
-      "dueDate",
-      "grandTotal",
-      "amountPaid",
-      "balanceDue",
-      "status",
-      "paymentHistory",
-      "sendDate",
-      "sendMethod",
-      "invoiceLogNotes"
+      "logID", "invoiceID", "qtID", "firstName", "lastName", "email",
+      "invoiceDate", "dueDate", "grandTotal", "amountPaid", "balanceDue",
+      "status", "paymentHistory", "sendDate", "sendMethod", "invoiceLogNotes"
     ];
 
     fieldMap.forEach(key => {
       const el = document.getElementById(key);
-      if (el) el.value = invoiceInfo[key] || "";
+      if (!el) return;
+
+      if (["invoiceDate", "dueDate", "sendDate", "paymentHistory"].includes(key)) {
+        el.value = formatDateForUser(invoiceInfo[key]);
+      } else {
+        el.value = invoiceInfo[key] || "";
+      }
     });
 
     // === Simple overdue and paid-in-full alert logic ===
@@ -217,7 +210,7 @@ async function populateViewForm(logID) {
       }
     }
 
-    // ✅ Setup View PDF button using invoiceUrl
+    // ✅ Setup View PDF button
     const viewBtn = document.getElementById("view-Button");
     if (viewBtn) {
       if (invoiceInfo.invoiceUrl) {
@@ -238,7 +231,7 @@ async function populateViewForm(logID) {
       sendBtn.addEventListener("click", openEmailModal);
     }
 
-    // ✅ Optional: Jump to QuoteManager using qtID
+    // ✅ Optional: Jump to QuoteManager
     const openQuoteBtn = document.getElementById("openQuoteBtn");
     if (openQuoteBtn && invoiceInfo.qtID) {
       openQuoteBtn.disabled = false;
@@ -252,6 +245,33 @@ async function populateViewForm(logID) {
       };
     }
 
+    // ✅ Setup Record Payment button for the correct modal
+    const recordBtn = document.getElementById("recordPaymentBtn");
+    if (recordBtn && invoiceInfo.logID) {
+      // Remove any previous handler
+      if (window._recordPaymentHandler) {
+        recordBtn.removeEventListener("click", window._recordPaymentHandler);
+      }
+
+      // Define and attach new handler
+      window._recordPaymentHandler = () => {
+        // Reset modal fields
+        document.getElementById("paymentAmount").value = "";
+        document.getElementById("paymentMethod").value = "";
+        document.getElementById("paymentDate").value = new Date().toISOString().split("T")[0];
+        document.getElementById("paymentNote").value = "";
+
+        // Store logID globally or in a hidden input if needed
+        window.activeLogID = invoiceInfo.logID;
+
+        // Show the modal
+        const modal = new bootstrap.Modal(document.getElementById("paymentModal"));
+        modal.show();
+      };
+
+      recordBtn.addEventListener("click", window._recordPaymentHandler);
+    }
+
   } catch (error) {
     console.error("❌ Error fetching invoice data:", error);
     showToast("❌ Failed to load invoice data.", "error");
@@ -260,57 +280,40 @@ async function populateViewForm(logID) {
   }
 }
    
-// Open the log payment modal with the invoice ID preloaded
-function openLogPaymentModal(invoiceID) {
-  document.getElementById("log-payment-invoiceID").value = invoiceID;
-  document.getElementById("log-payment-amount").value = "";
-  document.getElementById("log-payment-method").value = "";
-  const modal = new bootstrap.Modal(document.getElementById("logPaymentModal"));
-  modal.show();
+// ✅ Format Date for UI Display
+function formatDateForUser(date) {
+  if (!date) return "";
+  return new Date(date).toLocaleDateString("en-US");
 }
 
-// Handle form submission
-document.getElementById("submitLogPaymentBtn").addEventListener("click", async () => {
-  const invoiceID = document.getElementById("log-payment-invoiceID").value;
-  const amount = parseFloat(document.getElementById("log-payment-amount").value);
-  const method = document.getElementById("log-payment-method").value;
+document.addEventListener("DOMContentLoaded", () => {
+  // Get references to elements
+  const recordPaymentBtn = document.getElementById("recordPaymentBtn");
+  const paymentModalEl = document.getElementById("paymentModal");
+  const bsPaymentModal = new bootstrap.Modal(paymentModalEl);
 
-  // Validation: check for empty and valid number
-  if (!invoiceID || isNaN(amount) || !method) {
-    showToast("⚠️ Please complete all fields before submitting.", "warning");
-    return;
-  }
+  // Show modal on button click
+  recordPaymentBtn.addEventListener("click", () => {
+    bsPaymentModal.show();
+  });
 
-  try {
-    toggleLoader(true);
+  // Handle save payment button inside the modal
+  document.getElementById("savePaymentBtn").addEventListener("click", () => {
+    const amount = document.getElementById("paymentAmount").value;
+    const method = document.getElementById("paymentMethodInput").value;
+    const date = document.getElementById("paymentDate").value;
+    const note = document.getElementById("paymentNote").value;
 
-    const response = await fetch(scriptURL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        system: "quotes",
-        action: "logPayment",
-        invoiceID,
-        amount,
-        method
-      })
-    });
-
-    const result = await response.json();
-
-    if (result.success) {
-      showToast("✅ Payment logged successfully!");
-      bootstrap.Modal.getInstance(document.getElementById("logPaymentModal")).hide();
-
-      // Optional: refresh totals or reload quote — good idea to add if needed
-      // e.g., await refreshInvoiceTotals(invoiceID);
-    } else {
-      throw new Error(result.message || "Unknown error");
+    // Simple validation example
+    if (!amount || !method || !date) {
+      alert("Please fill in all required fields.");
+      return;
     }
-  } catch (error) {
-    console.error("❌ Error logging payment:", error);
-    showToast("❌ Failed to log payment", "error");
-  } finally {
-    toggleLoader(false);
-  }
+
+    // TODO: Your logic to save the payment, e.g., API call or form submission
+    console.log({ amount, method, date, note });
+
+    // Close modal after save
+    bsPaymentModal.hide();
+  });
 });

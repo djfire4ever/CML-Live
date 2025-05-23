@@ -96,6 +96,7 @@
     <div class="row g-3 mt-1 mb-1">
       <div class="d-grid gap-2 d-sm-block mt-3">
         <button type="button" class="btn btn-warning" id="viewQuoteBtn">📝 View Quote</button>
+        <button id="recordPaymentBtn" class="btn btn-primary">Record Payment</button>
       </div>
     </div>
     <div id="overdueAlert" class="alert alert-warning mt-2" style="display: none;">
@@ -121,7 +122,7 @@
 
       <div class="form-text text-muted mb-3">Partial payments are supported. Balance will update accordingly.</div>
       <div class="d-flex gap-2">
-        <button type="submit" id="submitLogPaymentBtn" class="btn btn-success">Log Payment</button>
+        <button id="recordPaymentBtn" class="btn btn-primary">Record Payment</button>
         <button type="reset" class="btn btn-secondary">Clear</button>
       </div>
     </form>
@@ -130,7 +131,49 @@
 
 </div> <!-- END tab-content -->
 </div> <!-- END container -->
-</section>
+<!-- 💳 Modal -->
+<div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="paymentModalLabel">Record Payment</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="paymentForm">
+          <div class="mb-3">
+            <label for="paymentAmount" class="form-label">Amount</label>
+            <input type="number" class="form-control" id="paymentAmount" required />
+          </div>
+          <div class="mb-3">
+            <label for="paymentMethodInput" class="form-label">Method</label>
+            <input class="form-control" list="payment-method-options" id="paymentMethodInput" name="paymentMethod" placeholder="Select or type method">
+            <datalist id="payment-method-options">
+              <option value="Cash">
+              <option value="Card">
+              <option value="Check">
+              <option value="Zelle">
+              <option value="Venmo">
+              <option value="Other">
+            </datalist>
+          </div>
+          <div class="mb-3">
+            <label for="paymentDate" class="form-label">Date</label>
+            <input type="date" class="form-control" id="paymentDate" />
+          </div>
+          <div class="mb-3">
+            <label for="paymentNote" class="form-label">Note</label>
+            <textarea class="form-control" id="paymentNote" rows="2"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="savePaymentBtn">Save Payment</button>
+      </div>
+    </div>
+  </div>
+</div></section>
 
 <!-- <script> -->
 
