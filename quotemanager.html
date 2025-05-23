@@ -787,26 +787,6 @@ function setupDynamicNavigation() {
   window.addEventListener('hashchange', activateTabFromHash);
 }
 
-function setupDynamicNavigation() {
-  function activateTabFromHash() {
-    var hash = window.location.hash;
-    if (!hash) return;
-
-    var targetTabButton = document.querySelector('[data-bs-target="' + hash + '"]');
-    if (targetTabButton) {
-      var tab = new bootstrap.Tab(targetTabButton);
-      tab.show();
-    }
-  }
-
-  // Use window.onload for full page load
-  window.onload = function() {
-    activateTabFromHash();  // Ensures tab switch happens after everything is loaded
-  };
-
-  window.addEventListener('hashchange', activateTabFromHash);
-}
-
 setupDynamicNavigation();
 
 </script>

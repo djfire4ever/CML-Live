@@ -5,14 +5,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const searchInput = document.getElementById("searchInput");
   const searchResultsBox = document.getElementById("searchResults");
 
-  // ✅ Attach input listener
   if (searchInput) {
     searchInput.addEventListener("input", search);
   } else {
     console.error("❌ Search input not found!");
   }
 
-  // ✅ Handle tab-switch to Search Tab
   const searchTabButton = document.querySelector('button[data-bs-target="#tab-search"]');
   if (searchTabButton) {
     searchTabButton.addEventListener("shown.bs.tab", () => {
@@ -32,16 +30,27 @@ document.addEventListener("DOMContentLoaded", () => {
     console.error("❌ Search tab not found!");
   }
 
-  // ✅ Clear previous results and load fresh data
   if (searchResultsBox) searchResultsBox.innerHTML = "";
-  toggleLoader();
-  setDataForSearch();
-  setTimeout(toggleLoader, 500);
+  toggleLoader(true);
+  setDataForSearch().finally(() => toggleLoader(false));
 });
 
-// ✅ Load invoice data for search
+function formatCurrency(amount) {
+  const num = parseFloat(amount);
+  if (isNaN(num)) return "$0.00";
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(num);
+}
+
+function formatDateForUser(date) {
+  if (!date) return "";
+  return new Date(date).toLocaleDateString("en-US");
+}
+
 function setDataForSearch() {
-  fetch(scriptURL + "?action=getInvDataForSearch")
+  return fetch(scriptURL + "?action=getInvDataForSearch")
     .then(res => res.json())
     .then(data => {
       invoicedata = Array.isArray(data) ? data : [];
@@ -49,11 +58,9 @@ function setDataForSearch() {
     .catch(err => console.error("❌ Error loading invoice data:", err));
 }
 
-// ✅ Perform search
 function search() {
   const inputEl = document.getElementById("searchInput");
   const box = document.getElementById("searchResults");
-
   if (!inputEl || !box) return;
 
   let counterContainer = document.getElementById("counterContainer");
@@ -80,17 +87,16 @@ function search() {
     searchCounter.insertAdjacentElement("afterend", totalCounter);
   }
 
-  toggleLoader();
+  toggleLoader(true);
 
   const terms = inputEl.value.toLowerCase().trim().split(/\s+/);
   const filtered = terms[0] === ""
     ? []
     : invoicedata.filter(row =>
-      terms.every(word =>
-        // Search in columns: logID(0), invoiceID(1), qtID(2), firstName(3), lastName(4)
-        [0, 1, 2, 3, 4].some(i => row[i]?.toString().toLowerCase().includes(word))
-      )
-    );
+        terms.every(word =>
+          [0, 1, 2, 3, 4, 12].some(i => row[i]?.toString().toLowerCase().includes(word))
+        )
+      );
 
   searchCounter.textContent = terms[0] === "" ? "🔍" : `${filtered.length} Invoices Found`;
   totalCounter.textContent = `Total Invoices: ${invoicedata.length}`;
@@ -102,17 +108,40 @@ function search() {
     const tr = row.querySelector("tr");
 
     tr.querySelector(".invoiceID").textContent = r[1];
-    tr.querySelector(".invoiceDate").textContent = r[7];
+    tr.querySelector(".invoiceDate").textContent = formatDateForUser(r[7]);
     tr.querySelector(".firstName").textContent = r[3];
     tr.querySelector(".lastName").textContent = r[4];
-    tr.querySelector(".grandTotal").textContent = r[9];
-    // Use logID as unique dataset key for row identification
-    tr.dataset.logid = r[0];
+    tr.querySelector(".balanceDue").textContent = formatCurrency(r[11]);
+    const statusCell = tr.querySelector(".status");
+      statusCell.innerHTML = "";
 
+      const badge = document.createElement("span");
+      badge.textContent = r[12];
+      badge.classList.add("badge", "fw-bold", "fs-6");
+
+      switch (r[12]) {
+        case "Paid":
+          badge.classList.add("bg-success", "text-dark");
+          break;
+        case "Unpaid":
+          badge.classList.add("bg-danger", "text-dark");
+          break;
+        case "Partial":
+          badge.classList.add("bg-warning", "text-dark");
+          break;
+        default:
+          badge.classList.add("bg-secondary", "text-dark");
+          break;
+      }
+
+      statusCell.appendChild(badge);
+
+
+    tr.dataset.logid = r[0];
     box.appendChild(row);
   });
 
-  toggleLoader();
+  toggleLoader(false);
 }
 
 // ✅ Handle clicks on any row (delegated handler)
@@ -136,16 +165,10 @@ document.getElementById("searchResults").addEventListener("click", async functio
 
 // ✅ Fetch and populate form using logID (unique key)
 async function populateViewForm(logID) {
-  if (!logID) {
-    console.error("❌ Missing logID parameter");
-    return;
-  }
+  if (!logID) return console.error("❌ Missing logID parameter");
 
   const invoiceIDField = document.getElementById("invoiceID");
-  if (!invoiceIDField) {
-    console.error("❌ invoiceID input field not found");
-    return;
-  }
+  if (!invoiceIDField) return console.error("❌ invoiceID input field not found");
 
   invoiceIDField.removeAttribute("readonly");
   toggleLoader(true);
@@ -153,26 +176,14 @@ async function populateViewForm(logID) {
   try {
     const response = await fetch(`${scriptURL}?action=getInvoiceById&logID=${encodeURIComponent(logID)}`);
     const text = await response.text();
+    const invoiceInfo = JSON.parse(text);
 
-    let invoiceInfo;
-    try {
-      invoiceInfo = JSON.parse(text);
-    } catch (err) {
-      throw new Error(`Failed to parse JSON: ${err.message}\nResponse text: ${text}`);
+    if (!invoiceInfo || typeof invoiceInfo !== "object" || invoiceInfo.error) {
+      throw new Error(invoiceInfo?.error || "Invalid or missing invoice data");
     }
 
-    if (!invoiceInfo || typeof invoiceInfo !== "object") {
-      throw new Error("Invalid or missing invoice data");
-    }
-
-    if (invoiceInfo.error) {
-      throw new Error(invoiceInfo.error);
-    }
-
-    // ✅ Store globally
     window.currentInvoiceData = invoiceInfo;
 
-    // ✅ Map fields to DOM
     const fieldMap = [
       "logID", "invoiceID", "qtID", "firstName", "lastName", "email",
       "invoiceDate", "dueDate", "grandTotal", "amountPaid", "balanceDue",
@@ -183,34 +194,33 @@ async function populateViewForm(logID) {
       const el = document.getElementById(key);
       if (!el) return;
 
-      if (["invoiceDate", "dueDate", "sendDate", "paymentHistory"].includes(key)) {
+      if (["grandTotal", "amountPaid", "balanceDue"].includes(key)) {
+        el.value = formatCurrency(invoiceInfo[key]);
+      } else if (["invoiceDate", "dueDate", "sendDate", "paymentHistory"].includes(key)) {
         el.value = formatDateForUser(invoiceInfo[key]);
       } else {
         el.value = invoiceInfo[key] || "";
       }
     });
 
-    // === Simple overdue and paid-in-full alert logic ===
-    const overdueEl = document.getElementById("overdueAlert");
-    const paidInFullEl = document.getElementById("paidInFullAlert");
-    if (overdueEl && paidInFullEl) {
-      const dueDate = new Date(invoiceInfo.dueDate);
-      const balance = parseFloat(invoiceInfo.balanceDue) || 0;
-      const today = new Date();
+    // Alerts
+      const paymentPendingEl = document.getElementById("paymentPendingAlert");
+      const paidInFullEl = document.getElementById("paidInFullAlert");
 
-      if (balance > 0 && dueDate < today) {
-        overdueEl.style.display = "block";
-        paidInFullEl.style.display = "none";
-      } else if (balance === 0) {
-        overdueEl.style.display = "none";
-        paidInFullEl.style.display = "block";
-      } else {
-        overdueEl.style.display = "none";
-        paidInFullEl.style.display = "none";
+      if (paymentPendingEl && paidInFullEl) {
+        const balance = parseFloat(invoiceInfo.balanceDue) || 0;
+
+        paymentPendingEl.classList.add("d-none");
+        paidInFullEl.classList.add("d-none");
+
+        if (balance > 0) {
+          paymentPendingEl.classList.remove("d-none");
+        } else {
+          paidInFullEl.classList.remove("d-none");
+        }
       }
-    }
 
-    // ✅ Setup View PDF button
+    // View button
     const viewBtn = document.getElementById("view-Button");
     if (viewBtn) {
       if (invoiceInfo.invoiceUrl) {
@@ -224,14 +234,14 @@ async function populateViewForm(logID) {
       }
     }
 
-    // ✅ Setup Send Email button
+    // Email button
     const sendBtn = document.getElementById("send-Button");
     if (sendBtn) {
       sendBtn.removeEventListener("click", openEmailModal);
       sendBtn.addEventListener("click", openEmailModal);
     }
 
-    // ✅ Optional: Jump to QuoteManager
+    // Open quote button
     const openQuoteBtn = document.getElementById("openQuoteBtn");
     if (openQuoteBtn && invoiceInfo.qtID) {
       openQuoteBtn.disabled = false;
@@ -245,75 +255,104 @@ async function populateViewForm(logID) {
       };
     }
 
-    // ✅ Setup Record Payment button for the correct modal
-    const recordBtn = document.getElementById("recordPaymentBtn");
-    if (recordBtn && invoiceInfo.logID) {
-      // Remove any previous handler
-      if (window._recordPaymentHandler) {
-        recordBtn.removeEventListener("click", window._recordPaymentHandler);
-      }
-
-      // Define and attach new handler
-      window._recordPaymentHandler = () => {
-        // Reset modal fields
-        document.getElementById("paymentAmount").value = "";
-        document.getElementById("paymentMethod").value = "";
-        document.getElementById("paymentDate").value = new Date().toISOString().split("T")[0];
-        document.getElementById("paymentNote").value = "";
-
-        // Store logID globally or in a hidden input if needed
-        window.activeLogID = invoiceInfo.logID;
-
-        // Show the modal
-        const modal = new bootstrap.Modal(document.getElementById("paymentModal"));
-        modal.show();
-      };
-
-      recordBtn.addEventListener("click", window._recordPaymentHandler);
-    }
-
   } catch (error) {
     console.error("❌ Error fetching invoice data:", error);
     showToast("❌ Failed to load invoice data.", "error");
   } finally {
+    setupPaymentModalIfNeeded();
     toggleLoader(false);
   }
 }
    
-// ✅ Format Date for UI Display
-function formatDateForUser(date) {
-  if (!date) return "";
-  return new Date(date).toLocaleDateString("en-US");
-}
+function setupPaymentModalIfNeeded() {
+  const makePaymentBtn = document.getElementById("makePaymentBtn");
+  const modalEl = document.getElementById("paymentModal");
+  const paymentForm = document.getElementById("paymentForm");
 
-document.addEventListener("DOMContentLoaded", () => {
-  // Get references to elements
-  const recordPaymentBtn = document.getElementById("recordPaymentBtn");
-  const paymentModalEl = document.getElementById("paymentModal");
-  const bsPaymentModal = new bootstrap.Modal(paymentModalEl);
+  if (!makePaymentBtn || !modalEl || !paymentForm) {
+    console.warn("❌ Payment modal elements not found yet");
+    return;
+  }
 
-  // Show modal on button click
-  recordPaymentBtn.addEventListener("click", () => {
-    bsPaymentModal.show();
-  });
+  const bootstrapModal = new bootstrap.Modal(modalEl);
+  const balanceStr = window.currentInvoiceData?.balanceDue;
+  const rawBalance = parseFloat(balanceStr || 0);
 
-  // Handle save payment button inside the modal
-  document.getElementById("savePaymentBtn").addEventListener("click", () => {
-    const amount = document.getElementById("paymentAmount").value;
-    const method = document.getElementById("paymentMethodInput").value;
-    const date = document.getElementById("paymentDate").value;
-    const note = document.getElementById("paymentNote").value;
+  console.log("BalanceDue (raw):", rawBalance);
+  makePaymentBtn.classList.toggle("d-none", rawBalance <= 0);
 
-    // Simple validation example
-    if (!amount || !method || !date) {
-      alert("Please fill in all required fields.");
-      return;
+  makePaymentBtn.onclick = () => {
+    const today = new Date().toISOString().split("T")[0];
+
+    document.getElementById("paymentLogID").value = document.getElementById("logID").value;
+
+    // ✅ Use formatCurrency for display
+    const displayBalanceEl = document.getElementById("displayBalanceDue");
+    if (displayBalanceEl) {
+      displayBalanceEl.innerHTML = `Total Amount Due - <strong>${formatCurrency(rawBalance)}</strong>`;
     }
 
-    // TODO: Your logic to save the payment, e.g., API call or form submission
-    console.log({ amount, method, date, note });
+    // ✅ Optional: formatted preview, only if element exists
+    const formattedAmountEl = document.getElementById("formattedAmount");
+    if (formattedAmountEl) {
+      formattedAmountEl.textContent = `Formatted: ${formatCurrency(rawBalance)}`;
+    }
 
-    // Close modal after save
-    bsPaymentModal.hide();
-  });
+    // ✅ Set today’s date (ISO for input type="date")
+    document.getElementById("paymentDate").value = today;
+
+    document.getElementById("paymentMethod").value = "";
+    document.getElementById("paymentNotes").value = "";
+
+    bootstrapModal.show();
+  };
+}
+
+// Handle Payment Modal Submission
+document.getElementById("submitPaymentBtn").addEventListener("click", async () => {
+  const logID = document.getElementById("paymentLogID").value;
+  const amount = parseFloat(document.getElementById("paymentAmount").value);
+  const method = document.getElementById("paymentMethod").value;
+  const notes = document.getElementById("paymentNotes").value;
+
+  // ✅ Validation
+  if (!logID || isNaN(amount) || amount <= 0 || !method) {
+    showToast("⚠️ Please complete all required fields.", "warning");
+    return;
+  }
+
+  try {
+    toggleLoader(true);
+
+    const response = await fetch(scriptURL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        system: "invoice", 
+        action: "logPayment",
+        logID,
+        amount,
+        method,
+        notes
+      })
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      showToast("✅ Payment logged successfully!");
+      bootstrap.Modal.getInstance(document.getElementById("paymentModal")).hide();
+
+      // ✅ Refresh with updated logID
+      await populateViewForm(logID);
+    } else {
+      throw new Error(result.message || "Unknown error occurred");
+    }
+  } catch (error) {
+    console.error("❌ Error logging payment:", error);
+    showToast("❌ Failed to log payment", "error");
+  } finally {
+    toggleLoader(false);
+  }
 });
+

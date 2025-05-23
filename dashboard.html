@@ -116,7 +116,7 @@
           <div class="accordion-body bg-black text-light">
             <div class="row g-3">
               <div class="col-12"><button class="btn btn-outline-primary w-100 d-flex justify-content-between align-items-center" data-link="clientmanager.html#tab-search"><span>Total Clients:</span><span id="totalClients" class="fw-bold">--</span></button></div>
-              <!-- <div class="col-12"><button class="btn btn-outline-success w-100 d-flex justify-content-between align-items-center" data-link="invoicemanager.html#search-invoice"><span>Total Invoices:</span><span id="totalInvoices" class="fw-bold">--</span></button></div> -->
+              <div class="col-12"><button class="btn btn-outline-success w-100 d-flex justify-content-between align-items-center" data-link="invoicemanager.html#search-invoice"><span>Total Unpaid Invoices:</span><span id="unpaidInvoiceCount" class="fw-bold">--</span></button></div>
               <div class="col-12"><button class="btn btn-outline-info w-100 d-flex justify-content-between align-items-center" data-link="materialmanager.html#search-material"><span>Total Materials:</span><span id="totalMaterials" class="fw-bold">--</span></button></div>
               <div class="col-12"><button class="btn btn-outline-danger w-100 d-flex justify-content-between align-items-center" data-link="productmanager.html#search-product"><span>Total Products:</span><span id="totalProducts" class="fw-bold">--</span></button></div>
               <div class="col-12"><button class="btn btn-outline-warning w-100 d-flex justify-content-between align-items-center" data-link="quotemanager.html#search-quote"><span>Total Quotes:</span><span id="totalQuotes" class="fw-bold">--</span></button></div>
@@ -202,66 +202,76 @@ function fetchAndCount(action, elementId, system = null) {
       const el = document.getElementById(elementId);
       if (!el || data === null) return;
 
+      // ✅ Count low stock alerts
       if (action === "getLowStockAlerts" && Array.isArray(data)) {
-  // update count badge
-  el.textContent = data.length;
+        el.textContent = data.length;
 
-  // render list
-  const list = document.getElementById("lowStockList");
-  list.innerHTML = "";
+        const list = document.getElementById("lowStockList");
+        list.innerHTML = "";
 
-  if (data.length === 0) {
-    list.innerHTML = "<li class='list-group-item bg-black text-info'>✅ All stock levels healthy.</li>";
-    return;
-  }
+        if (data.length === 0) {
+          list.innerHTML = "<li class='list-group-item bg-black text-info'>✅ All stock levels healthy.</li>";
+          return;
+        }
 
-  data.forEach((item, index) => {
-    const li = document.createElement("li");
-    li.className = `list-group-item list-group-item-action d-flex justify-content-between align-items-center text-info low-stock-row ${
-      index % 2 === 0 ? "bg-black" : "bg-black"
-    }`;
-    li.style.cursor = "pointer";
+        data.forEach((item, index) => {
+          const li = document.createElement("li");
+          li.className = `list-group-item list-group-item-action d-flex justify-content-between align-items-center text-info low-stock-row ${
+            index % 2 === 0 ? "bg-black" : "bg-black"
+          }`;
+          li.style.cursor = "pointer";
 
-    li.innerHTML = `
-      <div class="w-90 text-start text-info">${item.matName}</div>
-      <div class="w-10 text-end text-info">${item.onHand}</div>
-    `;
+          li.innerHTML = `
+            <div class="w-90 text-start text-info">${item.matName}</div>
+            <div class="w-10 text-end text-info">${item.onHand}</div>
+          `;
 
-    li.addEventListener("click", () => {
-      if (item.supplierUrl) window.open(item.supplierUrl, "_blank");
-    });
+          li.addEventListener("click", () => {
+            if (item.supplierUrl) window.open(item.supplierUrl, "_blank");
+          });
 
-    list.appendChild(li);
-  });
-} 
-else if (action === "getLeads" && Array.isArray(data)) {
-  const today = new Date().toLocaleDateString();
+          list.appendChild(li);
+        });
 
-  let count = 0;
-  switch (elementId) {
-    case "newLeads":
-      count = data.filter(lead => lead.Status === "New").length;
-      break;
-    case "followupLeads":
-      count = data.filter(lead =>
-        lead.FollowUpDate && formatDateString(lead.FollowUpDate) === today
-      ).length;
-      break;
-    case "pendingLeads":
-      count = data.filter(lead => lead.Status === "Pending").length;
-      break;
-    default:
-      count = data.length;
-  }
+      // ✅ Count lead statuses
+      } else if (action === "getLeads" && Array.isArray(data)) {
+        const today = new Date().toLocaleDateString();
+        let count = 0;
 
-  el.textContent = count;
+        switch (elementId) {
+          case "newLeads":
+            count = data.filter(lead => lead.Status === "New").length;
+            break;
+          case "followupLeads":
+            count = data.filter(lead =>
+              lead.FollowUpDate && formatDateString(lead.FollowUpDate) === today
+            ).length;
+            break;
+          case "pendingLeads":
+            count = data.filter(lead => lead.Status === "Pending").length;
+            break;
+          default:
+            count = data.length;
+        }
 
-  const tbody = document.querySelector("#leadsTable tbody");
-  if (tbody) displayLeads(data);
-} else {
-  el.textContent = Array.isArray(data) ? data.length : 0;
-}
+        el.textContent = count;
 
+        const tbody = document.querySelector("#leadsTable tbody");
+        if (tbody) displayLeads(data);
+
+      // ✅ Count only unpaid invoices
+      } else if (action === "getInvDataForSearch" && elementId === "unpaidInvoiceCount") {
+        const unpaidCount = data.filter(row => {
+          const balance = parseFloat(row[11]);
+          return !isNaN(balance) && balance > 0;
+        }).length;
+
+        el.textContent = unpaidCount;
+
+      // ✅ Default: count all rows
+      } else {
+        el.textContent = Array.isArray(data) ? data.length : 0;
+      }
     })
     .catch(error => {
       console.error(`❌ Error loading ${action}:`, error);
@@ -278,6 +288,7 @@ document.addEventListener("DOMContentLoaded", () => {
     fetchAndCount("getProdDataForSearch", "totalProducts"),
     fetchAndCount("getMatDataForSearch", "totalMaterials"),
     // fetchAndCount("getInvDataForSearch", "totalInvoices"),
+    fetchAndCount("getInvDataForSearch", "unpaidInvoiceCount"),
     fetchAndCount("getQuoteDataForSearch", "totalQuotes"),
     fetchAndCount("getMatDataForSearch", "totalProducts"),
     fetchAndCount("getLeads", "newLeads", "leads"),

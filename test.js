@@ -11,11 +11,7 @@ async function setMatDataForSearch() {
   }
 }
 
-console.log("Test call:", typeof setMatDataForSearch);
-
 document.addEventListener("DOMContentLoaded", async () => {
-  console.log("📦 MaterialManager module loaded");
-
   const container = document.getElementById("materialRows");
   const searchInput = document.getElementById("searchInput");
   const resultsBox = document.getElementById("searchResults");
@@ -34,6 +30,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const target = e.target.getAttribute("data-bs-target");
 
     if (target === "#search-material") {
+      console.log("📦 Switching to Search Material Tab");
       if (searchInput) searchInput.value = "";
       if (resultsBox) resultsBox.innerHTML = "";
       const counter = document.getElementById("searchCounter");
@@ -42,6 +39,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     if (target === "#add-material") {
+      console.log("📦 Switching to Add Material Tab");
       const priceInput = document.getElementById("add-matPrice");
       const qtyInput = document.getElementById("add-unitQty");
       const unitPriceInput = document.getElementById("add-unitPrice");
@@ -58,7 +56,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     if (target === "#add-inventory") {
-      console.log("📦 Switching to Add Inventory tab");
+      console.log("📦 Switching to Add Inventory Tab");
 
       initializeRows(); // generates the .materials row
 
