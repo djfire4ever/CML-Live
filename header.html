@@ -1,38 +1,38 @@
-  <!-- Navigation Tabs -->
-  <nav class="navbar navbar-expand-md bg-black navbar-dark fixed-top">
-    <div class="container-fluid">
-      <a href="index.html" class="navbar-brand text-info">
-        <img src="https://drive.google.com/thumbnail?id=10PMFJh0Yeoin65J5ub6bkH5RY0wSEdf2&sz=w25" alt="Logo"> CraftyMamaaLab
-      </a>
-      <button id="navToggler" class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navmenu" aria-controls="navmenu" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navmenu">
-        <ul class="navbar-nav ms-auto">
-          <li class="nav-item"><a href="#" class="nav-link text-info" onclick="loadPage('dashboard.html', this)">Dashboard</a></li>
-          <li class="nav-item"><a href="#" class="nav-link text-primary" onclick="loadPage('clientmanager.html', this)">Clients</a></li>
-          <li class="nav-item"><a href="#" class="nav-link text-success" onclick="loadPage('invoicemanager.html', this)">Invoice</a></li>
-          <li class="nav-item"><a href="#" class="nav-link text-info" onclick="loadPage('materialmanager.html', this)">Materials</a></li>
-          <li class="nav-item"><a href="#" class="nav-link text-danger" onclick="loadPage('productmanager.html', this)">Products</a></li>
-          <li class="nav-item"><a href="#" class="nav-link text-warning" onclick="loadPage('quotemanager.html', this)">Quotes</a></li>
-          <li class="nav-item"><a href="#" class="nav-link text-info" onclick="loadPage('leads.html', this)">Leads</a></li>
-          <!-- <li class="nav-item"><a href="#" class="nav-link text-warning" onclick="loadPage('test.html', this)">Test</a></li> -->
-          <!-- <li class="nav-item"><a href="#" class="nav-link text-info" onclick="loadPage('settings.html', this)">⚙️</a></li> -->
-          <li class="nav-item">
-            <button id="leadNotifBtn"
-                    class="btn btn-link position-relative notif-btn"
-                    title="No new leads"
-                    onclick="openLeadsPage()"
-                    data-bs-toggle="tooltip"> 
-              <i class="bi bi-bell fs-4"></i>
-              <span id="leadNotifDot"
-                    class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle d-none"></span>
-              <span id="leadNotifBadge"
-                    class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none"></span>
-            </button>
-          </li>
-                </ul>
-      </div>
+<!-- Navigation Tabs -->
+<nav class="navbar navbar-expand-md bg-black navbar-dark fixed-top">
+  <div class="container-fluid">
+    <a href="index.html" class="navbar-brand text-info">
+      <img src="https://drive.google.com/thumbnail?id=10PMFJh0Yeoin65J5ub6bkH5RY0wSEdf2&sz=w25" alt="Logo"> CraftyMamaaLab
+    </a>
+    <button id="navToggler" class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navmenu" aria-controls="navmenu" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navmenu">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item"><a href="#" class="nav-link text-info" onclick="loadPage('dashboard.html', this)">Dashboard</a></li>
+        <li class="nav-item"><a href="#" class="nav-link text-primary" onclick="loadPage('clientmanager.html', this)">Clients</a></li>
+        <li class="nav-item"><a href="#" class="nav-link text-success" onclick="loadPage('invoicemanager.html', this)">Invoice</a></li>
+        <li class="nav-item"><a href="#" class="nav-link text-info" onclick="loadPage('materialmanager.html', this)">Materials</a></li>
+        <li class="nav-item"><a href="#" class="nav-link text-danger" onclick="loadPage('productmanager.html', this)">Products</a></li>
+        <li class="nav-item"><a href="#" class="nav-link text-warning" onclick="loadPage('quotemanager.html', this)">Quotes</a></li>
+        <li class="nav-item"><a href="#" class="nav-link text-info" onclick="loadPage('leads.html', this)">Leads</a></li>
+        <!-- <li class="nav-item"><a href="#" class="nav-link text-warning" onclick="loadPage('test.html', this)">Test</a></li> -->
+        <!-- <li class="nav-item"><a href="#" class="nav-link text-info" onclick="loadPage('settings.html', this)">⚙️</a></li> -->
+        <li class="nav-item">
+          <button id="leadNotifBtn"
+                  class="btn btn-link position-relative notif-btn"
+                  title="No new leads"
+                  onclick="openLeadsPage()"
+                  data-bs-toggle="tooltip"> 
+            <i class="bi bi-bell fs-4"></i>
+            <span id="leadNotifDot"
+                  class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle d-none"></span>
+            <span id="leadNotifBadge"
+                  class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none"></span>
+          </button>
+        </li>
+      </ul>
     </div>
-  </nav>
+  </div>
+</nav>
   
