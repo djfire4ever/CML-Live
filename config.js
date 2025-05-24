@@ -78,135 +78,148 @@ function toggleLoader() {
   }
 }
 
-  function loadStylesheets() {
-    const head = document.head;
+function loadStylesheets() {
+  const head = document.head;
 
-    // Bootstrap 5.3.5 CSS
-    const bootstrapCSS = document.createElement('link');
-    bootstrapCSS.rel = 'stylesheet';
-    bootstrapCSS.href = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css';
-    head.appendChild(bootstrapCSS);
+  // Bootstrap 5.3.6 CSS
+  const bootstrapCSS = document.createElement('link');
+  bootstrapCSS.rel = 'stylesheet';
+  bootstrapCSS.href = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css';
+  head.appendChild(bootstrapCSS);
 
-    // Bootstrap Icons
-    const bootstrapIcons = document.createElement('link');
-    bootstrapIcons.rel = 'stylesheet';
-    bootstrapIcons.href = 'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css';
-    head.appendChild(bootstrapIcons);
+  // Bootstrap Icons
+  const bootstrapIcons = document.createElement('link');
+  bootstrapIcons.rel = 'stylesheet';
+  bootstrapIcons.href = 'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css';
+  head.appendChild(bootstrapIcons);
 
-    // Font Awesome 6.5
-    const fontAwesome = document.createElement('link');
-    fontAwesome.rel = 'stylesheet';
-    fontAwesome.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css';
-    head.appendChild(fontAwesome);
+  // Font Awesome 6.7.2
+  const fontAwesome = document.createElement('link');
+  fontAwesome.rel = 'stylesheet';
+  fontAwesome.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css';
+  head.appendChild(fontAwesome);
 
-    // Base Custom Styles
-    const customCSS = document.createElement('link');
-    customCSS.rel = 'stylesheet';
-    customCSS.href = 'style.css';
-    head.appendChild(customCSS);
+  // Base Custom Styles
+  const customCSS = document.createElement('link');
+  customCSS.rel = 'stylesheet';
+  customCSS.href = 'style.css';
+  head.appendChild(customCSS);
+}
 
-    // Theme/Settings Styles (load last so it overrides other styles)
-    // const settingsCSS = document.createElement('link');
-    // settingsCSS.rel = 'stylesheet';
-    // settingsCSS.href = 'settings.css';
-    // head.appendChild(settingsCSS);
-  }
+function loadScripts() {
+  const body = document.body;
 
-  function loadScripts() {
-    const body = document.body;
+  // Bootstrap 5.3.6 JS Bundle
+  const bootstrapScript = document.createElement('script');
+  bootstrapScript.src = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js';
+  bootstrapScript.defer = true;
+  body.appendChild(bootstrapScript);
 
-    // Bootstrap 5.3.5 JS Bundle
-    const bootstrapScript = document.createElement('script');
-    bootstrapScript.src = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js';
-    bootstrapScript.defer = true;
-    body.appendChild(bootstrapScript);
+  // FullCalendar Core + all FREE plugins
+  const fullCalendarScripts = [
+    'https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.17/index.global.min.js',
+    'https://cdn.jsdelivr.net/npm/@fullcalendar/daygrid@6.1.17/index.global.min.js',
+    'https://cdn.jsdelivr.net/npm/@fullcalendar/timegrid@6.1.17/index.global.min.js',
+    'https://cdn.jsdelivr.net/npm/@fullcalendar/interaction@6.1.17/index.global.min.js',
+    'https://cdn.jsdelivr.net/npm/@fullcalendar/list@6.1.17/index.global.min.js',
+    'https://cdn.jsdelivr.net/npm/@fullcalendar/google-calendar@6.1.17/index.global.min.js'
+  ];
 
-    bootstrapScript.onload = () => {
-      // Bootstrap is ready, run any dependent code here
-    };
-  }
-
-  // ✅ Only run once the DOM is fully loaded
-  document.addEventListener('DOMContentLoaded', () => {
-    loadStylesheets();
-    loadScripts();
+  fullCalendarScripts.forEach(src => {
+    const script = document.createElement('script');
+    script.src = src;
+    script.defer = true;
+    body.appendChild(script);
   });
 
-  // ✅ Load Dropdowns
-  document.addEventListener("DOMContentLoaded", () => {
-    if (
-      document.getElementById("product-type-options") ||
-      document.getElementById("parts-options") ||
-      document.getElementById("phone-options") ||
-      document.getElementById("unit-type-options") ||
-      document.getElementById("payment-method-options") ||
-      document.getElementById("product-options")
-    ) {
-      loadDropdowns();
-    }
-  });
+  bootstrapScript.onload = () => {
+    console.log('✅ Scripts loaded');
+    // Page-specific logic should run after scripts finish loading
+  };
+}
 
-  function loadDropdowns() {
-    fetch(`${scriptURL}?action=dropdownLists`)
-      .then(response => {
-        if (!response.ok) throw new Error(`Server returned ${response.status}`);
-        return response.json();
-      })
-      .then(data => {
-        const dropdowns = {
-          productTypeDropdown: "product-type-options",
-          partsDropdown: "parts-options",
-          phoneDropdown: "phone-options",
-          unitTypeDropdown: "unit-type-options",
-          paymentMethodDropdown: "payment-method-options",
-          productDropdown: "product-options"
-        };
+// To be called on DOMContentLoaded:
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('✅ DOM Ready: loading styles and scripts...');
+  loadStylesheets();
+  loadScripts();
+});
+
+// ✅ Load Dropdowns
+document.addEventListener("DOMContentLoaded", () => {
+  if (
+    document.getElementById("product-type-options") ||
+    document.getElementById("parts-options") ||
+    document.getElementById("phone-options") ||
+    document.getElementById("unit-type-options") ||
+    document.getElementById("payment-method-options") ||
+    document.getElementById("product-options")
+  ) {
+    loadDropdowns();
+  }
+});
+
+function loadDropdowns() {
+  fetch(`${scriptURL}?action=dropdownLists`)
+    .then(response => {
+      if (!response.ok) throw new Error(`Server returned ${response.status}`);
+      return response.json();
+    })
+    .then(data => {
+      const dropdowns = {
+        productTypeDropdown: "product-type-options",
+        partsDropdown: "parts-options",
+        phoneDropdown: "phone-options",
+        unitTypeDropdown: "unit-type-options",
+        paymentMethodDropdown: "payment-method-options",
+        productDropdown: "product-options"
+      };
   
-        for (const [key, selectId] of Object.entries(dropdowns)) {
-          const selectElement = document.getElementById(selectId);
-          if (selectElement) {
-            selectElement.innerHTML = ""; // Clear existing options
+      for (const [key, selectId] of Object.entries(dropdowns)) {
+        const selectElement = document.getElementById(selectId);
+        if (selectElement) {
+          selectElement.innerHTML = ""; // Clear existing options
+
+          // Add a default "Select" option
+          const defaultOption = document.createElement("option");
+          defaultOption.value = "";
+          defaultOption.textContent = "Select an option";
+          selectElement.appendChild(defaultOption);
   
-            // Add a default "Select" option
-            const defaultOption = document.createElement("option");
-            defaultOption.value = "";
-            defaultOption.textContent = "Select an option";
-            selectElement.appendChild(defaultOption);
+          let values = [];
+          if (key === "productTypeDropdown") values = data.productTypes || [];
+          else if (key === "partsDropdown") values = data.parts || [];
+          else if (key === "phoneDropdown") values = data.phoneList || [];
+          else if (key === "unitTypeDropdown") values = data.unitTypes || [];
+          else if (key === "paymentMethodDropdown") values = data.paymentMethods || [];
+          else if (key === "productDropdown") values = data.products || [];
   
-            let values = [];
-            if (key === "productTypeDropdown") values = data.productTypes || [];
-            else if (key === "partsDropdown") values = data.parts || [];
-            else if (key === "phoneDropdown") values = data.phoneList || [];
-            else if (key === "unitTypeDropdown") values = data.unitTypes || [];
-            else if (key === "paymentMethodDropdown") values = data.paymentMethods || [];
-            else if (key === "productDropdown") values = data.products || [];
-  
-            // Populate the dropdown with options
-            values.forEach(val => {
-              const option = document.createElement("option");
-              option.value = val;
-              option.textContent = val;
-              selectElement.appendChild(option);
-            });
-          }
+          // Populate the dropdown with options
+          values.forEach(val => {
+            const option = document.createElement("option");
+            option.value = val;
+            option.textContent = val;
+            selectElement.appendChild(option);
+          });
         }
+      }
   
-        console.log("✅ Dropdowns loaded successfully");
-      })
-      .catch(error => {
-        // Only log the error if it's not caused by user navigating away
-        if (error.name !== "AbortError") {
-          console.warn("⚠️ Dropdown fetch skipped or failed silently:", error.message);
-        }
-      });
+      console.log("✅ Dropdowns loaded successfully");
+    })
+    .catch(error => {
+      // Only log the error if it's not caused by user navigating away
+      if (error.name !== "AbortError") {
+        console.warn("⚠️ Dropdown fetch skipped or failed silently:", error.message);
+      }
+    });
   }
 
-  window.addEventListener('DOMContentLoaded', () => {
-    const input = document.getElementById('searchInput');
-    if (input && document.activeElement !== input) {
-      input.focus();
-    }
-  });
+window.addEventListener('DOMContentLoaded', () => {
+  const input = document.getElementById('searchInput');
+  if (input && document.activeElement !== input) {
+    input.focus();
+  }
+});
 
 document.addEventListener("keydown", function (e) {
   const isEnter = e.key === "Enter";
