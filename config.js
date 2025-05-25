@@ -109,13 +109,17 @@ function loadStylesheets() {
 function loadScripts() {
   const body = document.body;
 
-  // Bootstrap 5.3.6 JS Bundle
+  // ✅ Prevent re-loading
+  if (window.fullCalendarScriptsLoaded) return;
+  window.fullCalendarScriptsLoaded = true;
+
+  // Bootstrap
   const bootstrapScript = document.createElement('script');
   bootstrapScript.src = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js';
   bootstrapScript.defer = true;
   body.appendChild(bootstrapScript);
 
-  // FullCalendar Core + all FREE plugins
+  // FullCalendar
   const fullCalendarScripts = [
     'https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.17/index.global.min.js',
     'https://cdn.jsdelivr.net/npm/@fullcalendar/daygrid@6.1.17/index.global.min.js',
@@ -125,16 +129,24 @@ function loadScripts() {
     'https://cdn.jsdelivr.net/npm/@fullcalendar/google-calendar@6.1.17/index.global.min.js'
   ];
 
+  let loadedCount = 0;
+
   fullCalendarScripts.forEach(src => {
     const script = document.createElement('script');
     script.src = src;
     script.defer = true;
+    script.onload = () => {
+      loadedCount++;
+      if (loadedCount === fullCalendarScripts.length) {
+        window.dispatchEvent(new Event('FullCalendarLoaded'));
+        console.log('✅ FullCalendar scripts fully loaded');
+      }
+    };
     body.appendChild(script);
   });
 
   bootstrapScript.onload = () => {
     console.log('✅ Scripts loaded');
-    // Page-specific logic should run after scripts finish loading
   };
 }
 
@@ -233,6 +245,52 @@ document.addEventListener("keydown", function (e) {
     e.preventDefault();
   }
 });
+
+// ✅ Calendar init waits for FullCalendar to load
+// function initCalendarIfPresent() {
+//   const calendarEl = document.getElementById("calendar");
+//   if (!calendarEl) return; // Exit if calendar isn't on this page
+
+//   function waitForFullCalendar(callback) {
+//     if (window.FullCalendar && window.FullCalendar.Calendar) {
+//       callback();
+//     } else {
+//       setTimeout(() => waitForFullCalendar(callback), 50);
+//     }
+//   }
+
+//   waitForFullCalendar(() => {
+//     const {
+//       Calendar,
+//       dayGridPlugin,
+//       timeGridPlugin,
+//       listPlugin,
+//       interactionPlugin,
+//     } = window.FullCalendar;
+
+//     const calendar = new Calendar(calendarEl, {
+//       plugins: [dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin],
+//       initialView: "dayGridMonth",
+//       headerToolbar: {
+//         left: "prev,next today",
+//         center: "title",
+//         right: "dayGridMonth,timeGridWeek,timeGridDay,listWeek",
+//       },
+//       events: [], // or fetch from backend
+//       editable: true,
+//       selectable: true,
+//     });
+
+//     calendar.render();
+//     console.log("✅ Calendar rendered");
+//   });
+// }
+
+// Attach after DOM ready
+// document.addEventListener("DOMContentLoaded", initCalendarIfPresent);
+
+
+
 
   // function applyThemeFromPage() {
   //   const theme = document.body.dataset.theme; // e.g., "theme-dark"

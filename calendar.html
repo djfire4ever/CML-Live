@@ -4,8 +4,20 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>📅 FullCalendar Feature Showcase</title>
+
+  <!-- Mocha CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mocha@10.2.0/mocha.min.css">
+
+  <!-- Mocha & Chai Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/mocha@10.2.0/mocha.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chai@4.3.7/chai.js"></script>
+
   <script src="config.js" defer></script>
 </head>
+
+<!-- ✅ Toast Container -->
+<div id="toastContainer" class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1080;"></div>
+
 <body class="bg-light">
   <div class="container py-4">
     <h1 class="text-center mb-4">📅 FullCalendar Demo</h1>
@@ -16,25 +28,77 @@
     </div>
   </div>
 
+<!-- <button class="btn btn-primary" onclick="loginWithGoogle()">Sign in with Google</button> -->
+
 <!-- 📌 Add/Edit Event Modal -->
 <div class="modal fade" id="addEventModal" tabindex="-1" aria-labelledby="addEventLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content shadow rounded-4">
       <div class="modal-header">
         <h5 class="modal-title" id="addEventLabel">Event Details</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
+
       <div class="modal-body">
-        <form id="eventForm">
-          <div class="mb-3">
-            <label for="eventTitle" class="form-label">Event Title</label>
+        <form id="eventForm" class="row g-3">
+          <input type="hidden" id="eventID">
+
+          <!-- Event Title -->
+          <div class="col-md-8">
+            <label for="eventTitle" class="form-label">Title</label>
             <input type="text" class="form-control" id="eventTitle" required>
           </div>
-          <input type="hidden" id="eventStart">
-          <input type="hidden" id="eventEnd">
-          <input type="hidden" id="eventAllDay">
+
+          <!-- All Day -->
+          <div class="col-md-4 d-flex align-items-end">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="eventAllDay">
+              <label class="form-check-label" for="eventAllDay">All Day</label>
+            </div>
+          </div>
+
+          <!-- Start Date/Time -->
+          <div class="col-md-6">
+            <label for="eventStart" class="form-label">Start</label>
+            <input type="datetime-local" class="form-control" id="eventStart">
+          </div>
+
+          <!-- End Date/Time -->
+          <div class="col-md-6">
+            <label for="eventEnd" class="form-label">End</label>
+            <input type="datetime-local" class="form-control" id="eventEnd">
+          </div>
+
+          <!-- Status -->
+          <div class="col-md-4">
+            <label for="eventStatus" class="form-label">Status</label>
+            <select class="form-select" id="eventStatus">
+              <option value="scheduled">Scheduled</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
+
+          <!-- Category -->
+          <div class="col-md-4">
+            <label for="eventCategory" class="form-label">Category</label>
+            <input type="text" class="form-control" id="eventCategory" placeholder="e.g. Meeting, Delivery">
+          </div>
+
+          <!-- Color -->
+          <div class="col-md-4">
+            <label for="eventColor" class="form-label">Color</label>
+            <input type="color" class="form-control form-control-color" id="eventColor" value="#007bff">
+          </div>
+
+          <!-- Description -->
+          <div class="col-12">
+            <label for="eventDescription" class="form-label">Description</label>
+            <textarea class="form-control" id="eventDescription" rows="3" placeholder="Enter details..."></textarea>
+          </div>
         </form>
       </div>
+
       <div class="modal-footer d-flex justify-content-between">
         <button type="button" class="btn btn-outline-danger" id="deleteEventBtn" style="display: none;">Delete</button>
         <button type="submit" class="btn btn-primary" form="eventForm">Save</button>
@@ -43,138 +107,239 @@
   </div>
 </div>
 
+<script src="calendar.js"></script>
 <script>
-  document.addEventListener('DOMContentLoaded', () => {
-    console.log('✅ DOM Ready: checking FullCalendar...');
+// document.addEventListener('DOMContentLoaded', () => {
+//   console.log('✅ DOM Ready: initializing FullCalendar...');
 
-    setTimeout(() => {
-      const { Calendar } = window.FullCalendar;
+//   setTimeout(() => {
+//     const { Calendar } = window.FullCalendar;
+//     const dayGridPlugin = window.FullCalendar.DayGrid?.default || window.FullCalendar.DayGrid;
+//     const timeGridPlugin = window.FullCalendar.TimeGrid?.default || window.FullCalendar.TimeGrid;
+//     const listPlugin = window.FullCalendar.List?.default || window.FullCalendar.List;
+//     const interactionPlugin = window.FullCalendar.Interaction?.default || window.FullCalendar.Interaction;
 
-      const dayGridPlugin = window.FullCalendar.DayGrid?.default || window.FullCalendar.DayGrid;
-      const timeGridPlugin = window.FullCalendar.TimeGrid?.default || window.FullCalendar.TimeGrid;
-      const listPlugin = window.FullCalendar.List?.default || window.FullCalendar.List;
-      const interactionPlugin = window.FullCalendar.Interaction?.default || window.FullCalendar.Interaction;
-      const googleCalendarPlugin = window.FullCalendar.GoogleCalendar?.default || window.FullCalendar.GoogleCalendar;
+//     if (!Calendar || !dayGridPlugin) {
+//       console.error('❌ Required plugins not loaded!');
+//       return;
+//     }
 
-      if (!Calendar || !dayGridPlugin || !googleCalendarPlugin) {
-        console.error('❌ Required plugins not loaded!');
-        return;
-      }
+//     const calendarEl = document.getElementById('calendar');
+//     if (!calendarEl) {
+//       console.error('❌ #calendar element not found!');
+//       return;
+//     }
 
-      const calendarEl = document.getElementById('calendar');
-      if (!calendarEl) {
-        console.error('❌ #calendar element not found!');
-        return;
-      }
+//     const calendar = new Calendar(calendarEl, {
+//       plugins: [dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin],
+//       initialView: 'dayGridMonth',
+//       headerToolbar: {
+//         left: 'prev,next today',
+//         center: 'title',
+//         right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
+//       },
+//       events: (fetchInfo, successCallback, failureCallback) => {
+//         fetch(scriptURL, {
+//           method: 'POST',
+//           headers: { 'Content-Type': 'application/json' },
+//           body: JSON.stringify({
+//             system: 'calendar',
+//             action: 'getEvents',
+//             start: fetchInfo.startStr,
+//             end: fetchInfo.endStr
+//           })
+//         })
+//         .then(res => res.json())
+//         .then(response => {
+//           if (response.success && Array.isArray(response.data)) {
+//           const events = response.data.map(ev => ({
+//             id: ev.calID,
+//             title: ev.title,
+//             start: ev.start,
+//             end: ev.end,
+//             allDay: ev.allDay === true || ev.allDay === 'TRUE' || (!ev.start.includes('T')),
+//             color: ev.color || '',
+//             extendedProps: {
+//               description: ev.description || '',
+//               status: ev.status || '',
+//               category: ev.category || ''
+//             }
+//           }));
+//             successCallback(events);
+//           } else {
+//             failureCallback(response.error || 'Failed to fetch events.');
+//           }
+//         })
+//         .catch(err => failureCallback(err));
+//       },
+//       selectable: true,
+//       editable: true,
 
-      const calendar = new Calendar(calendarEl, {
-        plugins: [dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin, googleCalendarPlugin],
-        initialView: 'dayGridMonth',
-        headerToolbar: {
-          left: 'prev,next today',
-          center: 'title',
-          right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
-        },
-        googleCalendarApiKey: 'AIzaSyDMCPotxQCPUqoUbKO-oKaCCj6i4ra56gI',
-        events: {
-          googleCalendarId: '31e2b4afe118f9629a2acd596385c6e00066ba8c78e701097783fa6a6f2cc4af@group.calendar.google.com'
-        },
-        selectable: true,
-        editable: true,
+//       select(info) {
+//         const form = document.getElementById('eventForm');
+//         form.reset();
+//         form.dataset.editing = 'false';
+//         form.dataset.eventId = '';
 
-        select(info) {
-          document.getElementById('eventForm').reset();
-          document.getElementById('eventStart').value = info.startStr;
-          document.getElementById('eventEnd').value = info.endStr;
-          document.getElementById('eventAllDay').value = info.allDay;
-          document.getElementById('eventForm').dataset.editing = 'false';
-          document.getElementById('eventForm').dataset.eventId = '';
-          document.getElementById('deleteEventBtn').style.display = 'none';
+//         document.getElementById('eventTitle').value = '';
+//         document.getElementById('eventStart').value = info.startStr;
+//         document.getElementById('eventEnd').value = info.endStr;
+//         document.getElementById('eventAllDay').checked = info.allDay;
 
-          const modal = new bootstrap.Modal(document.getElementById('addEventModal'));
-          modal.show();
-        },
+//         document.getElementById('deleteEventBtn').style.display = 'none';
 
-        eventClick(info) {
-          const event = info.event;
+//         new bootstrap.Modal(document.getElementById('addEventModal')).show();
+//       },
 
-          document.getElementById('eventTitle').value = event.title;
-          document.getElementById('eventStart').value = event.startStr;
-          document.getElementById('eventEnd').value = event.endStr || '';
-          document.getElementById('eventAllDay').value = event.allDay;
+//       eventClick(info) {
+//         const event = info.event;
+//         const form = document.getElementById('eventForm');
 
-          document.getElementById('eventForm').dataset.editing = 'true';
-          document.getElementById('eventForm').dataset.eventId = event.id || event._def.publicId;
-          document.getElementById('deleteEventBtn').style.display = 'inline-block';
+//         form.dataset.editing = 'true';
+//         form.dataset.eventId = event.id;
 
-          const modal = new bootstrap.Modal(document.getElementById('addEventModal'));
-          modal.show();
-        },
+//         document.getElementById('eventTitle').value = event.title;
+//         document.getElementById('eventStart').value = event.startStr;
+//         document.getElementById('eventEnd').value = event.endStr || '';
+//         document.getElementById('eventAllDay').checked = event.allDay;
 
-        eventDrop(info) {
-          console.log(`📦 Moved '${info.event.title}'`);
-        },
+//         document.getElementById('deleteEventBtn').style.display = 'inline-block';
 
-        eventResize(info) {
-          console.log(`🔧 Resized '${info.event.title}'`);
-        }
-      });
+//         new bootstrap.Modal(document.getElementById('addEventModal')).show();
+//       },
 
-      calendar.render();
+//       eventDrop(info) {
+//         updateEvent(info.event);
+//       },
 
-      document.getElementById('eventForm').addEventListener('submit', function (e) {
-        e.preventDefault();
+//       eventResize(info) {
+//         updateEvent(info.event);
+//       }
+//     });
 
-        const title = document.getElementById('eventTitle').value.trim();
-        const start = document.getElementById('eventStart').value;
-        const end = document.getElementById('eventEnd').value;
-        const allDay = document.getElementById('eventAllDay').value === 'true';
+//     calendar.render();
 
-        const isEditing = this.dataset.editing === 'true';
-        const eventId = this.dataset.eventId;
+//     // Save Event (Create or Update)
+//     document.getElementById('eventForm').addEventListener('submit', e => {
+//       e.preventDefault();
 
-        if (title) {
-          if (isEditing && eventId) {
-            const existingEvent = calendar.getEventById(eventId);
-            if (existingEvent) {
-              existingEvent.setProp('title', title);
-              existingEvent.setStart(start);
-              existingEvent.setEnd(end || null);
-              existingEvent.setAllDay(allDay);
-            }
-          } else {
-            const newId = 'ev-' + Date.now();
-            calendar.addEvent({
-              id: newId,
-              title,
-              start,
-              end,
-              allDay
-            });
-          }
-        }
+//       const form = e.target;
+//       const title = document.getElementById('eventTitle').value.trim();
+//       const start = document.getElementById('eventStart').value;
+//       const end = document.getElementById('eventEnd').value;
+//       const allDay = document.getElementById('eventAllDay').checked;
+//       const isEditing = form.dataset.editing === 'true';
+//       const eventId = form.dataset.eventId;
 
-        const modal = bootstrap.Modal.getInstance(document.getElementById('addEventModal'));
-        modal.hide();
-        calendar.unselect();
-        this.reset();
-        this.dataset.editing = 'false';
-        this.dataset.eventId = '';
-      });
+//       if (!title) return alert('Event title required.');
 
-      document.getElementById('deleteEventBtn').addEventListener('click', () => {
-        const eventId = document.getElementById('eventForm').dataset.eventId;
-        const event = calendar.getEventById(eventId);
-        if (event) event.remove();
+//       const payload = {
+//         system: 'calendar',
+//         action: isEditing ? 'editEvent' : 'addEvent',
+//         eventInfo: {  // <--- renamed from "data"
+//           ...(isEditing && { calID: eventId }),
+//           title,
+//           start,
+//           end,
+//           allDay,
+//           status: 'scheduled',
+//           category: '',
+//           description: '',
+//           color: ''
+//         }
+//       };
+      
+//       console.log("📤 Sending event payload:", payload);
 
-        const modal = bootstrap.Modal.getInstance(document.getElementById('addEventModal'));
-        modal.hide();
-        document.getElementById('eventForm').reset();
-      });
+//       fetch(scriptURL, {
+//         method: 'POST',
+//         headers: { 'Content-Type': 'application/json' },
+//         body: JSON.stringify(payload)
+//       })
+//       .then(res => res.json())
+//       .then(response => {
+//         if (response.success) {
+//           calendar.refetchEvents();
+//           bootstrap.Modal.getInstance(document.getElementById('addEventModal')).hide();
+//           form.reset();
+//           form.dataset.editing = 'false';
+//           form.dataset.eventId = '';
+//         } else {
+//           alert('Error: ' + (response.error || 'Could not save event.'));
+//         }
+//       })
+//       .catch(err => {
+//         console.error(err);
+//         showToast("⚠️ " + (err.message || "Unexpected error while saving event"), "danger");
+//       });
+//     });
 
-      console.log('✅ Calendar rendered with all plugins and custom modal!');
-    }, 300);
-  });
+//     // Delete Event
+//     document.getElementById('deleteEventBtn').addEventListener('click', () => {
+//       const form = document.getElementById('eventForm');
+//       const eventId = form.dataset.eventId;
+//       if (!eventId) return alert('No event selected to delete.');
+
+//       fetch(scriptURL, {
+//         method: 'POST',
+//         headers: { 'Content-Type': 'application/json' },
+//         body: JSON.stringify({
+//           system: 'calendar',
+//           action: 'deleteEvent',
+//           eventID: eventId  // <--- not wrapped in "data"
+//         }) 
+//     })
+//       .then(res => res.json())
+//       .then(response => {
+//         if (response.success) {
+//           calendar.refetchEvents();
+//           bootstrap.Modal.getInstance(document.getElementById('addEventModal')).hide();
+//           form.reset();
+//           form.dataset.editing = 'false';
+//           form.dataset.eventId = '';
+//         } else {
+//           alert('Error: ' + (response.error || 'Could not delete event.'));
+//         }
+//       })
+//       .catch(err => {
+//         console.error(err);
+//         showToast("⚠️ " + (err.message || "Unexpected error while saving event"), "danger");
+//       });
+//     });
+
+//     // Helper function for drop/resize updates
+//     function updateEvent(event) {
+//       fetch(scriptURL, {
+//         method: 'POST',
+//         headers: { 'Content-Type': 'application/json' },
+//         body: JSON.stringify({
+//           system: 'calendar',
+//           action: 'editEvent',
+//           data: {
+//             calID: event.id,
+//             title: event.title,
+//             start: event.startStr,
+//             end: event.endStr || event.startStr,
+//             allDay: event.allDay
+//           }
+//         })
+//       })
+//       .then(res => res.json())
+//       .then(response => {
+//         if (!response.success) {
+//           alert('Failed to update event.');
+//         }
+//       })
+//       .catch(err => {
+//         console.error(err);
+//         showToast("⚠️ " + (err.message || "Unexpected error while saving event"), "danger");
+//       });
+//     }
+
+//     console.log('✅ Calendar ready with backend integration.');
+//   }, 300);
+// });
+
 </script>
 
 
