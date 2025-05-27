@@ -1,182 +1,249 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>📅 FullCalendar Feature Showcase</title>
-  <script src="config.js" defer></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Material Manager</title>
+  <style>
+  </style>
 </head>
-<body class="bg-light">
-  <div class="container py-4">
-    <h1 class="text-center mb-4">📅 FullCalendar Demo</h1>
-    <div class="card shadow rounded-4">
-      <div class="card-body p-4">
-        <div id="calendar"></div>
-      </div>
-    </div>
-  </div>
+<body class="theme-dark">
+<div class="watermark"></div>
+<!-- Notification Toasts -->
 
-<!-- 📌 Add/Edit Event Modal -->
-<div class="modal fade" id="addEventModal" tabindex="-1" aria-labelledby="addEventLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content shadow rounded-4">
-      <div class="modal-header">
-        <h5 class="modal-title" id="addEventLabel">Event Details</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <form id="eventForm">
-          <div class="mb-3">
-            <label for="eventTitle" class="form-label">Event Title</label>
-            <input type="text" class="form-control" id="eventTitle" required>
-          </div>
-          <input type="hidden" id="eventStart">
-          <input type="hidden" id="eventEnd">
-          <input type="hidden" id="eventAllDay">
-        </form>
-      </div>
-      <div class="modal-footer d-flex justify-content-between">
-        <button type="button" class="btn btn-outline-danger" id="deleteEventBtn" style="display: none;">Delete</button>
-        <button type="submit" class="btn btn-primary" form="eventForm">Save</button>
-      </div>
-    </div>
+<div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3"></div>
+
+<!-- Loader -->
+<div id="loadingOverlay" class="d-none">
+  <div class="text-center text-info">
+      <div class="spinner-border text-info" role="status"></div>
+      <p class="mt-2">Loading... Please wait...</p>
   </div>
 </div>
 
+<!-- Material Management Section -->
+<section class="text-center text-sm-start">
+  <div class="container">
+    <h2 class="text-center mt-2">Materials Management</h2>
+
+<!-- Navigation Tabs -->
+<ul class="nav nav-tabs" id="materialTabs">
+  <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#search-material">🔍 Search Material</button></li>
+  <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#add-material">➕ Add Material</button></li>
+  <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#add-inventory">➕ Add Inventory</button></li>
+  <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#edit-material" style="display:none;">✏️ Edit Material</button></li> <!-- Hidden tab -->
+</ul>
+
+<!-- Search Template -->
+<template id="rowTemplate">
+  <tr class="result-box search-result-row" style="cursor: pointer;">
+    <th class="matID" scope="row"></th>
+    <th class="matName"></th>
+    <th class="matPrice"></th>
+    <th class="supplier"></th>
+    <th class="text-center">
+      <button type="button" class="btn btn-dark edit-button btn-sm d-none">Edit</button> <!-- hidden now -->
+    </th>
+    <th class="text-center">
+      <div class="btn-group" role="group">
+        <button type="button" class="btn btn-danger delete-button btn-sm d-none">Confirm</button>
+        <button type="button" class="btn btn-dark btn-sm before-delete-button" data-button-state="delete">Delete</button>
+      </div>
+    </th>
+  </tr>
+</template>
+
+<!-- Tab Content -->
+<div class="tab-content">
+      
+<!-- 🔍 Search Materials -->
+<div class="tab-pane fade show active" id="search-material">
+  <div class="input-group">
+    <input type="text" class="form-control" id="searchInput" placeholder="🔍 search...">
+      <div class="input-group-append">
+        <span class="input-group-text" id="searchCounter">🔍</span> 
+      </div>
+  </div>
+  <table class="table table-hover">
+    <thead>
+      <tr>
+        <th>ID#</th>
+        <th>Name</th>
+        <th>Price</th>
+        <th>Supplier</th>
+        <th></th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody id="searchResults">
+    </tbody>
+  </table>
+</div>
+
+<!-- ➕ Add New Material -->
+<div class="tab-pane fade" id="add-material">
+  <form id="addMaterialForm">
+    <div class="container">
+      <div class="row g-3">
+        <div class="col-md-2 col-lg-4"><label><b>Name</b></label><input type="text" class="form-control" id="add-matName"></div>
+        <div class="col-md-2 col-lg-2"><label><b>Supplier</b></label><input type="text" class="form-control" id="add-supplier"></div>
+        <div class="col-md-2 col-lg-4"><label><b>Supplier Url</b></label><input type="text" class="form-control" id="add-supplierUrl"></div>
+      </div>
+      <div class="row g-3">
+        <div class="col-md-2 col-lg-2"><label><b>Unit Type</b></label><input type="text" class="form-select" id="add-unitType" list="unit-type-options">
+          <datalist id="unit-type-options"></datalist></div>
+          <div class="col-md-2 col-lg-2"><label><b>Reorder Level</b></label><input type="text" class="form-control" id="add-reorderLevel"></div>
+          <div class="col-md-2 col-lg-2"><label><b>Last Updated</b></label><input type="text" class="form-control" id="add-lastUpdated" readonly></div>
+          <div class="col-md-2 col-lg-2"><label><b>Price</b></label><input type="text" class="form-control" id="add-matPrice"></div>
+        <div class="col-md-2 col-lg-2"><label><b>Unit Qty</b></label><input type="text" class="form-control" id="add-unitQty"></div>
+        <div class="col-md-2 col-lg-2"><label><b>Unit Price</b></label><input type="text" class="form-control" id="add-unitPrice" readonly></div>
+        <div class="col-md-2 col-lg-2"><label><b>On Hand</b></label><input type="text" class="form-control" id="add-onHand"></div>
+      </div>
+      <div class="row g-3 mt-1">
+        <div class="col-sm-2"><button type="submit" class="btn btn-dark" id="add-material-btn">💾 Save</button></div>
+      </div>
+    </div> <!-- container -->
+  </form>
+</div>
+
+<!-- ✏️ Edit Material -->
+<div class="tab-pane fade" id="edit-material">
+  <form id="editMaterialForm">
+    <input type="hidden" id="edit-material-id">
+    <input type="hidden" id="edit-matID">
+    <div class="container">
+      <div class="row g-3">
+        <div class="col-md-2 col-lg-4"><label><b>Name</b></label><input type="text" class="form-control" id="edit-matName"></div>
+        <div class="col-md-2 col-lg-2"><label><b>Supplier</b></label><input type="text" class="form-control" id="edit-supplier"></div>
+        <div class="col-md-2 col-lg-4"><label><b>Supplier Url</b></label>
+          <div class="input-group"><input type="text" class="form-control" id="edit-supplierUrl" placeholder="Enter URL here">
+            <button class="btn btn-dark" type="button" id="openSupplierUrlBtn" title="Open in new tab">🔗</button>
+          </div>
+        </div>
+      </div>
+      <div class="row g-3">
+        <div class="col-md-2 col-lg-2"><label><b>Unit Type</b></label><input type="text" class="form-select" id="edit-unitType" list="unit-type-options">
+          <datalist id="unit-type-options"></datalist>
+        </div>
+        <div class="col-md-2 col-lg-2"><label><b>Price</b></label><input type="text" class="form-control" id="edit-matPrice"></div>
+        <div class="col-md-2 col-lg-2"><label><b>Unit Qty</b></label><input type="text" class="form-control" id="edit-unitQty"></div>
+        <div class="col-md-2 col-lg-2"><label><b>Unit Price</b></label><input type="text" class="form-control" id="edit-unitPrice" readonly></div>
+        <div class="col-md-2 col-lg-2"><label><b>Reorder Level</b></label><input type="text" class="form-control" id="edit-reorderLevel"></div>
+      </div>
+      <div class="row g-3">
+        <div class="col-md-2 col-lg-2"><label><b>On Hand</b></label><input type="text" class="form-control" id="edit-onHand"></div>
+        <div class="col-md-2 col-lg-2"><label><b>Incoming</b></label><input type="text" class="form-control" id="edit-incoming"></div>
+        <!-- <div class="col-md-2 col-lg-2"><label><b>Outgoing</b></label><input type="text" class="form-control" id="edit-outgoing"></div> -->
+        <div class="col-md-2 col-lg-2"><label><b>Last Updated</b></label><input type="text" class="form-control" id="edit-lastUpdated" readonly></div>
+      </div>
+      <div class="row g-3 mt-1">
+        <div class="col-12">
+          <button type="button" class="btn btn-dark" id="save-changes">💾 Save</button>
+          <button type="button" class="btn btn-dark" id="cancel-changes">Cancel</button>
+        </div>
+      </div>
+      <div id="reorderAlert" class="alert alert-danger mt-2 mb-2 d-none">
+        ⚠ Low stock! Time to reorder.
+      </div>
+    </div> <!-- container -->
+  </form>
+</div>
+
+<!-- 🏗️ Add Inventory -->
+<div class="tab-pane fade" id="add-inventory">
+  <form id="addInventoryForm">
+    <div id="materialRows">
+      <!-- 🔁 Template Material Row -->
+      <div class="row g-3 material-row mb-3 border rounded p-3" data-row="1">
+        <input type="hidden" class="inv-matID">
+        <input type="hidden" class="inv-matName">
+        <div class="col-12 text-center mt-2">
+          <h5 class="text">📦 Incoming Delivery</h5>
+        </div>
+        <div class="col-md-4"><label><b>Material</b></label><input type="text" class="form-select inv-material" list="parts-options" placeholder="Select Material">
+          <datalist id="parts-options"></datalist></div>
+        <div class="col-md-2"><label><b>Unit Type</b></label><input type="text" class="form-control inv-unitType" readonly></div>
+        <div class="col-md-2"><label><b>Unit Price</b></label><input type="text" class="form-control inv-unitPrice" readonly></div>
+        <div class="col-md-2"><label><b>Qty On Hand</b></label><input type="text" class="form-control inv-onHand"></div>
+        <div class="col-md-2"><input type="hidden" readonly class="form-control-plaintext inv-incoming"></div>
+        <div class="col-md-4"><label><b>Supplier</b></label><input type="text" class="form-control inv-supplier"></div>
+        <div class="col-md-6"><label><b>Supplier URL</b></label><input type="text" class="form-control inv-supplierUrl"></div>
+        <div class="col-md-2"><label><b>Reorder Level</b></label><input type="text" class="form-control inv-reorderLevel"></div>
+        <div class="col-md-2"><label><b>Last Updated</b></label><input type="text" class="form-control inv-lastUpdated" readonly></div>
+        <div class="col-md-2"><label><b>Package Price</b></label><input type="text" class="form-control inv-matPrice"></div>
+        <div class="col-md-2"><label><b>Package Qty</b></label><input type="text" class="form-control inv-unitQty"></div>
+
+        <!-- Row Control Buttons -->
+        <div class="col-md-6 d-flex align-items-end gap-2">
+          <button type="button" class="btn btn-dark btn-sm add-inventory-btn">➕ Add Material</button>
+          <button type="button" class="remove-material-row btn btn-danger btn-sm" style="display: none;">🗑️ Remove</button>
+        </div>
+      </div>
+    </div>
+
+          <!-- Save Button -->
+          <div class="mt-3 text-start mb-5">
+            <button type="submit" class="btn btn-dark btn-sm" id="save-inventory-btn">💾 Save Inventory</button>
+          </div>
+          <!-- Reorder Alert -->
+          <div id="reorder-alert" class="alert alert-warning d-none mt-3">
+            ⚠️ Stock is below reorder level!
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- <script> -->
+
 <script>
-  document.addEventListener('DOMContentLoaded', () => {
-    console.log('✅ DOM Ready: checking FullCalendar...');
 
-    setTimeout(() => {
-      const { Calendar } = window.FullCalendar;
+// Function to open the URL in a new tab
+function openUrl() {
+  const url = document.getElementById('edit-supplierUrl').value.trim();
+  
+  if (url && !/^https?:\/\//i.test(url)) {
+    // If URL is valid but doesn't start with https://, add it.
+    window.open('https://' + url, '_blank');
+  } else if (url) {
+    // If it's already valid, open it.
+    window.open(url, '_blank');
+  }
+}
 
-      const dayGridPlugin = window.FullCalendar.DayGrid?.default || window.FullCalendar.DayGrid;
-      const timeGridPlugin = window.FullCalendar.TimeGrid?.default || window.FullCalendar.TimeGrid;
-      const listPlugin = window.FullCalendar.List?.default || window.FullCalendar.List;
-      const interactionPlugin = window.FullCalendar.Interaction?.default || window.FullCalendar.Interaction;
-      const googleCalendarPlugin = window.FullCalendar.GoogleCalendar?.default || window.FullCalendar.GoogleCalendar;
+// Attach the function to the button click event
+document.getElementById('openSupplierUrlBtn').addEventListener('click', openUrl);
 
-      if (!Calendar || !dayGridPlugin || !googleCalendarPlugin) {
-        console.error('❌ Required plugins not loaded!');
-        return;
-      }
+function setupDynamicNavigation() {
+  function activateTabFromHash() {
+    var hash = window.location.hash;
+    if (!hash) return;
 
-      const calendarEl = document.getElementById('calendar');
-      if (!calendarEl) {
-        console.error('❌ #calendar element not found!');
-        return;
-      }
+    var targetTabButton = document.querySelector('[data-bs-target="' + hash + '"]');
+    if (targetTabButton) {
+      var tab = new bootstrap.Tab(targetTabButton);
+      tab.show();
+    }
+  }
 
-      const calendar = new Calendar(calendarEl, {
-        plugins: [dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin, googleCalendarPlugin],
-        initialView: 'dayGridMonth',
-        headerToolbar: {
-          left: 'prev,next today',
-          center: 'title',
-          right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
-        },
-        googleCalendarApiKey: 'AIzaSyDMCPotxQCPUqoUbKO-oKaCCj6i4ra56gI',
-        events: {
-          googleCalendarId: '31e2b4afe118f9629a2acd596385c6e00066ba8c78e701097783fa6a6f2cc4af@group.calendar.google.com'
-        },
-        selectable: true,
-        editable: true,
+  // Use window.onload for full page load
+  window.onload = function() {
+    activateTabFromHash();  // Ensures tab switch happens after everything is loaded
+  };
 
-        select(info) {
-          document.getElementById('eventForm').reset();
-          document.getElementById('eventStart').value = info.startStr;
-          document.getElementById('eventEnd').value = info.endStr;
-          document.getElementById('eventAllDay').value = info.allDay;
-          document.getElementById('eventForm').dataset.editing = 'false';
-          document.getElementById('eventForm').dataset.eventId = '';
-          document.getElementById('deleteEventBtn').style.display = 'none';
+  window.addEventListener('hashchange', activateTabFromHash);
+}
 
-          const modal = new bootstrap.Modal(document.getElementById('addEventModal'));
-          modal.show();
-        },
+setupDynamicNavigation();
 
-        eventClick(info) {
-          const event = info.event;
-
-          document.getElementById('eventTitle').value = event.title;
-          document.getElementById('eventStart').value = event.startStr;
-          document.getElementById('eventEnd').value = event.endStr || '';
-          document.getElementById('eventAllDay').value = event.allDay;
-
-          document.getElementById('eventForm').dataset.editing = 'true';
-          document.getElementById('eventForm').dataset.eventId = event.id || event._def.publicId;
-          document.getElementById('deleteEventBtn').style.display = 'inline-block';
-
-          const modal = new bootstrap.Modal(document.getElementById('addEventModal'));
-          modal.show();
-        },
-
-        eventDrop(info) {
-          console.log(`📦 Moved '${info.event.title}'`);
-        },
-
-        eventResize(info) {
-          console.log(`🔧 Resized '${info.event.title}'`);
-        }
-      });
-
-      calendar.render();
-
-      document.getElementById('eventForm').addEventListener('submit', function (e) {
-        e.preventDefault();
-
-        const title = document.getElementById('eventTitle').value.trim();
-        const start = document.getElementById('eventStart').value;
-        const end = document.getElementById('eventEnd').value;
-        const allDay = document.getElementById('eventAllDay').value === 'true';
-
-        const isEditing = this.dataset.editing === 'true';
-        const eventId = this.dataset.eventId;
-
-        if (title) {
-          if (isEditing && eventId) {
-            const existingEvent = calendar.getEventById(eventId);
-            if (existingEvent) {
-              existingEvent.setProp('title', title);
-              existingEvent.setStart(start);
-              existingEvent.setEnd(end || null);
-              existingEvent.setAllDay(allDay);
-            }
-          } else {
-            const newId = 'ev-' + Date.now();
-            calendar.addEvent({
-              id: newId,
-              title,
-              start,
-              end,
-              allDay
-            });
-          }
-        }
-
-        const modal = bootstrap.Modal.getInstance(document.getElementById('addEventModal'));
-        modal.hide();
-        calendar.unselect();
-        this.reset();
-        this.dataset.editing = 'false';
-        this.dataset.eventId = '';
-      });
-
-      document.getElementById('deleteEventBtn').addEventListener('click', () => {
-        const eventId = document.getElementById('eventForm').dataset.eventId;
-        const event = calendar.getEventById(eventId);
-        if (event) event.remove();
-
-        const modal = bootstrap.Modal.getInstance(document.getElementById('addEventModal'));
-        modal.hide();
-        document.getElementById('eventForm').reset();
-      });
-
-      console.log('✅ Calendar rendered with all plugins and custom modal!');
-    }, 300);
-  });
 </script>
+    
+<script src="config.js"></script>
+<script src="test.js"></script>
 
+<!-- </script> -->
 
 </body>
 </html>
+

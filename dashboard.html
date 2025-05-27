@@ -41,8 +41,8 @@
 
 <!-- Simple Loader Overlay -->
 <div id="loadingOverlay" class="d-none">
-  <div class="text-center text-white">
-      <div class="spinner-border text-light" role="status"></div>
+  <div class="text-center text-info">
+      <div class="spinner-border text-info" role="status"></div>
       <p class="mt-2">Loading dashboard data…</p>
   </div>
 </div>
@@ -154,7 +154,7 @@
 
 <!-- Row 2 -->
 <!-- Low-Stock Accordion -->
-<div class="row g-3 mt-1 mb-1">
+<div class="row g-3 mt-1 mb-5">
   <div class="col-md-4 col-lg-4 mt-3 mb-5">
     <div class="accordion fade-in-card" id="lowStockAccordion">
       <div class="accordion-item border-light">
@@ -243,7 +243,7 @@ function fetchAndCount(action, elementId, system = null) {
             break;
           case "followupLeads":
             count = data.filter(lead =>
-              lead.FollowUpDate && formatDateString(lead.FollowUpDate) === today
+              lead.FollowUpDate && formatDateForUser(lead.FollowUpDate) === today
             ).length;
             break;
           case "pendingLeads":
@@ -280,7 +280,7 @@ function fetchAndCount(action, elementId, system = null) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  // toggleLoader(true);
+  toggleLoader(true);
 
   const fetchTasks = [
     fetchAndCount("getDataForSearch", "totalClients"),
@@ -297,7 +297,7 @@ document.addEventListener("DOMContentLoaded", () => {
     ];
 
   Promise.all(fetchTasks).finally(() => {
-    // toggleLoader(false);
+    toggleLoader(false);
   });
 });
 

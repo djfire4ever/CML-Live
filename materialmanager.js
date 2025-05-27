@@ -1,114 +1,147 @@
-// ✅ Initialize Material Tab on Load
+const SELECTORS = {
+  saveChangesBtn: "save-changes",
+  addMaterialForm: "addMaterialForm",
+  editFieldsPrefix: "edit-",
+  addFieldsPrefix: "add-",
+  searchInput: "searchInput",
+  searchResults: "searchResults",
+  searchMaterialTab: '[data-bs-target="#search-material"]',
+  materialRowsContainer: "materialRowsContainer",
+  addMaterialRowBtn: "addMaterialRowBtn"
+};
+const MAX_ROWS = 10;
+
+// ✅ DOMContentLoaded Entry Point
 document.addEventListener("DOMContentLoaded", async () => {
+  const container = document.getElementById("materialRows");
   const searchInput = document.getElementById("searchInput");
   const resultsBox = document.getElementById("searchResults");
+  const searchCounter = document.getElementById("searchCounter");
+  const saveBtn = document.getElementById("save-inventory-btn");
+  const addRowBtn = document.getElementById("addMaterialRowBtn");
 
-  // Preload material data
+  // 🔄 Load material data and dropdowns
   toggleLoader(true);
   await setMatDataForSearch();
+  loadDropdowns();
   toggleLoader(false);
 
-  // Search input event
-  searchInput?.addEventListener("input", search);
-
-  // Reset search tab on activation
-  document.querySelector('[data-bs-target="#search-material"]')
-    ?.addEventListener("shown.bs.tab", () => {
-      if (!searchInput || !resultsBox) return;
-      searchInput.value = "";
-      resultsBox.innerHTML = "";
-      document.getElementById("searchCounter")?.textContent = "";
-      searchInput.focus();
+  // 🔍 SEARCH TAB: Reset input/results when tab shown
+  const searchTab = document.querySelector('[data-bs-target="#search-material"]');
+  if (searchTab) {
+    searchTab.addEventListener("shown.bs.tab", () => {
+      if (searchInput && resultsBox) {
+        searchInput.value = "";
+        resultsBox.innerHTML = "";
+        if (searchCounter) searchCounter.textContent = "";
+        searchInput.focus();
+      }
     });
 
-  // Add tab change logic for Add Material price/qty
-  document.querySelector('[data-bs-target="#add-material"]')
-    ?.addEventListener("shown.bs.tab", () => {
-      document.querySelectorAll("#addForm input.matPrice, #addForm input.unitQty")
-        .forEach(input => {
-          input.addEventListener("change", ({ target }) => {
-            const form = target.form;
-            if (form?.id !== "addForm") return;
-
-            const price = form.querySelector(".matPrice")?.value;
-            const qty = form.querySelector(".unitQty")?.value;
-            const unitPriceInput = form.querySelector(".unitPrice");
-
-            const { unitPrice } = calculateInventoryFields({ matPrice: price, unitQty: qty });
-            if (unitPriceInput) unitPriceInput.value = unitPrice?.toFixed(2) || "";
-          });
-        });
-    });
-});
-
-// ✅ Search Function
-function search() {
-  const inputEl = document.getElementById("searchInput");
-  const resultsBox = document.getElementById("searchResults");
-  const query = inputEl.value.toLowerCase().trim();
-
-  // Ensure counter container exists
-  let counterContainer = document.getElementById("counterContainer");
-  if (!counterContainer) {
-    counterContainer = document.createElement("div");
-    counterContainer.id = "counterContainer";
-    counterContainer.className = "d-inline-flex gap-3 align-items-center ms-3";
-    inputEl.insertAdjacentElement("afterend", counterContainer);
+    if (searchInput) {
+      searchInput.addEventListener("input", search);
+    }
   }
 
-  // Ensure counters exist
-  const getOrCreateCounter = (id, text = "") => {
-    let el = document.getElementById(id);
-    if (!el) {
-      el = document.createElement("span");
-      el.id = id;
-      el.className = "px-2 py-1 border rounded fw-bold bg-dark text-info";
-      el.textContent = text;
-      counterContainer.appendChild(el);
-    }
-    return el;
-  };
+  // ➕ ADD MATERIAL TAB: Auto-calculate unit price
+  const addMatTab = document.querySelector('[data-bs-target="#add-material"]');
+  if (addMatTab) {
+    addMatTab.addEventListener("shown.bs.tab", () => {
+      const priceInput = document.querySelector("#add-matPrice");
+      const qtyInput = document.querySelector("#add-unitQty");
+      const unitInput = document.querySelector("#add-unitPrice");
+      const lastUpdated = document.getElementById("add-lastUpdated");
 
-  const searchCounter = getOrCreateCounter("searchCounter");
-  const totalCounter = getOrCreateCounter("totalCounter");
+      if (lastUpdated) {
+        lastUpdated.value = formatDateForUser(new Date());
+      }
 
-  toggleLoader(true);
+      if (priceInput && qtyInput && unitInput) {
+        const recalculate = () => {
+          const price = parseFloat(priceInput.value) || 0;
+          const qty = parseFloat(qtyInput.value) || 0;
+          unitInput.value = qty ? (price / qty).toFixed(2) : "0.00";
+        };
 
-  const words = query.split(/\s+/);
-  const columns = [0, 1, 2, 3, 4, 5, 6];
+        priceInput.addEventListener("input", recalculate);
+        qtyInput.addEventListener("input", recalculate);
+      }
+    });
+  }
 
-  const results = query === "" ? [] : materialData.filter(row =>
-    words.every(word =>
-      columns.some(i => row[i]?.toString().toLowerCase().includes(word))
-    )
-  );
+  // 📦 ADD INVENTORY TAB: Initialize first row and bind add button
+  const addInvTab = document.querySelector('[data-bs-target="#add-inventory"]');
+  if (addInvTab) {
+    addInvTab.addEventListener("shown.bs.tab", () => {
+      if (!container) return;
 
-  // Update counters
-  searchCounter.textContent = query === "" ? "🔍" : `${results.length} Materials Found`;
-  totalCounter.textContent = `Total Materials: ${materialData.length}`;
+      let firstRow = container.querySelector(".material-row");
+      if (!firstRow) {
+        addMaterialRow(container);
+        firstRow = container.querySelector(".material-row");
+      }
 
-  // Render results
-  resultsBox.innerHTML = "";
-  const template = document.getElementById("rowTemplate").content;
+      if (firstRow) {
+        initializeMaterialRow(firstRow);
+      }
 
-  results.forEach(r => {
-    const row = template.cloneNode(true);
-    const tr = row.querySelector("tr");
+      if (addRowBtn && !addRowBtn.dataset.bound) {
+        addRowBtn.addEventListener("click", () => addMaterialRow(container));
+        addRowBtn.dataset.bound = "true";
+      }
 
-    tr.classList.add("search-result-row");
-    tr.dataset.materialid = r[0];
-    tr.querySelector(".matID").textContent = r[0];
-    tr.querySelector(".matName").textContent = r[1];
-    tr.querySelector(".matPrice").textContent = r[2];
-    tr.querySelector(".supplier").textContent = r[5];
+      loadDropdowns();
+    });
+  }
 
-    resultsBox.appendChild(row);
-  });
+  // 💾 SAVE: Trigger inventory save
+  if (saveBtn) {
+    saveBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      saveInventoryData();
+    });
+  }
 
-  toggleLoader(false);
-}
+  // 🧠 DELEGATE: Handle clicks and changes inside inventory container
+  if (container) {
+    container.addEventListener("click", (e) => {
+      const target = e.target;
+      if (target.classList.contains("add-inventory-btn")) {
+        addMaterialRow(container);
+      } else if (target.classList.contains("remove-material-row")) {
+        removeMaterialRow(target, container);
+      }
+    });
 
-// ✅ Handle Edit & Delete from Search Table
+    container.addEventListener("change", (e) => {
+      const target = e.target;
+      if (target.classList.contains("inv-material")) {
+        const row = target.closest(".material-row");
+        const name = target.value.trim();
+        const match = materialData.find(m => m[1]?.trim() === name);
+
+        if (!row || !match) {
+          showToast(`No match for "${name}"`, "warning");
+          return;
+        }
+
+        populateMaterialData(row, match);
+      }
+    });
+  }
+
+  // ✏️ EDIT MATERIAL FORM: Recalculate on input
+  const editPrice = document.getElementById("edit-matPrice");
+  const editQty = document.getElementById("edit-unitQty");
+
+  if (editPrice && editQty) {
+    [editPrice, editQty].forEach(input =>
+      input.addEventListener("input", () => calculateAllStaticForm("edit-"))
+    );
+  }
+});
+
+// ✅ Handle Edit & Delete buttons from Search Results Table
 document.getElementById("searchResults")?.addEventListener("click", (event) => {
   const row = event.target.closest(".search-result-row");
 
@@ -153,244 +186,74 @@ document.getElementById("searchResults")?.addEventListener("click", (event) => {
       .finally(() => toggleLoader(false));
   }
 });
-  
-document.addEventListener("DOMContentLoaded", async () => {
-  console.log("📦 MaterialManager module loaded");
 
-  const container = document.getElementById("materialRows");
-  const searchInput = document.getElementById("searchInput");
+// ✅ Search Function
+function search() {
+  const inputEl = document.getElementById("searchInput");
   const resultsBox = document.getElementById("searchResults");
-  const searchCounter = document.getElementById("searchCounter");
-  const saveBtn = document.getElementById("save-inventory-btn");
+  const query = inputEl.value.toLowerCase().trim();
 
-  toggleLoader(true);
-  await setMatDataForSearch();
-  toggleLoader(false);
-
-  // ✅ Inventory Tab Setup
-  document.querySelector('[data-bs-target="#inventory-material"]')
-    ?.addEventListener("shown.bs.tab", () => {
-      initializeRows();    // 🧱 Only runs when inventory tab is shown
-      loadDropdowns();     // 🔽 Now safe here
-    });
-
-  // ✅ Search Tab Setup
-  document.querySelector('[data-bs-target="#search-material"]')
-    ?.addEventListener("shown.bs.tab", () => {
-      if (searchInput) searchInput.value = "";
-      if (resultsBox) resultsBox.innerHTML = "";
-      if (searchCounter) searchCounter.textContent = "";
-      searchInput?.focus();
-    });
-
-  // ✅ Run inventory setup immediately if it's already the default visible tab
-  const activeTab = document.querySelector(".tab-pane.active")?.id;
-  if (activeTab === "inventory-material") {
-    initializeRows();
-    loadDropdowns();
+  // Ensure counter container exists next to input
+  let counterContainer = document.getElementById("counterContainer");
+  if (!counterContainer) {
+    counterContainer = document.createElement("div");
+    counterContainer.id = "counterContainer";
+    counterContainer.className = "d-inline-flex gap-3 align-items-center ms-3";
+    inputEl.insertAdjacentElement("afterend", counterContainer);
   }
 
-  // ✅ Inventory Save Button
-  saveBtn?.addEventListener("click", (e) => {
-    e.preventDefault();
-    saveInventoryData();
+  // Helper to get or create individual counters
+  const getOrCreateCounter = (id, text = "") => {
+    let el = document.getElementById(id);
+    if (!el) {
+      el = document.createElement("span");
+      el.id = id;
+      el.className = "px-2 py-1 border rounded fw-bold bg-dark text-info";
+      el.textContent = text;
+      counterContainer.appendChild(el);
+    }
+    return el;
+  };
+
+  const searchCounter = getOrCreateCounter("searchCounter");
+  const totalCounter = getOrCreateCounter("totalCounter");
+
+  toggleLoader(true);
+
+  const words = query.split(/\s+/);
+  const columns = [0, 1, 2, 3, 4, 5, 6]; // Columns to search in your materialData rows
+
+  // Filter materialData based on all words matching at least one of the specified columns
+  const results = query === "" ? [] : materialData.filter(row =>
+    words.every(word =>
+      columns.some(i => row[i]?.toString().toLowerCase().includes(word))
+    )
+  );
+
+  // Update counters
+  searchCounter.textContent = query === "" ? "🔍" : `${results.length} Materials Found`;
+  totalCounter.textContent = `Total Materials: ${materialData.length}`;
+
+  // Render search results
+  resultsBox.innerHTML = "";
+  const template = document.getElementById("rowTemplate").content;
+
+  results.forEach(r => {
+    const row = template.cloneNode(true);
+    const tr = row.querySelector("tr");
+
+    tr.classList.add("search-result-row");
+    tr.dataset.materialid = r[0];
+    tr.querySelector(".matID").textContent = r[0];
+    tr.querySelector(".matName").textContent = r[1];
+    tr.querySelector(".matPrice").textContent = r[2];
+    tr.querySelector(".supplier").textContent = r[5];
+
+    resultsBox.appendChild(row);
   });
 
-// ✅ Populate Edit Form
-function populateEditForm(matID) {
-  const matIDField = document.getElementById("edit-matID");
-  matIDField.value = matID;
-  matIDField.removeAttribute("readonly");
-  document.getElementById("edit-material-id").value = matID;
-
-  loadDropdowns();
-  toggleLoader(true);
-
-  fetch(`${scriptURL}?action=getMaterialById&matID=${matID}`)
-    .then(res => res.json())
-    .then(data => {
-      if (data.error) throw new Error(data.error);
-
-      const fields = [
-        "matName", "matPrice", "unitType", "unitQty",
-        "supplier", "supplierUrl", "unitPrice", "onHand",
-        "outgoing", "lastUpdated", "reorderLevel"
-      ];
-
-      fields.forEach(field => {
-        const el = document.getElementById(`edit-${field}`);
-        if (el) el.value = (data[field] !== undefined && data[field] !== null) ? String(data[field]).trim() : "";
-      });
-
-      calculateAll();
-    })
-    .catch(err => {
-      console.error("❌ Error fetching material:", err);
-      showToast("❌ Error loading material data!", "error");
-    })
-    .finally(() => toggleLoader(false));
-}
-
-// Save changes from Edit Form
-document.getElementById("save-changes").addEventListener("click", async () => {
-  const matID = document.getElementById("edit-matID").value.trim();
-  if (!matID) return showToast("❌ Material ID is missing.", "error");
-
-  const now = new Date();
-  document.getElementById("edit-lastUpdated").value = formatDateForUser(now); // UI only
-
-  const fields = [
-    "matName", "matPrice", "unitType", "unitQty", "supplier", "supplierUrl",
-    "unitPrice", "incoming", "outgoing", "lastUpdated", "reorderLevel"
-  ];
-
-  const materialInfo = {};
-
-  for (const field of fields) {
-    const el = document.getElementById(`edit-${field}`);
-    materialInfo[field] = (field === "lastUpdated") ? now : (el?.value.trim() || "");
-  }
-
-  // Override onHand with totalStock calculated value
-  materialInfo.onHand = document.getElementById("edit-totalStock")?.value.trim() || "";
-
-  toggleLoader(true);
-
-  try {
-    const response = await fetch(scriptURL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ system: "materials", action: "edit", matID, materialInfo })
-    });
-
-    const result = await response.json();
-
-    if (result.success) {
-      showToast("✅ Material updated successfully!", "success");
-      document.getElementById("searchInput").value = "";
-      document.getElementById("searchResults").innerHTML = "";
-      await setMatDataForSearch();
-
-      bootstrap.Tab.getOrCreateInstance(document.querySelector('[data-bs-target="#search-material"]')).show();
-    } else {
-      showToast("❌ Error updating material data!", "error");
-    }
-  } catch (err) {
-    console.error(err);
-    showToast("❌ Error updating material data!", "error");
-  } finally {
-    toggleLoader(false);
-  }
-});
-
-// Save All Inventory Rows
-async function saveInventoryData() {
-  console.log("📝 Saving inventory data...");
-
-  const rows = document.querySelectorAll(".material-row");
-  console.log(`Found ${rows.length} rows.`);
-
-  toggleLoader(true);
-
-  for (const row of rows) {
-    const matID = row.querySelector(".matID")?.value.trim() || "";
-    if (!matID) {
-      console.warn("⏭️ Skipping row without matID.");
-      continue;
-    }
-
-    const matName = row.querySelector(".matName")?.value.trim() || matID;
-    const unitQty = row.querySelector(".unitQty")?.value.trim() || "";
-
-    // Sync incoming with unitQty for consistency
-    const incomingInput = row.querySelector(".incoming");
-    if (incomingInput) incomingInput.value = unitQty;
-
-    const materialInfo = {
-      matName,
-      matPrice: row.querySelector(".matPrice")?.value.trim() || "",
-      unitType: row.querySelector(".unitType")?.value.trim() || "",
-      unitQty,
-      supplier: row.querySelector(".supplier")?.value.trim() || "",
-      supplierUrl: row.querySelector(".supplierUrl")?.value.trim() || "",
-      unitPrice: row.querySelector(".unitPrice")?.value.trim() || "",
-      incoming: unitQty,
-      lastUpdated: new Date()
-    };
-
-    try {
-      const res = await fetch(scriptURL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          system: "materials",
-          action: "edit",
-          matID,
-          materialInfo
-        })
-      });
-
-      const result = await res.json();
-      console.log(`✅ Result for ${matName}:`, result);
-
-      if (result.success) {
-        showToast(`✅ Saved ${matName}`, "success");
-        clearMaterialInputs(row);
-      } else {
-        showToast(`❌ Failed to save ${matName}`, "error");
-      }
-    } catch (err) {
-      console.error(`❌ Error saving ${matName}:`, err);
-      showToast(`❌ Error saving ${matName}`, "error");
-    }
-  }
-
   toggleLoader(false);
 }
-
-// Add Material Form Save Logic
-addMaterialForm?.addEventListener("submit", async (event) => {
-  event.preventDefault();
-
-  const fields = [
-    "matName", "matPrice", "unitType", "unitQty", "supplier",
-    "supplierUrl", "unitPrice", "onHand", "lastUpdated", "reorderLevel"
-  ];
-
-  const materialInfo = {};
-  for (const field of fields) {
-    const el = document.getElementById(`add-${field}`);
-    materialInfo[field] = el?.value.trim() || "";
-  }
-
-  toggleLoader(true);
-
-  try {
-    const response = await fetch(`${scriptURL}?action=add`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ system: "materials", action: "add", materialInfo })
-    });
-
-    const result = await response.json();
-
-    if (result.success) {
-      showToast("✅ Material added successfully!", "success");
-      addMaterialForm.reset();
-      await setMatDataForSearch();
-
-      bootstrap.Tab.getOrCreateInstance(document.querySelector('[data-bs-target="#search-material"]')).show();
-    } else {
-      showToast("❌ Error adding material.", "error");
-      console.error(result);
-    }
-  } catch (error) {
-    console.error("Fetch error:", error);
-    showToast("❌ Error adding material.", "error");
-  } finally {
-    toggleLoader(false);
-  }
-});
 
 // Global material dataset (cached)
 let materialData = [];
@@ -412,377 +275,406 @@ async function setMatDataForSearch() {
   }
 }
 
-// Autocomplete material lookup handler
-function handleMaterialLookup(e) {
-  const input = e.target;
-  const row = input.closest(".material-row");
-  const name = input.value.trim();
+// Populate Edit Form
+async function populateEditForm(matID) {
+  const matIDField = document.getElementById(`${SELECTORS.editFieldsPrefix}matID`);
+  if (!matIDField) {
+    console.warn("Edit matID field missing");
+    return;
+  }
 
-  if (!name || !row) return showToast("❌ Enter a material name", "warning");
+  matIDField.value = matID;
+  matIDField.removeAttribute("readonly");
+
+  const editMaterialId = document.getElementById("edit-material-id");
+  if (editMaterialId) editMaterialId.value = matID;
+
+  loadDropdowns(); // keep if dropdowns need refreshing
+  toggleLoader(true);
+
+  try {
+    const res = await fetch(`${scriptURL}?action=getMaterialById&matID=${encodeURIComponent(matID)}`);
+    const data = await res.json();
+
+    if (data.error) throw new Error(data.error);
+
+    const fields = [
+      "matName", "matPrice", "unitType", "unitQty",
+      "supplier", "supplierUrl", "unitPrice", "onHand",
+      "incoming", "outgoing", "lastUpdated", "reorderLevel"
+    ];
+
+    fields.forEach(field => {
+      const el = document.getElementById(`${SELECTORS.editFieldsPrefix}${field}`);
+      if (!el) return;
+
+      if (field === "lastUpdated") {
+        el.value = formatDateForUser(data[field]);
+      } else {
+        el.value = data[field] != null ? String(data[field]).trim() : "";
+      }
+    });
+
+    // Add input listeners for live calculation
+    ["matPrice", "unitQty"].forEach(id => {
+      const input = document.getElementById(`${SELECTORS.editFieldsPrefix}${id}`);
+      if (input) {
+        input.removeEventListener("input", calculateAllStaticForm);
+        input.addEventListener("input", calculateAllStaticForm);
+      }
+    });
+
+    calculateAllStaticForm();
+
+  } catch (err) {
+    console.error("❌ Error fetching material:", err);
+    showToast("❌ Error loading material data!", "error");
+  } finally {
+    toggleLoader(false);
+  }
+}
+
+// Save changes from Edit Form
+document.getElementById(SELECTORS.saveChangesBtn)?.addEventListener("click", async (e) => {
+  e.preventDefault();
+
+  const matID = document.getElementById(`${SELECTORS.editFieldsPrefix}matID`)?.value.trim();
+  if (!matID) {
+    showToast("❌ Material ID is missing.", "error");
+    return;
+  }
+
+  const now = new Date();
+  const lastUpdatedEl = document.getElementById(`${SELECTORS.editFieldsPrefix}lastUpdated`);
+  if (lastUpdatedEl) lastUpdatedEl.value = formatDateForUser(now); // UI only
+
+  const fields = [
+    "matName", "matPrice", "unitType", "unitQty", "supplier", "supplierUrl",
+    "onHand", "unitPrice", "incoming", "outgoing", "lastUpdated", "reorderLevel"
+  ];
+
+  const materialInfo = {};
+  for (const field of fields) {
+    const el = document.getElementById(`${SELECTORS.editFieldsPrefix}${field}`);
+    materialInfo[field] = field === "lastUpdated" ? now : (el?.value.trim() || "");
+  }
 
   toggleLoader(true);
 
-  const match = materialData.find(m => m[1].trim() === name);
-  if (!match) {
-    showToast(`No match found for "${name}"`, "warning");
+  try {
+    const response = await fetch(scriptURL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ system: "materials", action: "edit", matID, materialInfo })
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      showToast("✅ Material updated successfully!", "success");
+
+      // Clear search input/results
+      const searchInput = document.getElementById(SELECTORS.searchInput);
+      const searchResults = document.getElementById(SELECTORS.searchResults);
+      if (searchInput) searchInput.value = "";
+      if (searchResults) searchResults.innerHTML = "";
+
+      // Refresh material data
+      await setMatDataForSearch();
+
+      // Switch to search tab
+      const searchTabEl = document.querySelector(SELECTORS.searchMaterialTab);
+      if (searchTabEl) {
+        bootstrap.Tab.getOrCreateInstance(searchTabEl).show();
+      }
+    } else {
+      showToast("❌ Error updating material data!", "error");
+    }
+  } catch (err) {
+    console.error(err);
+    showToast("❌ Error updating material data!", "error");
+  } finally {
     toggleLoader(false);
+  }
+});
+
+// Add Material Form submission handler
+document.getElementById(SELECTORS.addMaterialForm)?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  const fields = [
+    "matName", "matPrice", "unitType", "unitQty", "supplier",
+    "lastUpdated", "supplierUrl", "unitPrice", "onHand", "reorderLevel"
+  ];
+
+  const materialInfo = {};
+  for (const field of fields) {
+    const el = document.getElementById(`${SELECTORS.addFieldsPrefix}${field}`);
+    materialInfo[field] = el?.value.trim() || "";
+  }
+
+  toggleLoader(true);
+
+  try {
+    const response = await fetch(`${scriptURL}?action=add`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ system: "materials", action: "add", materialInfo })
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      showToast("✅ Material added successfully!", "success");
+
+      // Reset form
+      document.getElementById(SELECTORS.addMaterialForm).reset();
+
+      // Refresh search data
+      await setMatDataForSearch();
+
+      // Switch to search tab
+      const searchTabEl = document.querySelector(SELECTORS.searchMaterialTab);
+      if (searchTabEl) bootstrap.Tab.getOrCreateInstance(searchTabEl).show();
+
+    } else {
+      showToast("❌ Error adding material.", "error");
+      console.error(result);
+    }
+  } catch (error) {
+    console.error("Fetch error:", error);
+    showToast("❌ Error adding material.", "error");
+  } finally {
+    toggleLoader(false);
+  }
+});
+
+// Save All Inventory Rows function
+async function saveInventoryData() {
+  console.log("📝 Saving inventory data...");
+
+  const rows = document.querySelectorAll(".material-row");
+  console.log(`Found ${rows.length} rows.`);
+
+  if (rows.length === 0) {
+    showToast("⚠️ No inventory rows to save.", "warning");
     return;
   }
 
-  const fieldMap = {
-    ".matID": match[0],
-    ".matName": match[1],
-    ".matPrice": match[2],
-    ".unitType": match[3],
-    ".unitQty": match[4],
-    ".supplier": match[5],
-    ".supplierUrl": match[6],
-    ".unitPrice": match[7],
-    ".onHand": match[8],
-    ".incoming": match[9]
-  };
+  toggleLoader(true);
 
-  for (const [selector, value] of Object.entries(fieldMap)) {
-    const el = row.querySelector(selector);
-    if (el) el.value = value;
+  for (const row of rows) {
+    const matID = row.querySelector(".inv-matID")?.value.trim();
+    if (!matID) {
+      console.warn("⏭️ Skipping row without matID.");
+      continue;
+    }
+
+    const matName = row.querySelector(".inv-matName")?.value.trim() || matID;
+    const unitQty = parseFloat(row.querySelector(".inv-unitQty")?.value.trim() || "0");
+    const rawPrice = row.querySelector(".inv-matPrice")?.value.trim() || "0";
+    const matPrice = parseFloat(rawPrice.replace(/[^\d.]/g, ""));
+
+    const onHandField = row.querySelector(".inv-onHand");
+    const originalOnHand = parseFloat(onHandField?.dataset.original || "0");
+    const newOnHand = originalOnHand + unitQty;
+    if (onHandField) onHandField.value = newOnHand;
+
+    const incomingInput = row.querySelector(".inv-incoming");
+    if (incomingInput) incomingInput.value = unitQty;
+
+    const materialInfo = {
+      matName,
+      matPrice,
+      unitType: row.querySelector(".inv-unitType")?.value.trim() || "",
+      unitQty,
+      supplier: row.querySelector(".inv-supplier")?.value.trim() || "",
+      supplierUrl: row.querySelector(".inv-supplierUrl")?.value.trim() || "",
+      unitPrice: row.querySelector(".inv-unitPrice")?.value.trim() || "",
+      incoming: unitQty,
+      onHand: newOnHand,
+      reorderLevel: row.querySelector(".inv-reorderLevel")?.value.trim() || "",
+      lastUpdated: new Date()
+    };
+
+    try {
+      const res = await fetch(scriptURL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          system: "materials",
+          action: "edit",
+          matID,
+          materialInfo
+        })
+      });
+
+      const result = await res.json();
+      console.log(`✅ Result for ${matName}:`, result);
+
+      if (result.success) {
+        showToast(`✅ Saved ${matName}`, "success");
+      } else {
+        showToast(`❌ Failed to save ${matName}`, "error");
+      }
+    } catch (err) {
+      console.error(`❌ Error saving ${matName}:`, err);
+      showToast(`❌ Error saving ${matName}`, "error");
+    }
   }
 
   toggleLoader(false);
-}
 
-// Add a new material row to container
-function addMaterialRow(container) {
-  const rows = container.querySelectorAll(".material-row");
-  if (rows.length >= 10) {
-    showToast("🚫 Max 10 materials allowed.", "warning");
-    return;
-  }
+  // ✅ Reset the form and clear all inventory rows
+  const form = document.getElementById(SELECTORS.addMaterialForm);
+  if (form) form.reset();
 
-  const newRow = rows[0].cloneNode(true);
+  const container = document.getElementById("materialRows");
+  if (container) container.innerHTML = ""; // Clear all material rows from inventory
 
-  // Reset all input values in new row
-  newRow.querySelectorAll("input").forEach(input => input.value = "");
-  
-  // Ensure hidden matID input exists and reset it
-  let matIDField = newRow.querySelector(".matID");
-  if (!matIDField) {
-    matIDField = document.createElement("input");
-    matIDField.type = "hidden";
-    matIDField.classList.add("matID");
-    newRow.appendChild(matIDField);
-  }
-  matIDField.value = "";
-
-  newRow.querySelector(".lastUpdated").value = formatDateForUser(new Date());
-
-  // Show delete button on all but first row
-  const removeBtn = newRow.querySelector(".remove-material-row");
-  if (removeBtn) removeBtn.style.display = "inline-block";
-
-  container.appendChild(newRow);
-
-  attachAutoCalcListeners(newRow);
-  refreshDeleteButtons();
-}
-
-// Remove material row if more than 1 remains
-function removeMaterialRow(target, container) {
-  const rows = container.querySelectorAll(".material-row");
-  if (rows.length > 1) {
-    target.closest(".material-row").remove();
-    refreshDeleteButtons();
-  } else {
-    showToast("⚠️ At least one row must remain.", "info");
+  // ✅ Switch to the Search tab via Bootstrap 5 API
+  const searchTabBtn = document.querySelector('[data-bs-target="#search-material"]');
+  if (searchTabBtn) {
+    const tabInstance = bootstrap.Tab.getInstance(searchTabBtn) || new bootstrap.Tab(searchTabBtn);
+    tabInstance.show();
   }
 }
 
-function initializeRows() {
-  document.querySelectorAll(".material-row").forEach((row, index) => {
-    const lastUpdated = row.querySelector(".lastUpdated");
-    if (lastUpdated) {
-      lastUpdated.value = formatDateForUser(new Date());
-    }
-
-    const deleteBtn = row.querySelector(".remove-material-row");
-    if (deleteBtn) {
-      deleteBtn.style.display = index === 0 ? "none" : "inline-block";
-    }
-
-    attachAutoCalcListeners(row);
-  });
-}
-
-// ♻️ Clear inputs in a material row (except lastUpdated)
-function clearMaterialInputs(row) {
-  row.querySelectorAll("input").forEach(input => {
-    if (!input.classList.contains("lastUpdated")) input.value = "";
-  });
-  row.querySelector(".lastUpdated").value = formatDateForUser(new Date());
-}
-
-// ✅ Show/hide delete buttons depending on row count
-function refreshDeleteButtons() {
-  const allRows = document.querySelectorAll(".material-row");
-  allRows.forEach((row, i) => {
-    const btn = row.querySelector(".remove-material-row");
-    if (btn) btn.style.display = i === 0 ? "none" : "inline-block";
-  });
-}
-
-  // ✅ Inventory Add/Remove Material Row Buttons
-  container?.addEventListener("click", (e) => {
-    if (e.target.id === "add-material-btn") {
-      addMaterialRow(container);
-    } else if (e.target.classList.contains("remove-material-row")) {
-      removeMaterialRow(e.target, container);
-    }
-  });
-
-  // ✅ Inventory Material Lookup Handler
-  container?.addEventListener("change", (e) => {
-    if (e.target.classList.contains("materials")) {
-      handleMaterialLookup({ target: e.target });
-    }
-  });
-
-  // ✅ Search Input Listener
-  if (searchInput) {
-    searchInput.addEventListener("input", search);
-  }
-});
-
-// ✅ Format Date for UI Display (MM/DD/YYYY)
-function formatDateForUser(date) {
-  if (!date) return "";
-  return new Date(date).toLocaleDateString("en-US");
-}
-
-// ✅ Set value in a row safely
-function setValue(row, selector, value) {
-  const input = row.querySelector(selector);
-  if (!input) {
-    const matName = row.querySelector(".materials")?.value || "unknown";
-    console.warn(`⚠️ Missing field ${selector} in row with material: ${matName}`);
-    return;
-  }
-  input.value = value || "";
-}
-
-// 🧮 Single calculation helper (shared)
-function calculateInventoryFields({ matPrice, unitQty, onHand = 0, incoming = 0, outgoing = 0 } = {}) {
-  const clean = val => parseFloat(val?.toString().replace(/[^0-9.]/g, "")) || 0;
-
-  const price = clean(matPrice);
-  const qty = clean(unitQty);
-  const stockOnHand = clean(onHand);
-  const incomingStock = clean(incoming);
-  const outgoingStock = clean(outgoing);
-
-  const unitPrice = qty !== 0 ? price / qty : 0;
-  const totalStock = stockOnHand + incomingStock - outgoingStock;
-
-  return {
-    unitPrice: +unitPrice.toFixed(2),
-    totalStock: +totalStock.toFixed(2)
+function calculateAllStaticForm(prefix) {
+  const get = id => document.getElementById(`${prefix}${id}`)?.value;
+  const set = (id, val) => {
+    const el = document.getElementById(`${prefix}${id}`);
+    if (el) el.value = val;
   };
+
+  const matPrice = parseFloat(get("matPrice")) || 0;
+  const unitQty = parseFloat(get("unitQty")) || 0;
+  const onHand = parseFloat(get("onHand")) || 0;
+  const incoming = parseFloat(get("incoming")) || 0;
+  // const outgoing = parseFloat(get("outgoing")) || 0;
+  const unitPrice = unitQty !== 0 ? matPrice / unitQty : 0;
+  const totalStock = onHand + incoming;
+
+  set("unitPrice", unitPrice.toFixed(2));
+  set("totalStock", totalStock.toFixed(2));
+
+  if (prefix === "edit-") checkLowStock(prefix);
 }
 
-// 🧼 Setup listeners for all relevant inputs (edit form + add form + rows)
-// Replace these IDs and selectors with your actual field IDs or container selectors
-const allFields = [
-  ...document.querySelectorAll("#editForm input[id^='edit-']"),
-  ...document.querySelectorAll("#addForm input.matPrice, #addForm input.unitQty"),
-  ...document.querySelectorAll(".material-row input.matPrice, .material-row input.unitQty")
-];
-
-allFields.forEach(input => {
-  input.addEventListener("change", (e) => {
-    const target = e.target;
-
-    // If in edit form
-    if (target.id && target.id.startsWith("edit-")) {
-      const get = id => document.getElementById(`edit-${id}`)?.value;
-      const { unitPrice, totalStock } = calculateInventoryFields({
-        matPrice: get("matPrice"),
-        unitQty: get("unitQty"),
-        onHand: get("onHand"),
-        incoming: get("incoming"),
-        outgoing: get("outgoing")
-      });
-
-      const totalField = document.getElementById("edit-totalStock");
-      if (totalField) totalField.value = totalStock;
-
-      const unitField = document.getElementById("edit-unitPrice");
-      if (unitField) unitField.value = unitPrice;
-
-      checkLowStock();
-    } 
-    // If in add material form (not inventory rows)
-    else if (target.form && target.form.id === "addForm") {
-      const priceInput = target.form.querySelector(".matPrice");
-      const qtyInput = target.form.querySelector(".unitQty");
-      const unitPriceInput = target.form.querySelector(".unitPrice");
-
-      const { unitPrice } = calculateInventoryFields({
-        matPrice: priceInput?.value,
-        unitQty: qtyInput?.value
-      });
-
-      if (unitPriceInput) unitPriceInput.value = unitPrice ? unitPrice.toFixed(2) : "";
-    }
-    // If in inventory material rows
-    else {
-      const row = target.closest(".material-row");
-      if (!row) return;
-
-      const priceInput = row.querySelector(".matPrice");
-      const qtyInput = row.querySelector(".unitQty");
-      const unitPriceInput = row.querySelector(".unitPrice");
-
-      const { unitPrice } = calculateInventoryFields({
-        matPrice: priceInput?.value,
-        unitQty: qtyInput?.value
-      });
-
-      if (unitPriceInput) unitPriceInput.value = unitPrice ? unitPrice.toFixed(2) : "";
-    }
-  });
-});
-
-// 🚨 Keep checkLowStock separate for clarity & single responsibility
-function checkLowStock() {
-  const total = parseFloat(document.getElementById("edit-totalStock")?.value) || 0;
-  const reorder = parseFloat(document.getElementById("edit-reorderLevel")?.value) || 0;
+function checkLowStock(prefix = "edit-") {
+  const total = parseFloat(document.getElementById(`${prefix}totalStock`)?.value) || 0;
+  const reorder = parseFloat(document.getElementById(`${prefix}reorderLevel`)?.value) || 0;
   const alert = document.getElementById("reorderAlert");
-
   if (alert) alert.classList.toggle("d-none", total >= reorder);
 }
 
-// 🔄 Attach calc listeners on dynamic row inputs
-function attachAutoCalcListeners(row) {
-  const priceInput = row.querySelector(".matPrice");
-  const qtyInput = row.querySelector(".unitQty");
-  const unitPriceInput = row.querySelector(".unitPrice");
+// 🔄 Add Inventory Part Row Logic
+function initializeMaterialRow(row) {
+  const nameInput = row.querySelector(".inv-material");
+  const priceInput = row.querySelector(".inv-matPrice");
+  const qtyInput = row.querySelector(".inv-unitQty");
+  const unitPriceOutput = row.querySelector(".inv-unitPrice");
+  const onHandInput = row.querySelector(".inv-onHand");
+  const removeBtn = row.querySelector(".remove-material-row");
 
-  if (!priceInput || !qtyInput || !unitPriceInput) return;
+  if (!nameInput || !priceInput || !qtyInput || !unitPriceOutput || !onHandInput || !removeBtn) {
+    console.warn("⚠️ Missing expected elements in material row.");
+    return;
+  }
 
-  const update = () => {
-    const { unitPrice } = calculateInventoryFields({
-      matPrice: priceInput.value,
-      unitQty: qtyInput.value
-    });
-    unitPriceInput.value = unitPrice ? unitPrice.toFixed(2) : "";
+  const recalculate = () => {
+    const price = parseFloat(priceInput.value) || 0;
+    const qty = parseFloat(qtyInput.value) || 0;
+    const unitPrice = qty ? price / qty : 0;
+    unitPriceOutput.value = unitPrice.toFixed(2);
+
+    // Update onHand: originalOnHand + unitQty
+    const originalOnHand = parseFloat(onHandInput.dataset.original || "0");
+    const newOnHand = originalOnHand + qty;
+    onHandInput.value = newOnHand;
   };
 
-  priceInput.addEventListener("change", update);
-  qtyInput.addEventListener("change", update);
-}
-
-// 🔁 Recalculate all edit form fields and check alerts
-function calculateAll() {
-  const get = id => document.getElementById(`edit-${id}`)?.value;
-
-  const { unitPrice, totalStock } = calculateInventoryFields({
-    matPrice: get("matPrice"),
-    unitQty: get("unitQty"),
-    onHand: get("onHand"),
-    incoming: get("incoming"),
-    outgoing: get("outgoing")
+  nameInput.addEventListener("change", () => {
+    const name = nameInput.value.trim();
+    const match = materialData.find(m => m[1].trim() === name);
+    if (!match) {
+      showToast(`No match found for "${name}"`, "warning");
+      return;
+    }
+    populateMaterialData(row, match);
+    recalculate();
   });
 
-  const totalField = document.getElementById("edit-totalStock");
-  if (totalField) totalField.value = totalStock;
+  priceInput.addEventListener("input", recalculate);
+  qtyInput.addEventListener("input", recalculate);
 
-  const unitField = document.getElementById("edit-unitPrice");
-  if (unitField) unitField.value = unitPrice;
-
-  checkLowStock();
+  removeBtn.addEventListener("click", () => {
+    const container = row.parentElement;
+    if (!container) return;
+    const allRows = container.querySelectorAll(".material-row");
+    if (allRows.length <= 1) {
+      showToast("⚠️ At least one row must remain.", "info");
+      return;
+    }
+    row.remove();
+  });
 }
 
-// 🔁 Set up listeners for auto recalculation on change
-["onHand", "incoming", "outgoing", "matPrice", "unitQty", "reorderLevel"].forEach(field => {
-  const el = document.getElementById(`edit-${field}`);
-  if (el) el.addEventListener("change", calculateAll);
-});
+// ➕ Add new material row
+function addMaterialRow(container) {
+  if (!container) {
+    console.warn("⚠️ addMaterialRow: Missing container.");
+    return;
+  }
 
+  const rows = container.querySelectorAll(".material-row");
+  if (typeof MAX_ROWS !== "undefined" && rows.length >= MAX_ROWS) {
+    showToast(`🚫 Max ${MAX_ROWS} materials allowed.`, "warning");
+    return;
+  }
 
+  const template = rows[0];
+  if (!template) {
+    console.warn("⚠️ addMaterialRow: No template row found.");
+    return;
+  }
 
+  const newRow = template.cloneNode(true);
+  newRow.querySelectorAll("input").forEach(input => (input.value = ""));
 
-// // 🎯 Get trimmed input value from selector
-// function getTrimmedValue(row, selector) {
-//   return row.querySelector(selector)?.value.trim() || "";
-// }
+  const lastUpdatedInput = newRow.querySelector(".inv-lastUpdated");
+  if (lastUpdatedInput) {
+    lastUpdatedInput.value = formatDateForUser(new Date());
+  }
 
-// // 📅 Set default date for 'add' form (on DOM ready)
-// document.addEventListener("DOMContentLoaded", () => {
-//   const field = document.getElementById("add-lastUpdated");
-//   if (field) field.value = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
-// });
+  container.appendChild(newRow);
+  initializeMaterialRow(newRow);
+}
 
-// // 🧮 Core Calculation Utility
-// function calculateUnitPrice(price, qty) {
-//   const p = parseFloat(price);
-//   const q = parseFloat(qty);
-//   return (!isNaN(p) && !isNaN(q) && q !== 0) ? (p / q) : 0;
-// }
+// 📥 Populate a row with matched material data
+function populateMaterialData(row, match) {
+  const fields = [
+    "matID", "matName", "matPrice", "unitType",
+    "unitQty", "supplier", "supplierUrl", "unitPrice",
+    "onHand", "incoming", "outgoing", "lastUpdated", "reorderLevel"
+  ];
 
-// // 🧲 Attach calc logic to dynamic material row
-// function attachAutoCalcListeners(row) {
-//   const matPriceInput = row.querySelector(".matPrice");
-//   const unitQtyInput = row.querySelector(".unitQty");
-//   const unitPriceInput = row.querySelector(".unitPrice");
+  fields.forEach((key, i) => {
+    const el = row.querySelector(`.inv-${key}`);
+    if (el) {
+      console.log(`Setting ${key} to:`, match[i]); // 🔍 Debug log here
+      el.value = match[i];
 
-//   if (!matPriceInput || !unitQtyInput || !unitPriceInput) return;
+      if (key === "onHand") el.dataset.original = match[i];
+    } else {
+      console.warn(`⚠️ Missing element: .inv-${key}`);
+    }
+  });
 
-//   const update = () => {
-//     const unitPrice = calculateUnitPrice(matPriceInput.value, unitQtyInput.value);
-//     unitPriceInput.value = unitPrice ? unitPrice.toFixed(2) : "";
-//   };
+  const lastUpdated = row.querySelector(".inv-lastUpdated");
+  if (lastUpdated) {
+    lastUpdated.value = formatDateForUser(new Date());
+  }
+}
 
-//   matPriceInput.addEventListener("change", update);
-//   unitQtyInput.addEventListener("change", update);
-// }
-
-// // 📊 Stock formula: onHand + incoming - outgoing
-// function calculateTotalStock(onHand, incoming, outgoing) {
-//   return (parseFloat(onHand) || 0) + (parseFloat(incoming) || 0) - (parseFloat(outgoing) || 0);
-// }
-
-// // 🚨 Toggle low stock alert
-// function checkLowStock() {
-//   const total = parseFloat(document.getElementById("edit-totalStock")?.value) || 0;
-//   const reorder = parseFloat(document.getElementById("edit-reorderLevel")?.value) || 0;
-//   const alert = document.getElementById("reorderAlert");
-
-//   if (alert) alert.classList.toggle("d-none", total >= reorder);
-// }
-
-// // 🧮 Main inventory calculation (Edit Form only)
-// function calculateAll() {
-//   const getVal = id => parseFloat(document.getElementById(`edit-${id}`)?.value.replace(/[^0-9.]/g, "") || 0);
-
-//   const matPrice = getVal("matPrice");
-//   const unitQty = getVal("unitQty");
-//   const onHand = getVal("onHand");
-//   const incoming = getVal("incoming");
-//   const outgoing = getVal("outgoing");
-
-//   const unitPrice = calculateUnitPrice(matPrice, unitQty);
-//   const totalStock = calculateTotalStock(onHand, incoming, outgoing);
-
-//   const totalField = document.getElementById("edit-totalStock");
-//   if (totalField) totalField.value = totalStock;
-
-//   const unitField = document.getElementById("edit-unitPrice");
-//   if (unitField) unitField.value = unitPrice.toFixed(2);
-
-//   checkLowStock();
-// }
-
-// // 🔁 Watch changes to auto-recalculate totals
-// ["onHand", "incoming", "outgoing", "matPrice", "unitQty", "reorderLevel"].forEach(field => {
-//   const el = document.getElementById(`edit-${field}`);
-//   if (el) el.addEventListener("change", calculateAll);
-// });
 

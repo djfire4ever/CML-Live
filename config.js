@@ -246,6 +246,17 @@ document.addEventListener("keydown", function (e) {
   }
 });
 
+function formatDateForUser(date) {
+  if (!date) return "";
+  return new Date(date).toLocaleDateString("en-US");
+}
+
+function formatPhoneNumber(number) {
+  const digits = number.replace(/\D/g, "");
+  if (digits.length !== 10) return number;
+  return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
+}
+
 // ✅ Calendar init waits for FullCalendar to load
 // function initCalendarIfPresent() {
 //   const calendarEl = document.getElementById("calendar");

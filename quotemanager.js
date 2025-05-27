@@ -881,7 +881,7 @@ function recalculateAndUpdateHeaders(mode = "edit") {
   updateCardHeaders(mode);
 }
 
-function formatPhoneNumber(number) {
+function formatPhoneNumber(number) { // This function is in config.js
   const digits = number.replace(/\D/g, "");
   if (digits.length !== 10) return number;
   return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
