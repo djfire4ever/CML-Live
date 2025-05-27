@@ -881,7 +881,7 @@ function recalculateAndUpdateHeaders(mode = "edit") {
   updateCardHeaders(mode);
 }
 
-function formatPhoneNumber(number) { // This function is in config.js
+function formatPhoneNumber(number) { // This function is in
   const digits = number.replace(/\D/g, "");
   if (digits.length !== 10) return number;
   return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
@@ -952,8 +952,8 @@ async function finalizeInvoiceBtnHandler(e) {
   const btnID = e.target.id;
   const mode = btnID.startsWith("edit") ? "edit" : "add";
   const qtID = mode === "edit" ? getField("edit-qtID") : null;
-  console.log("🧾 Finalizing invoice, mode:", mode);
 
+  console.log("🧾 Finalizing invoice, mode:", mode);
   toggleLoader(true);
 
   try {
@@ -980,8 +980,11 @@ async function finalizeInvoiceBtnHandler(e) {
     const quoteSaveData = await quoteSaveRes.json();
     console.log("✅ Quote saved:", quoteSaveData);
 
-    const savedQtID = quoteSaveData?.qtID || qtID;
-    if (!savedQtID) throw new Error("❌ No qtID returned after saving quote");
+    if (!quoteSaveData?.success || !quoteSaveData.data?.qtID) {
+      throw new Error("❌ No qtID returned after saving quote");
+    }
+
+    const savedQtID = quoteSaveData.data.qtID;
 
     // Step 3: Finalize invoice
     const finalizeRes = await fetch(scriptURL, {
@@ -997,21 +1000,21 @@ async function finalizeInvoiceBtnHandler(e) {
 
     const finalizeData = await finalizeRes.json();
     const finalData = finalizeData?.data?.success ? finalizeData.data.data : finalizeData.data;
-    const { url } = finalData || {};
+    const url = finalData?.url;
 
-    if (url) {
-      const displayName = `${quoteInfo.firstName} ${quoteInfo.lastName}'s Invoice`;
-      const emailHtml = generateInvoiceEmailHtml(displayName, url, quoteInfo);
-
-      document.getElementById("invoice-email-to").value = quoteInfo.email || "";
-      document.getElementById("invoice-email-subject").value = `Your Final Invoice from Your Company`;
-      document.getElementById("invoice-email-body").innerHTML = emailHtml;
-
-      new bootstrap.Modal(document.getElementById("finalInvoiceModal")).show();
-      showToast("📄 Invoice finalized and ready to send.", "success");
-    } else {
+    if (!url) {
       throw new Error("❌ Invoice PDF URL missing from finalization response.");
     }
+
+    const displayName = `${quoteInfo.firstName} ${quoteInfo.lastName}'s Invoice`;
+    const emailHtml = generateInvoiceEmailHtml(displayName, url, quoteInfo);
+
+    document.getElementById("invoice-email-to").value = quoteInfo.email || "";
+    document.getElementById("invoice-email-subject").value = "Your Final Invoice from Your Company";
+    document.getElementById("invoice-email-body").innerHTML = emailHtml;
+
+    new bootstrap.Modal(document.getElementById("finalInvoiceModal")).show();
+    showToast("📄 Invoice finalized and ready to send.", "success");
 
   } catch (err) {
     console.error("❌ Finalization failed:", err);
@@ -1020,7 +1023,6 @@ async function finalizeInvoiceBtnHandler(e) {
     toggleLoader(false);
   }
 }
-
 
 function generateInvoiceEmailHtml(displayName, pdfUrl, quoteData) {
   return `

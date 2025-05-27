@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('eventTitle').value = event.title;
         document.getElementById('eventStart').value = event.startStr;
         document.getElementById('eventEnd').value = event.endStr || '';
-        document.getElementById('eventAllDay').value = event.allDay;
+        document.getElementById('eventAllDay').checked = info.allDay;
 
         document.getElementById('eventStatus').value = event.extendedProps.status || '';
         document.getElementById('eventCategory').value = event.extendedProps.category || '';
@@ -145,7 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
           title,
           start: document.getElementById('eventStart').value,
           end: document.getElementById('eventEnd').value,
-          allDay: document.getElementById('eventAllDay').value === 'true',
+          allDay: document.getElementById('eventAllDay').checked,
           status: document.getElementById('eventStatus').value,
           category: document.getElementById('eventCategory').value,
           description: document.getElementById('eventDescription').value,
