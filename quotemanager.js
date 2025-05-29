@@ -945,6 +945,13 @@ function previewQuoteBtnHandler(e) {
 }
 
 // === Finalize Quote Handler ===
+document.body.addEventListener("click", (e) => {
+  if (e.target.matches("#add-finalizeInvoiceBtn, #edit-finalizeInvoiceBtn")) {
+    e.preventDefault();
+    finalizeInvoiceBtnHandler(e);
+  }
+});
+
 async function finalizeInvoiceBtnHandler(e) {
   e.preventDefault();
   e.stopPropagation();
@@ -957,15 +964,15 @@ async function finalizeInvoiceBtnHandler(e) {
   toggleLoader(true);
 
   try {
-    // Step 1: Calculate totals and collect form data
+    // Step 1: Gather quote data
     calculateAllTotals(mode);
     const quoteInfo = collectQuoteFormData(mode);
 
     if (!quoteInfo || typeof quoteInfo !== "object") {
-      throw new Error("❌ Invalid quote data returned.");
+      throw new Error("❌ Invalid quote data.");
     }
 
-    // Step 2: Save quote
+    // Step 2: Save the quote
     const quoteSaveRes = await fetch(scriptURL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -977,16 +984,17 @@ async function finalizeInvoiceBtnHandler(e) {
       })
     });
 
-    const quoteSaveData = await quoteSaveRes.json();
-    console.log("✅ Quote saved:", quoteSaveData);
+    const quoteSaveRaw = await quoteSaveRes.json();
+    const quoteSaveData = quoteSaveRaw?.data?.data || quoteSaveRaw?.data || {};
+    const savedQtID = quoteSaveData.qtID;
 
-    if (!quoteSaveData?.success || !quoteSaveData.data?.qtID) {
-      throw new Error("❌ No qtID returned after saving quote");
+    if (!savedQtID) {
+      throw new Error("❌ No qtID returned after saving.");
     }
 
-    const savedQtID = quoteSaveData.data.qtID;
+    console.log("✅ Quote saved:", quoteSaveRaw);
 
-    // Step 3: Finalize invoice
+    // Step 3: Finalize the invoice
     const finalizeRes = await fetch(scriptURL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -998,22 +1006,36 @@ async function finalizeInvoiceBtnHandler(e) {
       })
     });
 
-    const finalizeData = await finalizeRes.json();
-    const finalData = finalizeData?.data?.success ? finalizeData.data.data : finalizeData.data;
-    const url = finalData?.url;
+    const finalizeRaw = await finalizeRes.json();
+    const invoiceData = finalizeRaw?.data?.data || finalizeRaw?.data || {};
+    const invoiceURL = invoiceData.url;
 
-    if (!url) {
-      throw new Error("❌ Invoice PDF URL missing from finalization response.");
+    if (!invoiceURL) {
+      throw new Error("❌ Invoice URL not returned.");
     }
 
-    const displayName = `${quoteInfo.firstName} ${quoteInfo.lastName}'s Invoice`;
-    const emailHtml = generateInvoiceEmailHtml(displayName, url, quoteInfo);
+    console.log("🧪 Invoice finalized:", invoiceData);
+
+    // Step 4: Fill modal content
+    const displayName = `${quoteInfo.firstName || ""} ${quoteInfo.lastName || ""}`.trim();
+    const emailHtml = generateInvoiceEmailHtml(displayName, invoiceURL, quoteInfo);
 
     document.getElementById("invoice-email-to").value = quoteInfo.email || "";
     document.getElementById("invoice-email-subject").value = "Your Final Invoice from Your Company";
     document.getElementById("invoice-email-body").innerHTML = emailHtml;
 
-    new bootstrap.Modal(document.getElementById("finalInvoiceModal")).show();
+    // Step 5: Show modal
+    const modalEl = document.getElementById("finalInvoiceModal");
+
+    // If modal is hidden by parent tab or style, log it but don't force fixes here
+    console.log("Modal visibility check:");
+    console.log("- Display:", getComputedStyle(modalEl).display);
+    console.log("- offsetParent exists:", modalEl.offsetParent !== null);
+    console.log("- Modal has 'show':", modalEl.classList.contains("show"));
+
+    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+    modal.show();
+
     showToast("📄 Invoice finalized and ready to send.", "success");
 
   } catch (err) {
@@ -1079,3 +1101,69 @@ document.getElementById("send-invoice-email").addEventListener("click", async fu
     toggleLoader(false);
   }
 });
+
+// Shopping list
+document.getElementById("btn-show-shopping-list").addEventListener("click", async (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+
+  const qtID = document.querySelector("#edit-qtID")?.value;
+  if (!qtID) {
+    showToast("❌ Missing quote ID — cannot generate shopping list.", "error");
+    return;
+  }
+
+  toggleLoader(true);
+
+  try {
+    const res = await fetch(scriptURL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        system: "quotes",
+        action: "getShoppingList",
+        qtID: qtID
+      })
+    });
+
+    if (!res.ok) throw new Error(`Server responded with status ${res.status}`);
+
+    const data = await res.json();
+    console.log("✅ Shopping list data:", data);
+
+    if (!data.success) {
+      showToast("❌ " + (data.message || "Failed to generate shopping list"), "error");
+      return;
+    }
+
+    renderShoppingListModal(data.materials);
+
+  } catch (err) {
+    console.error("❌ Error generating shopping list:", err);
+    showToast("❌ Failed to load shopping list", "error");
+  } finally {
+    toggleLoader(false);
+  }
+});
+
+function renderShoppingListModal(materials) {
+  const tbody = document.getElementById("shopping-list-body");
+  tbody.innerHTML = "";
+
+  materials.forEach(mat => {
+    const shortfall = mat.totalNeeded > mat.onHand;
+    const row = document.createElement("tr");
+
+    row.innerHTML = `
+      <td>${mat.matName}</td>
+      <td>${mat.totalNeeded}</td>
+      <td>${mat.onHand}</td>
+      <td>${shortfall ? `<span class="text-danger">Shortfall</span>` : `<span class="text-success">OK</span>`}</td>
+      <td>${mat.supplier || ""}</td>
+    `;
+
+    tbody.appendChild(row);
+  });
+
+  new bootstrap.Modal(document.getElementById("shoppingListModal")).show();
+}

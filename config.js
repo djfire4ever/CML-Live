@@ -224,7 +224,7 @@ function loadDropdowns() {
         console.warn("⚠️ Dropdown fetch skipped or failed silently:", error.message);
       }
     });
-  }
+}
 
 window.addEventListener('DOMContentLoaded', () => {
   const input = document.getElementById('searchInput');
@@ -256,6 +256,8 @@ function formatPhoneNumber(number) {
   if (digits.length !== 10) return number;
   return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
 }
+
+
 
 // ✅ Calendar init waits for FullCalendar to load
 // function initCalendarIfPresent() {

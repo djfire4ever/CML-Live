@@ -2,57 +2,819 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Test Add Quote</title>
-  <script src="config.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quote Manager</title>
+  <style>
+  </style>
 </head>
-<body>
-  <h2>Quote Add Test</h2>
-  <button onclick="testAddQuote()">Test Add Quote</button>
-  <pre id="output"></pre>
+<body class="theme-dark">
+<div class="watermark"></div>
+<!-- Notification Toasts -->
 
-  <script>
-    // const scriptURL = "https://script.google.com/macros/s/YOUR_SCRIPT_URL_HERE/exec";
+<div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3"></div>
 
-    async function testAddQuote() {
-      const output = document.getElementById("output");
-      output.textContent = "⏳ Sending request...";
+<!-- Loader -->
+<div id="loadingOverlay" class="d-none">
+  <div class="text-center text-info">
+      <div class="spinner-border text-info" role="status"></div>
+      <p class="mt-2">Loading... Please wait...</p>
+  </div>
+</div>
 
-      const dummyQuoteInfo = {
-        firstName: "Test",
-        lastName: "User",
-        email: "test@example.com",
-        phone: "123-456-7890",
-        quoteDate: new Date().toISOString(),
-        eventDate: "2025-12-25",
-        totalAmount: 1000
-        // Add more fields as needed that your script expects
-      };
+<!-- Quote Management Section -->
+<section class="text-center text-sm-start">
+  <div class="container">
+    <h2 class="text-center">Quote Management Test</h2>
 
-      try {
-        const res = await fetch(scriptURL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            system: "quotes",
-            action: "add",
-            quoteInfo: dummyQuoteInfo
-          })
-        });
+<!-- Navigation Tabs -->
+<ul class="nav nav-tabs border-info" id="quoteTabs" role="tablist">
+  <li class="nav-item" role="presentation">
+    <button class="nav-link active" id="search-tab" data-bs-toggle="tab" data-bs-target="#search-quote" type="button" role="tab" aria-controls="search-quote" aria-selected="true">🔍 Search</button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="add-tab" data-bs-toggle="tab" data-bs-target="#add-quote" type="button" role="tab" aria-controls="add-quote" aria-selected="false">➕ Add</button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="payments-tab" data-bs-toggle="tab" data-bs-target="#payments" type="button" role="tab" aria-controls="payments" aria-selected="false">Payments</button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="edit-tab" data-bs-toggle="tab" data-bs-target="#edit-quote" type="button" role="tab" aria-controls="edit-quote" aria-selected="false" style="display: none;">✏️ Edit</button>
+  </li>
+</ul>
 
-        const text = await res.text();
-        output.textContent = `📥 Raw Response:\n${text}`;
+<!-- Search Template -->
+<template id="rowTemplate">
+  <tr class="result-box">
+    <th class="qtID" scope="row"></th>
+    <th class="firstName"></th>
+    <th class="lastName"></th>
+    <th class="eventDate"></th>
+    <!-- <th class="text-center"><button type="button" class="btn btn-dark edit-button btn-sm">View</button></th> -->
+    <th class="text-center">
+      <button type="button" class="btn edit-button btn-sm d-none">Edit</button>
+      <div class="btn-group" role="group">
+        <button type="button" class="btn delete-button btn-sm d-none">Confirm</button>
+        <button type="button" class="btn btn-sm before-delete-button" data-button-state="delete">Delete</button>
+      </div>
+    </th>
+  </tr>
+</template>
 
-        try {
-          const json = JSON.parse(text);
-          console.log("Parsed response:", json);
-        } catch (parseErr) {
-          console.warn("Failed to parse JSON:", parseErr);
-        }
+<!-- Tab Content -->
+<!-- 🔍 Search Quote -->
+<div class="tab-content" id="quoteTabsContent">
+  <div class="tab-pane fade show active" id="search-quote" role="tabpanel" aria-labelledby="search-tab">
+  <div class="input-group">
+    <input type="text" class="form-control" id="searchInput" placeholder="🔍 search...">
+      <div class="input-group-append">
+        <span class="input-group-text" id="searchCounter">🔍</span> 
+      </div>
+  </div>
+  <table class="table table-hover my-custom-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>First Name</th>
+        <th>Last Name</th>
+        <th>Event Date</th>
+        <th></th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody id="searchResults">
+    </tbody>
+  </table>
+</div>
 
-      } catch (err) {
-        output.textContent = `❌ Error:\n${err}`;
-      }
+<!-- ✏️ Edit Quote Form-->
+<div class="tab-pane fade" id="edit-quote" role="tabpanel" aria-labelledby="edit-tab">
+  <form id="editQuoteForm">
+    <input type="hidden" id="edit-qtID">
+    
+  <!-- Edit Form-Row 1: Cards 1–3 -->
+    <!-- Edit Form-Card 1: Client Info -->
+    <div class="row g-3 mt-1 mb-1">
+      <div class="col-md-4">
+        <!-- Card 1: Client Info -->
+        <div class="accordion" id="edit-AccordionR1C1">
+          <div class="accordion-item border-info">
+            <h2 class="accordion-header" id="edit-headingClient">
+              <button class="accordion-button collapsed bg-black text-info" type="button" data-bs-toggle="collapse" data-bs-target="#edit-collapseClient" aria-expanded="false" aria-controls="edit-collapseClient">
+                <span><i class="fa-solid fa-user me-2 text-info"></i></span>
+                <span id="card1-header" class="badge bg-black fs-6 text-info ms-2">
+                <span id="edit-card1-header-display"></span>
+              </span>
+                </button>
+            </h2>
+            <div id="edit-collapseClient" class="accordion-collapse collapse" aria-labelledby="edit-headingClient" data-bs-parent="#edit-AccordionR1C1">
+              <div class="accordion-body bg-black text-info">
+                <div class="row g-3">
+                  <div class="col-sm-12"><label class="form-label">Phone</label><input type="text" readonly class="form-control-plaintext" id="edit-phone"></div>
+                </div>
+                <div class="row g-3">
+                  <div class="col-sm-4"><label class="form-label">First Name</label><input type="text" readonly class="form-control-plaintext" id="edit-firstName"></div>
+                  <div class="col-sm-8"><label class="form-label">Last Name</label><input type="text" readonly class="form-control-plaintext" id="edit-lastName"></div>
+                </div>
+                <div class="row g-3">
+                  <div class="col-sm-12"><label class="form-label">Email</label><input type="text" readonly class="form-control-plaintext" id="edit-email"></div>
+                </div>
+                <div class="row g-3">
+                  <div class="col-12"><label class="form-label">Street</label><input type="text" readonly class="form-control-plaintext" id="edit-street"></div>
+                </div>
+                <div class="row g-3">
+                  <div class="col-sm-5"><label class="form-label">City</label><input type="text" readonly class="form-control-plaintext" id="edit-city"></div>
+                  <div class="col-sm-3"><label class="form-label">State</label><input type="text" readonly class="form-control-plaintext" id="edit-state"></div>
+                  <div class="col-sm-4"><label class="form-label">Zip</label><input type="text" readonly class="form-control-plaintext" id="edit-zip"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    <!-- Edit Form-Card 2: Event Info -->
+      <div class="col-md-4">
+        <div class="accordion" id="edit-AccordionR1C2">
+          <div class="accordion-item border-info">
+            <h2 class="accordion-header" id="edit-headingEvent">
+              <button class="accordion-button collapsed bg-danger text-black" type="button" data-bs-toggle="collapse" data-bs-target="#edit-collapseEvent" aria-expanded="false" aria-controls="edit-collapseEvent">
+                <span><i class="fa-solid fa-calendar-days me-2 text-info"></i></i>Event On </span>
+                <span id="card2-header" class="badge bg-black fs-6 text-info ms-2">
+                <span id="edit-card2-header-display">Event On</span>
+                </span>
+              </button>
+            </h2>
+            <div id="edit-collapseEvent" class="accordion-collapse collapse" aria-labelledby="edit-headingEvent" data-bs-parent="#edit-AccordionR1C2">
+              <div class="accordion-body">
+                <div class="row py-1 border-bottom align-items-center">
+                  <div class="col-5">Due Date</div>
+                  <div class="col-7 text-end"><input type="text" class="form-control form-control-sm text-end" id="edit-dueDate"></div>
+                </div>
+                <div class="row py-1 border-bottom align-items-center">
+                  <div class="col-5">Event Date</div>
+                  <div class="col-7 text-end"><input type="text" class="form-control form-control-sm text-end" id="edit-eventDate"></div>
+                </div>
+                <div class="row g-3">
+                  <div class="col-sm-12"><label class="form-label">Event Location</label><input type="text" class="form-control" id="edit-eventLocation"></div>
+                </div>
+                <div class="row g-3">
+                  <div class="col-sm-12"><label class="form-label">Event Notes</label><input type="text" class="form-control" id="edit-eventNotes"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    <!-- Edit Form-Card 3: Quote Summary -->
+      <div class="col-md-4">
+        <div class="accordion" id="edit-AccordionR1C3">
+          <div class="accordion-item border-info">
+            <h2 class="accordion-header" id="edit-headingSummary">
+              <button class="accordion-button collapsed bg-black text-info" type="button" data-bs-toggle="collapse" data-bs-target="#edit-collapseSummary" aria-expanded="false" aria-controls="edit-collapseSummary">
+                <i class="fa-solid fa-chart-line me-2 text-info"></i>Quote Summary
+                <span id="card3-header" class="badge bg-black fs-6 text-info ms-2">
+                  <span id="edit-card3-header-display">Grand Total</span>
+                </span>
+              </button>
+            </h2>
+            <div id="edit-collapseSummary" class="accordion-collapse collapse" aria-labelledby="edit-headingSummary" data-bs-parent="#edit-AccordionR1C3">
+              <div class="accordion-body">
+                <div class="row py-1 border-bottom align-items-center">
+                  <div class="col-5">Grand Total</div>
+                  <div class="col-7 text-end"><input type="text" class="form-control form-control-sm text-end" id="edit-grandTotal"></div>
+                </div>
+                <div class="row py-1 border-bottom align-items-center">
+                  <div class="col-5">Quote Date</div>
+                  <div class="col-7 text-end"><input type="text" class="form-control form-control-sm text-end" id="edit-quoteDate"></div>
+                </div>
+                <div class="row py-1 border-bottom align-items-center">
+                  <div class="col-5">Products</div>
+                  <div class="col-7 text-end"><input type="text" class="form-control form-control-sm text-end" id="edit-productCount"></div>
+                </div>
+               <div class="row py-1 border-bottom align-items-center">
+                  <div class="col-5">Invoice ID</div>
+                  <div class="col-7 text-end"><input type="text" class="form-control form-control-sm text-end" id="edit-invoiceID"></div>
+                </div>
+                <div class="row py-1 border-bottom align-items-center">
+                  <div class="col-5">Invoice Date</div>
+                  <div class="col-7 text-end"><input type="text" class="form-control form-control-sm text-end" id="edit-invoiceDate"></div>
+                </div>
+                <div class="col-sm-12"><label><b>Invoice Url</b></label>
+                  <div class="input-group"><input type="text" class="form-control" id="edit-invoiceUrl" placeholder="Enter URL here">
+                    <button class="btn btn-dark" type="button" id="openInvoiceUrlBtn" title="Open in new tab">🔗</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  <!-- Edit Form-Row 2: Cards 4–6 -->
+    <!-- Edit Form-Card 4: Add-On Fees -->
+    <div class="row g-3 mt-1 mb-1">
+      <div class="col-md-4">
+        <div class="accordion" id="edit-AccordionR2C1">
+          <div class="accordion-item border-info">
+            <h2 class="accordion-header" id="edit-headingAddonsTotal">
+              <button class="accordion-button collapsed bg-primary text-black" type="button" data-bs-toggle="collapse" data-bs-target="#edit-collapseAddonsTotal" aria-expanded="false" aria-controls="edit-collapseAddonsTotal">
+                <span><i class="fa-solid fa-user me-2 text-info"></i>Add-On Fees</span>
+                <span id="card4-header" class="badge bg-black fs-6 text-info ms-2">
+                  <span id="edit-card4-header-display">Add-On Fees</span>
+                </span>
+              </button>
+            </h2>
+            <div id="edit-collapseAddonsTotal" class="accordion-collapse collapse" aria-labelledby="edit-headingAddonsTotal" data-bs-parent="#edit-AccordionR2C1">
+              <div class="accordion-body">
+                <div class="row py-1 border-bottom align-items-center">
+                  <div class="col-6">Delivery Fee</div>
+                  <div class="col-6 text-end"><input type="text" class="form-control form-control-sm text-end" id="edit-deliveryFee"></div>
+                </div>
+                <div class="row py-1 border-bottom align-items-center">
+                  <div class="col-6">Setup Fee</div>
+                  <div class="col-6 text-end"><input type="text" class="form-control form-control-sm text-end" id="edit-setupFee"></div>
+                </div>
+                <div class="row py-1 border-bottom align-items-center">
+                  <div class="col-6">Other Fee</div>
+                  <div class="col-6 text-end"><input type="text" class="form-control form-control-sm text-end" id="edit-otherFee"></div>
+                </div>
+                <div class="row pt-2 mt-2 border-top align-items-center">
+                  <div class="col-6 fs-6">Add-ons Total</div>
+                  <div class="col-6 text-end fs-6 text-primary" id="edit-addonsTotal"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    <!-- Edit Form-Card 5: Balance Info -->
+      <div class="col-md-4">
+        <div class="accordion" id="edit-AccordionR2C2">
+          <div class="accordion-item border-info">
+            <h2 class="accordion-header" id="edit-headingBalanceInfo">
+              <button class="accordion-button collapsed bg-success text-black" type="button" data-bs-toggle="collapse" data-bs-target="#edit-collapseBalanceInfo" aria-expanded="false" aria-controls="edit-collapseBalanceInfo">
+                <span><i class="fa-solid fa-calculator me-2 text-info"></i>Balance & Deposit</span>
+                <span id="card5-header" class="badge bg-black fs-6 text-info ms-2">
+                <span id="edit-card5-header-display">Balance</span>
+              </span>
+                </button>
+            </h2>
+          <div id="edit-collapseBalanceInfo" class="accordion-collapse collapse" aria-labelledby="edit-headingBalanceInfo" data-bs-parent="#edit-AccordionR2C2">
+            <div class="accordion-body">
+              <div class="row py-1 border-bottom align-items-center">
+                <div class="col-6">Deposit Amount</div>
+                <div class="col-6 text-end"><input type="text" class="form-control form-control-sm text-end" id="edit-deposit"></div>
+              </div>
+              <div class="row py-1 border-bottom align-items-center">
+                <div class="col-6">Balance Due</div>
+                <div class="col-6 text-end"><input type="text" readonly class="form-control-plaintext form-control-sm text-end" id="edit-balanceDue"></div>
+              </div>
+              <div class="row py-1 border-bottom align-items-center">
+                <div class="col-6">Deposit Date</div>
+                <div class="col-6 text-end"><input type="text" class="form-control" id="edit-depositDate"></div>
+              </div>
+              <div class="row py-1 border-bottom align-items-center">
+                <div class="col-6">Payment Method</div>
+                <div class="col-6 text-end"><input class="form-control text-end" list="payment-method-options" id="edit-paymentMethod" name="paymentMethod" placeholder="Select or type method"></div>
+                  <datalist id="payment-method-options"></datalist>
+              </div>
+              <div class="row py-1 border-bottom align-items-center">
+                <div class="col-6">Balance Due Date</div>
+                <div class="col-6 text-end"><input type="text" class="form-control form-control-sm text-end" id="edit-balanceDueDate"></div>
+              </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    <!-- Edit Form-Card 6: Running Totals -->
+      <div class="col-md-4">
+        <div class="accordion" id="edit-AccordionR2C3">
+          <div class="accordion-item border-info">
+            <h2 class="accordion-header" id="edit-headingTotals">
+              <button class="accordion-button collapsed bg-warning text-black" type="button" data-bs-toggle="collapse" data-bs-target="#edit-collapseTotals" aria-expanded="false" aria-controls="edit-collapseTotals">
+                <span><i class="fa-solid fa-calculator me-2 text-info"></i>Running Total</span>
+                <span id="card6-header" class="badge bg-black fs-6 text-info ms-2">
+                <span id="edit-card6-header-display">Grand Total</span>
+              </button>
+            </h2>
+          <div id="edit-collapseTotals" class="accordion-collapse collapse" aria-labelledby="edit-headingTotals" data-bs-parent="#edit-AccordionR2C3">
+            <div class="accordion-body">
+              <div class="row border-bottom py-1">
+                <div class="col-6">Total Cost</div>
+                <div class="col-6 text-end" id="edit-totalProductCost"></div>
+              </div>
+              <div class="row border-bottom py-1">
+                <div class="col-6">Total Retail</div>
+                <div class="col-6 text-end" id="edit-totalProductRetail"></div>
+              </div>
+              <div class="row border-bottom py-1">
+                <div class="col-4">Tax 8.875%</div>
+                <div class="col-4 text-end">Tax $<input type="text" readonly class="form-control-plaintext form-control-sm border-black text-end" id="edit-subTotal1"></div>
+                <div class="col-4 text-end text-black">After Tax<input type="text" readonly class="form-control-plaintext form-control-sm border-black text-end" id="edit-subTotal2"></div>
+              </div>
+              <div class="row border-bottom py-1">
+                <div class="col-4">- Discount<input type="text" class="form-control form-control-sm text-end" id="edit-discount"></div>
+                <div class="col-4 text-end">Disc Total<input type="text" class="form-control form-control-sm border-black text-end" id="edit-subTotal3"></div>
+                <div class="col-4 text-end text-black">Discount<input type="text" readonly class="form-control-plaintext form-control-sm border-black text-danger text-end" id="edit-discountedTotal">-</div>
+              </div>
+              <div class="row border-bottom py-1">
+                <div class="col-4">+Add-Ons</div>
+                <div class="col-4 text-end text-black">Addons $<input type="text" readonly class="form-control-plaintext form-control-sm border-black text-end" id="edit-addonsTotal-totals"></div>
+                <div class="col-4 text-end text-black">Total<input type="text" readonly class="form-control-plaintext form-control-sm border-black text-end" id="edit-grandTotal-Addons"></div>
+              </div>
+              <div class="row border-top pt-2 mt-2">
+                <div class="col-6 fs-6 text-primary">Grand Total</div>
+                <div class="col-6 text-end fs-6 text-primary" id="edit-grandTotal"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Form-Row 3 -->
+    <!-- Edit Form-Card 7 - Product Rows -->
+      <div class="row g-3 mt-1 mb-1">
+        <div class="col-12">
+          <!-- Card 7: Product Rows -->
+          <div class="accordion" id="edit-AccordionR3C1">
+            <div class="accordion-item border-info">
+              <h2 class="accordion-header" id="edit-headingProducts">
+                <button class="accordion-button collapsed bg-black text-info" type="button" data-bs-toggle="collapse" data-bs-target="#edit-collapseProducts" aria-expanded="false" aria-controls="edit-collapseProducts">
+                  <span><i class="fa-solid fa-boxes-stacked me-2 text-info"></i></span>
+                  <span id="card7-header" class="badge bg-black fs-6 text-info ms-2">
+                  <span id="edit-card7-header-display">Products</span>
+                </button>
+              </h2>
+              <div id="edit-collapseProducts" class="accordion-collapse collapse" aria-labelledby="edit-headingProducts" data-bs-parent="#edit-AccordionR3C1">
+                <div class="accordion-body">
+                  <input type="hidden" id="edit-cost">
+                  <input type="hidden" id="edit-retail">
+                  <div class="container-fluid px-0">
+                    <div class="row mb-0 product-row-headers">
+                      <div class="col-md-6 text-start">Product</div>
+                      <div class="col-md-1 text-center">Qty</div>
+                      <div class="col-md-2 text-end">Cost $</div>
+                      <div class="col-md-2 text-end">Retail $</div>
+                      <div class="col-md-1"></div>
+                    </div>
+                    <div id="edit-product-rows-container" class="container px-0"></div>
+                    <datalist id="row-products-selector"></datalist>
+                    <!-- Edit Form-Add Row Button -->
+                    <div class="row g-3 mt-3">
+                      <div class="col-sm-6">
+                        <button type="button" class="btn btn-dark" id="edit-product-btn">➕ Product</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+  <!-- Edit Form-Row 4: Notes and Save -->
+    <div class="row g-3 mt-1 mb-1">
+      <div class="col-sm-12">
+        <label class="fw-bold">Quote Notes</label>
+        <input type="text" class="form-control" id="edit-quoteNotes">
+      </div>
+    </div>
+    <div class="row g-3 mt-1 mb-5">
+      <div class="col-sm-12">
+        <button class="btn btn-dark" id="edit-quote-btn">💾 Save Changes</button>
+        <button type="button" class="btn btn-secondary" id="edit-previewQuoteBtn">Preview Invoice</button>
+        <button type="button" class="btn btn-success" id="edit-finalizeInvoiceBtn">
+          <i class="bi bi-file-earmark-check"></i> Finalize Invoice</button>
+        <button id="btn-show-shopping-list" class="btn btn-outline-primary">🛒 View Shopping List</button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<!-- ➕ Add Quote Tab -->
+<div class="tab-pane fade" id="add-quote" role="tabpanel" aria-labelledby="add-tab">
+  <form id="addQuoteForm">
+    <input type="hidden" id="add-qtID">
+
+  <!-- Add Form-Row 1: Cards 1–3 -->
+    <!-- Add Form-Card 1: Client Info -->
+    <div class="row g-3 mt-1 mb-1">
+      <div class="col-md-4">
+        <div class="accordion" id="add-AccordionR1C1">
+          <div class="accordion-item border-info">
+            <h2 class="accordion-header" id="add-headingClient">
+              <button class="accordion-button collapsed bg-black text-info" type="button" data-bs-toggle="collapse" data-bs-target="#add-collapseClient" aria-expanded="false" aria-controls="add-collapseClient">
+                <span><i class="fa-solid fa-user me-2 text-info"></i></span>
+                  <span id="card1-header" class="badge bg-black fs-6 text-info ms-2">
+                  <span id="add-card1-header-display"></span>
+                </span>
+              </button>
+            </h2>
+            <div id="add-collapseClient" class="accordion-collapse collapse" aria-labelledby="add-headingClient" data-bs-parent="#add-AccordionR1C1">
+              <div class="accordion-body bg-black text-info">
+                <div class="row g-3">
+                  <div class="col-sm-12"><label class="form-label">Phone</label><input type="text" class="form-control" list="phone-options" id="add-phone">
+                    <datalist id="phone-options"></datalist></div>
+                </div>
+                <div class="row g-3">
+                  <div class="col-sm-6"><label class="form-label">First Name</label><input type="text" readonly class="form-control-plaintext" id="add-firstName"></div>
+                  <div class="col-sm-6"><label class="form-label">Last Name</label><input type="text" readonly class="form-control-plaintext" id="add-lastName"></div>
+                  <div class="col-sm-12"><label class="form-label">Email</label><input type="text" readonly class="form-control-plaintext" id="add-email"></div>
+                  <div class="col-sm-12"><label class="form-label">Street</label><input type="text" readonly class="form-control-plaintext" id="add-street"></div>
+                  <div class="col-sm-5"><label class="form-label">City</label><input type="text" readonly class="form-control-plaintext" id="add-city"></div>
+                  <div class="col-sm-3"><label class="form-label">State</label><input type="text" readonly class="form-control-plaintext" id="add-state"></div>
+                  <div class="col-sm-4"><label class="form-label">Zip</label><input type="text" readonly class="form-control-plaintext" id="add-zip"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    <!-- Add Form-Card 2: Event Info -->
+    <div class="col-md-4">
+      <div class="accordion" id="add-AccordionR2C1">
+        <div class="accordion-item border-info">
+          <h2 class="accordion-header" id="add-headingEventInfo">
+            <button class="accordion-button collapsed bg-danger text-black" type="button" data-bs-toggle="collapse" data-bs-target="#add-collapseEvent" aria-expanded="false" aria-controls="add-collapseEvent">
+              <span><i class="fa-solid fa-calendar-days me-2 text-info"></i>Event Info</span>
+              <span id="card2-header" class="badge bg-black fs-6 text-info ms-2">
+                <span id="add-card2-header-display">Event On</span>
+              </span>
+            </button>
+          </h2>
+          <div id="add-collapseEvent" class="accordion-collapse collapse" aria-labelledby="add-headingEventInfo" data-bs-parent="#add-AccordionR2C1">
+            <div class="accordion-body">
+                <div class="row py-1 border-bottom align-items-center">
+                  <div class="col-5">Due Date</div>
+                  <div class="col-7 text-end"><input type="text" class="form-control form-control-sm text-end" id="add-dueDate"></div>
+                </div>
+                <div class="row py-1 border-bottom align-items-center">
+                  <div class="col-5">Event Date</div>
+                  <div class="col-7 text-end"><input type="text" class="form-control form-control-sm text-end" id="add-eventDate"></div>
+                </div>
+              <div class="row g-3">
+                <div class="col-sm-12"><label class="form-label">Event Location</label><input type="text" class="form-control" id="add-eventLocation"></div>
+              </div>
+              <div class="row g-3">
+                <div class="col-sm-12"><label class="form-label">Event Notes</label><input type="text" class="form-control" id="add-eventNotes"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+      <div class="col-md-4">
+        <div class="accordion" id="add-AccordionR1C3">
+          <div class="accordion-item border-info">
+            <h2 class="accordion-header" id="add-headingSummary">
+              <button class="accordion-button collapsed bg-black text-info" type="button" data-bs-toggle="collapse" data-bs-target="#add-collapseSummary" aria-expanded="false" aria-controls="add-collapseSummary">
+                <i class="fa-solid fa-chart-line me-2 text-info"></i>Quote Summary
+                <span id="card3-header" class="badge bg-black fs-6 text-info ms-2">
+                  <span id="add-card3-header-display">Grand Total</span>
+                </span>
+              </button>
+            </h2>
+            <div id="add-collapseSummary" class="accordion-collapse collapse" aria-labelledby="add-headingSummary" data-bs-parent="#add-AccordionR1C3">
+              <div class="accordion-body">
+                <div class="row py-1 border-bottom align-items-center">
+                  <div class="col-5">Grand Total</div>
+                  <div class="col-7 text-end"><input type="text" class="form-control form-control-sm text-end" id="add-grandTotal"></div>
+                </div>
+                <div class="row py-1 border-bottom align-items-center">
+                  <div class="col-5">Quote Date</div>
+                  <div class="col-7 text-end"><input type="text" class="form-control form-control-sm text-end" id="add-quoteDate"></div>
+                </div>
+                <div class="row py-1 border-bottom align-items-center">
+                  <div class="col-5">Products</div>
+                  <div class="col-7 text-end"><input type="text" class="form-control form-control-sm text-end" id="add-productCount"></div>
+                </div>
+               <div class="row py-1 border-bottom align-items-center">
+                  <div class="col-5">Invoice ID</div>
+                  <div class="col-7 text-end"><input type="text" class="form-control form-control-sm text-end" id="add-invoiceID"></div>
+                </div>
+                <div class="row py-1 border-bottom align-items-center">
+                  <div class="col-5">Invoice Date</div>
+                  <div class="col-7 text-end"><input type="text" class="form-control form-control-sm text-end" id="add-invoiceDate"></div>
+                </div>
+               <div class="row py-1 border-bottom align-items-center">
+                  <div class="col-5">Invoice Url</div>
+                  <div class="col-7 text-end"><input type="text" class="form-control form-control-sm text-end" id="add-invoiceUrl">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  <!-- Add Form-Row 2: Cards 4–6 -->
+    <!-- Add Form-Card 4: Event Info -->
+    <div class="row g-3 mt-1 mb-1">
+      <div class="col-md-4">
+        <div class="accordion" id="add-AccordionR1C2">
+          <div class="accordion-item border-info">
+            <h2 class="accordion-header" id="add-headingAddonsTotal">
+              <button class="accordion-button collapsed bg-primary text-black" type="button" data-bs-toggle="collapse" data-bs-target="#add-collapseAddonsTotal" aria-expanded="false" aria-controls="add-collapseAddonsTotal">
+                <span><i class="fa-solid fa-plus me-2 text-info"></i>Add-On Fees</span>
+                <span id="card4-header" class="badge bg-black fs-6 text-info ms-2">
+                <span id="add-card4-header-display">Add-On Fees</span>
+              </button>
+            </h2>
+          <div id="add-collapseAddonsTotal" class="accordion-collapse collapse" aria-labelledby="add-headingAddonsTotal" data-bs-parent="#add-AccordionR1C2">
+            <div class="accordion-body">
+              <div class="row py-1 border-bottom align-items-center">
+                <div class="col-6">Delivery Fee</div>
+                <div class="col-6 text-end"><input type="text" class="form-control form-control-sm text-end" id="add-deliveryFee"></div>
+              </div>
+              <div class="row py-1 border-bottom align-items-center">
+                <div class="col-6">Setup Fee</div>
+                <div class="col-6 text-end"><input type="text" class="form-control form-control-sm text-end" id="add-setupFee"></div>
+              </div>
+              <div class="row py-1 border-bottom align-items-center">
+                <div class="col-6">Other Fee</div>
+                <div class="col-6 text-end"><input type="text" class="form-control form-control-sm text-end" id="add-otherFee"></div>
+              </div>
+              <div class="row pt-2 mt-2 border-top align-items-center">
+                <div class="col-6 fs-6">Add-ons Total</div>
+                <div class="col-6 text-end fs-6 text-primary" id="add-addonsTotal"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Form-Card 5: Balance Info -->
+    <div class="col-md-4">
+      <div class="accordion" id="add-AccordionR2C2">
+        <div class="accordion-item border-info">
+          <h2 class="accordion-header" id="add-headingBalanceInfo">
+            <button class="accordion-button collapsed bg-success text-black" type="button" data-bs-toggle="collapse" data-bs-target="#add-collapseBalanceInfo" aria-expanded="false" aria-controls="add-collapseBalanceInfo">
+              <span><i class="fa-solid fa-hand-holding-dollar me-2 text-info"></i>Balance Info</span>
+              <span id="card5-header" class="badge bg-black fs-6 text-info ms-2">
+                <span id="add-card5-header-display">Balance</span>
+              </span>
+            </button>
+          </h2>
+          <div id="add-collapseBalanceInfo" class="accordion-collapse collapse" aria-labelledby="add-headingBalanceInfo" data-bs-parent="#add-AccordionR2C2">
+            <div class="accordion-body">
+              <div class="row py-1 border-bottom align-items-center">
+                <div class="col-6">Deposit Amount</div>
+                <div class="col-6 text-end"><input type="text" class="form-control form-control-sm text-end" id="add-deposit"></div>
+              </div>
+              <div class="row py-1 border-bottom align-items-center">
+                <div class="col-6">Balance Due</div>
+                <div class="col-6 text-end"><input type="text" readonly class="form-control-plaintext form-control-sm text-end" id="add-balanceDue"></div>
+              </div>
+              <div class="row py-1 border-bottom align-items-center">
+                <div class="col-6">Deposit Date</div>
+                <div class="col-6 text-end"><input type="text" class="form-control" id="add-depositDate"></div>
+              </div>
+              <div class="row py-1 border-bottom align-items-center">
+                <div class="col-6">Payment Method</div>
+                <div class="col-6 text-end"><input class="form-control text-end" list="payment-method-options" id="add-paymentMethod" name="paymentMethod" placeholder="Select or type method"></div>
+                  <datalist id="payment-method-options"></datalist>
+              </div>
+              <div class="row py-1 border-bottom align-items-center">
+                <div class="col-6">Balance Due Date</div>
+                <div class="col-6 text-end"><input type="text" class="form-control form-control-sm text-end" id="add-balanceDueDate"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Form-Card 6: Quote Summary -->
+      <div class="col-md-4">
+        <div class="accordion" id="add-AccordionR2C3">
+          <div class="accordion-item border-info">
+            <h2 class="accordion-header" id="add-headingTotals">
+              <button class="accordion-button collapsed bg-warning text-black" type="button" data-bs-toggle="collapse" data-bs-target="#add-collapseTotals" aria-expanded="false" aria-controls="add-collapseTotals">
+                <span><i class="fa-solid fa-calculator me-2 text-info"></i>Running Total</span>
+                <span id="card6-header" class="badge bg-black fs-6 text-info ms-2">
+                <span id="add-card6-header-display">Grand Total</span>
+              </button>
+            </h2>
+          <div id="add-collapseTotals" class="accordion-collapse collapse" aria-labelledby="add-headingTotals" data-bs-parent="#add-AccordionR2C3">
+            <div class="accordion-body">
+              <div class="row border-bottom py-1">
+                <div class="col-6">Total Cost</div>
+                <div class="col-6 text-end" id="add-totalProductCost"></div>
+              </div>
+              <div class="row border-bottom py-1">
+                <div class="col-6">Total Retail</div>
+                <div class="col-6 text-end" id="add-totalProductRetail"></div>
+              </div>
+              <div class="row border-bottom py-1">
+                <div class="col-4">Tax 8.875%</div>
+                <div class="col-4 text-end">Tax $<input type="text" readonly class="form-control-plaintext form-control-sm border-black text-end" id="add-subTotal1"></div>
+                <div class="col-4 text-end text-black">After Tax<input type="text" readonly class="form-control-plaintext form-control-sm border-black text-end" id="add-subTotal2"></div>
+              </div>
+              <div class="row border-bottom py-1">
+                <div class="col-4">- Discount<input type="text" class="form-control form-control-sm text-end" id="add-discount"></div>
+                <div class="col-4 text-end">Disc Total<input type="text" class="form-control form-control-sm border-black text-end" id="add-subTotal3"></div>
+                <div class="col-4 text-end text-black">Discount<input type="text" readonly class="form-control-plaintext form-control-sm border-black text-danger text-end" id="add-discountedTotal">-</div>
+              </div>
+              <div class="row border-bottom py-1">
+                <div class="col-4">+Add-Ons</div>
+                <div class="col-4 text-end text-black">Addons $<input type="text" readonly class="form-control-plaintext form-control-sm border-black text-end" id="add-addonsTotal-totals"></div>
+                <div class="col-4 text-end text-black">Total<input type="text" readonly class="form-control-plaintext form-control-sm border-black text-end" id="add-grandTotal-Addons"></div>
+              </div>
+              <div class="row border-top pt-2 mt-2">
+                <div class="col-6 fs-6 text-primary">Grand Total</div>
+                <div class="col-6 text-end fs-6 text-primary" id="add-grandTotal"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Form-Row 3: Card 7 -->
+    <!-- Add Form-Card 7: Product Rows -->
+    <div class="row g-3 mt-1 mb-1">
+      <div class="col-12">
+        <div class="accordion" id="add-AccordionR3C1">
+          <div class="accordion-item border-info">
+            <h2 class="accordion-header" id="add-headingProducts">
+              <button class="accordion-button collapsed bg-black text-info" type="button" data-bs-toggle="collapse" data-bs-target="#add-collapseProducts" aria-expanded="false" aria-controls="add-collapseProducts">
+                <span><i class="fa-solid fa-boxes-stacked me-2 text-info"></i></span>
+                <span id="card7-header" class="badge bg-black fs-6 text-info ms-2">
+                <span id="add-card7-header-display">Products</span>
+              </button>
+            </h2>
+            <div id="add-collapseProducts" class="accordion-collapse collapse" aria-labelledby="add-headingProducts" data-bs-parent="#add-AccordionR3C1">
+              <div class="accordion-body">
+                <!-- 🔥 Product Rows Section -->
+                <input type="hidden" id="add-cost">
+                <input type="hidden" id="add-retail">
+                <div class="container-fluid px-0">
+                  <div class="row mb-0 product-row-headers">
+                    <div class="col-md-6 text-start">Product</div>
+                    <div class="col-md-1 text-center">Qty</div>
+                    <div class="col-md-2 text-end">Cost $</div>
+                    <div class="col-md-2 text-end">Retail $</div>
+                    <div class="col-md-1"></div>
+                  </div>
+                  <div id="add-product-rows-container" class="container px-0"></div>
+                  <datalist id="row-products-selector"></datalist>
+                  <!-- Edit Form-Add Row Button -->
+                  <div class="row g-3 mt-3">
+                    <div class="col-sm-6">
+                      <button type="button" class="btn btn-dark" id="add-product-btn">➕ Product</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  <!-- Add Form-Row 4: Notes and Save -->
+    <div class="row g-3 mt-1 mb-1">
+      <div class="col-sm-12"><label class="fw-bold">Quote Notes</label><input type="text" class="form-control" id="add-quoteNotes"></div>
+    </div>
+    <div class="row g-3 mt-1 mb-5">
+      <div class="col-sm-12">
+        <button class="btn btn-dark" id="add-quote-btn">💾 Save Changes</button>
+        <button type="button" class="btn btn-secondary" id="add-previewQuoteBtn">Preview Invoice</button>
+        <button type="button" class="btn btn-success" id="add-finalizeInvoiceBtn">
+          <i class="bi bi-file-earmark-check"></i> Finalize Invoice</button>
+      </div>
+    </div>
+  </form>
+</div>
+</section>
+
+<!-- Final Invoice Email Modal - Place Outside of Tab/Form -->
+<div class="modal fade" id="finalInvoiceModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <input type="hidden" id="logID">
+      <div class="modal-header">
+        <h5 class="modal-title">Send Final Invoice</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3"><label for="invoice-email-to" class="form-label">To:</label><input type="email" class="form-control" id="invoice-email-to" readonly></div>
+        <div class="mb-3"><label for="invoice-email-subject" class="form-label">Subject:</label><input type="text" class="form-control" id="invoice-email-subject"></div>
+        <div class="mb-3"><label for="invoice-email-body" class="form-label">Email Body:</label><div id="invoice-email-body" contenteditable="true" class="form-control" style="height: 200px; overflow-y: auto;"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="send-invoice-email" class="btn btn-primary">Send Invoice</button>
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Log Payment Modal -->
+<div class="modal fade" id="logPaymentModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content shadow">
+      <div class="modal-header">
+        <h5 class="modal-title">Log Invoice Payment</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="logPaymentForm">
+          <input type="hidden" id="log-payment-invoiceID">
+          <div class="mb-3"><label for="log-payment-amount" class="form-label">Amount Received</label><input type="number" class="form-control" id="log-payment-amount" min="0.01" step="0.01" required></div>
+          <div class="col-md-2 col-lg-2"><input class="form-control" list="payment-method-options" id="paymentMethod" name="paymentMethod" placeholder="Select or type method">
+            <datalist id="payment-method-options"></datalist></div>
+          <div class="form-text text-muted">Partial payments are supported. Balance will update accordingly.</div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button id="submitLogPaymentBtn" class="btn btn-success">Log Payment</button>
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Shopping List Modal -->
+<div class="modal fade" id="shoppingListModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">🛒 Required Materials for Quote</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <table class="table table-striped">
+          <thead>
+            <tr><th>Material</th><th>Needed</th><th>In Stock</th><th>Status</th><th>Supplier</th></tr>
+          </thead>
+          <tbody id="shopping-list-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+
+// Function to open the URL in a new tab
+function openUrl() {
+  const url = document.getElementById('edit-invoiceUrl').value.trim();
+  
+  if (url && !/^https?:\/\//i.test(url)) {
+    // If URL is valid but doesn't start with https://, add it.
+    window.open('https://' + url, '_blank');
+  } else if (url) {
+    // If it's already valid, open it.
+    window.open(url, '_blank');
+  }
+}
+
+// Attach the function to the button click event
+document.getElementById('openInvoiceUrlBtn').addEventListener('click', openUrl);
+
+function setupDynamicNavigation() {
+  function activateTabFromHash() {
+    var hash = window.location.hash;
+    if (!hash) return;
+
+    var targetTabButton = document.querySelector('[data-bs-target="' + hash + '"]');
+    if (targetTabButton) {
+      var tab = new bootstrap.Tab(targetTabButton);
+      tab.show();
     }
-  </script>
+  }
+
+  // Use window.onload for full page load
+  window.onload = function() {
+    activateTabFromHash();  // Ensures tab switch happens after everything is loaded
+  };
+
+  window.addEventListener('hashchange', activateTabFromHash);
+}
+
+setupDynamicNavigation();
+
+</script>
+  
+<script src="config.js"></script>
+<script src="test.js"></script>
+<!-- <script src="invoicemanager.js"></script> -->
+
+<!-- </script> -->
+
 </body>
 </html>
