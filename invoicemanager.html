@@ -83,24 +83,31 @@
     <input type="hidden" id="qtID">
     <input type="hidden" id="invoiceID">
 
-  <div class="row g-3 mt-1 mb-1">
-    <div class="col-md-2"><label for="invoiceDate"><b>Invoice Date</b></label><input type="text" class="form-control" id="invoiceDate" readonly></div>
-    <div class="col-md-2"><label for="dueDate"><b>Due Date</b></label><input type="text" class="form-control" id="dueDate" readonly></div>
-    <div class="col-md-2"><label for="firstName"><b>First Name</b></label><input type="text" class="form-control" id="firstName" readonly></div>
-    <div class="col-md-2"><label for="lastName"><b>Last Name</b></label><input type="text" class="form-control" id="lastName" readonly></div>
-    <div class="col-md-2"><label for="email"><b>Email</b></label><input type="text" class="form-control" id="email" readonly></div>
-    <div class="col-md-2"><label for="grandTotal"><b>Grand Total</b></label><input type="text" class="form-control" id="grandTotal" readonly></div>
-    <div class="col-md-2"><label for="amountPaid"><b>Amount Paid</b></label><input type="text" class="form-control" id="amountPaid" readonly></div>
-    <div class="col-md-2"><label for="balanceDue"><b>Balance Due</b></label><input type="text" class="form-control" id="balanceDue" readonly></div>
-    <div class="col-md-2"><label for="status"><b>Status</b></label><input type="text" class="form-control" id="status" readonly></div>
-    <div class="col-md-2"><label for="paymentHistory"><b>Payment History</b></label><input type="text" class="form-control" id="paymentHistory" readonly></div>
-    <div class="col-md-2"><label for="sendDate"><b>Send Date</b></label><input type="text" class="form-control" id="sendDate" readonly></div>
-    <div class="col-md-2"><label for="sendMethod"><b>Send Method</b></label><input type="text" class="form-control" id="sendMethod" readonly></div>
-    <div class="col-md-2"><label for="invoiceLogNotes"><b>Log Notes</b></label><input type="text" class="form-control" id="invoiceLogNotes" readonly></div>
+    <div class="container"></div>
+      <div class="row g-3 mt-1 mb-1">
+        <div class="col-md-2"><label for="firstName"><b>First Name</b></label><input type="text" class="form-control" id="firstName" readonly></div>
+        <div class="col-md-2"><label for="lastName"><b>Last Name</b></label><input type="text" class="form-control" id="lastName" readonly></div>
+        <div class="col-md-4"><label for="email"><b>Email</b></label><input type="text" class="form-control" id="email" readonly></div>
+      </div>
+      <div class="row g-3 mt-1 mb-1">
+        <div class="col-md-2"><label for="invoiceDate"><b>Invoice Date</b></label><input type="text" class="form-control" id="invoiceDate" readonly></div>
+        <div class="col-md-2"><label for="grandTotal"><b>Invoice Total</b></label><input type="text" class="form-control" id="grandTotal" readonly></div>
+        <div class="col-md-2"><label for="amountPaid"><b>Amount Paid</b></label><input type="text" class="form-control" id="amountPaid" readonly></div>
+        <div class="col-md-2"><label for="status"><b>Status</b></label><input type="text" class="form-control" id="status" readonly></div>
+      </div>
+      <div class="row g-3 mt-1 mb-1">
+        <div class="col-md-2"><label for="balanceDue"><b>Balance Due</b></label><input type="text" class="form-control" id="balanceDue" readonly></div>
+        <div class="col-md-2"><label for="dueDate"><b>Due Date</b></label><input type="text" class="form-control" id="dueDate" readonly></div>
+        <div class="col-md-2"><label for="sendDate"><b>Last Send Date</b></label><input type="text" class="form-control" id="sendDate" readonly></div>
+        <div class="col-md-2"><label for="sendMethod"><b>Last Send Method</b></label><input type="text" class="form-control" id="sendMethod" readonly></div>
+        <div class="col-md-2"><label for="paymentHistory"><b></b></label><input type="hidden" class="form-control" id="paymentHistory" readonly></div>
+      </div>
+    <div class="row g-3 mt-1 mb-1">
+    <div class="col-md-10"><label for="invoiceLogNotes"><b>Log Notes</b></label><input type="text" class="form-control" id="invoiceLogNotes" readonly></div>
   </div>
 
   <div class="row g-3 mt-1 mb-1">
-    <div class="d-grid gap-2 d-sm-block mt-3">
+    <div class="d-grid gap-2 d-sm-block mt-2 mb-2">
       <button type="button" class="btn btn-warning" id="viewQuoteBtn">📝 View Quote</button>
       <button type="button" class="btn btn-success ms-2 d-none" id="makePaymentBtn">💵 Make Payment</button>
     </div>
@@ -109,7 +116,7 @@
   <div id="paymentPendingAlert" class="alert alert-warning d-none">
     🕒 Payment is pending. Please follow up.
   </div>
-  <div id="paidInFullAlert" class="alert alert-success d-none">
+  <div id="paidInFullAlert" class="alert alert-success col-md-4 bg-info text-black d-none">
     ✅ This invoice is paid in full.
   </div>
 </form>

@@ -1055,7 +1055,32 @@ async function finalizeInvoiceBtnHandler(e) {
 
     console.log("🧪 Invoice finalized:", invoiceData);
 
-    // Step 4: Fill modal content
+    // Step 4: Auto-create calendar event
+    const eventInfo = {
+      title: `Event: ${quoteInfo.firstName || ""} ${quoteInfo.lastName || ""}`.trim(),
+      start: quoteInfo.eventDate,
+      end: quoteInfo.eventDate,
+      allDay: true,
+      status: quoteInfo.deposit > 0 ? "confirmed" : "scheduled",
+      category: "Quote",
+      description: quoteInfo.eventNotes || "",
+      color: "" // Optional: use default or add a color key
+    };
+
+    const calRes = await fetch(scriptURL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        system: "calendar",
+        action: "addEvent",
+        eventInfo
+      })
+    });
+
+    const calData = await calRes.json();
+    console.log("📅 Calendar event created:", calData);
+
+    // Step 5: Prepare invoice email modal
     const displayName = `${quoteInfo.firstName || ""} ${quoteInfo.lastName || ""}`.trim();
     const emailHtml = generateInvoiceEmailHtml(displayName, invoiceURL, quoteInfo);
 
@@ -1063,19 +1088,12 @@ async function finalizeInvoiceBtnHandler(e) {
     document.getElementById("invoice-email-subject").value = "Your Final Invoice from Your Company";
     document.getElementById("invoice-email-body").innerHTML = emailHtml;
 
-    // Step 5: Show modal
+    // Step 6: Show modal
     const modalEl = document.getElementById("finalInvoiceModal");
-
-    // If modal is hidden by parent tab or style, log it but don't force fixes here
-    console.log("Modal visibility check:");
-    console.log("- Display:", getComputedStyle(modalEl).display);
-    console.log("- offsetParent exists:", modalEl.offsetParent !== null);
-    console.log("- Modal has 'show':", modalEl.classList.contains("show"));
-
     const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
     modal.show();
 
-    showToast("📄 Invoice finalized and ready to send.", "success");
+    showToast("📄 Invoice finalized and calendar event created.", "success");
 
   } catch (err) {
     console.error("❌ Finalization failed:", err);

@@ -155,7 +155,7 @@
 <!-- Row 2 -->
 <!-- Low-Stock Accordion -->
 <div class="row g-3 mt-1 mb-5">
-  <div class="col-md-4 col-lg-4 mt-3 mb-5">
+  <div class="col-md-4 col-lg-4 mt-1 mb-5">
     <div class="accordion fade-in-card" id="lowStockAccordion">
       <div class="accordion-item border-light">
         <h2 class="accordion-header" id="headingLowStock">
@@ -171,6 +171,43 @@
       </div>
     </div>
   </div>
+
+<!-- 📅 Calendar Events Today Accordion -->
+<div class="col-md-4 col-lg-4 mt-1 mb-5">
+  <div class="accordion fade-in-card" id="calendarTodayAccordion">
+    <div class="accordion-item border-light">
+      <h2 class="accordion-header" id="headingTodayEvents">
+        <button class="accordion-button collapsed bg-black text-info" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTodayEvents" aria-expanded="false" aria-controls="collapseTodayEvents">
+          <i class="fa-solid fa-calendar-day me-2"></i>Today's Events
+        </button>
+      </h2>
+      <div id="collapseTodayEvents" class="accordion-collapse collapse" aria-labelledby="headingTodayEvents">
+        <div class="accordion-body bg-black text-light p-2" style="max-height: 300px; overflow-y: auto;">
+          <ul class="list-group list-group-flush" id="todayEventsList"></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 📆 Calendar Events This Week Accordion -->
+<div class="col-md-4 col-lg-4 mt-1 mb-5">
+  <div class="accordion fade-in-card" id="calendarWeekAccordion">
+    <div class="accordion-item border-light">
+      <h2 class="accordion-header" id="headingWeekEvents">
+        <button class="accordion-button collapsed bg-black text-info" type="button" data-bs-toggle="collapse" data-bs-target="#collapseWeekEvents" aria-expanded="false" aria-controls="collapseWeekEvents">
+          <i class="fa-solid fa-calendar-week me-2"></i>This Week's Events
+        </button>
+      </h2>
+      <div id="collapseWeekEvents" class="accordion-collapse collapse" aria-labelledby="headingWeekEvents">
+        <div class="accordion-body bg-black text-light p-2" style="max-height: 300px; overflow-y: auto;">
+          <div id="weekEventsGroup"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 </div>
 </div>
 </div>
@@ -301,11 +338,6 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-// function formatDateString(dateStr) {
-//   const date = new Date(dateStr);
-//   return date.toLocaleDateString();
-// }
-
 document.addEventListener('click', function (e) {
   var linkButton = e.target.closest('[data-link]');
   if (linkButton) {
@@ -318,6 +350,82 @@ document.addEventListener('click', function (e) {
       }
     }
   }
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+
+function formatTime(datetimeStr) {
+  const d = new Date(datetimeStr);
+  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function loadCalendarSummaries() {
+  const now = new Date();
+  const startOfToday = new Date(now.setHours(0, 0, 0, 0)).toISOString();
+  const endOfToday = new Date(now.setHours(23, 59, 59, 999)).toISOString();
+
+  const startOfWeek = new Date();
+  startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+  startOfWeek.setHours(0, 0, 0, 0);
+
+  const endOfWeek = new Date(startOfWeek);
+  endOfWeek.setDate(endOfWeek.getDate() + 6);
+  endOfWeek.setHours(23, 59, 59, 999);
+
+  fetch(scriptURL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      system: 'calendar',
+      action: 'getEvents',
+      start: startOfWeek.toISOString(),
+      end: endOfWeek.toISOString()
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    const events = Array.isArray(data?.data) ? data.data : [];
+    const todayList = document.getElementById("todayEventsList");
+    const weekGroup = document.getElementById("weekEventsGroup");
+    todayList.innerHTML = '';
+    weekGroup.innerHTML = '';
+
+    const grouped = {};
+    events.forEach(ev => {
+      const evDate = new Date(ev.start).toLocaleDateString();
+      grouped[evDate] = grouped[evDate] || [];
+      grouped[evDate].push(ev);
+
+      // Filter today
+      if (new Date(ev.start).toDateString() === new Date().toDateString()) {
+        const li = document.createElement("li");
+        li.className = "list-group-item bg-dark text-light d-flex justify-content-between align-items-center";
+        li.innerHTML = `<span>${ev.title}</span><span class="text-info">${formatTime(ev.start)}</span>`;
+        todayList.appendChild(li);
+      }
+    });
+
+    for (const [date, evs] of Object.entries(grouped)) {
+      const dateGroup = document.createElement("div");
+      dateGroup.className = "mb-2";
+      dateGroup.innerHTML = `<div class="fw-bold text-info mb-1">${date}</div>`;
+
+      evs.forEach(ev => {
+        const eventLine = document.createElement("div");
+        eventLine.className = "text-light small border-bottom border-secondary pb-1 mb-1";
+        eventLine.innerHTML = `<span class="text-warning">${formatTime(ev.start)}</span> - ${ev.title}`;
+        dateGroup.appendChild(eventLine);
+      });
+
+      weekGroup.appendChild(dateGroup);
+    }
+  })
+  .catch(err => {
+    console.error("❌ Error loading calendar summary:", err);
+  });
+}
+
+  loadCalendarSummaries();
 });
 
 </script>
