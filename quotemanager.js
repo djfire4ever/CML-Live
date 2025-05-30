@@ -1,3 +1,7 @@
+// ✅ Data store
+let quoteData = [];
+let productData = [];
+
 // ✅ Utility: Get or create reusable counter elements
 function getOrCreateCounter(id, classList, parent, insertAfter = null) {
   let el = document.getElementById(id);
@@ -17,10 +21,6 @@ function showEditTab() {
   const editTab = document.querySelector('[data-bs-target="#edit-quote"]');
   if (editTab) new bootstrap.Tab(editTab).show();
 }
-
-// ✅ Data store
-let quoteData = [];
-let productData = [];
 
 // ✅ Load search data from backend
 function setQuoteDataForSearch() {
@@ -67,7 +67,7 @@ function search() {
     row.querySelector(".qtID").textContent = r[0];
     row.querySelector(".firstName").textContent = r[3];
     row.querySelector(".lastName").textContent = r[4];
-    row.querySelector(".eventDate").textContent = r[10];
+    row.querySelector(".eventDate").textContent = formatDateForUser(r[10]);
 
     const tr = row.querySelector("tr");
     tr.dataset.quoteid = r[0];
@@ -172,9 +172,10 @@ document.addEventListener("DOMContentLoaded", () => {
 // ✅ Form field listeners (Edit/Add)
 document.addEventListener("DOMContentLoaded", () => {
   const fieldsToWatch = [
-    "edit-deliveryFee", "edit-setupFee", "edit-otherFee", "edit-discount", "edit-deposit",
-    "add-deliveryFee", "add-setupFee", "add-otherFee", "add-discount", "add-deposit",
-    "add-phone", "add-eventDate", "edit-eventDate", "edit-phone"
+    "edit-deliveryFee", "add-deliveryFee", "edit-setupFee", "add-setupFee", 
+    "edit-otherFee", "add-otherFee", "edit-discount", "add-discount", 
+    "edit-deposit", "add-deposit", "edit-amountPaid",
+    "add-phone", "edit-phone", "add-eventDate", "edit-eventDate"
   ];
 
   fieldsToWatch.forEach(id => {
@@ -207,10 +208,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Watch fields and recalculate totals
   const fieldsToWatch = [
-    "edit-deliveryFee", "edit-setupFee", "edit-otherFee", "edit-discount", "edit-deposit",
-    "add-deliveryFee", "add-setupFee", "add-otherFee", "add-discount", "add-deposit",
-    "add-phone", "add-eventDate", "edit-eventDate", "edit-phone"
+    "edit-deliveryFee", "add-deliveryFee", "edit-setupFee", "add-setupFee", 
+    "edit-otherFee", "add-otherFee", "edit-discount", "add-discount", 
+    "edit-deposit", "add-deposit", "edit-amountPaid", "add-amountPaid",
+    "add-phone", "edit-phone", "add-eventDate", "edit-eventDate"
   ];
+
   fieldsToWatch.forEach(id => {
     document.getElementById(id)?.addEventListener("change", () => {
       const mode = id.startsWith("add") ? "add" : "edit";
@@ -315,18 +318,25 @@ async function populateEditForm(qtID) {
       .forEach(id => setField(`edit-${id}`, data[id] || ""));
 
     // Card 2: Event Info
-    ["eventDate", "eventLocation", "eventNotes"]
-      .forEach(id => setField(`edit-${id}`, data[id] || ""));
+    setField("edit-eventDate", formatDateForUser(data.eventDate));
+    setField("edit-eventLocation", data.eventLocation || "");
+    setField("edit-eventNotes", data.eventNotes || "");
 
-    // Card 3: Add-On Fees
+    // Card 4: Add-On Fees
     ["deliveryFee", "setupFee", "otherFee", "addonsTotal"]
       .forEach(id => setField(`edit-${id}`, data[id] || 0));
 
-    // Card 4: Balance & Payment
-    ["deposit", "depositDate", "balanceDue", "balanceDueDate", "paymentMethod", "dueDate"]
-      .forEach(id => setField(`edit-${id}`, data[id] || ""));
+    // Card 5: Balance & Payment
+    setField("edit-deposit", data.deposit || "");
+    setField("edit-amountPaid", data.amountPaid || "");
+    setField("edit-balanceDue", data.balanceDue || "");
+    setField("edit-paymentMethod", data.paymentMethod || "");
 
-    // Card 5: Totals
+    setField("edit-depositDate", formatDateForUser(data.depositDate));
+    setField("edit-balanceDueDate", formatDateForUser(data.balanceDueDate));
+    setField("edit-dueDate", formatDateForUser(data.dueDate));
+
+    // Card 6: Totals
     ["discount", "subTotal1", "subTotal2", "subTotal3", "discountedTotal", "grandTotal"]
       .forEach(id => setField(`edit-${id}`, data[id] || 0));
 
@@ -348,10 +358,21 @@ async function populateEditForm(qtID) {
     }
 
     // Hidden/Meta Fields
-    [
-      "totalProductCost", "totalProductRetail", "productCount", "quoteDate",
-      "quoteNotes", "invoiceID", "invoiceDate", "invoiceUrl"
-    ].forEach(id => setField(`edit-${id}`, data[id] || ""));
+    [ "totalProductCost",
+      "totalProductRetail",
+      "productCount",
+      "quoteDate",
+      "quoteNotes",
+      "invoiceID",
+      "invoiceDate",
+      "invoiceUrl"
+    ].forEach(id => {
+      let val = data[id] || "";
+      if (id === "quoteDate" || id === "invoiceDate") {
+        val = formatDateForUser(val);
+      }
+      setField(`edit-${id}`, val);
+    });
 
     // 🔢 Totals and Header Updates
     calculateAllTotals("edit");
@@ -457,6 +478,7 @@ function collectQuoteFormData(mode) {
     otherFee: parseCurrency(get("otherFee")),
     addonsTotal: parseCurrency(get("addonsTotal")),
     deposit: parseCurrency(get("deposit")),
+    amountPaid: parseCurrency(get("amountPaid")),
     depositDate: get("depositDate"),
     balanceDue: parseCurrency(get("balanceDue")),
     balanceDueDate: get("balanceDueDate"),
@@ -793,14 +815,18 @@ function calculateAllTotals(mode = "edit") {
   const otherFee = parseCurrency(document.getElementById(`${prefix}otherFee`)?.value);
   const discount = parseCurrency(document.getElementById(`${prefix}discount`)?.value);
   const deposit = parseCurrency(document.getElementById(`${prefix}deposit`)?.value);
+  const amountPaidEl = document.getElementById(`${prefix}amountPaid`);
+  const amountPaid = parseCurrency(amountPaidEl?.value);
+
+  const hasAmountPaid = amountPaidEl && amountPaid > 0;
 
   const addonsTotal = deliveryFee + setupFee + otherFee;
-  const subTotal1 = totalProductRetail * 0.08875;
+  const subTotal1 = totalProductRetail * 0.08875; // tax
   const subTotal2 = totalProductRetail + subTotal1;
   const subTotal3 = totalProductRetail * (discount / 100);
   const discountedTotal = subTotal2 - subTotal3;
   const grandTotal = discountedTotal + addonsTotal;
-  const balanceDue = grandTotal - deposit;
+  const balanceDue = grandTotal - (hasAmountPaid ? amountPaid : deposit);
 
   const updateField = (id, value) => {
     const el = document.getElementById(id);
@@ -817,6 +843,7 @@ function calculateAllTotals(mode = "edit") {
     }
   };
 
+  // Update totals in DOM
   updateField(`${prefix}addonsTotal`, addonsTotal);
   updateField(`${prefix}addonsTotal-totals`, addonsTotal);
   updateField(`${prefix}grandTotal`, grandTotal);
@@ -829,15 +856,19 @@ function calculateAllTotals(mode = "edit") {
   updateField(`${prefix}subTotal2`, subTotal2);
   updateField(`${prefix}subTotal3`, subTotal3);
   updateField(`${prefix}discountedTotal`, discountedTotal);
+  // updateField(`${prefix}amountPaid`, amountPaid); // ✅ Format & show amountPaid
+
+  // Update Card 7 header
   const card7Header = document.getElementById(`${prefix}card7-header-display`);
-    if (card7Header) {
-      const retailFormatted = totalProductRetail.toLocaleString("en-US", {
-        style: "currency",
-        currency: "USD",
-        minimumFractionDigits: 2,
-      });
-      card7Header.textContent = `Products - ${productCount} • ${retailFormatted}`;
-    }
+  if (card7Header) {
+    const retailFormatted = totalProductRetail.toLocaleString("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 2,
+    });
+    card7Header.textContent = `Products - ${productCount} • ${retailFormatted}`;
+  }
+
   updateCardHeaders(mode);
 }
 
@@ -873,7 +904,15 @@ function getField(id) {
 
 function setField(id, value) {
   const el = document.getElementById(id);
-  if (el) el.value = value;
+  if (!el) return;
+
+  // Handle input or textarea fields
+  if (el.tagName === "INPUT" || el.tagName === "TEXTAREA") {
+    el.value = value;
+  } else {
+    // Fallback for <span>, <div>, etc.
+    el.textContent = value;
+  }
 }
 
 function recalculateAndUpdateHeaders(mode = "edit") {
@@ -1167,3 +1206,4 @@ function renderShoppingListModal(materials) {
 
   new bootstrap.Modal(document.getElementById("shoppingListModal")).show();
 }
+

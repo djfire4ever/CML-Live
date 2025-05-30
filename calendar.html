@@ -6,13 +6,13 @@
   <title>📅 FullCalendar Feature Showcase</title>
 
   <!-- Mocha CSS -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mocha@10.2.0/mocha.min.css">
+  <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mocha@10.2.0/mocha.min.css"> -->
 
   <!-- Mocha & Chai Scripts -->
-  <script src="https://cdn.jsdelivr.net/npm/mocha@10.2.0/mocha.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chai@4.3.7/chai.js"></script>
+  <!-- <script src="https://cdn.jsdelivr.net/npm/mocha@10.2.0/mocha.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chai@4.3.7/chai.js"></script> -->
 
-  <script src="config.js" defer></script>
+<script src="config.js" defer></script>
 </head>
 
 <!-- ✅ Toast Container -->
@@ -20,7 +20,7 @@
 
 <body class="bg-light">
   <div class="container py-4">
-    <h1 class="text-center mb-4">📅 FullCalendar Demo</h1>
+    <h1 class="text-center mb-4">📅 FullCalendar</h1>
     <div class="card shadow rounded-4">
       <div class="card-body p-4">
         <div id="calendar"></div>
@@ -38,64 +38,40 @@
         <h5 class="modal-title" id="addEventLabel">Event Details</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-
       <div class="modal-body">
         <form id="eventForm" class="row g-3">
           <input type="hidden" id="eventID">
-
           <!-- Event Title -->
-          <div class="col-md-8">
-            <label for="eventTitle" class="form-label">Title</label>
-            <input type="text" class="form-control" id="eventTitle" required>
-          </div>
-
+          <div class="col-md-8"><label for="eventTitle" class="form-label">Title</label>
+            <input type="text" class="form-control" id="eventTitle" required></div>
           <!-- All Day -->
           <div class="col-md-4 d-flex align-items-end">
-            <div class="form-check">
-              <input class="form-check-input" type="checkbox" id="eventAllDay">
-              <label class="form-check-label" for="eventAllDay">All Day</label>
-            </div>
+            <div class="form-check"><label class="form-check-label" for="eventAllDay">All Day</label>
+              <input class="form-check-input" type="checkbox" id="eventAllDay"></div>
           </div>
-
           <!-- Start Date/Time -->
-          <div class="col-md-6">
-            <label for="eventStart" class="form-label">Start</label>
-            <input type="datetime-local" class="form-control" id="eventStart">
-          </div>
-
+          <div class="col-md-6"><label for="eventStart" class="form-label">Start</label>
+            <input type="datetime-local" class="form-control" id="eventStart"></div>
           <!-- End Date/Time -->
-          <div class="col-md-6">
-            <label for="eventEnd" class="form-label">End</label>
-            <input type="datetime-local" class="form-control" id="eventEnd">
-          </div>
-
+          <div class="col-md-6"><label for="eventEnd" class="form-label">End</label>
+            <input type="datetime-local" class="form-control" id="eventEnd"></div>
           <!-- Status -->
-          <div class="col-md-4">
-            <label for="eventStatus" class="form-label">Status</label>
+          <div class="col-md-4"><label for="eventStatus" class="form-label">Status</label>
             <select class="form-select" id="eventStatus">
               <option value="scheduled">Scheduled</option>
               <option value="confirmed">Confirmed</option>
               <option value="cancelled">Cancelled</option>
             </select>
           </div>
-
           <!-- Category -->
-          <div class="col-md-4">
-            <label for="eventCategory" class="form-label">Category</label>
-            <input type="text" class="form-control" id="eventCategory" placeholder="e.g. Meeting, Delivery">
-          </div>
-
+          <div class="col-md-4"><label for="eventCategory" class="form-label">Category</label>
+            <input type="text" class="form-control" id="eventCategory" placeholder="e.g. Meeting, Delivery"></div>
           <!-- Color -->
-          <div class="col-md-4">
-            <label for="eventColor" class="form-label">Color</label>
-            <input type="color" class="form-control form-control-color" id="eventColor" value="#007bff">
-          </div>
-
+          <div class="col-md-4"><label for="eventColor" class="form-label">Color</label>
+            <input type="color" class="form-control form-control-color" id="eventColor" value="#007bff"></div>
           <!-- Description -->
-          <div class="col-12">
-            <label for="eventDescription" class="form-label">Description</label>
-            <textarea class="form-control" id="eventDescription" rows="3" placeholder="Enter details..."></textarea>
-          </div>
+          <div class="col-12"><label for="eventDescription" class="form-label">Description</label>
+            <textarea class="form-control" id="eventDescription" rows="3" placeholder="Enter details..."></textarea></div>
         </form>
       </div>
 

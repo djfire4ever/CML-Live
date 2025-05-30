@@ -156,6 +156,7 @@ function populateEditForm(clientID) {
 
 // ✅ Save Edited Client
 const saveEditBtn = document.getElementById("save-changes");
+
 saveEditBtn?.addEventListener("click", async () => {
   const clientID = document.getElementById("edit-clientID").value.trim();
   if (!clientID) return showToast("❌ Phone number is missing.", "error");
@@ -197,6 +198,7 @@ saveEditBtn?.addEventListener("click", async () => {
 
 // ✅ Add New Client
 const addClientForm = document.getElementById("addClientForm");
+
 addClientForm?.addEventListener("submit", async (e) => {
   e.preventDefault();
 
@@ -205,7 +207,7 @@ addClientForm?.addEventListener("submit", async (e) => {
     return info;
   }, {});
 
-  if (!clientInfo.clientID || !clientInfo.firstName || !clientInfo.lastName || !clientInfo.email)
+  if (!clientInfo.clientID || !clientInfo.firstName || !clientInfo.lastName) // Add this is you want to make email required " || !clientInfo.email"
     return showToast("❌ Missing required fields.", "error");
 
   toggleLoader();

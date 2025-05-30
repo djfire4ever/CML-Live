@@ -44,11 +44,6 @@ function formatCurrency(amount) {
   }).format(num);
 }
 
-function formatDateForUser(date) {
-  if (!date) return "";
-  return new Date(date).toLocaleDateString("en-US");
-}
-
 function setDataForSearch() {
   return fetch(scriptURL + "?action=getInvDataForSearch")
     .then(res => res.json())
