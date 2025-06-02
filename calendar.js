@@ -44,11 +44,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   setTimeout(() => {
-    const { Calendar } = window.FullCalendar;
-    const dayGridPlugin = window.FullCalendar.DayGrid?.default || window.FullCalendar.DayGrid;
-    const timeGridPlugin = window.FullCalendar.TimeGrid?.default || window.FullCalendar.TimeGrid;
-    const listPlugin = window.FullCalendar.List?.default || window.FullCalendar.List;
-    const interactionPlugin = window.FullCalendar.Interaction?.default || window.FullCalendar.Interaction;
+    const { Calendar } = window.FullCalendarNamespace;
+    const dayGridPlugin = window.FullCalendarNamespace.dayGridPlugin;
+    const timeGridPlugin = window.FullCalendarNamespace.timeGridPlugin;
+    const listPlugin = window.FullCalendarNamespace.listPlugin;
+    const interactionPlugin = window.FullCalendarNamespace.interactionPlugin;
 
     if (!Calendar || !dayGridPlugin) {
       console.error('❌ Required FullCalendar plugins not loaded.');
