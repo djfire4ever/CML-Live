@@ -116,45 +116,45 @@ function loadStylesheets() {
 function loadScripts() {
   const body = document.body;
 
-  // ✅ Prevent re-loading
-  if (window.fullCalendarScriptsLoaded) return;
-  window.fullCalendarScriptsLoaded = true;
+  // ✅ Prevent reloading
+  if (window.scriptsAlreadyLoaded) return;
+  window.scriptsAlreadyLoaded = true;
 
-  // Bootstrap
+  // ✅ Load Bootstrap
   const bootstrapScript = document.createElement('script');
   bootstrapScript.src = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js';
   bootstrapScript.defer = true;
+  bootstrapScript.onload = () => {
+    console.log('✅ Bootstrap loaded');
+  };
   body.appendChild(bootstrapScript);
 
-  // FullCalendar
-  const fullCalendarScripts = [
-    'https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.17/index.global.min.js',
-    'https://cdn.jsdelivr.net/npm/@fullcalendar/daygrid@6.1.17/index.global.min.js',
-    'https://cdn.jsdelivr.net/npm/@fullcalendar/timegrid@6.1.17/index.global.min.js',
-    'https://cdn.jsdelivr.net/npm/@fullcalendar/interaction@6.1.17/index.global.min.js',
-    'https://cdn.jsdelivr.net/npm/@fullcalendar/list@6.1.17/index.global.min.js',
-    'https://cdn.jsdelivr.net/npm/@fullcalendar/google-calendar@6.1.17/index.global.min.js'
-  ];
+  // ✅ Conditionally load FullCalendar ONLY on calendar pages
+  if (["/calendar.html", "/schedule.html"].includes(window.location.pathname)) {
+    const fullCalendarScripts = [
+      'https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.17/index.global.min.js',
+      'https://cdn.jsdelivr.net/npm/@fullcalendar/daygrid@6.1.17/index.global.min.js',
+      'https://cdn.jsdelivr.net/npm/@fullcalendar/timegrid@6.1.17/index.global.min.js',
+      'https://cdn.jsdelivr.net/npm/@fullcalendar/interaction@6.1.17/index.global.min.js',
+      'https://cdn.jsdelivr.net/npm/@fullcalendar/list@6.1.17/index.global.min.js',
+      'https://cdn.jsdelivr.net/npm/@fullcalendar/google-calendar@6.1.17/index.global.min.js'
+    ];
 
-  let loadedCount = 0;
-
-  fullCalendarScripts.forEach(src => {
-    const script = document.createElement('script');
-    script.src = src;
-    script.defer = true;
-    script.onload = () => {
-      loadedCount++;
-      if (loadedCount === fullCalendarScripts.length) {
-        window.dispatchEvent(new Event('FullCalendarLoaded'));
-        console.log('✅ FullCalendar scripts fully loaded');
-      }
-    };
-    body.appendChild(script);
-  });
-
-  bootstrapScript.onload = () => {
-    console.log('✅ Scripts loaded');
-  };
+    let loadedCount = 0;
+    fullCalendarScripts.forEach(src => {
+      const script = document.createElement('script');
+      script.src = src;
+      script.defer = true;
+      script.onload = () => {
+        loadedCount++;
+        if (loadedCount === fullCalendarScripts.length) {
+          window.dispatchEvent(new Event('FullCalendarLoaded'));
+          console.log('✅ FullCalendar scripts fully loaded');
+        }
+      };
+      body.appendChild(script);
+    });
+  }
 }
 
 // To be called on DOMContentLoaded:
@@ -265,6 +265,36 @@ function formatPhoneNumber(number) {
 }
 
 // ✅ Global version/debug check
+function getResourceStatus() {
+  return [
+    {
+      name: "Bootstrap CSS",
+      loaded: !!document.querySelector('link[href*="bootstrap.min.css"]')
+    },
+    {
+      name: "Bootstrap Icons",
+      loaded: !!document.querySelector('link[href*="bootstrap-icons"]')
+    },
+    {
+      name: "Font Awesome",
+      loaded: !!document.querySelector('link[href*="font-awesome"], link[href*="fontawesome"]')
+    },
+    {
+      name: "Custom CSS",
+      loaded: !!document.querySelector('link[href*="style.css"]')
+    },
+    {
+      name: "Bootstrap JS",
+      loaded: typeof bootstrap !== "undefined"
+    },
+    {
+      name: "FullCalendar",
+      loaded: typeof window.FullCalendar !== "undefined",
+      location: typeof window.FullCalendar !== "undefined" ? "✅ Global" : "❌ Not Found"
+    }
+  ];
+}
+
 function checkBackendVersion() {
   const versionCheckURL = `${scriptURL}?action=versionCheck`;
   const resources = [
@@ -273,7 +303,10 @@ function checkBackendVersion() {
     { name: "Font Awesome", check: () => !!document.querySelector('link[href*="font-awesome"]') },
     { name: "Custom CSS", check: () => !!document.querySelector('link[href*="style.css"]') },
     { name: "Bootstrap JS", check: () => !!window.bootstrap },
-    { name: "FullCalendar", check: () => !!window.FullCalendar }
+    { name: "FullCalendar",
+      status: window.FullCalendar ? "✅" : "⚠️ Not Loaded",
+      location: typeof window.FullCalendar !== "undefined" ? "Global" : "Unavailable"
+    }
   ];
 
   const updateBadge = (statusEmoji, statusText, bgClass) => {
@@ -290,14 +323,17 @@ function checkBackendVersion() {
   fetch(versionCheckURL)
     .then(res => res.json())
     .then(data => {
+      const resources = getResourceStatus();
+
       window.backendMeta = {
         status: "✅ Connected",
         scriptURL,
         isLocal,
         deployedVersion: data.deployedVersion || "N/A",
         timestamp: new Date().toISOString(),
-        resources: resources.map(r => ({ name: r.name, loaded: r.check() }))
+        resources
       };
+
       console.log("✅ Backend Connected:", window.backendMeta);
       updateBadge("✅", "Connected", "btn-outline-success");
     })
@@ -352,7 +388,7 @@ async function showDebugInfo() {
     : "<li>None</li>";
 
   const resources = (debugOutput.resources || [])
-    .map(r => `<tr><td>${r.name}</td><td>${r.loaded ? "✅" : "❌"}</td></tr>`)
+    .map(r => `<tr><td>${r.name}</td><td>${r.loaded ? "✅" : "❌"}${r.location ? ` <span class="text-muted small">(${r.location})</span>` : ""}</td></tr>`)
     .join("");
 
   const contentHTML = `
