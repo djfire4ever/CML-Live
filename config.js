@@ -326,6 +326,7 @@ async function showDebugInfo() {
     iframeSrc: document.querySelector("iframe")?.src || "N/A",
     theme: getComputedStyle(document.documentElement).getPropertyValue('--bs-body-bg')?.trim() || "Not set",
     recentErrors: window._errorLog?.slice(-5) || [],
+    ...window.backendMeta // 🧠 Merge all backendMeta values (status, scriptURL, isLocal, environment, resources, etc.)
   };
 
   try {
@@ -341,8 +342,57 @@ async function showDebugInfo() {
     debugOutput.error = e.message;
   }
 
-  const debugText = JSON.stringify(debugOutput, null, 2);
-  document.getElementById("debugData").textContent = debugText;
+  // 🧩 Build UI content
+  const statusBadge = debugOutput.status.includes("✅")
+    ? `<span class="badge bg-success">${debugOutput.status}</span>`
+    : `<span class="badge bg-danger">${debugOutput.status}</span>`;
+
+  const errors = debugOutput.recentErrors.length
+    ? debugOutput.recentErrors.map(e => `<li>${e}</li>`).join("")
+    : "<li>None</li>";
+
+  const resources = (debugOutput.resources || [])
+    .map(r => `<tr><td>${r.name}</td><td>${r.loaded ? "✅" : "❌"}</td></tr>`)
+    .join("");
+
+  const contentHTML = `
+    <div class="mb-3">
+      <h6>Status ${statusBadge}</h6>
+    </div>
+    <div class="mb-3">
+      <h6>📄 Page Info</h6>
+      <ul class="list-group list-group-flush small">
+        <li class="list-group-item"><strong>Current Page:</strong> ${debugOutput.currentPage}</li>
+        <li class="list-group-item"><strong>iFrame Src:</strong> ${debugOutput.iframeSrc}</li>
+        <li class="list-group-item"><strong>Theme Color:</strong> ${debugOutput.theme}</li>
+      </ul>
+    </div>
+    <div class="mb-3">
+      <h6>🧠 Backend Info</h6>
+      <ul class="list-group list-group-flush small">
+        <li class="list-group-item"><strong>Script URL:</strong> ${debugOutput.scriptURL}</li>
+        <li class="list-group-item"><strong>Deployed Version:</strong> ${debugOutput.deployedVersion}</li>
+        <li class="list-group-item"><strong>Environment:</strong> ${debugOutput.environment}</li>
+        <li class="list-group-item"><strong>isLocal:</strong> ${debugOutput.isLocal}</li>
+        <li class="list-group-item"><strong>Timestamp:</strong> ${debugOutput.timestamp}</li>
+      </ul>
+    </div>
+    <div class="mb-3">
+      <h6>📦 Resources Loaded</h6>
+      <table class="table table-sm table-bordered small">
+        <thead class="table-light">
+          <tr><th>Resource</th><th>Status</th></tr>
+        </thead>
+        <tbody>${resources}</tbody>
+      </table>
+    </div>
+    <div>
+      <h6>⚠️ Recent Errors</h6>
+      <ul class="small">${errors}</ul>
+    </div>
+  `;
+
+  document.getElementById("debugData").innerHTML = contentHTML;
 
   const modal = new bootstrap.Modal(document.getElementById("debugModal"));
   modal.show();
