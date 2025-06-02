@@ -116,7 +116,6 @@ function loadStylesheets() {
 function loadScripts() {
   const body = document.body;
 
-  // ✅ Prevent reloading
   if (window.scriptsAlreadyLoaded) return;
   window.scriptsAlreadyLoaded = true;
 
@@ -124,36 +123,43 @@ function loadScripts() {
   const bootstrapScript = document.createElement('script');
   bootstrapScript.src = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js';
   bootstrapScript.defer = true;
-  bootstrapScript.onload = () => {
-    console.log('✅ Bootstrap loaded');
-  };
+  bootstrapScript.onload = () => console.log('✅ Bootstrap loaded');
   body.appendChild(bootstrapScript);
 
-  // ✅ Conditionally load FullCalendar ONLY on calendar pages
+  // ✅ Only load FullCalendar on specific pages
   if (["/calendar.html", "/schedule.html"].includes(window.location.pathname)) {
-    const fullCalendarScripts = [
-      'https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.17/index.global.min.js',
-      'https://cdn.jsdelivr.net/npm/@fullcalendar/daygrid@6.1.17/index.global.min.js',
-      'https://cdn.jsdelivr.net/npm/@fullcalendar/timegrid@6.1.17/index.global.min.js',
-      'https://cdn.jsdelivr.net/npm/@fullcalendar/interaction@6.1.17/index.global.min.js',
-      'https://cdn.jsdelivr.net/npm/@fullcalendar/list@6.1.17/index.global.min.js',
-      'https://cdn.jsdelivr.net/npm/@fullcalendar/google-calendar@6.1.17/index.global.min.js'
-    ];
+    // Load core first, then load plugins sequentially
+    const fullCalendarCore = document.createElement('script');
+    fullCalendarCore.src = 'https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.17/index.global.min.js';
+    fullCalendarCore.onload = () => {
+      console.log('✅ FullCalendar core loaded');
 
-    let loadedCount = 0;
-    fullCalendarScripts.forEach(src => {
-      const script = document.createElement('script');
-      script.src = src;
-      script.defer = true;
-      script.onload = () => {
-        loadedCount++;
-        if (loadedCount === fullCalendarScripts.length) {
-          window.dispatchEvent(new Event('FullCalendarLoaded'));
-          console.log('✅ FullCalendar scripts fully loaded');
-        }
-      };
-      body.appendChild(script);
-    });
+      const pluginScripts = [
+        'https://cdn.jsdelivr.net/npm/@fullcalendar/daygrid@6.1.17/index.global.min.js',
+        'https://cdn.jsdelivr.net/npm/@fullcalendar/timegrid@6.1.17/index.global.min.js',
+        'https://cdn.jsdelivr.net/npm/@fullcalendar/interaction@6.1.17/index.global.min.js',
+        'https://cdn.jsdelivr.net/npm/@fullcalendar/list@6.1.17/index.global.min.js',
+        'https://cdn.jsdelivr.net/npm/@fullcalendar/google-calendar@6.1.17/index.global.min.js'
+      ];
+
+      let loadedCount = 0;
+
+      pluginScripts.forEach((src, i) => {
+        const script = document.createElement('script');
+        script.src = src;
+        script.defer = true;
+        script.onload = () => {
+          loadedCount++;
+          if (loadedCount === pluginScripts.length) {
+            console.log('✅ FullCalendar plugins loaded');
+            window.dispatchEvent(new Event('FullCalendarLoaded'));
+          }
+        };
+        body.appendChild(script);
+      });
+    };
+
+    body.appendChild(fullCalendarCore);
   }
 }
 
@@ -335,7 +341,7 @@ function checkBackendVersion() {
       };
 
       console.log("✅ Backend Connected:", window.backendMeta);
-      updateBadge("✅", "Connected", "btn-outline-success");
+      updateBadge("✅", "Connected", "btn-outline-black");
     })
     .catch(err => {
       window.backendMeta = {
@@ -380,7 +386,7 @@ async function showDebugInfo() {
 
   // 🧩 Build UI content
   const statusBadge = debugOutput.status.includes("✅")
-    ? `<span class="badge bg-success">${debugOutput.status}</span>`
+    ? `<span class="badge bg-black">${debugOutput.status}</span>`
     : `<span class="badge bg-danger">${debugOutput.status}</span>`;
 
   const errors = debugOutput.recentErrors.length
@@ -416,7 +422,7 @@ async function showDebugInfo() {
     <div class="mb-3">
       <h6>📦 Resources Loaded</h6>
       <table class="table table-sm table-bordered small">
-        <thead class="table-light">
+        <thead class="table-black text-info">
           <tr><th>Resource</th><th>Status</th></tr>
         </thead>
         <tbody>${resources}</tbody>
