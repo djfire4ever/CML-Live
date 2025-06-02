@@ -746,6 +746,15 @@ function handleEditProductClick() {
   addProductRow("", 1, "edit-product-rows-container", "edit");
 }
 
+function resetProductRows(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  container.innerHTML = "";
+  const mode = containerId.startsWith("add") ? "add" : "edit";
+  addProductRow("", 1, containerId, mode);
+}
+
 function attachRowEvents(row, mode = "edit") {
   const nameInput = row.querySelector(".product-name");
   const qtyInput = row.querySelector(".product-quantity");
@@ -759,8 +768,12 @@ function attachRowEvents(row, mode = "edit") {
     const prod = productData?.[name] || Object.values(productData).find(p => p.name === name);
 
     if (prod && qty > 0) {
-      costOutput.value = `$${(prod.cost * qty).toFixed(2)}`;
-      retailOutput.value = `$${(prod.retail * qty).toFixed(2)}`;
+      // Round unit price up to next $0.10
+      const roundedUnitPrice = Math.ceil((parseFloat(prod.cost || 0)) * 10) / 10;
+      const rowCost = roundedUnitPrice * qty;
+      const rowRetail = rowCost * 2;
+      costOutput.value = `$${rowCost.toFixed(2)}`;
+      retailOutput.value = `$${rowRetail.toFixed(2)}`;
     } else {
       costOutput.value = "$0.00";
       retailOutput.value = "$0.00";
@@ -779,15 +792,6 @@ function attachRowEvents(row, mode = "edit") {
   updateTotals();
 }
 
-function resetProductRows(containerId) {
-  const container = document.getElementById(containerId);
-  if (!container) return;
-
-  container.innerHTML = "";
-  const mode = containerId.startsWith("add") ? "add" : "edit";
-  addProductRow("", 1, containerId, mode);
-}
-
 function calculateAllTotals(mode = "edit") {
   const prefix = mode === "add" ? "add-" : "edit-";
 
@@ -801,8 +805,12 @@ function calculateAllTotals(mode = "edit") {
     const qty = parseFloat(row.querySelector(".product-quantity")?.value) || 0;
     const prod = productData?.[name] || Object.values(productData).find(p => p.name === name);
     if (prod && qty > 0) {
-      totalProductCost += prod.cost * qty;
-      totalProductRetail += prod.retail * qty;
+      // Use rounded unit price for cost and retail
+      const roundedUnitPrice = Math.ceil((parseFloat(prod.cost || 0)) * 10) / 10;
+      const rowCost = roundedUnitPrice * qty;
+      const rowRetail = rowCost * 2;
+      totalProductCost += rowCost;
+      totalProductRetail += rowRetail;
     }
   });
 

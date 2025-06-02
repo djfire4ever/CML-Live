@@ -76,6 +76,12 @@
     border-radius: 4px;
     cursor: pointer;
 }
+  
+#debugBadge button {
+  min-width: 130px;
+  text-align: left;
+  white-space: nowrap;
+}
 </style>
 </head>
 
@@ -89,6 +95,26 @@
 </main>
 
 <div id="footer-placeholder"></div>
+
+<!-- 🔍 Backend Debug Modal -->
+<div class="modal fade" id="debugModal" tabindex="-1" aria-labelledby="debugModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered">
+    <div class="modal-content border border-secondary shadow-sm rounded-3">
+      <div class="modal-header py-2 bg-dark text-white">
+        <h5 class="modal-title fs-6" id="debugModalLabel">🛠️ System Debug Info</h5>
+        <button type="button" class="btn-close btn-close-white btn-sm" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body bg-light text-dark small">
+        <pre id="debugData" class="mb-0" style="white-space: pre-wrap; word-break: break-word;"></pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 🔗 Debug Badge -->
+<div id="debugBadge" class="position-fixed bottom-0 end-0 m-3">
+  <button class="btn btn-sm btn-outline-secondary" onclick="showDebugInfo()">🔍 Debug</button>
+</div>
 
 <script>
   document.addEventListener('DOMContentLoaded', () => {
@@ -249,28 +275,28 @@ function openLeadsPage() {
     });
 }
 
-fetch('header.html')
-    .then(res => res.text())
-    .then(html => {
-      document.getElementById('header-placeholder').innerHTML = html;
+  fetch('header.html')
+      .then(res => res.text())
+      .then(html => {
+        document.getElementById('header-placeholder').innerHTML = html;
 
-      // Wait a moment to ensure DOM is updated
-      setTimeout(() => {
-  const navLinks = document.querySelectorAll('#navmenu .nav-link');
-  const navbarToggler = document.getElementById('navToggler');
-  const navMenu = document.getElementById('navmenu');
+        // Wait a moment to ensure DOM is updated
+        setTimeout(() => {
+    const navLinks = document.querySelectorAll('#navmenu .nav-link');
+    const navbarToggler = document.getElementById('navToggler');
+    const navMenu = document.getElementById('navmenu');
 
-  if (navLinks.length && navbarToggler && navMenu) {
-    // Collapse on link click (mobile)
-    navLinks.forEach(link => {
-      link.addEventListener('click', () => {
-        if (window.getComputedStyle(navbarToggler).display !== 'none') {
-          const bsCollapse = bootstrap.Collapse.getInstance(navMenu)
-            || new bootstrap.Collapse(navMenu, { toggle: false });
-          bsCollapse.hide();
-        }
+    if (navLinks.length && navbarToggler && navMenu) {
+      // Collapse on link click (mobile)
+      navLinks.forEach(link => {
+        link.addEventListener('click', () => {
+          if (window.getComputedStyle(navbarToggler).display !== 'none') {
+            const bsCollapse = bootstrap.Collapse.getInstance(navMenu)
+              || new bootstrap.Collapse(navMenu, { toggle: false });
+            bsCollapse.hide();
+          }
+        });
       });
-    });
 
     // ⬇️ Hover to open/close logic
     let hoverTimeout;
@@ -310,3 +336,5 @@ fetch('header.html')
 setInterval(checkNewLeads, 60000);
 
 </script>
+</body>
+</html>

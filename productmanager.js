@@ -1,5 +1,5 @@
 let materialData = {}; // Global material map
-const maxParts = 20;
+const maxParts = 15;
 let prodData = [];
 
 // ✅ Show Edit Tab (when clicking a row to edit)
@@ -261,24 +261,29 @@ async function populateEditForm(prodID) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("save-changes")?.addEventListener("click", async (e) => {
+  const saveBtn = document.getElementById("save-changes");
+  if (!saveBtn) return;
+
+  saveBtn.addEventListener("click", async (e) => {
     e.preventDefault();
     toggleLoader();
 
-    // Core fields
-    const formData = {
-      system: "products",
-      action: "edit",
-      prodID: getField("edit-prodID"),
+    // Gather product core info
+  const formData = {
+    system: "products",
+    action: "edit",
+    prodID: getField("edit-prodID"),
+    productInfo: {
       productName: getField("edit-productName"),
       productType: getField("edit-productType"),
       compTime: getField("edit-compTime"),
       description: getField("edit-description"),
       retail: getField("edit-totalProductRetail"),
       cost: getField("edit-totalProductCost")
-    };
+    }
+  };
 
-    // Collect part rows
+    // Add parts and quantities into productInfo
     const partRows = document.querySelectorAll("#edit-part-rows .part-row");
     let partCount = 0;
 
@@ -287,11 +292,10 @@ document.addEventListener("DOMContentLoaded", () => {
       const qty = row.querySelector(".qty-input")?.value.trim() || "";
       if (part && qty) partCount++;
 
-      formData[`part${i + 1}`] = part;
-      formData[`qty${i + 1}`] = qty;
+      formData.productInfo[`part${i + 1}`] = part;
+      formData.productInfo[`qty${i + 1}`] = qty;
     });
 
-    // If no valid parts entered, show warning
     if (partCount === 0) {
       showToast("⚠️ At least one part and quantity must be provided.", "error");
       toggleLoader();
@@ -307,14 +311,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const result = await res.json();
       if (result.success) {
-        showToast("✅ Product updated!");
-        new bootstrap.Tab(document.querySelector('[data-bs-target="#search-product"]')).show();
-        // No tab switching — Bootstrap handles that
+        showToast(result.data || "✅ Product updated!");
+        const tabTarget = document.querySelector('[data-bs-target="#search-product"]');
+        if (tabTarget) new bootstrap.Tab(tabTarget).show();
       } else {
-        showToast("❌ Error updating product data!", "error");
+        showToast(result.message || "❌ Error updating product data!", "error");
       }
     } catch (err) {
-      console.error("Edit error:", err);
+      console.error("🚨 Edit error:", err);
       showToast("❌ Error updating product data!", "error");
     } finally {
       toggleLoader();
@@ -491,14 +495,15 @@ function calculateAndUpdate(row) {
     return;
   }
 
-  const rowCost = qty * parseFloat(material.unitPrice || 0);
-  const rowRetail = rowCost * 2.5;
+  // Round unit price up to next $0.10
+  const roundedUnitPrice = Math.ceil((parseFloat(material.unitPrice || 0)) * 10) / 10;
+  const rowCost = roundedUnitPrice * qty;
+  const rowRetail = rowCost * 2;
 
   costInput.value = rowCost.toFixed(2);
   retailInput.value = rowRetail.toFixed(2);
   calculateTotalProductCost();
 }
-
 function calculateTotalProductCost() {
   const pane = document.querySelector(".tab-pane.active");
   if (!pane) return;

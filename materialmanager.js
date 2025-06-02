@@ -540,33 +540,14 @@ async function saveInventoryData() {
   }
 }
 
-function calculateAllStaticForm(prefix) {
-  const get = id => document.getElementById(`${prefix}${id}`)?.value;
-  const set = (id, val) => {
-    const el = document.getElementById(`${prefix}${id}`);
-    if (el) el.value = val;
-  };
-
-  const matPrice = parseFloat(get("matPrice")) || 0;
-  const unitQty = parseFloat(get("unitQty")) || 0;
-  const onHand = parseFloat(get("onHand")) || 0;
-  const incoming = parseFloat(get("incoming")) || 0;
-  // const outgoing = parseFloat(get("outgoing")) || 0;
-
-  const rawUnitPrice = unitQty !== 0 ? matPrice / unitQty : 0;
-  // Round UP to nearest $0.10:
-  const roundedUnitPrice = Math.ceil(rawUnitPrice * 10) / 10;
-
-  const totalStock = onHand + incoming;
-
-  set("unitPrice", roundedUnitPrice.toFixed(2));
-  set("totalStock", totalStock.toFixed(2));
-
-  if (prefix === "edit-") checkLowStock(prefix);
-}
+// New function to round material prices
 
 // function calculateAllStaticForm(prefix) {
-//   const get = id => document.getElementById(`${prefix}${id}`)?.value;
+//   const get = id => {
+//     const val = document.getElementById(`${prefix}${id}`)?.value || "";
+//     return val.replace(/[^0-9.-]+/g, ""); // Strip non-numeric characters
+//   };
+
 //   const set = (id, val) => {
 //     const el = document.getElementById(`${prefix}${id}`);
 //     if (el) el.value = val;
@@ -576,16 +557,38 @@ function calculateAllStaticForm(prefix) {
 //   const unitQty = parseFloat(get("unitQty")) || 0;
 //   const onHand = parseFloat(get("onHand")) || 0;
 //   const incoming = parseFloat(get("incoming")) || 0;
-//   // const outgoing = parseFloat(get("outgoing")) || 0;
-//   const unitPrice = unitQty !== 0 ? matPrice / unitQty : 0;
+
+//   const rawUnitPrice = unitQty !== 0 ? matPrice / unitQty : 0;
+//   const roundedUnitPrice = Math.ceil(rawUnitPrice * 10) / 10;
+
 //   const totalStock = onHand + incoming;
 
-//   set("unitPrice", unitPrice.toFixed(2));
+//   set("unitPrice", roundedUnitPrice.toFixed(2));
 //   set("totalStock", totalStock.toFixed(2));
 
 //   if (prefix === "edit-") checkLowStock(prefix);
 // }
 
+function calculateAllStaticForm(prefix) {
+  // Strip non-numeric characters for safe parsing
+  const get = id => (document.getElementById(`${prefix}${id}`)?.value || "").replace(/[^0-9.-]+/g, "");
+  const set = (id, val) => {
+    const el = document.getElementById(`${prefix}${id}`);
+    if (el) el.value = val;
+  };
+
+  const matPrice = parseFloat(get("matPrice")) || 0;
+  const unitQty = parseFloat(get("unitQty")) || 0;
+  const onHand = parseFloat(get("onHand")) || 0;
+  const incoming = parseFloat(get("incoming")) || 0;
+  const unitPrice = unitQty !== 0 ? matPrice / unitQty : 0;
+  const totalStock = onHand + incoming;
+
+  set("unitPrice", unitPrice.toFixed(2));
+  set("totalStock", totalStock.toFixed(2));
+
+  if (prefix === "edit-") checkLowStock(prefix);
+}
 function checkLowStock(prefix = "edit-") {
   const total = parseFloat(document.getElementById(`${prefix}totalStock`)?.value) || 0;
   const reorder = parseFloat(document.getElementById(`${prefix}reorderLevel`)?.value) || 0;
