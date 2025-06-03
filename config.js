@@ -127,7 +127,7 @@ function loadScripts() {
   body.appendChild(bootstrapScript);
 
   // ✅ Only load FullCalendar on specific pages
-  if (["/calendar.html", "/schedule.html"].includes(window.location.pathname)) {
+  if (["/calendar.html"].includes(window.location.pathname)) {
     // Load core first, then load plugins sequentially
     const fullCalendarCore = document.createElement('script');
     fullCalendarCore.src = 'https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.17/index.global.min.js';
@@ -364,7 +364,7 @@ async function showDebugInfo() {
     scriptURL: window.scriptURL || "⚠️ Not set",
     deployedVersion: "Loading...",
     timestamp: new Date().toISOString(),
-    currentPage: window.location.pathname,
+    currentPage: window.location.href,
     iframeSrc: document.querySelector("iframe")?.src || "N/A",
     theme: getComputedStyle(document.documentElement).getPropertyValue('--bs-body-bg')?.trim() || "Not set",
     recentErrors: window._errorLog?.slice(-5) || [],
@@ -404,7 +404,7 @@ async function showDebugInfo() {
     <div class="mb-3">
       <h6>📄 Page Info</h6>
       <ul class="list-group list-group-flush small">
-        <li class="list-group-item"><strong>Current Page:</strong> ${debugOutput.currentPage}</li>
+        <li class="list-group-item"><strong>Current Page:</strong> ${window.location.href}</li>
         <li class="list-group-item"><strong>iFrame Src:</strong> ${debugOutput.iframeSrc}</li>
         <li class="list-group-item"><strong>Theme Color:</strong> ${debugOutput.theme}</li>
       </ul>
@@ -442,7 +442,7 @@ async function showDebugInfo() {
 
 // Automatically check version on load
 document.addEventListener("DOMContentLoaded", () => {
-  checkBackendVersion();
+  setTimeout(checkBackendVersion, 1000); // delay 1 second
 });
 
 
