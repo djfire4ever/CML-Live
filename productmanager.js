@@ -42,65 +42,85 @@ document.addEventListener("DOMContentLoaded", () => {
     setTimeout(toggleLoader, 500);
 });
 
-// ✅ Load Product Data for Search
 function setProdDataForSearch() {
-    fetch(scriptURL + "?action=getProdDataForSearch")
-        .then(res => res.json())
-        .then(data => prodData = data.slice())
-        .catch(err => console.error("❌ Error loading product data:", err));
+  fetch(scriptURL + "?action=getProdDataForSearch")
+    .then(res => res.json())
+    .then(data => {
+      prodData = data.map(product => {
+        let parts = [];
+        try {
+          parts = product[4] ? JSON.parse(product[4]) : [];
+        } catch (e) {
+          console.error("❌ Failed to parse partsJSON for product", product[0], e);
+        }
+
+        return {
+          prodID: product[0],          // Column A
+          productName: product[1],     // Column B
+          productType: product[2],     // Column C
+          compTime: product[3],        // Column D
+          parts,                       // Column E (JSON)
+          description: product[5],     // Column F
+          cost: product[6],            // Column G
+          retail: product[7],          // Column H
+          raw: product
+        };
+      });
+    })
+    .catch(err => console.error("❌ Error loading product data:", err));
 }
 
 // ✅ Search Products
 function search() {
-    const searchInputEl = document.getElementById("searchInput");
-    const searchResultsBox = document.getElementById("searchResults");
-    if (!searchInputEl || !searchResultsBox) return;
+  const searchInputEl = document.getElementById("searchInput");
+  const searchResultsBox = document.getElementById("searchResults");
+  if (!searchInputEl || !searchResultsBox) return;
 
-    let counterContainer = document.getElementById("counterContainer");
-    if (!counterContainer) {
-        counterContainer = document.createElement("div");
-        counterContainer.id = "counterContainer";
-        counterContainer.classList.add("d-inline-flex", "gap-3", "align-items-center", "ms-3");
-        searchInputEl.parentNode.insertBefore(counterContainer, searchInputEl.nextSibling);
-    }
+  let counterContainer = document.getElementById("counterContainer");
+  if (!counterContainer) {
+    counterContainer = document.createElement("div");
+    counterContainer.id = "counterContainer";
+    counterContainer.classList.add("d-inline-flex", "gap-3", "align-items-center", "ms-3");
+    searchInputEl.parentNode.insertBefore(counterContainer, searchInputEl.nextSibling);
+  }
 
-    const searchCounter = getOrCreateCounter("searchCounter", ["px-2", "py-1", "border", "rounded", "fw-bold", "bg-dark", "text-info"], counterContainer);
-    const totalCounter = getOrCreateCounter("totalCounter", ["px-2", "py-1", "border", "rounded", "fw-bold", "bg-dark", "text-info"], counterContainer, searchCounter);
+  const searchCounter = getOrCreateCounter("searchCounter", ["px-2", "py-1", "border", "rounded", "fw-bold", "bg-dark", "text-info"], counterContainer);
+  const totalCounter = getOrCreateCounter("totalCounter", ["px-2", "py-1", "border", "rounded", "fw-bold", "bg-dark", "text-info"], counterContainer, searchCounter);
 
-    toggleLoader();
+  toggleLoader();
 
-    const input = searchInputEl.value.toLowerCase().trim();
-    const searchWords = input.split(/\s+/);
-    const searchCols = [0, 1, 2];
+  const input = searchInputEl.value.toLowerCase().trim();
+  const searchWords = input.split(/\s+/);
 
-    const results = input === "" ? [] : prodData.filter(r =>
-        searchWords.every(word =>
-            searchCols.some(i => r[i]?.toString().toLowerCase().includes(word))
-        )
-    );
+  const results = input === "" ? [] : prodData.filter(product =>
+    searchWords.every(word =>
+      [product.prodID, product.productName, product.productType]
+        .some(field => field?.toString().toLowerCase().includes(word))
+    )
+  );
 
-    searchCounter.textContent = input === "" ? "🔍" : `${results.length} Products Found`;
-    totalCounter.textContent = `Total Products: ${prodData.length}`;
-    searchResultsBox.innerHTML = "";
+  searchCounter.textContent = input === "" ? "🔍" : `${results.length} Products Found`;
+  totalCounter.textContent = `Total Products: ${prodData.length}`;
+  searchResultsBox.innerHTML = "";
 
-    const template = document.getElementById("rowTemplate").content;
-    results.forEach(r => {
-        const row = template.cloneNode(true);
-        const tr = row.querySelector("tr");
-        tr.classList.add("search-result-row");
-        tr.dataset.productid = r[0];
+  const template = document.getElementById("rowTemplate").content;
+  results.forEach(product => {
+    const row = template.cloneNode(true);
+    const tr = row.querySelector("tr");
+    tr.classList.add("search-result-row");
+    tr.dataset.productid = product.prodID;
 
-        row.querySelector(".prodID").textContent = r[0];
-        row.querySelector(".productName").textContent = r[1];
-        row.querySelector(".productType").textContent = r[2];
-        row.querySelector(".cost").textContent = r[46];
-        row.querySelector(".retail").textContent = r[45];
+    row.querySelector(".prodID").textContent = product.prodID;
+    row.querySelector(".productName").textContent = product.productName;
+    row.querySelector(".productType").textContent = product.productType;
+    row.querySelector(".cost").textContent = formatCurrency(product.cost);
+    row.querySelector(".retail").textContent = formatCurrency(product.retail);
 
-        row.querySelector(".delete-button").dataset.productid = r[0];
-        searchResultsBox.appendChild(row);
-    });
+    row.querySelector(".delete-button").dataset.productid = product.prodID;
+    searchResultsBox.appendChild(row);
+  });
 
-    toggleLoader();
+  toggleLoader();
 }
 
 // ✅ Unified Click Handler for Search Results
@@ -231,26 +251,28 @@ async function populateEditForm(prodID) {
     const data = await res.json();
     if (!data || data.error) throw new Error(data?.error || "No product data found");
 
-    ["productName", "productType", "compTime", "retail", "cost", "description"].forEach(field =>
-      setField(`edit-${field}`, data[field] || "")
-    );
+    // Fill core fields
+    ["productName", "productType", "compTime", "retail", "cost", "description"].forEach(field => {
+      let value = data[field] || "";
+      if (["cost", "retail"].includes(field)) value = formatCurrency(value);
+      setField(`edit-${field}`, value);
+      });
 
+    // Clear and rebuild part rows
     clearPartRows("edit-part-rows");
+    const parts = JSON.parse(data.partsJSON || "[]");
 
-    for (let i = 1; i <= maxParts; i++) {
-      const name = data[`part${i}`];
-      const qty = data[`qty${i}`];
-      if (name && qty) {
-        const found = Object.values(materialData).find(m => m.name === name);
-        if (found) addPartRowTo("edit-part-rows", name, qty);
+    parts.forEach(part => {
+      if (part.matName && part.qty) {
+        const found = Object.values(materialData).find(m => m.name === part.matName);
+        if (found) addPartRowTo("edit-part-rows", part.matName, part.qty);
       }
-    }
+    });
 
     calculateTotalProductCost();
 
-    const editPane = document.getElementById("edit-product");
-    editPane?.classList.remove("d-none");
-    editPane?.scrollIntoView({ behavior: "smooth" });
+    document.getElementById("edit-product")?.classList.remove("d-none");
+    document.getElementById("edit-product")?.scrollIntoView({ behavior: "smooth" });
 
   } catch (err) {
     console.error("❌ Error populating edit form:", err);
@@ -268,40 +290,45 @@ document.addEventListener("DOMContentLoaded", () => {
     e.preventDefault();
     toggleLoader();
 
-    // Gather product core info
-  const formData = {
-    system: "products",
-    action: "edit",
-    prodID: getField("edit-prodID"),
-    productInfo: {
+    // Step 1: Gather core info
+    const prodID = getField("edit-prodID");
+    const productInfo = {
       productName: getField("edit-productName"),
       productType: getField("edit-productType"),
       compTime: getField("edit-compTime"),
       description: getField("edit-description"),
       retail: getField("edit-totalProductRetail"),
       cost: getField("edit-totalProductCost")
-    }
-  };
+    };
 
-    // Add parts and quantities into productInfo
+    // Step 2: Collect parts into partsJSON
     const partRows = document.querySelectorAll("#edit-part-rows .part-row");
-    let partCount = 0;
+    const parts = [];
 
-    partRows.forEach((row, i) => {
-      const part = row.querySelector(".part-input")?.value.trim() || "";
-      const qty = row.querySelector(".qty-input")?.value.trim() || "";
-      if (part && qty) partCount++;
-
-      formData.productInfo[`part${i + 1}`] = part;
-      formData.productInfo[`qty${i + 1}`] = qty;
+    partRows.forEach(row => {
+      const part = row.querySelector(".part-input")?.value.trim();
+      const qty = row.querySelector(".qty-input")?.value.trim();
+      if (part && qty) {
+        parts.push({ matName: part, qty });
+      }
     });
 
-    if (partCount === 0) {
+    if (parts.length === 0) {
       showToast("⚠️ At least one part and quantity must be provided.", "error");
       toggleLoader();
       return;
     }
 
+    productInfo.partsJSON = JSON.stringify(parts);
+
+    const formData = {
+      system: "products",
+      action: "edit",
+      prodID,
+      productInfo
+    };
+
+    // Step 3: Submit
     try {
       const res = await fetch(scriptURL, {
         method: "POST",
@@ -327,18 +354,43 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 async function initializeAddForm() {
-  ["add-prodID", "add-productName", "add-productType", "add-compTime", "add-totalProductRetail", "add-totalProductCost", "add-cost", "add-retail", "add-description"].forEach(id => {
+  // Reset all input fields
+  [
+    "add-prodID",
+    "add-productName",
+    "add-productType",
+    "add-compTime",
+    "add-totalProductRetail",
+    "add-totalProductCost",
+    "add-cost",
+    "add-retail",
+    "add-description"
+  ].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = "";
   });
 
-  if (Object.keys(materialData).length === 0) await setMaterialDataForEdit();
+  // Load materials for autocomplete
+  if (Object.keys(materialData).length === 0) {
+    await setMaterialDataForEdit();
+  }
 
+  // Abort if still missing
+  if (Object.keys(materialData).length === 0) {
+    showToast("⚠️ Material data missing. Try reloading.", "warning");
+    return;
+  }
+
+  // Reset part rows and add one blank
   const container = document.getElementById("add-part-rows");
   if (container) {
     container.innerHTML = "";
     addPartRowTo("add-part-rows");
   }
+
+  // Reset badge count
+  const badge = document.getElementById("add-partrow-header-display");
+  if (badge) badge.textContent = "Parts - 1";
 }
 
 addProductForm?.addEventListener("submit", async (e) => {
@@ -349,43 +401,55 @@ addProductForm?.addEventListener("submit", async (e) => {
     const productName = getField("add-productName");
     const productType = getField("add-productType");
     const compTime = getField("add-compTime");
-
-    const partRows = document.querySelectorAll("#add-part-rows .part-row");
-    const partData = [];
-
-    // Add up to 20 parts; fill empty strings for unused
-    for (let i = 0; i < 20; i++) {
-      const row = partRows[i];
-      const part = row?.querySelector(".part-input")?.value?.trim() || "";
-      const qty = row?.querySelector(".qty-input")?.value?.trim() || "";
-      partData.push(part, qty);
-    }
-
     const description = getField("add-description");
     const retail = getField("add-totalProductRetail");
     const cost = getField("add-totalProductCost");
 
+    // Gather all parts into an array of objects
+    const partRows = document.querySelectorAll("#add-part-rows .part-row");
+    const parts = [];
+
+    partRows.forEach(row => {
+      const matName = row.querySelector(".part-input")?.value.trim();
+      const qty = row.querySelector(".qty-input")?.value.trim();
+      if (matName && qty) {
+        parts.push({ matName, qty });
+      }
+    });
+
+    if (parts.length === 0) {
+      showToast("⚠️ At least one part and quantity must be provided.", "error");
+      toggleLoader();
+      return;
+    }
+
+    // Final array to send
     const productInfo = [
       productName,
       productType,
       compTime,
-      ...partData,
+      JSON.stringify(parts),  // partsJSON goes into column 5
       description,
-      retail,
-      cost
+      cost,
+      retail
     ];
 
     const res = await fetch(`${scriptURL}?action=add`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ system: "products", action: "add", productInfo })
+      body: JSON.stringify({
+        system: "products",
+        action: "add",
+        productInfo  // now matches what addProduct() expects
+      })
     });
 
     const result = await res.json();
     if (result.success) {
       showToast("✅ Product added!");
       addProductForm.reset();
-      document.getElementById("add-part-rows").innerHTML = ""; // Clear dynamic parts
+      document.getElementById("add-part-rows").innerHTML = "";
+      addPartRowTo("add-part-rows");  // re-init with one blank row
       setProdDataForSearch();
       new bootstrap.Tab(document.querySelector('[data-bs-target="#search-product"]')).show();
     } else {
@@ -500,29 +564,34 @@ function calculateAndUpdate(row) {
   const rowCost = roundedUnitPrice * qty;
   const rowRetail = rowCost * 2;
 
-  costInput.value = rowCost.toFixed(2);
-  retailInput.value = rowRetail.toFixed(2);
+  costInput.value = formatCurrency(rowCost);
+  retailInput.value = formatCurrency(rowRetail);
   calculateTotalProductCost();
 }
+
 function calculateTotalProductCost() {
   const pane = document.querySelector(".tab-pane.active");
   if (!pane) return;
 
   let totalCost = 0, totalRetail = 0;
 
+  // ...inside calculateTotalProductCost()...
   pane.querySelectorAll(".totalRowCost").forEach(input => {
-    totalCost += parseFloat(input.value) || 0;
+    const val = parseFloat((input.value || "0").replace(/[^0-9.\-]/g, ""));
+    totalCost += isNaN(val) ? 0 : val;
   });
-
+  
   pane.querySelectorAll(".totalRowRetail").forEach(input => {
-    totalRetail += parseFloat(input.value) || 0;
+    const val = parseFloat((input.value || "0").replace(/[^0-9.\-]/g, ""));
+    totalRetail += isNaN(val) ? 0 : val;
   });
 
   const costField = pane.querySelector("[id$='totalProductCost']");
   const retailField = pane.querySelector("[id$='totalProductRetail']");
 
-  if (costField) costField.value = totalCost.toFixed(2);
-  if (retailField) retailField.value = totalRetail.toFixed(2);
+  if (costField) costField.value = formatCurrency(totalCost);
+  if (retailField) retailField.value = formatCurrency(totalRetail);
+
 
   // FIXED: Update badge count dynamically based on active pane
   const partRowsContainer = pane.querySelector("[id$='part-rows']");
@@ -534,6 +603,10 @@ function calculateTotalProductCost() {
     const count = partRowsContainer.querySelectorAll(".part-row").length;
     badge.textContent = `Parts - ${count}`;
   }
+}
+
+function formatCurrency(num) {
+  return `$${parseFloat(num).toFixed(2)}`;
 }
 
 // ✅ Utility functions

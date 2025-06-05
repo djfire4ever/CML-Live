@@ -84,68 +84,20 @@ function search() {
 }
 
 // ✅ Handle search result interactions
-document.getElementById("searchResults").addEventListener("click", event => {
-  const target = event.target;
-
-  if (target.classList.contains("before-delete-button")) {
-    const confirmBtn = target.previousElementSibling;
-    const isDelete = target.dataset.buttonState === "delete";
-    confirmBtn?.classList.toggle("d-none", !isDelete);
-    target.textContent = isDelete ? "Cancel" : "Delete";
-    target.dataset.buttonState = isDelete ? "cancel" : "delete";
-    return;
-  }
-
-  if (target.classList.contains("delete-button")) {
-    const qtID = target.dataset.quoteid?.trim();
-    if (!qtID) return showToast("⚠️ Quote ID missing", "error");
-
-    toggleLoader();
-    fetch(scriptURL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ system: "quotes", action: "delete", qtID })
-    })
-      .then(res => res.json())
-      .then(result => {
-        if (result.success) {
-          showToast("✅ Quote deleted!");
-          document.getElementById("searchInput").value = "";
-          document.getElementById("searchResults").innerHTML = "";
-          setQuoteDataForSearch();
-          document.querySelector('[data-bs-target="#search-quote"]')?.click();
-        } else {
-          showToast("❌ Error deleting quote!", "error");
-          console.error("❌ Backend error:", result.message || "Unknown");
-        }
-      })
-      .catch(() => showToast("⚠️ Delete failed", "error"))
-      .finally(toggleLoader);
-    return;
-  }
-
-  const row = target.closest("tr");
-  if (row && row.dataset.quoteid && !target.closest(".btn-group")) {
-    const qtID = row.dataset.quoteid;
-    console.log("🔍 Selected quote ID:", qtID);
-    populateEditForm(qtID);
-    showEditTab();
-  }
-});
-
-// ✅ DOM Ready Initialization
 document.addEventListener("DOMContentLoaded", () => {
   const searchInput = document.getElementById("searchInput");
   const searchTabButton = document.querySelector('button[data-bs-target="#search-quote"]');
   const searchResultsBox = document.getElementById("searchResults");
   const searchCounter = document.getElementById("searchCounter");
 
+  // 🔍 Setup search input
   if (searchInput) {
     searchInput.addEventListener("input", search);
   } else {
     console.error("❌ Search input not found!");
   }
 
+  // 🧹 Clear search box when opening tab
   if (searchTabButton) {
     searchTabButton.addEventListener("shown.bs.tab", () => {
       if (searchInput) {
@@ -160,53 +112,28 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  if (searchResultsBox) searchResultsBox.innerHTML = "";
+  if (searchResultsBox) {
+    searchResultsBox.innerHTML = "";
+
+    // 🔎 Handle click inside search results table
+    searchResultsBox.addEventListener("click", event => {
+      const target = event.target;
+      const row = target.closest("tr");
+
+      if (row && row.dataset.quoteid && !target.closest(".btn-group")) {
+        const qtID = row.dataset.quoteid.trim();
+        console.log("🔍 Selected quote ID:", qtID);
+        populateEditForm(qtID);
+        showEditTab();
+      }
+    });
+  }
 
   toggleLoader();
   setQuoteDataForSearch();
   setTimeout(toggleLoader, 500);
 
-  document.getElementById("edit-discount")?.addEventListener("change", () => calculateAllTotals("edit"));
-});
-
-// ✅ Form field listeners (Edit/Add)
-document.addEventListener("DOMContentLoaded", () => {
-  const fieldsToWatch = [
-    "edit-deliveryFee", "add-deliveryFee", "edit-setupFee", "add-setupFee", 
-    "edit-otherFee", "add-otherFee", "edit-discount", "add-discount", 
-    "edit-deposit", "add-deposit", "edit-amountPaid",
-    "add-phone", "edit-phone", "add-eventDate", "edit-eventDate"
-  ];
-
-  fieldsToWatch.forEach(id => {
-    document.getElementById(id)?.addEventListener("change", () => {
-      const mode = id.startsWith("add") ? "add" : "edit";
-      calculateAllTotals(mode);
-    });
-  });
-
-  document.querySelectorAll(".product-row").forEach(row => {
-    const mode = row.closest("#add-product-rows-container") ? "add" : "edit";
-    attachRowEvents(row, mode);
-  });
-
-  const addBtn = document.getElementById("add-product-btn");
-  if (addBtn) {
-    addBtn.removeEventListener("click", handleAddProductClick);
-    addBtn.addEventListener("click", handleAddProductClick);
-  }
-
-  const editBtn = document.getElementById("edit-product-btn");
-  if (editBtn) {
-    editBtn.removeEventListener("click", handleEditProductClick);
-    editBtn.addEventListener("click", handleEditProductClick);
-  }
-});
-
-// 🔄 Populates the Edit Form when a quote is selected
-document.addEventListener("DOMContentLoaded", () => {
-
-  // Watch fields and recalculate totals
+  // 🧮 Watch key fields to recalculate totals
   const fieldsToWatch = [
     "edit-deliveryFee", "add-deliveryFee", "edit-setupFee", "add-setupFee", 
     "edit-otherFee", "add-otherFee", "edit-discount", "add-discount", 
@@ -221,57 +148,36 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // Attach events to each product row
+  // 🧩 Reattach product row event handlers
   document.querySelectorAll(".product-row").forEach(row => {
     const mode = row.closest("#add-product-rows-container") ? "add" : "edit";
     attachRowEvents(row, mode);
   });
 
-  // Bind product row buttons
-  const addProductBtn = document.getElementById("add-product-btn");
-  if (addProductBtn) {
-    addProductBtn.removeEventListener("click", handleAddProductClick); // in case reloaded
-    addProductBtn.addEventListener("click", handleAddProductClick);
-  }
+  // 💾 Add/Edit quote save buttons
+  ["add", "edit"].forEach(mode => {
+    const productBtn = document.getElementById(`${mode}-product-btn`);
+    if (productBtn) {
+      productBtn.removeEventListener("click", mode === "add" ? handleAddProductClick : handleEditProductClick);
+      productBtn.addEventListener("click", mode === "add" ? handleAddProductClick : handleEditProductClick);
+    }
 
-  const editProductBtn = document.getElementById("edit-product-btn");
-  if (editProductBtn) {
-    editProductBtn.removeEventListener("click", handleEditProductClick);
-    editProductBtn.addEventListener("click", handleEditProductClick);
-  }
+    const quoteBtn = document.getElementById(`${mode}-quote-btn`);
+    if (quoteBtn) {
+      quoteBtn.addEventListener("click", async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log(`🟢 ${mode === "add" ? "Add" : "Edit"} Quote button clicked`);
+        await handleSave(e, mode);
+      });
+    }
+  });
 
-  // Bind save buttons
-  const addQuoteBtn = document.querySelector("#add-quote-btn");
-  const editQuoteBtn = document.querySelector("#edit-quote-btn");
-
-  if (addQuoteBtn) {
-    addQuoteBtn.addEventListener("click", async (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      console.log("🟢 Add Quote button clicked");
-      await handleSave(e, "add");
-    });
-  }
-
-  if (editQuoteBtn) {
-    editQuoteBtn.addEventListener("click", async (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      console.log("🟢 Edit Quote button clicked");
-      await handleSave(e, "edit");
-    });
-  }
-
-  // Bootstrap tab shown event
+  // ➕ Add tab logic: initialize form, preview/finalize buttons
   const addTabButton = document.querySelector('button[data-bs-target="#add-quote"]');
   if (addTabButton) {
     addTabButton.addEventListener("shown.bs.tab", () => {
-    console.log("🟢 [Add Tab] Shown");
-
-    // Confirm DOM elements after switching
-    console.log("🟢 [Add Tab] add-quote-btn:", document.getElementById("add-quote-btn"));
-    console.log("🟢 [Add Tab] add-previewQuoteBtn:", document.getElementById("add-previewQuoteBtn"));
-    console.log("🟢 [Add Tab] add-finalizeInvoiceBtn:", document.getElementById("add-finalizeInvoiceBtn"));
+      console.log("🟢 [Add Tab] Shown");
 
       if (typeof productData === "undefined") {
         console.warn("⏳ Skipping form init — productData not ready");
@@ -301,11 +207,11 @@ async function populateEditForm(qtID) {
     toggleLoader(true);
     console.log("🔄 Loading quote data for qtID:", qtID);
 
-    await getProdDataForSearch();
+    await getProdDataForSearch(true);
     setField("edit-qtID", qtID);
     document.querySelector("#edit-qtID")?.setAttribute("readonly", true);
 
-    const response = await fetch(`${scriptURL}?action=getQuoteById&qtID=${qtID}`);
+    const response = await fetch(`${scriptURL}?system=quotes&action=getQuoteById&qtID=${qtID}`);
     if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
 
     const data = await response.json();
@@ -341,21 +247,32 @@ async function populateEditForm(qtID) {
       .forEach(id => setField(`edit-${id}`, data[id] || 0));
 
     // Products
+    // ...inside populateEditForm()...
     const container = document.querySelector("#edit-product-rows-container");
     if (container) container.innerHTML = "";
-
+    
+    let products = [];
     if (Array.isArray(data.products)) {
-      data.products.forEach(product => {
-        addProductRow(
-          product.name || "",
-          product.quantity || "",
-          "edit-product-rows-container",
-          "edit",
-          product.unitPrice || "",
-          product.totalRowRetail || ""
-        );
-      });
+      products = data.products;
+    } else if (typeof data.prodJSON === "string") {
+      try {
+        products = JSON.parse(data.prodJSON);
+      } catch (e) {
+        console.error("❌ Failed to parse prodJSON:", e, data.prodJSON);
+        products = [];
+      }
     }
+    
+    products.forEach(product => {
+      addProductRow(
+        product.name || "",
+        product.quantity || "",
+        "edit-product-rows-container",
+        "edit",
+        product.unitPrice ? Number(product.unitPrice) : 0,
+        product.totalRowRetail ? Number(product.totalRowRetail) : 0
+      );
+    });
 
     // Hidden/Meta Fields
     [ "totalProductCost",
@@ -439,7 +356,11 @@ async function handleSave(event, mode) {
     });
 
     const result = await response.json();
-    if (result.success) {
+    
+    const saveSuccess = mode === "add"
+      ? !!(result.data && result.data.qtID)
+      : !!(result.data && result.data.success);
+    if (saveSuccess) {
       showToast("✅ Quote saved successfully!");
       document.querySelector("#searchInput").value = "";
       document.querySelector("#searchResults").innerHTML = "";
@@ -501,19 +422,26 @@ function collectQuoteFormData(mode) {
   const rows = document.querySelectorAll(`#${mode}-product-rows-container .product-row`);
   const products = [];
 
+  // ...inside collectQuoteFormData()...
   rows.forEach(row => {
     const name = row.querySelector(".product-name")?.value.trim();
     const qty = parseFloat(row.querySelector(".product-quantity")?.value.trim() || 0);
     const unitPrice = parseCurrency(row.querySelector(".totalRowCost")?.value || 0);
     const totalRowRetail = parseCurrency(row.querySelector(".totalRowRetail")?.value || 0);
-
+  
     if (name && qty > 0) {
-      products.push({ name, quantity: qty, unitPrice, totalRowRetail });
+      products.push({
+        name,
+        quantity: qty,
+        unitPrice: isNaN(unitPrice) ? 0 : unitPrice,
+        totalRowRetail: isNaN(totalRowRetail) ? 0 : totalRowRetail
+      });
     }
   });
 
   formData.productCount = products.length;
-
+  formData.prodJSON = JSON.stringify(products);
+  
   for (let i = 1; i <= 15; i++) {
     const p = products[i - 1] || {};
     formData[`part${i}`] = p.name || "";
@@ -533,7 +461,7 @@ async function initializeAddForm() {
     // ✅ Make sure product data is available first
     if (typeof productData === "undefined" || !Array.isArray(productData) || productData.length === 0) {
       console.warn("⚠️ productData not ready, fetching...");
-      await getProdDataForSearch(); // <-- load or reload it if needed
+      await getProdDataForSearch(true); // <-- load or reload it if needed
     }
 
     // 🧼 Clear fields
@@ -629,24 +557,25 @@ document.querySelector("#add-phone")?.addEventListener("change", async (e) => {
 });
 
 // 🔁 5. Load product data from backend (used globally)
-async function getProdDataForSearch() {
+async function getProdDataForSearch(forceRefresh = false) {
   try {
-    // Check localStorage first
-    const cached = localStorage.getItem("productData");
-    if (cached) {
-      try {
-        const parsed = JSON.parse(cached);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          productData = parsed.slice();  // Create a copy
-          console.log("💾 Loaded productData from localStorage");
-          return;
+    if (!forceRefresh) {
+      const cached = localStorage.getItem("productData");
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            productData = parsed.slice();  // Create a copy
+            console.log("💾 Loaded productData from localStorage");
+            return;
+          }
+        } catch (e) {
+          console.warn("⚠️ Failed to parse productData from localStorage:", e);
         }
-      } catch (e) {
-        console.warn("⚠️ Failed to parse productData from localStorage:", e);
       }
     }
 
-    // Otherwise, fetch from server
+    // Fetch from server if no cache or forceRefresh is true
     const response = await fetch(`${scriptURL}?action=getProdDataForSearch`);
     if (!response.ok) throw new Error(`Status: ${response.status}`);
 
@@ -654,10 +583,10 @@ async function getProdDataForSearch() {
     productData = [];
 
     rawData.forEach(row => {
-      const id = String(row[0] || "").trim();
-      const name = String(row[1] || "").trim();
-      const cost = parseFloat(row[46]?.toString().replace(/[^\d.]/g, "")) || 0;
-      const retail = parseFloat(row[45]?.toString().replace(/[^\d.]/g, "")) || 0;
+      const id = String(row[0] || "").trim();            // prodID
+      const name = String(row[1] || "").trim();          // productName
+      const cost = parseFloat(row[6]) || 0;              // cost is column 7
+      const retail = parseFloat(row[7]) || 0;            // retail is column 8
 
       if (id && name) {
         productData.push({
@@ -670,7 +599,7 @@ async function getProdDataForSearch() {
     });
 
     localStorage.setItem("productData", JSON.stringify(productData));
-    console.log("✅ Product data loaded and cached");
+    console.log("✅ Product data loaded from server and cached");
 
   } catch (err) {
     console.error("❌ Failed to load product data:", err);
@@ -1216,15 +1145,41 @@ function renderShoppingListModal(materials) {
   tbody.innerHTML = "";
 
   materials.forEach(mat => {
-    const shortfall = mat.totalNeeded > mat.onHand;
+    const totalNeeded = parseFloat(mat.totalNeeded) || 0;
+    const onHand = parseFloat(mat.onHand) || 0;
+    const incoming = parseFloat(mat.incoming || 0);
+    const outgoing = parseFloat(mat.outgoing || 0);
+    const reorderLevel = parseFloat(mat.reorderLevel || 0);
+    const unitType = mat.unitType || "unit(s)";
+    const netAvailable = onHand + incoming - outgoing;
+    const shortfall = totalNeeded > netAvailable;
+    const needsReorder = netAvailable < reorderLevel;
+
     const row = document.createElement("tr");
 
+    if (mat.supplierUrl) {
+      row.style.cursor = "pointer";
+      row.title = "Click to open supplier page";
+      row.addEventListener("click", () => {
+        window.open(mat.supplierUrl, "_blank");
+      });
+    }
+
     row.innerHTML = `
-      <td>${mat.matName}</td>
-      <td>${mat.totalNeeded}</td>
-      <td>${mat.onHand}</td>
-      <td>${shortfall ? `<span class="text-danger">Shortfall</span>` : `<span class="text-success">OK</span>`}</td>
-      <td>${mat.supplier || ""}</td>
+      <td>${mat.matName || "❓ Unknown"}</td>
+      <td>${totalNeeded.toFixed(0)} ${unitType}</td>
+      <td>${onHand.toFixed(0)} ${unitType}</td>
+      <td>
+        ${shortfall 
+          ? `<span class="text-danger fw-bold">Shortfall</span>` 
+          : `<span class="text-success">OK</span>`}
+      </td>
+      <td>${mat.supplier || "—"}</td>
+      <td>
+        ${needsReorder 
+          ? `<span class="text-warning fw-bold">⚠️ Reorder Needed</span>` 
+          : `<span class="text-muted">—</span>`}
+      </td>
     `;
 
     tbody.appendChild(row);
@@ -1233,3 +1188,6 @@ function renderShoppingListModal(materials) {
   new bootstrap.Modal(document.getElementById("shoppingListModal")).show();
 }
 
+window.getProdDataForSearch = getProdDataForSearch;
+
+console.log("getProdDataForSearch on window?", typeof window.getProdDataForSearch);

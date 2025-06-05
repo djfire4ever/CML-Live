@@ -10,12 +10,10 @@
   transition: all 0.3s ease;
   border-width: 2px;
 }
-
 .stat-button:hover {
   transform: translateY(-2px);
   box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
 }
-
 .stat-button:active {
   transform: scale(0.98);
   box-shadow: none;
@@ -24,19 +22,18 @@
   transition: all 0.3s ease;
   border: none;
 }
-
 .low-stock-row:hover {
   transform: translateY(-2px);
   box-shadow: 0 0 10px rgba(255, 193, 7, 0.3); /* Soft amber/yellow glow */
   z-index: 1;
 }
-
 .low-stock-row:active {
   transform: scale(0.98);
   box-shadow: none;
 }
  </style>
 </head>
+
 <div class="watermark"></div>
 
 <!-- Simple Loader Overlay -->
@@ -143,7 +140,7 @@
               <div class="col-12"><button class="btn btn-outline-danger w-100 d-flex justify-content-between align-items-center"><span>Pending Leads:</span><span id="pendingLeads" class="fw-bold">0</span></button></div>
             </div>
             <div class="d-grid mt-3">
-              <button class="btn btn-outline-warning data-link="leads.html">View Leads</button>
+              <button class="btn btn-outline-warning" data-link="leads.html">View Leads</button>
             </div>
           </div>
         </div>
@@ -223,6 +220,7 @@
 <!-- Row 3 -->    
 
 <script>
+  
 function fetchAndCount(action, elementId, system = null) {
   const query = system ? `?system=${system}&action=${action}` : `?action=${action}`;
   const url = `${scriptURL}${query}`;
