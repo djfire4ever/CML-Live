@@ -961,8 +961,12 @@ async function finalizeInvoiceBtnHandler(e) {
     });
 
     const quoteSaveRaw = await quoteSaveRes.json();
-    const quoteSaveData = quoteSaveRaw?.data?.data || quoteSaveRaw?.data || {};
-    const savedQtID = quoteSaveData.qtID;
+    console.log("📦 quoteSaveRaw:", quoteSaveRaw);
+
+    console.log("🧪 Full quoteSaveRaw response:", JSON.stringify(quoteSaveRaw, null, 2));
+
+    // Safely access qtID from known structures
+    const savedQtID = quoteSaveRaw?.data?.qtID || null;
 
     if (!savedQtID) {
       throw new Error("❌ No qtID returned after saving.");

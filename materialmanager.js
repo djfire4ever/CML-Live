@@ -58,9 +58,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       if (priceInput && qtyInput && unitInput) {
         const recalculate = () => {
-          const price = parseFloat(priceInput.value) || 0;
-          const qty = parseFloat(qtyInput.value) || 0;
-          unitInput.value = qty ? (price / qty).toFixed(2) : "0.00";
+        const price = parseFloat(priceInput.value.replace(/[^0-9.-]+/g, "")) || 0;
+        const qty = parseFloat(qtyInput.value.replace(/[^0-9.-]+/g, "")) || 0;
+        const unit = qty ? price / qty : 0;
+        unitInput.value = formatCurrency(unit);
         };
 
         priceInput.addEventListener("change", recalculate);
@@ -301,7 +302,7 @@ async function populateEditForm(matID) {
     const fields = [
       "matName", "matPrice", "unitType", "unitQty",
       "supplier", "supplierUrl", "unitPrice", "onHand",
-      "incoming", "outgoing", "lastUpdated", "reorderLevel"
+      "incoming", "lastUpdated", "reorderLevel" // add if needed - "outgoing",
     ];
 
     fields.forEach(field => {
@@ -350,7 +351,7 @@ document.getElementById(SELECTORS.saveChangesBtn)?.addEventListener("click", asy
 
   const fields = [
     "matName", "matPrice", "unitType", "unitQty", "supplier", "supplierUrl",
-    "onHand", "unitPrice", "incoming", "outgoing", "lastUpdated", "reorderLevel"
+    "onHand", "unitPrice", "incoming", "lastUpdated", "reorderLevel"  // add if needed - "outgoing",
   ];
 
   const materialInfo = {};
@@ -540,55 +541,35 @@ async function saveInventoryData() {
   }
 }
 
-// New function to round material prices
-
-// function calculateAllStaticForm(prefix) {
-//   const get = id => {
-//     const val = document.getElementById(`${prefix}${id}`)?.value || "";
-//     return val.replace(/[^0-9.-]+/g, ""); // Strip non-numeric characters
-//   };
-
-//   const set = (id, val) => {
-//     const el = document.getElementById(`${prefix}${id}`);
-//     if (el) el.value = val;
-//   };
-
-//   const matPrice = parseFloat(get("matPrice")) || 0;
-//   const unitQty = parseFloat(get("unitQty")) || 0;
-//   const onHand = parseFloat(get("onHand")) || 0;
-//   const incoming = parseFloat(get("incoming")) || 0;
-
-//   const rawUnitPrice = unitQty !== 0 ? matPrice / unitQty : 0;
-//   const roundedUnitPrice = Math.ceil(rawUnitPrice * 10) / 10;
-
-//   const totalStock = onHand + incoming;
-
-//   set("unitPrice", roundedUnitPrice.toFixed(2));
-//   set("totalStock", totalStock.toFixed(2));
-
-//   if (prefix === "edit-") checkLowStock(prefix);
-// }
-
 function calculateAllStaticForm(prefix) {
-  // Strip non-numeric characters for safe parsing
-  const get = id => (document.getElementById(`${prefix}${id}`)?.value || "").replace(/[^0-9.-]+/g, "");
-  const set = (id, val) => {
-    const el = document.getElementById(`${prefix}${id}`);
-    if (el) el.value = val;
+  // Helper to get and clean numeric input
+  const get = id => {
+    const raw = document.getElementById(`${prefix}${id}`)?.value || "";
+    return parseFloat(raw.replace(/[^0-9.-]+/g, "")) || 0;
   };
 
-  const matPrice = parseFloat(get("matPrice")) || 0;
-  const unitQty = parseFloat(get("unitQty")) || 0;
-  const onHand = parseFloat(get("onHand")) || 0;
-  const incoming = parseFloat(get("incoming")) || 0;
+  // Helper to set a formatted currency value visually
+  const set = (id, val) => {
+    const el = document.getElementById(`${prefix}${id}`);
+    if (el) el.value = formatCurrency(val);
+  };
+
+  const matPrice = get("matPrice");
+  const unitQty = get("unitQty");
+  const onHand = get("onHand");
+  const incoming = get("incoming");
+
   const unitPrice = unitQty !== 0 ? matPrice / unitQty : 0;
   const totalStock = onHand + incoming;
 
-  set("unitPrice", unitPrice.toFixed(2));
-  set("totalStock", totalStock.toFixed(2));
+  set("unitPrice", unitPrice);
+  set("totalStock", totalStock);
 
-  if (prefix === "edit-") checkLowStock(prefix);
+  if (prefix === "edit-") {
+    checkLowStock(prefix);
+  }
 }
+
 function checkLowStock(prefix = "edit-") {
   const total = parseFloat(document.getElementById(`${prefix}totalStock`)?.value) || 0;
   const reorder = parseFloat(document.getElementById(`${prefix}reorderLevel`)?.value) || 0;
@@ -611,10 +592,12 @@ function initializeMaterialRow(row) {
   }
 
   const recalculate = () => {
-    const price = parseFloat(priceInput.value) || 0;
-    const qty = parseFloat(qtyInput.value) || 0;
+    const rawPrice = priceInput.value.replace(/[^0-9.-]+/g, "");
+    const rawQty = qtyInput.value.replace(/[^0-9.-]+/g, "");
+    const price = parseFloat(rawPrice) || 0;
+    const qty = parseFloat(rawQty) || 0;
     const unitPrice = qty ? price / qty : 0;
-    unitPriceOutput.value = unitPrice.toFixed(2);
+    unitPriceOutput.value = formatCurrency(unitPrice);
 
     // Update onHand: originalOnHand + unitQty
     const originalOnHand = parseFloat(onHandInput.dataset.original || "0");
@@ -633,8 +616,8 @@ function initializeMaterialRow(row) {
     recalculate();
   });
 
-  priceInput.addEventListener("input", recalculate);
-  qtyInput.addEventListener("input", recalculate);
+  priceInput.addEventListener("change", recalculate);
+  qtyInput.addEventListener("change", recalculate);
 
   removeBtn.addEventListener("click", () => {
     const container = row.parentElement;
@@ -680,29 +663,54 @@ function addMaterialRow(container) {
 }
 
 // 📥 Populate a row with matched material data
-function populateMaterialData(row, match) {
-  const fields = [
-    "matID", "matName", "matPrice", "unitType",
-    "unitQty", "supplier", "supplierUrl", "unitPrice",
-    "onHand", "incoming", "outgoing", "lastUpdated", "reorderLevel"
-  ];
+function populateMaterialData(row, data) {
+  if (!row || !Array.isArray(data)) return;
 
-  fields.forEach((key, i) => {
-    const el = row.querySelector(`.inv-${key}`);
-    if (el) {
-      console.log(`Setting ${key} to:`, match[i]); // 🔍 Debug log here
-      el.value = match[i];
+  const map = {
+    "inv-matID": 0,
+    "inv-material": 1,
+    "inv-matPrice": 2,
+    "inv-unitType": 3,
+    "inv-unitQty": 4,
+    "inv-supplier": 5,
+    "inv-supplierUrl": 6,
+    "inv-unitPrice": 7,
+    "inv-onHand": 8,
+    "inv-incoming": 9,
+    "inv-lastUpdated": 10,
+    // Index 11 = "outgoing" (skipped)
+    "inv-reorderLevel": 12
+  };
 
-      if (key === "onHand") el.dataset.original = match[i];
-    } else {
-      console.warn(`⚠️ Missing element: .inv-${key}`);
+  Object.entries(map).forEach(([className, index]) => {
+    const el = row.querySelector(`.${className}`);
+    if (!el) return;
+
+    let value = data[index];
+
+    // Set raw value first (for input fields or calculations)
+    el.value = value ?? "";
+
+    // Format currency fields visually after raw set
+    if (["inv-matPrice", "inv-unitPrice"].includes(className)) {
+      const numeric = parseFloat(value?.replace(/[^0-9.-]+/g, "")) || 0;
+      el.value = formatCurrency(numeric);
+    }
+
+    // Format lastUpdated date; fallback to today if empty or invalid
+    if (className === "inv-lastUpdated") {
+      if (value && !isNaN(new Date(value).getTime())) {
+        el.value = formatDateForUser(value);
+      } else {
+        el.value = formatDateForUser(new Date());
+      }
     }
   });
 
-  const lastUpdated = row.querySelector(".inv-lastUpdated");
-  if (lastUpdated) {
-    lastUpdated.value = formatDateForUser(new Date());
+  // Store original onHand value for calculations later
+  const onHand = row.querySelector(".inv-onHand");
+  if (onHand) {
+    onHand.dataset.original = data[8] ?? "0";
   }
 }
-
 

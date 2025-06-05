@@ -265,6 +265,15 @@ function formatDateForUser(date) {
   return new Date(date).toLocaleDateString("en-US");
 }
 
+function formatCurrency(amount) {
+  const num = parseFloat(amount);
+  if (isNaN(num)) return "$0.00";
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(num);
+}
+
 function formatPhoneNumber(number) {
   const digits = number.replace(/\D/g, "");
   if (digits.length !== 10) return number;
