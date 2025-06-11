@@ -6,65 +6,71 @@
   <title>Leads Manager</title>
   <script defer src="leadsform.js"></script>
 </head>
-<body class="bg-black text-white">
-  <div class="container py-4">
-    <h2 class="text-info text-center mb-4">Lead Management</h2>
+<body class="theme-dark">
+<!-- <body class="bg-black text-white"> -->
 
-    <!-- Filters and Search -->
-    <div class="card bg-secondary mb-3">
-      <div class="card-body">
-        <div class="row g-2 align-items-end">
-          <div class="col-md-4">
-            <label for="statusFilter" class="form-label">Filter by Status</label>
-            <select id="statusFilter" class="form-select">
-              <option value="">All</option>
-              <option value="New">New</option>
-              <option value="In Progress">In Progress</option>
-              <option value="Converted">Converted</option>
-              <option value="Closed">Closed</option>
-            </select>
-          </div>
-          <div class="col-md-4">
-            <label for="searchBar" class="form-label">Search</label>
-            <input type="text" id="searchBar" class="form-control" placeholder="Search leads...">
-          </div>
-          <div class="col-md-4">
-            <button class="btn btn-info w-100" onclick="filterLeads()">Apply</button>
-          </div>
+<div class="watermark"></div>
+
+<!-- Toasts -->
+<div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1050;"></div>
+
+<div class="container py-4">
+  <h2 class="text-info text-center mb-4">Lead Management</h2>
+
+  <!-- Filters and Search -->
+  <div class="card bg-secondary mb-3">
+    <div class="card-body">
+      <div class="row g-2 align-items-end">
+        <div class="col-md-4">
+          <label for="statusFilter" class="form-label">Filter by Status</label>
+          <select id="statusFilter" class="form-select">
+            <option value="">All</option>
+            <option value="New">New</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Converted">Converted</option>
+            <option value="Closed">Closed</option>
+          </select>
         </div>
-      </div>
-    </div>
-
-    <!-- Lead Table -->
-    <div class="card bg-black border-info">
-      <div class="card-body">
-        <div class="table-responsive">
-          <table class="table table-dark table-hover table-striped align-middle" id="leadsTable">
-            <thead class="table-light">
-              <tr>
-                <th>ID</th>
-                <th>Name</th> <!-- Concatentated firstName and lastName -->
-                <th>Phone</th>
-                <th>Email</th>
-                <th>Lead Source</th>
-                <th>Status</th>
-                <th>First Contact</th>
-                <th>Last Action</th>
-                <th>Next Followup</th>
-                <th></th> <!-- Actions -->
-              </tr>
-            </thead>
-            <tbody id="leadsTableBody">
-              <!-- Leads will be dynamically inserted here -->
-            </tbody>
-          </table>
+        <div class="col-md-4">
+          <label for="searchBar" class="form-label">Search</label>
+          <input type="text" id="searchBar" class="form-control" placeholder="Search leads...">
+        </div>
+        <div class="col-md-4">
+          <button class="btn btn-info w-100" onclick="filterLeads()">Apply</button>
         </div>
       </div>
     </div>
   </div>
 
-<!-- Log Action Modal -->
-<!-- Modal HTML -->
+  <!-- Lead Table -->
+  <div class="card bg-black border-info">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-dark table-hover table-striped align-middle" id="leadsTable">
+          <thead class="table-light">
+            <tr>
+              <th>ID</th>
+              <th>Name</th> <!-- Concatentated firstName and lastName -->
+              <th>Phone</th>
+              <th>Email</th>
+              <th>Lead Source</th>
+              <th>Status</th>
+              <th>First Contact</th>
+              <th>Last Action</th>
+              <th>Next Followup</th>
+              <th></th> <!-- Actions -->
+            </tr>
+          </thead>
+          <tbody id="leadsTableBody">
+            <!-- Leads will be dynamically inserted here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Log Action Modal HTML -->
 <div class="modal fade" id="logActionModal" tabindex="-1" aria-labelledby="logActionModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -101,9 +107,6 @@
     </div>
   </div>
 </div>
-
-  <!-- Toasts -->
-<div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1050;"></div>
 
 <script src="config.js"></script>
 
