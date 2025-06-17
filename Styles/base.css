@@ -7,14 +7,39 @@ html, body {
   height: 100%;
   overflow: auto;
   font-family: "Courgette", cursive;
-  background-color: var(--accent-color);
-  color: var(--text-color);
+  background-color: var(--bs-light);
+  color: var(--bs-dark);
   position: relative;
-  z-index: 1;
 }
 
-/* Centered Containers */
-.container, .tab-pane {
+.container,
+.section,
+.tab-pane,
+.tab-content {
+  /* border: 2px solid;                    🔷 Search section border */
   max-width: 1000px;
   margin: 0 auto;
+}
+
+/* ===============================
+   🔲 HEADER & FOOTER PLACEHOLDERS
+================================== */
+#header-placeholder {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: var(--header-height);
+  z-index: 1000;
+}
+
+#footer-placeholder {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: var(--footer-height);
+  background-color: transparent;
+  z-index: 1000;
+  pointer-events: none;
 }

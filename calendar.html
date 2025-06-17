@@ -15,15 +15,15 @@
 
 <!-- ⏳ Loader -->
 <div id="loadingOverlay" class="d-none">
-  <div class="text-center text-info">
-    <div class="spinner-border text-info" role="status"></div>
+  <div class="text-center text-primary">
+    <div class="spinner-border text-primary" role="status"></div>
     <p class="mt-2">Loading... Please wait...</p>
   </div>
 </div>
 
 <body class="bg-light">
-  <div class="container py-4">
-    <h1 class="text-center mb-4">📅 FullCalendar</h1>
+  <div class="container py-4 bg-black text-info">
+    <h2 class="text-center mb-4">📅  My Calendar</h2>
     <div class="card shadow rounded-4">
       <div class="card-body p-4">
         <div id="calendar"></div>
@@ -36,7 +36,7 @@
 <!-- 📌 Add/Edit Event Modal -->
 <div class="modal fade" id="addEventModal" tabindex="-1" aria-labelledby="addEventLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
-    <div class="modal-content shadow rounded-4">
+    <div class="modal-content shadow rounded-4 bg-black text-info">
       <div class="modal-header">
         <h5 class="modal-title" id="addEventLabel">Event Details</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>

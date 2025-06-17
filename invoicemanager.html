@@ -15,19 +15,19 @@
 
 <!-- Loader -->
 <div id="loadingOverlay" class="d-none">
-  <div class="text-center text-info">
-      <div class="spinner-border text-info" role="status"></div>
-      <p class="mt-2">Loading... Please wait...</p>
+  <div class="text-center">
+    <div class="spinner-border" role="status"></div>
+    <p class="mt-4">Loading... Please wait...</p>
   </div>
 </div>
 
 <!-- Invoice Management Section -->
 <section class="text-center text-sm-start">
 <div class="container" data-element="main-container">
-  <h2 class="text-center" data-element="page-title">Inventory Management</h2>
+  <h2 class="text-center" data-element="page-title">Invoice Management</h2>
 
 <!-- Navigation Tabs -->
-<ul class="nav nav-tabs border-info" id="invoiceTabs">
+<ul class="nav nav-tabs" id="invoiceTabs">
   <li class="nav-item">
     <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-search">🔍 Search Invoice</button>
   </li>
@@ -60,7 +60,7 @@
     </div>
   </div>
 
-<table class="table table-hover my-custom-table">
+<table class="table table-hover">
   <thead>
     <tr>
       <th>#</th>
@@ -108,8 +108,8 @@
 
   <div class="row g-3 mt-1 mb-1">
     <div class="d-grid gap-2 d-sm-block mt-2 mb-2">
-      <button type="button" class="btn btn-warning" id="viewQuoteBtn">📝 View Quote</button>
-      <button type="button" class="btn btn-success ms-2 d-none" id="makePaymentBtn">💵 Make Payment</button>
+      <button type="button" class="btn" id="viewQuoteBtn">📝 View Quote</button>
+      <button type="button" class="btn ms-2 d-none" id="makePaymentBtn">💵 Make Payment</button>
     </div>
   </div>
 

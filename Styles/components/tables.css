@@ -1,20 +1,24 @@
 /* ===============================
    📋 TABLE & RESULTS STYLING
 ================================== */
-.result-box th,
-.result-box td,
-.my-custom-table thead th {
-  background-color: var(--accent-color) ;
-  color: var(--text-color) ;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-}
-
 .result-box {
-  cursor: pointer;
-  transition: background-color 0.2s ease-in-out;
+  transition: background-color 0.2s ease-in-out;     /* ⏱ Smooth hover effect */
+  cursor: pointer;                                   /* 👆 Clickable rows */
 }
 
-.result-box:hover td,
-.result-box:hover th {
-  background-color: rgba(25, 135, 84, 0.15) ;
+.result-box th,
+.result-box td {
+  font-weight: bold;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  /* border: 1px solid; */
+}
+
+thead th {
+  border-bottom: 2px solid;
+  font-weight: bold;
+  padding: 0.75rem;
 }

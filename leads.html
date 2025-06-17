@@ -15,10 +15,10 @@
 <div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1050;"></div>
 
 <div class="container py-4">
-  <h2 class="text-info text-center mb-4">Lead Management</h2>
+  <h2 class="text-center mb-4">Lead Management</h2>
 
   <!-- Filters and Search -->
-  <div class="card bg-secondary mb-3">
+  <div class="card mb-3">
     <div class="card-body">
       <div class="row g-2 align-items-end">
         <div class="col-md-4">
@@ -36,17 +36,17 @@
           <input type="text" id="searchBar" class="form-control" placeholder="Search leads...">
         </div>
         <div class="col-md-4">
-          <button class="btn btn-info w-100" onclick="filterLeads()">Apply</button>
+          <button class="btn w-100" onclick="filterLeads()">Apply</button>
         </div>
       </div>
     </div>
   </div>
 
   <!-- Lead Table -->
-  <div class="card bg-black border-info">
+  <div class="card">
     <div class="card-body">
       <div class="table-responsive">
-        <table class="table table-dark table-hover table-striped align-middle" id="leadsTable">
+        <table class="table table-hover table-striped align-middle" id="leadsTable">
           <thead class="table-light">
             <tr>
               <th>ID</th>
@@ -101,7 +101,7 @@
           </div>
           <input type="number" id="followUpInterval" name="followUpInterval" hidden />
 
-          <button type="submit" class="btn btn-info">Submit</button>
+          <button type="submit" class="btn">Submit</button>
         </form>
       </div>
     </div>

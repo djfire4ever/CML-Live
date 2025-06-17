@@ -7,8 +7,6 @@
 </head>
 <body class="theme-dark">
 
-<!-- <body class="page-body classic-theme" data-page-id="clientManager" data-element="page-bg"> -->
-<!-- <body class="page-body bw-theme" data-page-id="clientManager" data-element="page-bg"> -->
 <!-- 💧 Watermark -->
 <div class="watermark"></div>
 
@@ -17,9 +15,9 @@
 
 <!-- ⏳ Loader -->
 <div id="loadingOverlay" class="d-none">
-  <div class="text-center text-info">
-    <div class="spinner-border text-info" role="status"></div>
-    <p class="mt-2">Loading... Please wait...</p>
+  <div class="text-center">
+    <div class="spinner-border" role="status"></div>
+    <p class="mt-4">Loading... Please wait...</p>
   </div>
 </div>
 
@@ -32,8 +30,8 @@
     <th class="nickName"></th>
     <th class="text-center">
       <div class="btn-group" role="group">
-        <button type="button" class="btn btn-danger delete-confirm-button btn-sm d-none">Confirm</button>
-        <button type="button" class="btn btn-dark btn-sm before-delete-button" data-button-state="delete">Delete</button>
+        <button type="button" class="btn btn-sm delete-confirm-button d-none">Confirm</button>
+        <button type="button" class="btn btn-sm before-delete-button" data-button-state="delete">Delete</button>
       </div>
     </th>
   </tr>
@@ -46,7 +44,7 @@
   <h2 class="text-center" data-element="page-title">Client Management</h2>
 
 <!-- 📍 Navigation Tabs -->
-  <ul class="nav nav-tabs border-info" id="clientTabs">
+  <ul class="nav nav-tabs" id="clientTabs">
     <li class="nav-item">
       <button class="nav-link active" data-element="nav-tab-button" data-bs-toggle="tab" data-bs-target="#tab-search">🔍 Search Client</button>
     </li>
@@ -70,7 +68,7 @@
       <span class="counter" id="totalCounter" data-element="search-counter">0</span>
     </div>
   </div>
-  <table class="table table-hover my-custom-table" data-element="results-table">
+  <table class="table table-hover" data-element="results-table">
     <thead>
       <tr>
         <th>Phone #</th>
@@ -107,7 +105,7 @@
         <div class="col-md-2 col-lg-2 "><label>Zip</label><input type="number" class="form-control" id="zip"></div>
       </div>
       <div class="row g-3 mt-2">
-        <div class="col-sm-2"><button type="submit" class="btn btn-dark">📅 Save</button></div>
+        <div class="col-sm-2"><button type="submit" class="btn">📅 Save</button></div>
       </div>
     </div>
   </div>
@@ -137,7 +135,7 @@
         <div class="col-md-2 col-lg-2"><label>Zip</label><input type="number" class="form-control" id="edit-zip"></div>
       </div>
       <div class="row g-3 mt-2">
-        <div class="col-sm-2"><button type="button" class="btn btn-dark" id="save-changes">📅 Save</button></div>
+        <div class="col-sm-2"><button type="button" class="btn" id="save-changes">📅 Save</button></div>
       </div>
   </form>
   </div>

@@ -1,7 +1,43 @@
-/* ===============================
-   ⬇️ ACCORDION OVERRIDES
-================================== */
+/* ====================================
+   🃏 ACCORDIONS & CARDS STRUCTURE
+==================================== */
+
 .accordion-button {
+  border: 1px solid;
+  border-radius: 0.375rem;
+  font-weight: bold;
+  box-shadow: 0 0 0 0.15rem transparent;  /* placeholder glow */
   position: relative;
+  transition: background-color 0.3s ease, color 0.3s ease;
   z-index: 2;
+}
+
+.accordion-button:hover,
+.accordion-button:focus {
+  outline: none;
+}
+
+.accordion-button:not(.collapsed) {
+  outline: 2px solid; /* emphasized outline when expanded */
+}
+
+.accordion-body {
+  border: 2px solid;
+  border-radius: 0 0 0.375rem 0.375rem;
+  border-style: solid;
+  /* Optional: padding/margin */
+}
+
+.accordion-body .row {
+  background-color: transparent;
+}
+
+.card-header {
+  font-weight: bold;
+  border-radius: 0.375rem 0.375rem 0 0;
+  border: 1px solid;
+}
+.badge {
+  font-size: .75rem;  /* structural control */
+  margin-right: 0.5rem; /* same as ms-2 */
 }

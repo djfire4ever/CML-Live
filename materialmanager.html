@@ -15,9 +15,9 @@
 
 <!-- Loader -->
 <div id="loadingOverlay" class="d-none">
-  <div class="text-center text-info">
-      <div class="spinner-border text-info" role="status"></div>
-      <p class="mt-2">Loading... Please wait...</p>
+  <div class="text-center">
+    <div class="spinner-border" role="status"></div>
+    <p class="mt-4">Loading... Please wait...</p>
   </div>
 </div>
 
@@ -27,7 +27,7 @@
     <h2 class="text-center mt-2">Materials Management</h2>
 
 <!-- Navigation Tabs -->
-<ul class="nav nav-tabs border-info" id="materialTabs">
+<ul class="nav nav-tabs" id="materialTabs">
   <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#search-material">🔍 Search Material</button></li>
   <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#add-material">➕ Add Material</button></li>
   <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#add-inventory">➕ Add Inventory</button></li>
@@ -42,7 +42,7 @@
     <th class="matPrice"></th>
     <th class="supplier"></th>
     <th class="text-center">
-      <button type="button" class="btn btn-dark edit-button btn-sm d-none">Edit</button> <!-- hidden now -->
+      <button type="button" class="btn btn-sm edit-button d-none">Edit</button> <!-- hidden now -->
     </th>
     <!-- <th class="text-center">
       <div class="btn-group" role="group">
@@ -100,7 +100,7 @@
         <div class="col-md-2 col-lg-2"><label><b>On Hand</b></label><input type="text" class="form-control" id="add-onHand"></div>
       </div>
       <div class="row g-3 mt-1">
-        <div class="col-sm-2"><button type="submit" class="btn btn-dark" id="add-material-btn">💾 Save</button></div>
+        <div class="col-sm-2"><button type="submit" class="btn" id="add-material-btn">💾 Save</button></div>
       </div>
     </div> <!-- container -->
   </form>
@@ -137,8 +137,8 @@
       </div>
       <div class="row g-3 mt-1">
         <div class="col-12">
-          <button type="button" class="btn btn-dark" id="save-changes">💾 Save</button>
-          <button type="button" class="btn btn-dark" id="cancel-changes">Cancel</button>
+          <button type="button" class="btn" id="save-changes">💾 Save</button>
+          <button type="button" class="btn" id="cancel-changes">Cancel</button>
         </div>
       </div>
       <div id="reorderAlert" class="alert alert-danger mt-2 mb-2 d-none">
@@ -174,8 +174,8 @@
 
         <!-- Row Control Buttons -->
         <div class="col-md-6 d-flex align-items-end gap-2">
-          <button type="button" class="btn btn-dark btn-sm add-inventory-btn">➕ Add Material</button>
-          <button type="button" class="remove-material-row btn btn-danger btn-sm" style="display: none;">🗑️ Remove</button>
+          <button type="button" class="btn btn-sm add-inventory-btn">➕ Add Material</button>
+          <button type="button" class="btn btn-sm remove-material-row" style="display: none;">🗑️ Remove</button>
         </div>
       </div>
     </div>

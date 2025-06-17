@@ -1,27 +1,4 @@
 /* ===============================
-   🔲 HEADER & FOOTER PLACEHOLDERS
-================================== */
-#header-placeholder {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: var(--header-height);
-  z-index: 1000;
-}
-
-#footer-placeholder {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: var(--footer-height);
-  background-color: transparent;
-  z-index: 1000;
-  pointer-events: none;
-}
-
-/* ===============================
    🖼️ IFRAME WRAPPER
 ================================== */
 iframe {

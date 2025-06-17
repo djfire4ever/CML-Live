@@ -6,9 +6,12 @@
   --header-height: 60px;
   --footer-height: 22px;
 
-  /* Theme Defaults */
-  /*  --accent-color: #0dcaf0;         /* Bootstrap success green */
-  /* --text-color: #000000;
-  --input-bg: #f8f9fa;
-  --search-bg: #ffffff; */
+  /* Buttons fallback */
+  --btn-bg: var(--bs-dark);
+  --btn-color: var(--bs-light);
+  --btn-border: var(--bs-dark);
+
+  /* Search results fallback */
+  --result-hover-bg: var(--bs-secondary);
+  --result-hover-color: var(--bs-light);
 }

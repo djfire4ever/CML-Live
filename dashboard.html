@@ -4,20 +4,32 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin Dashboard</title>
-  <script src="config.js"></script> <!-- Ensure config.js is linked here -->
-  <style>
-.stat-button {
+  <script src="config.js"></script>
+<style>
+body.bg-black .btn-outline-primary { color: #0d6efd; border-color: #0d6efd; }
+body.bg-black .btn-outline-info    { color: #0dcaf0; border-color: #0dcaf0; }
+body.bg-black .btn-outline-danger  { color: #dc3545; border-color: #dc3545; }
+body.bg-black .btn-outline-warning { color: #ffc107; border-color: #ffc107; }
+body.bg-black .btn-outline-success { color: #198754; border-color: #198754; }
+
+body.bg-black .stat-button {
+  all: revert;
   transition: all 0.3s ease;
   border-width: 2px;
+  font-weight: bold;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
-.stat-button:hover {
+body.bg-black .stat-button:hover {
   transform: translateY(-2px);
   box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
 }
-.stat-button:active {
+body.bg-black .stat-button:active {
   transform: scale(0.98);
   box-shadow: none;
 }
+
 .low-stock-row {
   transition: all 0.3s ease;
   border: none;
@@ -31,7 +43,7 @@
   transform: scale(0.98);
   box-shadow: none;
 }
- </style>
+</style>
 </head>
 
 <div class="watermark"></div>
@@ -60,7 +72,7 @@
           </button>
         </h2>
       <div id="collapseQuickLinks" class="accordion-collapse" aria-labelledby="headingQuickLinks" data-bs-parent="#quickLinksAccordion">
-        <div class="accordion-body bg-black text-light">
+        <div class="accordion-body bg-black text-light border-info">
           <div class="row g-3">
           <!-- Card 1 - Add Clients -->
             <div class="col-12">
@@ -109,7 +121,7 @@
           </button>
         </h2>
         <div id="collapseStats" class="accordion-collapse" aria-labelledby="headingStats">
-          <div class="accordion-body bg-black text-light">
+          <div class="accordion-body bg-black text-light border-info">
             <div class="row g-3">
               <div class="col-12"><button class="btn btn-outline-primary w-100 d-flex justify-content-between align-items-center" data-link="clientmanager.html#tab-search"><span>Total Clients:</span><span id="totalClients" class="fw-bold">--</span></button></div>
               <div class="col-12"><button class="btn btn-outline-info w-100 d-flex justify-content-between align-items-center" data-link="materialmanager.html#search-material"><span>Total Materials:</span><span id="totalMaterials" class="fw-bold">--</span></button></div>
@@ -133,7 +145,7 @@
           </button>
         </h2>
         <div id="collapseLeads" class="accordion-collapse" aria-labelledby="headingLeads">
-          <div class="accordion-body bg-black text-light">
+          <div class="accordion-body bg-black text-light border-info">
             <div class="row g-3">
               <div class="col-12"><button class="btn btn-outline-primary w-100 d-flex justify-content-between align-items-center"><span>New Leads:</span><span id="newLeads" class="fw-bold">0</span></button></div>
               <div class="col-12"><button class="btn btn-outline-info w-100 d-flex justify-content-between align-items-center"><span>Follow-Up Leads:</span><span id="followupLeads" class="fw-bold">0</span></button></div>
