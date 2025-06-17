@@ -10,8 +10,8 @@
   background-size: contain;                         /* ✨ Scale image properly */
   background-position: bottom;                      /* 🔽 Stick to bottom */
   background-repeat: no-repeat;                     /* 🚫 No repeating */
-  opacity: 0.2;                                     /* 👻 Invisible by default */
+  opacity: 0.5;                                     /* 👻 Invisible by default */
   /* outline: 1px dashed rgb(21, 7, 7); */
   pointer-events: none;                             /* 🚫 No interaction */
-  z-index: 999;                                     /* 🔽 Behind everything */
+  z-index: 1;                                     /* 🔽 Behind everything */
 }
