@@ -65,7 +65,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   
     if (searchResultsBox) {
       searchResultsBox.innerHTML = "";
-      totalCounter.textContent = `${data.length} Total Client`;
+      totalCounter.textContent = `${data.length} Total Clients`;
   
       if (resultsArray.length === 0) {
         searchCounter.textContent = "🔍";
@@ -80,7 +80,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           tr.dataset.clientid = r[0];
   
           const deleteBtn = tr.querySelector(".before-delete-button");
-          const confirmBtn = tr.querySelector(".delete-confirm-button");
+          const confirmBtn = tr.querySelector(".delete-button");
   
           deleteBtn.dataset.clientid = r[0];
           confirmBtn.dataset.clientid = r[0];
