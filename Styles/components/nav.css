@@ -4,12 +4,10 @@
 .nav-tabs .nav-link {
   border: 2px solid;
   font-weight: bold;
-  /* color: var(--bs-dark); */
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .nav-tabs {
   border: none;
-  /* border-color: transparent; */
   font-weight: bold;
 }

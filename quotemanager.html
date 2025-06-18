@@ -49,11 +49,11 @@
     <th class="firstName"></th>
     <th class="lastName"></th>
     <th class="eventDate"></th>
-    <!-- <th class="text-center"><button type="button" class="btn btn-dark edit-button btn-sm">View</button></th> -->
+    <!-- <th class="text-center"><button type="button" class="btn edit-button btn-sm">View</button></th> -->
     <th class="text-center">
       <button type="button" class="btn btn-sm edit-button btn-sm d-none">Edit</button>
       <div class="btn-group" role="group">
-        <!-- <button type="button" class="btn delete-button btn-sm d-none">Confirm</button>
+        <!-- <button type="button" class="btn btn-sm delete-button d-none">Confirm</button>
         <button type="button" class="btn btn-sm before-delete-button" data-button-state="delete">Delete</button> -->
       </div>
     </th>
@@ -70,7 +70,7 @@
         <span class="input-group-text" id="searchCounter">🔍</span> 
       </div>
   </div>
-  <table class="table table-hover my-custom-table">
+  <table class="table table-hover">
     <thead>
       <tr>
         <th>#</th>
@@ -102,8 +102,8 @@
                 <span><i class="fa-solid fa-user me-2 text-info"></i></span>
                 <span id="card1-header" class="badge bg-black fs-6 text-info ms-2">
                 <span id="edit-card1-header-display"></span>
-              </span>
-                </button>
+                </span>
+              </button>
             </h2>
             <div id="edit-collapseClient" class="accordion-collapse collapse" aria-labelledby="edit-headingClient" data-bs-parent="#edit-AccordionR1C1">
               <div class="accordion-body bg-black text-info">
@@ -755,45 +755,6 @@
     </div>
   </div>
 </div>
-
-<!-- Payment Modal -->
-<!-- <div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content rounded-3 shadow">
-      <div class="modal-header bg-black text-info">
-        <h5 class="modal-title" id="paymentModalLabel">Log Payment</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <form id="paymentForm">
-          <input type="hidden" id="paymentLogID">
-          <div class="mb-3">
-            <label class="form-label"></label>
-            <div id="displayBalanceDue" class="form-control-plaintext fw-bold text-danger"></div>
-          </div>
-          <div class="mb-3">
-            <label for="paymentAmount" class="form-label">Making a Payment of</label>
-            <input type="number" class="form-control" id="paymentAmount" step="0.01" min="0" />
-          </div>
-          <div class="mb-3">
-            <label for="paymentMethod" class="form-label">Payment Method</label>
-            <input type="text" class="form-control" id="paymentMethod" list="payment-method-options" required>
-            <datalist id="payment-method-options"></datalist>
-          </div>
-          <div class="mb-3">
-            <label for="paymentDate" class="form-label">Payment Date</label>
-            <input type="date" class="form-control" id="paymentDate" required>
-          </div>
-          <div class="mb-3">
-            <label for="paymentNotes" class="form-label">Notes (optional)</label>
-            <textarea class="form-control" id="paymentNotes" rows="2"></textarea>
-          </div>
-          <button type="button" class="btn btn-primary" id="submitPaymentBtn">Submit Payment</button>
-        </form>
-      </div>
-    </div>
-  </div>
-</div> -->
 
 <script>
 

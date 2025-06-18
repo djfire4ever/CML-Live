@@ -6,7 +6,7 @@
   <title>Product Manager</title>
   <style></style>
 </head>
-<body class="theme-pastel">
+<body class="theme-dark">
 <div class="watermark"></div>
 
 <!-- Notification Toasts -->
@@ -25,60 +25,62 @@
   <div class="container">
     <h2 class="text-center mb-4">Product Management</h2>
 
-    <!-- Nav Tabs -->
-    <ul class="nav nav-tabs" id="productTabs" role="tablist">
-      <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="search-tab" data-bs-toggle="tab" data-bs-target="#search-product" type="button" role="tab" aria-controls="search-product" aria-selected="true">🔍 Search</button>
-      </li>
-      <li class="nav-item" role="presentation">
-        <button class="nav-link" id="add-tab" data-bs-toggle="tab" data-bs-target="#add-product" type="button" role="tab" aria-controls="add-product" aria-selected="false">➕ Add</button>
-      </li>
-      <li class="nav-item" role="presentation">
-        <button class="nav-link" id="edit-tab" data-bs-toggle="tab" data-bs-target="#edit-product" type="button" role="tab" aria-controls="edit-product" aria-selected="false" hidden>✏️ Edit</button>
-      </li>
-    </ul>
+<!-- Nav Tabs -->
+<ul class="nav nav-tabs" id="productTabs" role="tablist">
+  <li class="nav-item" role="presentation">
+    <button class="nav-link active" id="search-tab" data-bs-toggle="tab" data-bs-target="#search-product" type="button" role="tab" aria-controls="search-product" aria-selected="true">🔍 Search</button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="add-tab" data-bs-toggle="tab" data-bs-target="#add-product" type="button" role="tab" aria-controls="add-product" aria-selected="false">➕ Add</button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="edit-tab" data-bs-toggle="tab" data-bs-target="#edit-product" type="button" role="tab" aria-controls="edit-product" aria-selected="false" hidden>✏️ Edit</button>
+  </li>
+</ul>
 
-  <!-- Row Template -->
-  <template id="rowTemplate">
-    <tr class="result-box">
-      <td class="prodID"></td>
-      <td class="productName"></td>
-      <td class="productType"></td>
-      <td class="cost"></td>
-      <td class="retail"></td>
-      <td class="text-center">
-        <div class="btn-group" role="group">
-          <button type="button" class="btn btn-sm delete-button d-none">Confirm</button>
-          <button type="button" class="btn btn-sm before-delete-button" data-button-state="delete">Delete</button>
-        </div>
-      </td>
-    </tr>
-  </template>
-
-  <!-- Tab Content -->
-  <div class="tab-content pt-3" id="productTabsContent">
-    <!-- Search Tab -->
-    <div class="tab-pane fade show active" id="search-product" role="tabpanel" aria-labelledby="search-tab">
-      <div class="input-group mb-2">
-        <input type="text" class="form-control" id="searchInput" placeholder="🔍 search...">
-        <div class="input-group-append">
-          <span class="input-group-text" id="searchCounter">🔍</span>
-        </div>
+<!-- Row Template -->
+<template id="rowTemplate">
+  <tr class="result-box">
+    <td class="prodID"></td>
+    <td class="productName"></td>
+    <td class="productType"></td>
+    <td class="cost"></td>
+    <td class="retail"></td>
+    <td class="text-center">
+      <div class="btn-group" role="group">
+        <button type="button" class="btn btn-sm delete-button d-none">Confirm</button>
+        <button type="button" class="btn btn-sm before-delete-button" data-button-state="delete">Delete</button>
       </div>
-      <table class="table table-hover">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Cost</th>
-            <th>Retail</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody id="searchResults"></tbody>
-      </table>
+    </td>
+  </tr>
+</template>
+
+<!-- Tab Content -->
+<div class="tab-content pt-3" id="productTabsContent">
+  
+<!-- Search Tab -->
+<div class="tab-pane fade show active" id="search-product" role="tabpanel" aria-labelledby="search-tab">
+  <div class="input-group mb-2">
+    <input type="text" class="form-control" id="searchInput" placeholder="🔍 search...">
+    <div class="input-group-append">
+      <span class="input-group-text" id="searchCounter">🔍</span>
     </div>
+  </div>
+
+  <table class="table table-hover">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Cost</th>
+        <th>Retail</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody id="searchResults"></tbody>
+  </table>
+</div>
 
 <!-- Edit Tab -->
 <div class="tab-pane fade" id="edit-product" role="tabpanel" aria-labelledby="edit-tab">
@@ -119,7 +121,7 @@
               </div>
               <div id="edit-part-rows" data-mode="edit"></div>
               <div class="row g-3 mt-1 mb-1">
-                <div class="col-sm-6"><button type="button" class="btn btn-dark" id="edit-partRow">➕ Part</button></div>
+                <div class="col-sm-6"><button type="button" class="btn" id="edit-partRow">➕ Part</button></div>
               </div>
             </div>
           </div>
@@ -131,7 +133,7 @@
       <div class="col-sm-12"><label for="fw-bold">Description</label><input type="text" class="form-control" id="edit-description"></div>
     </div>
     <div class="row g-3 mt-1 mb-5">
-      <div class="col-sm-12"><button type="submit" class="btn btn-dark" id="save-changes">💾 Save Changes</button></div>
+      <div class="col-sm-12"><button type="submit" class="btn" id="save-changes">💾 Save Changes</button></div>
     </div>
   </form>
 </div>
@@ -178,7 +180,7 @@
               </div>
               <div id="add-part-rows" data-mode="add"></div>
               <div class="row g-3 mt-1 mb-1">
-                <div class="col-sm-6"><button type="button" class="btn btn-dark" id="add-partRow">➕ Part</button></div>
+                <div class="col-sm-6"><button type="button" class="btn" id="add-partRow">➕ Part</button></div>
               </div>
             </div>
           </div>
@@ -190,7 +192,7 @@
       <div class="col-sm-12"><label for="fw-bold">Description</label><input type="text" class="form-control" id="add-description"></div>
     </div>
     <div class="row g-3 mt-1 mb-5">
-      <div class="col-sm-12"><button type="submit" class="btn btn-dark" id="submit">💾 Save</button></div>
+      <div class="col-sm-12"><button type="submit" class="btn" id="submit">💾 Save</button></div>
     </div>
 
   </form>

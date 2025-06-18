@@ -14,8 +14,3 @@
 @import url('./styles/theme.css');           /* shared styling */
 @import url('./styles/theme-variables.css'); /* per-theme vars */
 
-/* Add themes after base styles */
-/* @import url('./styles/themes/theme-classic.css');
-@import url('./styles/themes/theme-dark.css');
-@import url('./styles/themes/theme-pastel.css');
-@import url('./styles/themes/theme-test.css'); */
