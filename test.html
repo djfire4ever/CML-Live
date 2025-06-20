@@ -7,6 +7,7 @@
   <style>
   </style>
 </head>
+<body class="page-body" style="min-height: 100vh;" data-element="page-bg">
 <!-- <body class="theme-dark"> -->
 <div class="watermark"></div>
 <!-- Notification Toasts -->
@@ -833,14 +834,14 @@ function setupDynamicNavigation() {
   window.addEventListener('hashchange', activateTabFromHash);
 }
 
-setupDynamicNavigation();
-
 window.addEventListener('DOMContentLoaded', () => {
   const theme = localStorage.getItem('selectedTheme');
   if (theme) {
     document.body.classList.add(theme);
   }
 });
+
+setupDynamicNavigation();
 
 </script>
   
