@@ -3,8 +3,8 @@
 ================================== */
 :root {
   /* Layout Heights */
-  --header-height: 60px;
-  --footer-height: 22px;
+  --header-height: 50px;
+  --footer-height: 25px;
 
   /* Buttons fallback */
   --btn-bg: var(--bs-dark);
