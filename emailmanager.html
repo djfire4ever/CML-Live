@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Email Manager</title>
+  <style>
+    #emailBody {
+      height: 200px;
+    }
+  </style>
+</head>
+<body class="theme-dark p-4">
+  <div class="container">
+    <h2 class="mb-4">📧 Email Template Manager</h2>
+
+    <div class="mb-3">
+      <label for="emailTypeSelect" class="form-label">Select Email Type</label>
+      <select id="emailTypeSelect" class="form-select" onchange="loadTemplate(this.value)">
+        <option value="">-- Choose Email Type --</option>
+        <!-- Populated by JS -->
+      </select>
+    </div>
+
+    <form id="templateForm" onsubmit="saveTemplate(event)">
+      <div class="mb-3">
+        <label for="emailSubject" class="form-label">Subject</label>
+        <input type="text" class="form-control" id="emailSubject" required>
+      </div>
+
+      <div class="mb-3">
+        <label for="emailBody" class="form-label">Body</label>
+        <textarea class="form-control" id="emailBody" required></textarea>
+      </div>
+
+      <button type="submit" class="btn btn-primary">💾 Save Template</button>
+      <span id="saveStatus" class="ms-3 text-success d-none">Saved!</span>
+    </form>
+  </div>
+
+<script src="config.js"></script>
+
+<script>
+async function loadEmailTypes() {
+  const res = await fetch(scriptURL + "?action=getEmailTemplates");
+  const data = await res.json();
+  if (!data || !Array.isArray(data)) return alert("Failed to load templates");
+
+  templates = {};
+  const select = document.getElementById('emailTypeSelect');
+  select.innerHTML = '<option value="">-- Choose Email Type --</option>';
+  data.forEach(t => {
+    templates[t.type] = { subject: t.subject, body: t.body };
+    const opt = document.createElement('option');
+    opt.value = t.type;
+    opt.textContent = t.type.charAt(0).toUpperCase() + t.type.slice(1);
+    select.appendChild(opt);
+  });
+}
+
+function loadTemplate(type) {
+  if (!type || !templates[type]) return;
+  document.getElementById('emailSubject').value = templates[type].subject;
+  document.getElementById('emailBody').value = templates[type].body;
+}
+
+async function saveTemplate(e) {
+  e.preventDefault();
+  const type = document.getElementById('emailTypeSelect').value;
+  const subject = document.getElementById('emailSubject').value;
+  const body = document.getElementById('emailBody').value;
+  if (!type) return alert("Please select a template type.");
+
+  const payload = {
+    system: "email",
+    action: "updateTemplate",
+    type,
+    subject,
+    body
+  };
+
+  const res = await fetch(scriptURL, {
+    method: "POST",
+    body: JSON.stringify(payload),
+    headers: { "Content-Type": "application/json" }
+  });
+
+  const json = await res.json();
+  if (json.success) {
+    document.getElementById('saveStatus').classList.remove('d-none');
+    setTimeout(() => document.getElementById('saveStatus').classList.add('d-none'), 2000);
+    templates[type] = { subject, body };
+  } else {
+    alert("Error saving template: " + (json.message || "Unknown error"));
+  }
+}
+
+window.onload = loadEmailTypes;
+
+</script>
+</body>
+</html>
