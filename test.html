@@ -393,18 +393,25 @@
     </div>
 
     <div class="row g-3 mt-1 mb-5">
-    <!-- Edit Form-Buttons -->
       <div class="col-sm-12">
         <button class="btn btn-dark" id="edit-quote-btn">💾 Save Changes</button>
         <button type="button" class="btn btn-secondary" id="edit-previewQuoteBtn">Preview Invoice</button>
+
+        <!-- Finalize Invoice -->
         <button type="button" class="btn btn-success" id="edit-finalizeInvoiceBtn">
-          <i class="bi bi-file-earmark-check"></i> Finalize Invoice</button>
+          <i class="bi bi-file-earmark-check"></i> Finalize Invoice
+        </button>
+        <span id="edit-invoiceFinalizedBadge" class="badge bg-success d-none ms-2">Invoice Finalized</span>
+
+        <!-- Email Invoice -->
+        <button type="button" class="btn btn-outline-primary d-none ms-2" id="edit-emailInvoiceBtn">
+          📧 Email Invoice
+        </button>
+
         <button id="btn-show-shopping-list" class="btn btn-outline-primary">🛒 View Shopping List</button>
         <button type="button" class="btn btn-success ms-2" id="makePaymentBtn">💵 Make Payment</button>
       </div>
     </div>
-  </form>
-</div>
 
 <!-- ➕ Add Quote Tab -->
 <div class="tab-pane fade" id="add-quote" role="tabpanel" aria-labelledby="add-tab">

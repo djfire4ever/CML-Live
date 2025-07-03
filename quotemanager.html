@@ -159,6 +159,9 @@
                 <div class="row g-3">
                   <div class="col-sm-12"><label for="edit-eventNotes">Event Notes</label><input type="text" class="form-control" id="edit-eventNotes"></div>
                 </div>
+                <div class="row g-3">
+                  <div class="col-sm-12"><label for="edit-eventTheme">Event Theme</label><input type="text" class="form-control" id="edit-eventTheme"></div>
+                </div>
               </div>
             </div>
           </div>
@@ -393,13 +396,31 @@
     <div class="row g-3 mt-1 mb-5">
     <!-- Edit Form-Buttons -->
       <div class="col-sm-12">
-        <button class="btn" id="edit-quote-btn">💾 Save Changes</button>
-        <button type="button" class="btn" id="edit-previewQuoteBtn">Preview Invoice</button>
-        <button type="button" class="btn" id="edit-finalizeInvoiceBtn">
-          <i class="bi bi-file-earmark-check"></i> Finalize Invoice</button>
+        <button class="btn btn-dark" id="edit-quote-btn">💾 Save Changes</button>
+        <button type="button" class="btn btn-secondary" id="edit-previewQuoteBtn">Preview Invoice</button>
+
+        <!-- Finalize Invoice -->
+        <button type="button" class="btn" id="edit-finalizeInvoiceBtn" disabled>
+          <i class="bi bi-file-earmark-check"></i> Finalize Invoice
+        </button>
+
+        <!-- Email Invoice -->
+        <button type="button" class="btn ms-2" id="edit-emailInvoiceBtn" disabled>
+          📧 Email Invoice
+        </button>
+
         <button id="btn-show-shopping-list" class="btn">🛒 View Shopping List</button>
         <!-- <button type="button" class="btn btn-success ms-2" id="makePaymentBtn">💵 Make Payment</button> -->
       </div>
+      <!-- Alerts under buttons -->
+      <div id="edit-finalizeInvoice-alert" class="alert alert-info mt-2 py-2 px-3 small d-none">
+        Final Invoice was already created and saved. If you want to make changes, please contact your favoritest Tio
+      </div>
+
+      <div id="edit-emailInvoice-alert" class="alert alert-warning mt-2 py-2 px-3 small d-none">
+        Please finalize the invoice before emailing it.
+      </div>
+
     </div>
   </form>
 </div>
@@ -470,7 +491,10 @@
                 <div class="col-sm-12"><label for="add-eventLocation">Event Location</label><input type="text" class="form-control" id="add-eventLocation"></div>
               </div>
               <div class="row g-3">
-                <div class="col-sm-12"><label for="form-label">Event Notes</label><input type="text" class="form-control" id="add-eventLocation"></div>
+                <div class="col-sm-12"><label for="add-eventLocation">Event Notes</label><input type="text" class="form-control" id="add-eventLocation"></div>
+              </div>
+              <div class="row g-3">
+                <div class="col-sm-12"><label for="add-eventTheme">Event Theme</label><input type="text" class="form-control" id="add-eventTheme"></div>
               </div>
             </div>
           </div>
@@ -705,8 +729,20 @@
       <div class="col-sm-12">
         <button class="btn btn-dark" id="add-quote-btn">💾 Save Changes</button>
         <button type="button" class="btn btn-secondary" id="add-previewQuoteBtn">Preview Invoice</button>
-        <button type="button" class="btn btn-success" id="add-finalizeInvoiceBtn">
-          <i class="bi bi-file-earmark-check"></i> Finalize Invoice</button>
+
+        <!-- Finalize Invoice -->
+        <button type="button" class="btn btn-success" id="add-finalizeInvoiceBtn" disabled>
+          <i class="bi bi-file-earmark-check"></i> Finalize Invoice
+        </button>
+        <span id="add-invoiceFinalizedBadge" class="badge bg-success d-none ms-2">Invoice Finalized</span>
+
+        <!-- Email Invoice -->
+        <button type="button" class="btn btn-outline-primary ms-2" id="add-emailInvoiceBtn" disabled>
+          📧 Email Invoice
+        </button>
+
+        <button id="btn-show-shopping-list" class="btn btn-outline-primary">🛒 View Shopping List</button>
+        <!-- <button type="button" class="btn btn-success ms-2" id="makePaymentBtn">💵 Make Payment</button> -->
       </div>
     </div>
   </form>

@@ -196,6 +196,28 @@ document.addEventListener("DOMContentLoaded", () => {
         finalizeBtn.addEventListener("click", finalizeInvoiceBtnHandler);
         finalizeBtn.dataset.bound = "true";
       }
+
+      const addEmailBtn = document.getElementById("add-emailInvoiceBtn");
+      if (addEmailBtn && !addEmailBtn.dataset.bound) {
+        addEmailBtn.addEventListener("click", () => {
+          // Collect Add form fields
+          const emailTo = document.getElementById("add-email")?.value || "";
+          const invoiceUrl = document.getElementById("add-invoiceUrl")?.value || "";
+          const firstName = document.getElementById("add-firstName")?.value || "";
+          const lastName = document.getElementById("add-lastName")?.value || "";
+
+          const emailHtml = generateInvoiceEmailHtml(`${firstName} ${lastName}`.trim(), invoiceUrl);
+
+          document.getElementById("invoice-email-to").value = emailTo;
+          document.getElementById("invoice-email-subject").value = "Your Final Invoice from Your Company";
+          document.getElementById("invoice-email-body").innerHTML = emailHtml;
+
+          const modalEl = document.getElementById("finalInvoiceModal");
+          const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+          modal.show();
+        });
+        addEmailBtn.dataset.bound = "true";
+      }
     });
   } else {
     console.warn("❌ Add tab button not found in DOM");
@@ -207,32 +229,28 @@ async function populateEditForm(qtID) {
     toggleLoader(true);
     console.log("🔄 Loading quote data for qtID:", qtID);
 
-    await getProdDataForSearch(true);
+    await getProdDataForSearch();
     setField("edit-qtID", qtID);
     document.querySelector("#edit-qtID")?.setAttribute("readonly", true);
 
-    const response = await fetch(`${scriptURL}?system=quotes&action=getQuoteById&qtID=${qtID}`);
+    const response = await fetch(`${scriptURL}?action=getQuoteById&qtID=${qtID}`);
     if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
 
     const data = await response.json();
     if (!data || data.error) throw new Error(data.error || "No data returned");
 
     // ✅ Fill form fields — grouped by card
-
-    // Card 1: Client Info
     ["phone", "firstName", "lastName", "street", "email", "city", "state", "zip"]
       .forEach(id => setField(`edit-${id}`, data[id] || ""));
 
-    // Card 2: Event Info
     setField("edit-eventDate", formatDateForUser(data.eventDate));
     setField("edit-eventLocation", data.eventLocation || "");
     setField("edit-eventNotes", data.eventNotes || "");
+    setField("edit-eventTheme", data.eventTheme || "");
 
-    // Card 4: Add-On Fees
     ["deliveryFee", "setupFee", "otherFee", "addonsTotal"]
       .forEach(id => setField(`edit-${id}`, data[id] || 0));
 
-    // Card 5: Balance & Payment
     setField("edit-deposit", data.deposit || "");
     setField("edit-amountPaid", data.amountPaid || "");
     setField("edit-balanceDue", data.balanceDue || "");
@@ -242,69 +260,51 @@ async function populateEditForm(qtID) {
     setField("edit-balanceDueDate", formatDateForUser(data.balanceDueDate));
     setField("edit-dueDate", formatDateForUser(data.dueDate));
 
-    // Card 6: Totals
     ["discount", "subTotal1", "subTotal2", "subTotal3", "discountedTotal", "grandTotal"]
       .forEach(id => setField(`edit-${id}`, data[id] || 0));
 
-    // Products
-    // ...inside populateEditForm()...
+    // 🧱 Product Rows
     const container = document.querySelector("#edit-product-rows-container");
     if (container) container.innerHTML = "";
-    
-    let products = [];
+
     if (Array.isArray(data.products)) {
-      products = data.products;
-    } else if (typeof data.prodJSON === "string") {
-      try {
-        products = JSON.parse(data.prodJSON);
-      } catch (e) {
-        console.error("❌ Failed to parse prodJSON:", e, data.prodJSON);
-        products = [];
-      }
+      data.products.forEach(product => {
+        addProductRow(
+          product.name || "",
+          product.quantity || "",
+          "edit-product-rows-container",
+          "edit",
+          product.unitPrice || "",
+          product.totalRowRetail || ""
+        );
+      });
     }
-    
-    products.forEach(product => {
-      addProductRow(
-        product.name || "",
-        product.quantity || "",
-        "edit-product-rows-container",
-        "edit",
-        product.unitPrice ? Number(product.unitPrice) : 0,
-        product.totalRowRetail ? Number(product.totalRowRetail) : 0
-      );
-    });
 
     // Hidden/Meta Fields
-    [ "totalProductCost",
-      "totalProductRetail",
-      "productCount",
-      "quoteDate",
-      "quoteNotes",
-      "invoiceID",
-      "invoiceDate",
-      "invoiceUrl"
+    [
+      "totalProductCost", "totalProductRetail", "productCount", "quoteDate",
+      "quoteNotes", "invoiceID", "invoiceDate", "invoiceUrl"
     ].forEach(id => {
       let val = data[id] || "";
-      if (id === "quoteDate" || id === "invoiceDate") {
-        val = formatDateForUser(val);
-      }
+      if (id === "quoteDate" || id === "invoiceDate") val = formatDateForUser(val);
       setField(`edit-${id}`, val);
     });
 
-    // 🔢 Totals and Header Updates
+    // 🔢 Recalculate totals and update headers
     calculateAllTotals("edit");
     updateCardHeaders("edit");
 
-    // 👁️ Ensure Edit Tab is visible and focused
+    // 👁️ Reveal and scroll to Edit tab
     const tabPane = document.querySelector("#edit-quote");
     if (tabPane) {
       tabPane.classList.remove("d-none");
       tabPane.scrollIntoView({ behavior: "smooth" });
     }
 
-    // 🧷 Bind buttons safely (only once)
+    // 🧷 Bind action buttons (only once)
     const previewBtn = document.getElementById("edit-previewQuoteBtn");
     const finalizeBtn = document.getElementById("edit-finalizeInvoiceBtn");
+    const emailBtn = document.getElementById("edit-emailInvoiceBtn");
 
     if (previewBtn && !previewBtn.dataset.bound) {
       previewBtn.addEventListener("click", previewQuoteBtnHandler);
@@ -316,6 +316,17 @@ async function populateEditForm(qtID) {
       finalizeBtn.dataset.bound = "true";
     }
 
+    if (emailBtn && !emailBtn.dataset.bound) {
+      emailBtn.addEventListener("click", () => showEmailModal({
+        type: "finalInvoice",
+        mode: "edit"
+      }));
+      emailBtn.dataset.bound = "true";
+    }
+
+    // ✅ Update invoice-related UI
+    updateInvoiceUI(data);
+
     console.log("✅ Edit form populated and buttons bound");
 
   } catch (error) {
@@ -323,6 +334,36 @@ async function populateEditForm(qtID) {
     showToast("❌ Error loading quote data!", "error");
   } finally {
     toggleLoader(false);
+  }
+}
+
+function updateInvoiceUI(data) {
+  const finalized = !!(data?.url || data?.invoiceID);
+
+  const finalizeBtn = document.getElementById("edit-finalizeInvoiceBtn");
+  const emailBtn = document.getElementById("edit-emailInvoiceBtn");
+
+  const finalizeAlert = document.getElementById("edit-finalizeInvoice-alert");
+  const emailAlert = document.getElementById("edit-emailInvoice-alert");
+
+  // Finalize Invoice button enabled only if NOT finalized
+  if (finalizeBtn) {
+    finalizeBtn.disabled = finalized;
+  }
+
+  // Email Invoice button enabled only if finalized
+  if (emailBtn) {
+    emailBtn.disabled = !finalized;
+  }
+
+  // Show finalize alert only if finalized (button disabled)
+  if (finalizeAlert) {
+    finalizeAlert.classList.toggle("d-none", !finalized);
+  }
+
+  // Show email alert only if NOT finalized (button disabled)
+  if (emailAlert) {
+    emailAlert.classList.toggle("d-none", finalized);
   }
 }
 
@@ -394,6 +435,7 @@ function collectQuoteFormData(mode) {
     eventDate: get("eventDate"),
     eventLocation: get("eventLocation"),
     eventNotes: get("eventNotes"),
+    eventTheme: get("eventTheme"),
     deliveryFee: parseCurrency(get("deliveryFee")),
     setupFee: parseCurrency(get("setupFee")),
     otherFee: parseCurrency(get("otherFee")),
@@ -458,16 +500,16 @@ async function initializeAddForm() {
     toggleLoader(true);
     console.log("📋 Initializing Add Quote form");
 
-    // ✅ Make sure product data is available first
-    if (typeof productData === "undefined" || !Array.isArray(productData) || productData.length === 0) {
+    // ✅ Ensure product data is available
+    if (!Array.isArray(productData) || productData.length === 0) {
       console.warn("⚠️ productData not ready, fetching...");
-      await getProdDataForSearch(true); // <-- load or reload it if needed
+      await getProdDataForSearch(true);
     }
 
-    // 🧼 Clear fields
+    // 🧼 Clear all Add form fields
     const fieldsToClear = [
       "phone", "firstName", "lastName", "email", "street", "city", "state", "zip",
-      "eventDate", "eventLocation", "eventNotes",
+      "eventDate", "eventLocation", "eventNotes", "eventTheme",
       "deliveryFee", "setupFee", "otherFee", "addonsTotal",
       "deposit", "depositDate", "balanceDue", "balanceDueDate",
       "paymentMethod", "quoteNotes", "discount",
@@ -475,10 +517,9 @@ async function initializeAddForm() {
     ];
 
     fieldsToClear.forEach(id => setField(`add-${id}`, ""));
-
     resetProductRows("add-product-rows-container");
 
-    // 📦 Ensure everything else is loaded
+    // 📦 Load supporting data
     await Promise.all([
       setQuoteDataForSearch(),
       loadDropdowns()
@@ -489,9 +530,10 @@ async function initializeAddForm() {
 
     console.log("✅ Add Quote form initialized");
 
-    // 🧩 Bind buttons only once
+    // 🧷 Bind buttons (one-time)
     const previewBtn = document.getElementById("add-previewQuoteBtn");
     const finalizeBtn = document.getElementById("add-finalizeInvoiceBtn");
+    const emailBtn = document.getElementById("add-emailInvoiceBtn");
 
     if (previewBtn && !previewBtn.dataset.bound) {
       previewBtn.addEventListener("click", async (e) => {
@@ -513,6 +555,14 @@ async function initializeAddForm() {
       });
       finalizeBtn.dataset.bound = "true";
       console.log("🔗 Bound add-finalizeInvoiceBtn");
+    }
+
+    if (emailBtn && !emailBtn.dataset.bound) {
+      emailBtn.addEventListener("click", () => {
+        showEmailModal({ type: "finalInvoice", mode: "add" });
+      });
+      emailBtn.dataset.bound = "true";
+      console.log("🔗 Bound add-emailInvoiceBtn");
     }
 
   } catch (err) {
@@ -961,12 +1011,8 @@ async function finalizeInvoiceBtnHandler(e) {
     });
 
     const quoteSaveRaw = await quoteSaveRes.json();
-    console.log("📦 quoteSaveRaw:", quoteSaveRaw);
-
-    console.log("🧪 Full quoteSaveRaw response:", JSON.stringify(quoteSaveRaw, null, 2));
-
-    // Safely access qtID from known structures
-    const savedQtID = quoteSaveRaw?.data?.qtID || null;
+    const quoteSaveData = quoteSaveRaw?.data?.data || quoteSaveRaw?.data || {};
+    const savedQtID = quoteSaveData.qtID;
 
     if (!savedQtID) {
       throw new Error("❌ No qtID returned after saving.");
@@ -1021,18 +1067,14 @@ async function finalizeInvoiceBtnHandler(e) {
     const calData = await calRes.json();
     console.log("📅 Calendar event created:", calData);
 
-    // Step 5: Prepare invoice email modal
-    const displayName = `${quoteInfo.firstName || ""} ${quoteInfo.lastName || ""}`.trim();
-    const emailHtml = generateInvoiceEmailHtml(displayName, invoiceURL, quoteInfo);
+    // Step 5: Update form fields & UI with invoice info
+    setField("edit-invoiceID", invoiceData.invoiceID || "");
+    setField("edit-invoiceDate", formatDateForUser(invoiceData.invoiceDate) || "");
+    setField("edit-invoiceUrl", invoiceURL);
 
-    document.getElementById("invoice-email-to").value = quoteInfo.email || "";
-    document.getElementById("invoice-email-subject").value = "Your Final Invoice from Your Company";
-    document.getElementById("invoice-email-body").innerHTML = emailHtml;
+    updateInvoiceUI(invoiceData);
 
-    // Step 6: Show modal
-    const modalEl = document.getElementById("finalInvoiceModal");
-    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
-    modal.show();
+    // *** Removed email modal step here ***
 
     showToast("📄 Invoice finalized and calendar event created.", "success");
 
@@ -1044,25 +1086,16 @@ async function finalizeInvoiceBtnHandler(e) {
   }
 }
 
-function generateInvoiceEmailHtml(displayName, pdfUrl, quoteData) {
-  return `
-    <p>Hi ${quoteData.firstName},</p>
-    <p>Your invoice has been finalized. Please review it below:</p>
-    <p><strong>${displayName}</strong></p>
-    <p><a href="${pdfUrl}" target="_blank">📄 View Invoice PDF</a></p>
-    <p>Let us know if you have any questions.</p>
-    <p>Best regards,<br>Your Company Team</p>
-  `;
-}
-
+// Email send button handler (assumes you have this button in the modal)
 document.getElementById("send-invoice-email").addEventListener("click", async function (e) {
   e.preventDefault();
 
   const to = document.getElementById("invoice-email-to")?.value?.trim();
+  const subject = document.getElementById("invoice-email-subject")?.value?.trim();
   const body = document.getElementById("invoice-email-body")?.innerHTML?.trim();
   const qtID = document.getElementById("edit-qtID")?.value?.trim();
 
-  if (!to || !body) {
+  if (!to || !subject || !body) {
     showToast("⚠️ Please complete the email fields before sending.", "warning");
     return;
   }
@@ -1077,6 +1110,7 @@ document.getElementById("send-invoice-email").addEventListener("click", async fu
         system: "invoice",
         action: "sendInvoiceEmail",
         to,
+        subject,
         body,
         qtID
       })
@@ -1091,7 +1125,6 @@ document.getElementById("send-invoice-email").addEventListener("click", async fu
     } else {
       showToast(`❌ ${result.data?.error || "Email failed to send."}`, "error");
     }
-
   } catch (err) {
     console.error("❌ Send email request failed:", err);
     showToast("❌ Failed to send email. Check console.", "error");

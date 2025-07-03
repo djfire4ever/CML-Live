@@ -374,20 +374,22 @@ async function populateEditForm(qtID) {
       setField(`edit-${id}`, val);
     });
 
-    // 🔢 Totals and Header Updates
+    // 🔢 Recalculate totals and update headers
     calculateAllTotals("edit");
     updateCardHeaders("edit");
 
-    // 👁️ Ensure Edit Tab is visible and focused
+    // 👁️ Reveal and scroll to Edit tab
     const tabPane = document.querySelector("#edit-quote");
     if (tabPane) {
       tabPane.classList.remove("d-none");
       tabPane.scrollIntoView({ behavior: "smooth" });
     }
 
-    // 🧷 Bind buttons safely (only once)
+    // 🧷 Bind action buttons (only once)
     const previewBtn = document.getElementById("edit-previewQuoteBtn");
     const finalizeBtn = document.getElementById("edit-finalizeInvoiceBtn");
+    const emailBtn = document.getElementById("edit-emailInvoiceBtn");
+    const invoiceBadge = document.getElementById("edit-invoiceFinalizedBadge");
 
     if (previewBtn && !previewBtn.dataset.bound) {
       previewBtn.addEventListener("click", previewQuoteBtnHandler);
@@ -397,6 +399,21 @@ async function populateEditForm(qtID) {
     if (finalizeBtn && !finalizeBtn.dataset.bound) {
       finalizeBtn.addEventListener("click", finalizeInvoiceBtnHandler);
       finalizeBtn.dataset.bound = "true";
+    }
+
+    // ✅ Update invoice-related UI (button, badge, email)
+
+    console.log("📦 invoiceID raw value:", data.invoiceID, typeof data.invoiceID);
+    const hasInvoice = !!data.invoiceID;
+
+    if (hasInvoice) {
+      finalizeBtn?.classList.add("d-none");
+      invoiceBadge?.classList.remove("d-none");
+      emailBtn?.classList.remove("d-none");
+    } else {
+      finalizeBtn?.classList.remove("d-none");
+      invoiceBadge?.classList.add("d-none");
+      emailBtn?.classList.add("d-none");
     }
 
     console.log("✅ Edit form populated and buttons bound");

@@ -455,3 +455,100 @@ document.addEventListener("DOMContentLoaded", () => {
   setTimeout(checkBackendVersion, 3000); // delay 1 second
 });
 
+async function getEmailTemplateByType(type) {
+  try {
+    const res = await fetch(`${scriptURL}?action=getEmailTemplates`);
+    const templates = await res.json();
+
+    if (!res.ok || !Array.isArray(templates)) {
+      const msg = !res.ok ? res.statusText : "Invalid templates format";
+      showToast(`❌ Failed to fetch templates: ${msg}`, "error");
+      throw new Error(msg);
+    }
+
+    const match = templates.find(t => t.type === type);
+    if (!match) {
+      showToast(`⚠️ No template found for type "${type}"`, "warning");
+    }
+
+    return match || null;
+  } catch (err) {
+    console.error(`❌ Error fetching template "${type}":`, err);
+    showToast(`❌ Error fetching template "${type}"`, "error");
+    return null;
+  }
+}
+
+async function showEmailModal({ type, mode }) {
+  toggleLoader(true);
+
+  // ✅ Let the loader show first before async work starts
+  await new Promise(requestAnimationFrame);
+
+  try {
+    const prefix = mode === "add" ? "add" : "edit";
+
+    // ⛏️ Gather raw values from the form
+    const firstName = document.getElementById(`${prefix}-firstName`)?.value || "";
+    const lastName = document.getElementById(`${prefix}-lastName`)?.value || "";
+    const emailTo = document.getElementById(`${prefix}-email`)?.value || "";
+    const invoiceUrl = document.getElementById(`${prefix}-invoiceUrl`)?.value || "";
+    const eventDate = document.getElementById(`${prefix}-eventDate`)?.value || "";
+    const eventTheme = document.getElementById(`${prefix}-eventTheme`)?.value || "";
+    const grandTotal = document.getElementById(`${prefix}-grandTotal`)?.value || "";
+    const quoteID = document.getElementById(`${prefix}-qtID`)?.value || "";
+
+    // 🧠 Build one placeholder object to rule them all
+    const placeholders = {
+      firstName,
+      lastName,
+      fullName: `${firstName} ${lastName}`.trim(),
+      name: `${firstName} ${lastName}`.trim(), // optional alias
+      url: invoiceUrl,
+      quoteID,
+      eventDate,
+      eventTheme,
+      grandTotal
+    };
+
+    // 📨 Load the selected template
+    const template = await getEmailTemplateByType(type);
+    if (!template) {
+      showToast(`❌ Could not load "${type}" template`, "error");
+      return;
+    }
+
+    // 🧩 Render subject and body from one source of truth
+    const emailSubject = renderTemplate(template.subject || "", placeholders);
+    const emailBody = renderTemplate(template.body || "", placeholders);
+
+    // 🧾 Populate the modal with rendered values
+    document.getElementById("invoice-email-to").value = emailTo;
+    document.getElementById("invoice-email-subject").value = emailSubject;
+    document.getElementById("invoice-email-body").innerHTML = emailBody;
+
+    // 📩 Show the modal
+    const modalEl = document.getElementById("finalInvoiceModal");
+    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+    modal.show();
+
+  } catch (err) {
+    console.error("❌ Failed to show email modal:", err);
+    showToast("❌ Error preparing email", "error");
+  } finally {
+    toggleLoader(false);
+  }
+}
+
+/**
+ * Replaces {{placeholders}} in a template string with values from a data object
+ * @param {string} template - The template string (e.g. "Hi {{name}}, see {{url}}")
+ * @param {Object} data - An object with keys matching the placeholders (e.g. { name: "Felix", url: "..." })
+ * @returns {string} The template with all placeholders replaced
+ */
+function renderTemplate(template, data) {
+  return template.replace(/{{\s*([\w.]+)\s*}}/g, (match, key) => {
+    return key in data ? data[key] : match;
+  });
+}
+
