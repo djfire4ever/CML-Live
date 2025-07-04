@@ -259,81 +259,60 @@ function acknowledgeLead(id) {
   }
 }
 
-function openLeadsPage() {
-  const iframe = document.querySelector("iframe");
-  iframe.src = "leads.html";
+fetch('header.html')
+  .then(res => res.text())
+  .then(html => {
+    document.getElementById('header-placeholder').innerHTML = html;
 
-  fetch(`${scriptURL}?system=leads&action=getLeads`)
-    .then(res => res.json())
-    .then(data => {
-      if (Array.isArray(data) && data.length > 0) {
-        const latestLeadID = parseInt(data.at(-1).LeadID, 10);
-        localStorage.setItem("lastSeenLeadID", latestLeadID);
-        const dot = document.getElementById("leadNotifDot");
-        if (dot) dot.classList.add("d-none");
-      }
-    });
-}
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const navLinks = document.querySelectorAll('#navmenu .nav-link');
+        const navbarToggler = document.getElementById('navToggler');
+        const navMenu = document.getElementById('navmenu');
 
-  fetch('header.html')
-      .then(res => res.text())
-      .then(html => {
-        document.getElementById('header-placeholder').innerHTML = html;
+        if (navLinks.length && navbarToggler && navMenu) {
+          // Collapse on link click (mobile)
+          navLinks.forEach(link => {
+            link.addEventListener('click', () => {
+              if (window.getComputedStyle(navbarToggler).display !== 'none') {
+                const bsCollapse = bootstrap.Collapse.getInstance(navMenu)
+                  || new bootstrap.Collapse(navMenu, { toggle: false });
+                bsCollapse.hide();
+              }
+            });
+          });
 
-        // Wait a moment to ensure DOM is updated
-        setTimeout(() => {
-    const navLinks = document.querySelectorAll('#navmenu .nav-link');
-    const navbarToggler = document.getElementById('navToggler');
-    const navMenu = document.getElementById('navmenu');
+          // Hover open/close logic
+          let hoverTimeout;
 
-    if (navLinks.length && navbarToggler && navMenu) {
-      // Collapse on link click (mobile)
-      navLinks.forEach(link => {
-        link.addEventListener('click', () => {
-          if (window.getComputedStyle(navbarToggler).display !== 'none') {
-            const bsCollapse = bootstrap.Collapse.getInstance(navMenu)
-              || new bootstrap.Collapse(navMenu, { toggle: false });
-            bsCollapse.hide();
-          }
-        });
+          navbarToggler.addEventListener('mouseenter', () => {
+            if (window.getComputedStyle(navbarToggler).display !== 'none') {
+              const bsCollapse = bootstrap.Collapse.getInstance(navMenu)
+                || new bootstrap.Collapse(navMenu, { toggle: false });
+              bsCollapse.show();
+            }
+          });
+
+          navMenu.addEventListener('mouseenter', () => clearTimeout(hoverTimeout));
+          navbarToggler.addEventListener('mouseleave', () => {
+            hoverTimeout = setTimeout(() => {
+              const bsCollapse = bootstrap.Collapse.getInstance(navMenu);
+              if (bsCollapse) bsCollapse.hide();
+            }, 300);
+          });
+
+          navMenu.addEventListener('mouseleave', () => {
+            hoverTimeout = setTimeout(() => {
+              const bsCollapse = bootstrap.Collapse.getInstance(navMenu);
+              if (bsCollapse) bsCollapse.hide();
+            }, 300);
+          });
+        } else {
+          console.warn("Navbar elements not found after injecting header.");
+        }
       });
-
-    // ⬇️ Hover to open/close logic
-    let hoverTimeout;
-
-    navbarToggler.addEventListener('mouseenter', () => {
-      if (window.getComputedStyle(navbarToggler).display !== 'none') {
-        const bsCollapse = bootstrap.Collapse.getInstance(navMenu)
-          || new bootstrap.Collapse(navMenu, { toggle: false });
-        bsCollapse.show();
-      }
     });
-
-    navMenu.addEventListener('mouseenter', () => {
-      clearTimeout(hoverTimeout);
-    });
-
-    navbarToggler.addEventListener('mouseleave', () => {
-      hoverTimeout = setTimeout(() => {
-        const bsCollapse = bootstrap.Collapse.getInstance(navMenu);
-        if (bsCollapse) bsCollapse.hide();
-      }, 300);
-    });
-
-    navMenu.addEventListener('mouseleave', () => {
-      hoverTimeout = setTimeout(() => {
-        const bsCollapse = bootstrap.Collapse.getInstance(navMenu);
-        if (bsCollapse) bsCollapse.hide();
-      }, 300);
-    });
-  } else {
-    console.warn("Navbar elements not found after injecting header.");
-  }
-}, 100);
-});
-
-// Auto-refresh every 60 seconds
-setInterval(checkNewLeads, 60000);
+  });
 
 </script>
 </body>
