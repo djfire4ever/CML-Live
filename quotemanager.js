@@ -337,34 +337,26 @@ async function populateEditForm(qtID) {
   }
 }
 
-function updateInvoiceUI(data) {
+function updateInvoiceUI(data, mode = "edit") {
   const finalized = !!(data?.url || data?.invoiceID);
+  const prefix = mode === "add" ? "add" : "edit";
 
-  const finalizeBtn = document.getElementById("edit-finalizeInvoiceBtn");
-  const emailBtn = document.getElementById("edit-emailInvoiceBtn");
-
-  const finalizeAlert = document.getElementById("edit-finalizeInvoice-alert");
-  const emailAlert = document.getElementById("edit-emailInvoice-alert");
+  const finalizeBtn = document.getElementById(`${prefix}-finalizeInvoiceBtn`);
+  const emailBtn = document.getElementById(`${prefix}-emailInvoiceBtn`);
+  const finalizeAlert = document.getElementById(`${prefix}-finalizeInvoice-alert`);
+  const emailAlert = document.getElementById(`${prefix}-emailInvoice-alert`);
 
   // Finalize Invoice button enabled only if NOT finalized
-  if (finalizeBtn) {
-    finalizeBtn.disabled = finalized;
-  }
+  if (finalizeBtn) finalizeBtn.disabled = finalized;
 
   // Email Invoice button enabled only if finalized
-  if (emailBtn) {
-    emailBtn.disabled = !finalized;
-  }
+  if (emailBtn) emailBtn.disabled = !finalized;
 
-  // Show finalize alert only if finalized (button disabled)
-  if (finalizeAlert) {
-    finalizeAlert.classList.toggle("d-none", !finalized);
-  }
+  // Show finalize alert only if finalized (i.e., Finalize button is disabled)
+  if (finalizeAlert) finalizeAlert.classList.toggle("d-none", !finalized);
 
-  // Show email alert only if NOT finalized (button disabled)
-  if (emailAlert) {
-    emailAlert.classList.toggle("d-none", finalized);
-  }
+  // Show email alert only if NOT finalized (i.e., Email button is disabled)
+  if (emailAlert) emailAlert.classList.toggle("d-none", finalized);
 }
 
 async function handleSave(event, mode) {
@@ -564,6 +556,9 @@ async function initializeAddForm() {
       emailBtn.dataset.bound = "true";
       console.log("🔗 Bound add-emailInvoiceBtn");
     }
+
+    // ✅ Update invoice-related UI
+    updateInvoiceUI({}, "add");
 
   } catch (err) {
     console.error("❌ Error initializing Add Quote form:", err);

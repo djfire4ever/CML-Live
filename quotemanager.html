@@ -731,18 +731,25 @@
         <button type="button" class="btn btn-secondary" id="add-previewQuoteBtn">Preview Invoice</button>
 
         <!-- Finalize Invoice -->
-        <button type="button" class="btn btn-success" id="add-finalizeInvoiceBtn" disabled>
+        <button type="button" class="btn" id="add-finalizeInvoiceBtn" disabled>
           <i class="bi bi-file-earmark-check"></i> Finalize Invoice
         </button>
-        <span id="add-invoiceFinalizedBadge" class="badge bg-success d-none ms-2">Invoice Finalized</span>
 
         <!-- Email Invoice -->
-        <button type="button" class="btn btn-outline-primary ms-2" id="add-emailInvoiceBtn" disabled>
+        <button type="button" class="btn ms-2" id="add-emailInvoiceBtn" disabled>
           📧 Email Invoice
         </button>
 
-        <button id="btn-show-shopping-list" class="btn btn-outline-primary">🛒 View Shopping List</button>
+        <button id="btn-show-shopping-list" class="btn">🛒 View Shopping List</button>
         <!-- <button type="button" class="btn btn-success ms-2" id="makePaymentBtn">💵 Make Payment</button> -->
+      </div>
+      <!-- Alerts under buttons -->
+      <div id="add-finalizeInvoice-alert" class="alert alert-info mt-2 py-2 px-3 small d-none">
+        Final Invoice was already created and saved. If you want to make changes, please contact your favoritest Tio
+      </div>
+
+      <div id="add-emailInvoice-alert" class="alert alert-warning mt-2 py-2 px-3 small d-none">
+        Please finalize the invoice before emailing it.
       </div>
     </div>
   </form>

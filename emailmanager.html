@@ -8,7 +8,23 @@
     }
   </style>
 </head>
+<!-- Theme -->
 <body class="theme-dark p-4">
+
+<!-- 💧 Watermark -->
+<div class="watermark"></div>
+
+<!-- 🔔 Toast Notifications -->
+<div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3"></div>
+
+<!-- ⏳ Loader -->
+<div id="loadingOverlay" class="d-none">
+  <div class="text-center">
+    <div class="spinner-border" role="status"></div>
+    <p class="mt-4">Loading... Please wait...</p>
+  </div>
+</div>
+
   <div class="container">
     <h2 class="mb-4">📧 Email Template Manager</h2>
 
@@ -39,21 +55,36 @@
 <script src="config.js"></script>
 
 <script>
-async function loadEmailTypes() {
-  const res = await fetch(scriptURL + "?action=getEmailTemplates");
-  const data = await res.json();
-  if (!data || !Array.isArray(data)) return alert("Failed to load templates");
+let templates = {};
 
-  templates = {};
-  const select = document.getElementById('emailTypeSelect');
-  select.innerHTML = '<option value="">-- Choose Email Type --</option>';
-  data.forEach(t => {
-    templates[t.type] = { subject: t.subject, body: t.body };
-    const opt = document.createElement('option');
-    opt.value = t.type;
-    opt.textContent = t.type.charAt(0).toUpperCase() + t.type.slice(1);
-    select.appendChild(opt);
-  });
+async function loadEmailTypes() {
+  toggleLoader(true);
+  try {
+    const res = await fetch(scriptURL + "?action=getEmailTemplates");
+    const data = await res.json();
+    if (!Array.isArray(data)) {
+      showToast("❌ Failed to load templates", "error");
+      return;
+    }
+
+    templates = {};
+    const select = document.getElementById('emailTypeSelect');
+    select.innerHTML = '<option value="">-- Choose Email Type --</option>';
+    data.forEach(t => {
+      templates[t.type] = { subject: t.subject, body: t.body };
+      const opt = document.createElement('option');
+      opt.value = t.type;
+      opt.textContent = t.type.charAt(0).toUpperCase() + t.type.slice(1);
+      select.appendChild(opt);
+    });
+
+    // showToast("✅ Templates loaded", "success");
+  } catch (err) {
+    console.error(err);
+    showToast("❌ Error loading templates", "error");
+  } finally {
+    toggleLoader(false);
+  }
 }
 
 function loadTemplate(type) {
@@ -67,7 +98,11 @@ async function saveTemplate(e) {
   const type = document.getElementById('emailTypeSelect').value;
   const subject = document.getElementById('emailSubject').value;
   const body = document.getElementById('emailBody').value;
-  if (!type) return alert("Please select a template type.");
+
+  if (!type) {
+    showToast("⚠️ Please select a template type", "warning");
+    return;
+  }
 
   const payload = {
     system: "email",
@@ -77,24 +112,33 @@ async function saveTemplate(e) {
     body
   };
 
-  const res = await fetch(scriptURL, {
-    method: "POST",
-    body: JSON.stringify(payload),
-    headers: { "Content-Type": "application/json" }
-  });
+  toggleLoader(true);
+  try {
+    const res = await fetch(scriptURL, {
+      method: "POST",
+      body: JSON.stringify(payload),
+      headers: { "Content-Type": "application/json" }
+    });
 
-  const json = await res.json();
-  if (json.success) {
-    document.getElementById('saveStatus').classList.remove('d-none');
-    setTimeout(() => document.getElementById('saveStatus').classList.add('d-none'), 2000);
-    templates[type] = { subject, body };
-  } else {
-    alert("Error saving template: " + (json.message || "Unknown error"));
+    const json = await res.json();
+    if (json.success) {
+      document.getElementById('saveStatus').classList.remove('d-none');
+      setTimeout(() => document.getElementById('saveStatus').classList.add('d-none'), 2000);
+      templates[type] = { subject, body };
+      showToast("✅ Template saved", "success");
+    } else {
+      showToast(`❌ Error saving template: ${json.message || "Unknown error"}`, "error");
+    }
+  } catch (err) {
+    console.error(err);
+    showToast("❌ Failed to save template", "error");
+  } finally {
+    toggleLoader(false);
   }
 }
 
 window.onload = loadEmailTypes;
-
 </script>
+
 </body>
 </html>
