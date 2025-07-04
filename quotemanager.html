@@ -394,33 +394,45 @@
     </div>
 
     <div class="row g-3 mt-1 mb-5">
-    <!-- Edit Form-Buttons -->
-      <div class="col-sm-12">
-        <button class="btn btn-dark" id="edit-quote-btn">💾 Save Changes</button>
-        <button type="button" class="btn btn-secondary" id="edit-previewQuoteBtn">Preview Invoice</button>
-
+      <!-- Edit Form Buttons -->
+      <div class="col-sm-12 d-flex flex-wrap align-items-center gap-2">
+        <!-- 💾 Save Changes -->
+        <button class="btn btn-dark" id="edit-quote-btn">
+          <i class="bi bi-save me-1"></i> Save Changes
+        </button>
+        <!-- 👁️ Preview Invoice -->
+        <button type="button" class="btn btn-outline-primary" id="edit-previewQuoteBtn">
+          <i class="bi bi-eye me-1"></i> Preview Invoice
+        </button>
         <!-- Finalize Invoice -->
-        <button type="button" class="btn" id="edit-finalizeInvoiceBtn" disabled>
-          <i class="bi bi-file-earmark-check"></i> Finalize Invoice
+        <button type="button" class="btn btn-outline-success" id="edit-finalizeInvoiceBtn" disabled>
+          <i class="bi bi-file-earmark-check me-1"></i> Finalize Invoice
         </button>
-
-        <!-- Email Invoice -->
-        <button type="button" class="btn ms-2" id="edit-emailInvoiceBtn" disabled>
-          📧 Email Invoice
+        <!-- 📧 Email Invoice -->
+        <button type="button" class="btn btn-outline-secondary" id="edit-emailInvoiceBtn" disabled>
+          <i class="bi bi-envelope me-1"></i> Email Invoice
         </button>
-
-        <button id="btn-show-shopping-list" class="btn">🛒 View Shopping List</button>
-        <!-- <button type="button" class="btn btn-success ms-2" id="makePaymentBtn">💵 Make Payment</button> -->
-      </div>
-      <!-- Alerts under buttons -->
-      <div id="edit-finalizeInvoice-alert" class="alert alert-info mt-2 py-2 px-3 small d-none">
-        Final Invoice was already created and saved. If you want to make changes, please contact your favoritest Tio
-      </div>
-
-      <div id="edit-emailInvoice-alert" class="alert alert-warning mt-2 py-2 px-3 small d-none">
-        Please finalize the invoice before emailing it.
+        <!-- 🛒 View Shopping List -->
+        <button id="btn-show-shopping-list" class="btn btn-outline-dark">
+          <i class="bi bi-cart4 me-1"></i> View Shopping List
+        </button>
+        <!-- 💵 Make Payment -->
+        <!-- <button type="button" class="btn btn-success ms-2" id="makePaymentBtn">
+          <i class="bi bi-cash me-1"></i> Make Payment
+        </button> -->
       </div>
 
+      <!-- Finalize Alert -->
+      <div id="edit-finalizeInvoice-alert" class="alert alert-info mt-2 py-2 px-3 small d-none w-100">
+        <i class="bi bi-info-circle me-2"></i>
+        Final invoice was already created and saved. If you want to make changes, please contact your favoritest Tio.
+      </div>
+
+      <!-- Email Alert -->
+      <div id="edit-emailInvoice-alert" class="alert alert-warning mt-2 py-2 px-3 small d-none w-100">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        To enable the Email Invoice button you must first finalize the invoice.
+      </div>
     </div>
   </form>
 </div>
@@ -724,32 +736,46 @@
       <div class="col-sm-12">
         <label for="add-quoteNotes">Quote Notes</label><input type="text" class="form-control" id="add-quoteNotes">
       </div>
+
     <div class="row g-3 mt-1 mb-5">
-    <!-- Add Form-Buttons -->
-      <div class="col-sm-12">
-        <button class="btn btn-dark" id="add-quote-btn">💾 Save Changes</button>
-        <button type="button" class="btn btn-secondary" id="add-previewQuoteBtn">Preview Invoice</button>
-
+      <!-- Add Form Buttons -->
+      <div class="col-sm-12 d-flex flex-wrap align-items-center gap-2">
+        <!-- 💾 Save Changes -->
+        <button class="btn btn-dark" id="add-quote-btn">
+          <i class="bi bi-save me-1"></i> Save Changes
+        </button>
+        <!-- 👁️ Preview Invoice -->
+        <button type="button" class="btn btn-outline-primary" id="add-previewQuoteBtn">
+          <i class="bi bi-eye me-1"></i> Preview Invoice
+        </button>
         <!-- Finalize Invoice -->
-        <button type="button" class="btn" id="add-finalizeInvoiceBtn" disabled>
-          <i class="bi bi-file-earmark-check"></i> Finalize Invoice
+        <button type="button" class="btn btn-outline-success" id="add-finalizeInvoiceBtn" disabled>
+          <i class="bi bi-file-earmark-check me-1"></i> Finalize Invoice
         </button>
-
-        <!-- Email Invoice -->
-        <button type="button" class="btn ms-2" id="add-emailInvoiceBtn" disabled>
-          📧 Email Invoice
+        <!-- 📧 Email Invoice -->
+        <button type="button" class="btn btn-outline-secondary" id="add-emailInvoiceBtn" disabled>
+          <i class="bi bi-envelope me-1"></i> Email Invoice
         </button>
-
-        <button id="btn-show-shopping-list" class="btn">🛒 View Shopping List</button>
-        <!-- <button type="button" class="btn btn-success ms-2" id="makePaymentBtn">💵 Make Payment</button> -->
+        <!-- 🛒 View Shopping List -->
+        <button id="btn-show-shopping-list" class="btn btn-outline-dark">
+          <i class="bi bi-cart4 me-1"></i> View Shopping List
+        </button>
+        <!-- 💵 Make Payment -->
+        <!-- <button type="button" class="btn btn-success ms-2" id="makePaymentBtn">
+          <i class="bi bi-cash me-1"></i> Make Payment
+        </button> -->
       </div>
-      <!-- Alerts under buttons -->
-      <div id="add-finalizeInvoice-alert" class="alert alert-info mt-2 py-2 px-3 small d-none">
-        Final Invoice was already created and saved. If you want to make changes, please contact your favoritest Tio
+
+      <!-- Finalize Alert -->
+      <div id="add-finalizeInvoice-alert" class="alert alert-info mt-2 py-2 px-3 small d-none w-100">
+        <i class="bi bi-info-circle me-2"></i>
+        Final invoice was already created and saved. If you want to make changes, please contact your favoritest Tio.
       </div>
 
-      <div id="add-emailInvoice-alert" class="alert alert-warning mt-2 py-2 px-3 small d-none">
-        Please finalize the invoice before emailing it.
+      <!-- Email Alert -->
+      <div id="edit-emailInvoice-alert" class="alert alert-warning mt-2 py-2 px-3 small d-none w-100">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        To enable the Email Invoice button you must first finalize the invoice.
       </div>
     </div>
   </form>
