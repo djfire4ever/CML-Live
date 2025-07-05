@@ -132,6 +132,8 @@ textarea.form-control:focus {
 label,
 .form-label {
   font-weight: bold;
+  text-align: left !important;
+  display: block;
 }
 
 .btn {

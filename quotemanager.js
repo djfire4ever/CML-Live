@@ -696,7 +696,7 @@ function addProductRow(
       </select>
     </div>
     <div class="col-md-1">
-      <input type="number" class="form-control text-center product-quantity" value="${qty}">
+      <input type="number" class="form-control text-start product-quantity" value="${qty}">
     </div>
     <div class="col-md-2">
       <input type="text" class="form-control text-end totalRowCost" value="${formattedUnitRetail}" readonly>
@@ -841,14 +841,18 @@ function calculateAllTotals(mode = "edit") {
   // updateField(`${prefix}amountPaid`, amountPaid); // ✅ Format & show amountPaid
 
   // Update Card 7 header
-  const card7Header = document.getElementById(`${prefix}card7-header-display`);
-  if (card7Header) {
+  const productCountEl = document.getElementById(`${prefix}product-count`);
+  const productTotalEl = document.getElementById(`${prefix}product-total`);
+
+  if (productCountEl && productTotalEl) {
     const retailFormatted = totalProductRetail.toLocaleString("en-US", {
       style: "currency",
       currency: "USD",
       minimumFractionDigits: 2,
     });
-    card7Header.textContent = `Products - ${productCount} • ${retailFormatted}`;
+
+    productCountEl.textContent = productCount;
+    productTotalEl.textContent = retailFormatted.replace("$", ""); // strip $ if you already have it in HTML
   }
 
   updateCardHeaders(mode);

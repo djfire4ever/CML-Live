@@ -28,10 +28,6 @@
   /* Optional: padding/margin */
 }
 
-.accordion-body label {
-  text-align: start !important;
-}
-
 .accordion-body .row {
   background-color: transparent;
 }
@@ -44,4 +40,8 @@
 .badge {
   font-size: .75rem;  /* structural control */
   margin-right: 0.5rem; /* same as ms-2 */
+}
+
+.accordion-button .badge {
+  margin-left: auto;
 }
