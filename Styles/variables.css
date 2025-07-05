@@ -4,7 +4,7 @@
 :root {
   /* Layout Heights */
   --header-height: 56px;
-  --footer-height: 25px;
+  --footer-height: 30px;
 
   /* Buttons fallback */
   --btn-bg: var(--bs-dark);
