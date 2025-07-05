@@ -27,6 +27,9 @@
   border-style: solid;
   /* Optional: padding/margin */
 }
+.accordion-body label {
+  text-align: start !important;
+}
 
 .accordion-body .row {
   background-color: transparent;
