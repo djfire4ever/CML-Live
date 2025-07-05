@@ -82,6 +82,41 @@
   text-align: left;
   white-space: nowrap;
 }
+
+/* ⚙️ Debug Badge Styling */
+.debug-btn {
+  all: unset;
+  font-size: 0.75rem;
+  color: #0dcaf0;
+  padding: 0.35rem 0.75rem;
+  border-radius: 0.5rem;
+  background-color: rgba(13, 202, 240, 0.05);
+  backdrop-filter: blur(4px);
+  opacity: 0.15;
+  transition: all 0.3s ease;
+  pointer-events: auto;
+  user-select: none;
+  white-space: nowrap;
+  box-shadow: 0 0 3px rgba(13, 202, 240, 0.05);
+}
+
+.debug-btn:hover {
+  opacity: 1;
+  background-color: rgba(13, 202, 240, 0.15);
+  transform: translateY(-1px);
+  box-shadow: 0 0 8px rgba(13, 202, 240, 0.25);
+}
+
+/* 🔴 Pulse Effect for Error State */
+.debug-btn.error {
+  animation: pulseError 1s infinite alternate;
+}
+
+@keyframes pulseError {
+  from { box-shadow: 0 0 4px rgba(255, 0, 0, 0.3); }
+  to   { box-shadow: 0 0 10px rgba(255, 0, 0, 0.6); }
+}
+
 </style>
 </head>
 
@@ -112,8 +147,8 @@
 </div>
 
 <!-- 🔗 Debug Badge -->
-<div id="debugBadge" class="position-fixed bottom-0 end-0 m-3">
-  <button class="btn btn-sm btn-outline-black text-info" onclick="showDebugInfo()">🔍 Debug</button>
+<div id="debugBadge" class="position-fixed bottom-0 end-0 m-4">
+  <button class="btn btn-sm debug-btn btn-outline-black text-info" onclick="showDebugInfo()">🔍 Debug</button>
 </div>
 
 <script>
@@ -259,60 +294,81 @@ function acknowledgeLead(id) {
   }
 }
 
-fetch('header.html')
-  .then(res => res.text())
-  .then(html => {
-    document.getElementById('header-placeholder').innerHTML = html;
+function openLeadsPage() {
+  const iframe = document.querySelector("iframe");
+  iframe.src = "leads.html";
 
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        const navLinks = document.querySelectorAll('#navmenu .nav-link');
-        const navbarToggler = document.getElementById('navToggler');
-        const navMenu = document.getElementById('navmenu');
-
-        if (navLinks.length && navbarToggler && navMenu) {
-          // Collapse on link click (mobile)
-          navLinks.forEach(link => {
-            link.addEventListener('click', () => {
-              if (window.getComputedStyle(navbarToggler).display !== 'none') {
-                const bsCollapse = bootstrap.Collapse.getInstance(navMenu)
-                  || new bootstrap.Collapse(navMenu, { toggle: false });
-                bsCollapse.hide();
-              }
-            });
-          });
-
-          // Hover open/close logic
-          let hoverTimeout;
-
-          navbarToggler.addEventListener('mouseenter', () => {
-            if (window.getComputedStyle(navbarToggler).display !== 'none') {
-              const bsCollapse = bootstrap.Collapse.getInstance(navMenu)
-                || new bootstrap.Collapse(navMenu, { toggle: false });
-              bsCollapse.show();
-            }
-          });
-
-          navMenu.addEventListener('mouseenter', () => clearTimeout(hoverTimeout));
-          navbarToggler.addEventListener('mouseleave', () => {
-            hoverTimeout = setTimeout(() => {
-              const bsCollapse = bootstrap.Collapse.getInstance(navMenu);
-              if (bsCollapse) bsCollapse.hide();
-            }, 300);
-          });
-
-          navMenu.addEventListener('mouseleave', () => {
-            hoverTimeout = setTimeout(() => {
-              const bsCollapse = bootstrap.Collapse.getInstance(navMenu);
-              if (bsCollapse) bsCollapse.hide();
-            }, 300);
-          });
-        } else {
-          console.warn("Navbar elements not found after injecting header.");
-        }
-      });
+  fetch(`${scriptURL}?system=leads&action=getLeads`)
+    .then(res => res.json())
+    .then(data => {
+      if (Array.isArray(data) && data.length > 0) {
+        const latestLeadID = parseInt(data.at(-1).LeadID, 10);
+        localStorage.setItem("lastSeenLeadID", latestLeadID);
+        const dot = document.getElementById("leadNotifDot");
+        if (dot) dot.classList.add("d-none");
+      }
     });
-  });
+}
+
+  fetch('header.html')
+      .then(res => res.text())
+      .then(html => {
+        document.getElementById('header-placeholder').innerHTML = html;
+
+        // Wait a moment to ensure DOM is updated
+        setTimeout(() => {
+    const navLinks = document.querySelectorAll('#navmenu .nav-link');
+    const navbarToggler = document.getElementById('navToggler');
+    const navMenu = document.getElementById('navmenu');
+
+    if (navLinks.length && navbarToggler && navMenu) {
+      // Collapse on link click (mobile)
+      navLinks.forEach(link => {
+        link.addEventListener('click', () => {
+          if (window.getComputedStyle(navbarToggler).display !== 'none') {
+            const bsCollapse = bootstrap.Collapse.getInstance(navMenu)
+              || new bootstrap.Collapse(navMenu, { toggle: false });
+            bsCollapse.hide();
+          }
+        });
+      });
+
+    // ⬇️ Hover to open/close logic
+    let hoverTimeout;
+
+    navbarToggler.addEventListener('mouseenter', () => {
+      if (window.getComputedStyle(navbarToggler).display !== 'none') {
+        const bsCollapse = bootstrap.Collapse.getInstance(navMenu)
+          || new bootstrap.Collapse(navMenu, { toggle: false });
+        bsCollapse.show();
+      }
+    });
+
+    navMenu.addEventListener('mouseenter', () => {
+      clearTimeout(hoverTimeout);
+    });
+
+    navbarToggler.addEventListener('mouseleave', () => {
+      hoverTimeout = setTimeout(() => {
+        const bsCollapse = bootstrap.Collapse.getInstance(navMenu);
+        if (bsCollapse) bsCollapse.hide();
+      }, 300);
+    });
+
+    navMenu.addEventListener('mouseleave', () => {
+      hoverTimeout = setTimeout(() => {
+        const bsCollapse = bootstrap.Collapse.getInstance(navMenu);
+        if (bsCollapse) bsCollapse.hide();
+      }, 300);
+    });
+  } else {
+    console.warn("Navbar elements not found after injecting header.");
+  }
+}, 100);
+});
+
+// Auto-refresh every 60 seconds
+setInterval(checkNewLeads, 60000);
 
 </script>
 </body>

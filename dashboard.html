@@ -62,8 +62,8 @@ body.bg-black .stat-button:active {
     
 <!-- Row 1 -->
 <!-- Quick Links Accordion -->
-<div class="row g-3 mt-1 mb-1">
-  <div class="col-md-4 col-lg-4">
+<div class="row g-2 my-1">
+  <div class="col-md-4 col-lg-4 my-1">
     <div class="accordion fade-in-card" id="quickLinksAccordion">
       <div class="accordion-item border-info">
         <h2 class="accordion-header" id="headingQuickLinks">
@@ -73,35 +73,35 @@ body.bg-black .stat-button:active {
         </h2>
       <div id="collapseQuickLinks" class="accordion-collapse" aria-labelledby="headingQuickLinks" data-bs-parent="#quickLinksAccordion">
         <div class="accordion-body bg-black text-light border-info">
-          <div class="row g-3">
-          <!-- Card 1 - Add Clients -->
+          <div class="row g-2">
+          <!-- Link 1 - Add Clients -->
             <div class="col-12">
               <button class="btn btn-outline-primary w-100 d-flex justify-content-between align-items-center" data-link="clientmanager.html#tab-add">
                 <span>Add Clients</span><i class="fa-solid fa-user-plus"></i>
               </button>
             </div>
-          <!-- Link 2 - Add Inventory Disabled -->
-            <!-- <div class="col-12">
-              <button class="btn btn-outline-success w-100 d-flex justify-content-between align-items-center" data-link="materialmanager.html#add-inventory">
-                <span>Add Inventory</span><i class="fa-solid fa-boxes-stacked"></i>
-              </button>
-            </div> -->
-          <!-- Link 3 - Add Material -->
+          <!-- Link 2 - Add Material -->
             <div class="col-12">
               <button class="btn btn-outline-info w-100 d-flex justify-content-between align-items-center" data-link="materialmanager.html#add-material">
                 <span>Add Material</span><i class="fa-solid fa-cubes"></i>
               </button>
             </div>
-          <!-- Link 4 - Add Product -->
+          <!-- Link 3 - Add Product -->
             <div class="col-12">
               <button class="btn btn-outline-danger w-100 d-flex justify-content-between align-items-center" data-link="productmanager.html#add-product">
                 <span>Add Product</span><i class="fa-solid fa-tags"></i>
               </button>
             </div>
-          <!-- Link 5 - Add Quote -->
+          <!-- Link 4 - Add Quote -->
             <div class="col-12">
               <button class="btn btn-outline-warning w-100 d-flex justify-content-between align-items-center" data-link="quotemanager.html#add-quote">
                 <span>Add Quote</span><i class="fa-solid fa-file-signature"></i>
+              </button>
+            </div>
+          <!-- Link 5 - Add Inventory Disabled -->
+            <div class="col-12">
+              <button class="btn btn-outline-success w-100 d-flex justify-content-between align-items-center" data-link="materialmanager.html#add-inventory">
+                <span>Add Inventory</span><i class="fa-solid fa-boxes-stacked"></i>
               </button>
             </div>
           </div>
@@ -112,7 +112,7 @@ body.bg-black .stat-button:active {
 </div>
 
   <!-- All Stats Accordion -->
-  <div class="col-md-4 col-lg-4">
+  <div class="col-md-4 col-lg-4 my-1">
     <div class="accordion fade-in-card" id="statsAccordion">
       <div class="accordion-item border-info">
         <h2 class="accordion-header" id="headingStats">
@@ -122,7 +122,7 @@ body.bg-black .stat-button:active {
         </h2>
         <div id="collapseStats" class="accordion-collapse" aria-labelledby="headingStats">
           <div class="accordion-body bg-black text-light border-info">
-            <div class="row g-3">
+            <div class="row g-2">
               <div class="col-12"><button class="btn btn-outline-primary w-100 d-flex justify-content-between align-items-center" data-link="clientmanager.html#tab-search"><span>Total Clients:</span><span id="totalClients" class="fw-bold">--</span></button></div>
               <div class="col-12"><button class="btn btn-outline-info w-100 d-flex justify-content-between align-items-center" data-link="materialmanager.html#search-material"><span>Total Materials:</span><span id="totalMaterials" class="fw-bold">--</span></button></div>
               <div class="col-12"><button class="btn btn-outline-danger w-100 d-flex justify-content-between align-items-center" data-link="productmanager.html#search-product"><span>Total Products:</span><span id="totalProducts" class="fw-bold">--</span></button></div>
@@ -136,7 +136,7 @@ body.bg-black .stat-button:active {
   </div>
 
   <!-- Leads Accordion -->
-  <div class="col-md-4 col-lg-4">
+  <div class="col-md-4 col-lg-4 my-1">
     <div class="accordion fade-in-card" id="leadsAccordion">
       <div class="accordion-item border-info">
         <h2 class="accordion-header" id="headingLeads">
@@ -146,7 +146,7 @@ body.bg-black .stat-button:active {
         </h2>
         <div id="collapseLeads" class="accordion-collapse" aria-labelledby="headingLeads">
           <div class="accordion-body bg-black text-light border-info">
-            <div class="row g-3">
+            <div class="row g-2">
               <div class="col-12"><button class="btn btn-outline-primary w-100 d-flex justify-content-between align-items-center"><span>New Leads:</span><span id="newLeads" class="fw-bold">0</span></button></div>
               <div class="col-12"><button class="btn btn-outline-info w-100 d-flex justify-content-between align-items-center"><span>Follow-Up Leads:</span><span id="followupLeads" class="fw-bold">0</span></button></div>
               <div class="col-12"><button class="btn btn-outline-danger w-100 d-flex justify-content-between align-items-center"><span>Pending Leads:</span><span id="pendingLeads" class="fw-bold">0</span></button></div>
@@ -163,8 +163,8 @@ body.bg-black .stat-button:active {
 
 <!-- Row 2 -->
 <!-- Low-Stock Accordion -->
-<div class="row g-3 mt-1 mb-5">
-  <div class="col-md-4 col-lg-4 mt-1 mb-5">
+<div class="row g-2 my-1">
+  <div class="col-md-4 col-lg-4 my-1">
     <div class="accordion fade-in-card" id="lowStockAccordion">
       <div class="accordion-item border-info">
         <h2 class="accordion-header" id="headingLowStock">
@@ -182,7 +182,7 @@ body.bg-black .stat-button:active {
   </div>
 
 <!-- 📅 Calendar Events Today Accordion -->
-<div class="col-md-4 col-lg-4 mt-1 mb-5">
+<div class="col-md-4 col-lg-4 my-1">
   <div class="accordion fade-in-card" id="calendarTodayAccordion">
     <div class="accordion-item border-info">
       <h2 class="accordion-header" id="headingToday">
@@ -204,7 +204,7 @@ body.bg-black .stat-button:active {
 </div>
 
 <!-- 📆 Calendar Events This Week Accordion -->
-<div class="col-md-4 col-lg-4 mt-1 mb-5">
+<div class="col-md-4 col-lg-4 my-1">
   <div class="accordion fade-in-card" id="calendarWeekAccordion">
     <div class="accordion-item border-info">
       <h2 class="accordion-header" id="headingWeekEvents">

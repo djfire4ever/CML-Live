@@ -31,6 +31,15 @@
 /* ============
    Dropdown Item Defaults
 ============== */
+.dropdown-menu {
+  background-color: var(--bs-black); /* Bootstrap black background for menu */
+  border: 1px solid #444;
+  border-radius: 0.75rem;
+  min-width: 220px;
+  padding: 0.5rem 0;
+  box-shadow: 0 0 12px rgba(0, 255, 255, 0.05);
+}
+
 .dropdown-menu .dropdown-item {
   display: flex;
   align-items: center;
@@ -38,38 +47,27 @@
   padding: 0.6rem 1.2rem;
   font-size: 0.95rem;
   font-weight: 500;
-  color: #adb5bd;
+  color: var(--bs-info); /* info color text */
   border-radius: 0.375rem;
   transition: all 0.2s ease;
+  background-color: var(--bs-black); /* keep black bg on items */
 }
+
 .dropdown-menu .dropdown-item i {
   font-size: 1.1rem;
-  color: #0dcaf0;
+  color: var(--bs-info); /* info color icon */
   flex-shrink: 0;
 }
+
 .dropdown-menu .dropdown-item:hover {
-  background-color: #2c2f33;
-  color: #fff;
-  box-shadow: 0 0 8px rgba(13, 202, 240, 0.2);
+  background-color: var(--bs-info); /* info color bg on hover */
+  color: var(--bs-black);            /* black text on hover */
+  box-shadow: 0 0 8px rgba(13, 202, 240, 0.6); /* subtle info glow */
   transform: translateX(1px);
 }
 
-/* ============
-   Active Dropdown Item Styles
-============== */
-.dropdown-item.active,
-.dropdown-item:active {
-  background-color: #0dcaf0 !important;
-  color: #000 !important;
-  font-weight: bold;
-}
-.dropdown-item.text-warning.active {
-  background-color: #ffc107 !important;
-  color: #000 !important;
-}
-.dropdown-item.text-danger.active {
-  background-color: #dc3545 !important;
-  color: #fff !important;
+.dropdown-menu .dropdown-item:hover i {
+  color: var(--bs-black); /* black icon on hover */
 }
 
 /* ============
@@ -127,12 +125,12 @@
           </a>
           <ul class="dropdown-menu">
             <li>
-              <a class="dropdown-item text-primary" href="#" onclick="loadPage('clientmanager.html', this)">
+              <a class="dropdown-item" href="#" onclick="loadPage('clientmanager.html', this)">
                 <i class="bi bi-person-badge"></i> Clients
               </a>
             </li>
             <li>
-              <a class="dropdown-item text-info" href="#" onclick="loadPage('leads.html', this)">
+              <a class="dropdown-item" href="#" onclick="loadPage('leads.html', this)">
                 <i class="bi bi-person-lines-fill"></i> Leads
               </a>
             </li>
@@ -146,12 +144,12 @@
           </a>
           <ul class="dropdown-menu">
             <li>
-              <a class="dropdown-item text-danger" href="#" onclick="loadPage('productmanager.html', this)">
+              <a class="dropdown-item" href="#" onclick="loadPage('productmanager.html', this)">
                 <i class="bi bi-box-fill"></i> Products
               </a>
             </li>
             <li>
-              <a class="dropdown-item text-danger" href="#" onclick="loadPage('materialmanager.html', this)">
+              <a class="dropdown-item" href="#" onclick="loadPage('materialmanager.html', this)">
                 <i class="bi bi-archive"></i> Materials
               </a>
             </li>
@@ -165,18 +163,19 @@
           </a>
           <ul class="dropdown-menu">
             <li>
-              <a class="dropdown-item text-warning" href="#" onclick="loadPage('quotemanager.html', this)">
+              <a class="dropdown-item" href="#" onclick="loadPage('quotemanager.html', this)">
                 <i class="bi bi-clipboard-check"></i> Quotes
               </a>
             </li>
             <li>
-              <a class="dropdown-item text-warning" href="#" onclick="loadPage('invoicemanager.html', this)">
+              <a class="dropdown-item" href="#" onclick="loadPage('invoicemanager.html', this)">
                 <i class="bi bi-receipt"></i> Invoices / Payments
               </a>
             </li>
           </ul>
         </li>
 
+        <!-- Calendar -->
         <li class="nav-item">
           <a href="#" class="nav-link text-white" onclick="loadPage('calendar.html', this)">
             <i class="bi bi-calendar-week"></i> Calendar
@@ -207,17 +206,17 @@
           </a>
           <ul class="dropdown-menu dropdown-menu-end" data-bs-popper="static">
             <li>
-              <a class="dropdown-item text-light" href="#" onclick="loadPage('settings.html', this)">
+              <a class="dropdown-item" href="#" onclick="loadPage('settings.html', this)">
                 <i class="bi bi-sliders"></i> Settings
               </a>
             </li>
             <li>
-              <a class="dropdown-item text-light" href="#" onclick="loadPage('test.html', this)">
+              <a class="dropdown-item" href="#" onclick="loadPage('test.html', this)">
                 <i class="bi bi-terminal"></i> Test Mode
               </a>
             </li>
             <li>
-              <a class="dropdown-item text-warning" href="#" onclick="loadPage('emailmanager.html', this)">
+              <a class="dropdown-item" href="#" onclick="loadPage('emailmanager.html', this)">
                 <i class="bi bi-envelope-paper"></i> Emails
               </a>
             </li>
@@ -230,25 +229,25 @@
 
 <script>
   // Allow hover + click behavior
-  document.querySelectorAll('.dropdown-toggle').forEach(link => {
-    link.addEventListener('click', function (e) {
-      if (window.innerWidth >= 768) {
-        e.preventDefault(); // Prevents jumping on hover+click
-        const menu = this.nextElementSibling;
-        if (menu.classList.contains('show')) {
-          bootstrap.Dropdown.getOrCreateInstance(this).hide();
-        } else {
-          bootstrap.Dropdown.getOrCreateInstance(this).show();
-        }
-      }
-    });
-  });
+  // document.querySelectorAll('.dropdown-toggle').forEach(link => {
+  //   link.addEventListener('click', function (e) {
+  //     if (window.innerWidth >= 768) {
+  //       e.preventDefault(); // Prevents jumping on hover+click
+  //       const menu = this.nextElementSibling;
+  //       if (menu.classList.contains('show')) {
+  //         bootstrap.Dropdown.getOrCreateInstance(this).hide();
+  //       } else {
+  //         bootstrap.Dropdown.getOrCreateInstance(this).show();
+  //       }
+  //     }
+  //   });
+  // });
 
-document.querySelectorAll('.dropdown-item').forEach(item => {
-  item.addEventListener('click', function () {
-    document.querySelectorAll('.dropdown-item').forEach(el => el.classList.remove('active'));
-    this.classList.add('active');
-  });
-});
+// document.querySelectorAll('.dropdown-item').forEach(item => {
+//   item.addEventListener('click', function () {
+//     document.querySelectorAll('.dropdown-item').forEach(el => el.classList.remove('active'));
+//     this.classList.add('active');
+//   });
+// });
 
 </script>
