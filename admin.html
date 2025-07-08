@@ -149,26 +149,39 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  // Load header and initialize header height + dropdown behavior
+  // Load header and setup dropdown logic after load
   loadInclude("header-placeholder", "header.html", () => {
     const header = document.querySelector("header");
     if (header) {
       document.documentElement.style.setProperty('--header-height', `${header.offsetHeight}px`);
     }
 
-    // ✅ Clean dropdown behavior for all toggles
-    document.querySelectorAll(".dropdown-toggle").forEach(el => {
-      el.addEventListener("click", (e) => {
+    // Setup dropdown toggle behavior (mobile fix)
+    document.querySelectorAll('.dropdown-toggle').forEach(el => {
+      el.addEventListener('click', e => {
+        if (window.innerWidth < 768) {
+          e.stopPropagation();
+          const dropdown = bootstrap.Dropdown.getInstance(el);
+          if (dropdown) {
+            dropdown.toggle();
+          } else {
+            new bootstrap.Dropdown(el).toggle();
+          }
+        }
+      });
+    });
+
+    // Prevent dropdown menu from auto-closing on item click (mobile only)
+    document.querySelectorAll('.dropdown-menu .dropdown-item').forEach(item => {
+      item.addEventListener('click', e => {
         if (window.innerWidth < 768) {
           e.stopPropagation();
         }
-        // Optional: Logging
-        console.log("Dropdown toggled:", el.textContent.trim());
       });
     });
   });
 
-  // Load footer and initialize footer height
+  // Load footer and set height
   loadInclude("footer-placeholder", "footer.html", () => {
     const footer = document.querySelector("footer");
     if (footer) {
@@ -177,6 +190,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
+// Helper to load header/footer HTML fragments
 function loadInclude(id, file, callback) {
   fetch(file)
     .then(res => res.text())
@@ -189,6 +203,7 @@ function loadInclude(id, file, callback) {
     });
 }
 
+// Page loader and nav link handling
 function loadPage(page, element) {
   const frame = document.getElementById('content-frame');
   if (frame) frame.src = page;
@@ -196,14 +211,13 @@ function loadPage(page, element) {
   document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
   if (element) element.classList.add('active');
 
-  collapseNavbar(); // Collapse nav on mobile
-}
-
-function collapseNavbar() {
-  const navbar = document.querySelector('.navbar-collapse');
-  const bsCollapse = bootstrap.Collapse.getInstance(navbar);
-  if (bsCollapse) {
-    bsCollapse.hide();
+  // Collapse nav menu on mobile if not a dropdown toggle
+  if (!element.classList.contains('dropdown-toggle')) {
+    const navbarCollapse = document.querySelector('.navbar-collapse');
+    const bsCollapse = bootstrap.Collapse.getInstance(navbarCollapse);
+    if (bsCollapse) {
+      bsCollapse.hide();
+    }
   }
 }
 
