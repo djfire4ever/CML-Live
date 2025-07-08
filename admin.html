@@ -116,15 +116,19 @@
   from { box-shadow: 0 0 4px rgba(255, 0, 0, 0.3); }
   to   { box-shadow: 0 0 10px rgba(255, 0, 0, 0.6); }
 }
+@media (min-width: 768px) {
+  .navbar-nav .dropdown:hover > .dropdown-menu {
+    display: block;
+    animation: fadeIn 0.2s ease-in-out;
+  }
+}
 
 </style>
 </head>
 
 <body class="d-flex flex-column" style="height: 100vh; overflow: hidden;">
 <div id="header-placeholder"></div>
-<!-- This is a test -->
 <iframe id="content-frame" src="dashboard.html"></iframe>
-
 <div id="footer-placeholder"></div>
 
 <!-- 🔍 Backend Debug Modal -->
@@ -156,7 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.documentElement.style.setProperty('--header-height', `${header.offsetHeight}px`);
     }
 
-    setupDropdownFix(); // 👈 Run fix after header loads
+    setupDropdownFix(); // 👈 Important: Only after header is loaded!
   });
 
   // Load footer
@@ -167,7 +171,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Collapse nav after clicking a link (not a dropdown toggle)
+  // Auto-collapse nav after real link is clicked (not dropdown toggle)
   document.body.addEventListener('click', (e) => {
     const link = e.target.closest('.dropdown-item, .nav-link');
     if (link && !link.classList.contains('dropdown-toggle')) {
@@ -198,7 +202,7 @@ function loadPage(page, element) {
   if (element) element.classList.add('active');
 }
 
-// ✅ Mobile dropdown fix (only after header is loaded)
+// ✅ Handles mobile dropdown behavior
 function setupDropdownFix() {
   document.querySelectorAll('.dropdown-toggle').forEach(toggle => {
     toggle.addEventListener('click', (e) => {
@@ -206,13 +210,13 @@ function setupDropdownFix() {
         e.preventDefault();
         e.stopPropagation();
 
-        const dropdown = bootstrap.Dropdown.getOrCreateInstance(toggle);
-        dropdown.toggle();
+        const instance = bootstrap.Dropdown.getOrCreateInstance(toggle);
+        instance.toggle();
       }
     });
   });
 
-  // Prevent tap inside menu from closing it (on mobile)
+  // Prevent closing dropdown if user taps inside it
   document.querySelectorAll('.dropdown-menu').forEach(menu => {
     menu.addEventListener('click', (e) => {
       if (window.innerWidth < 768) {
