@@ -149,39 +149,17 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  // Load header and setup dropdown logic after load
+  // Load header
   loadInclude("header-placeholder", "header.html", () => {
     const header = document.querySelector("header");
     if (header) {
       document.documentElement.style.setProperty('--header-height', `${header.offsetHeight}px`);
     }
 
-    // Setup dropdown toggle behavior (mobile fix)
-    document.querySelectorAll('.dropdown-toggle').forEach(el => {
-      el.addEventListener('click', e => {
-        if (window.innerWidth < 768) {
-          e.stopPropagation();
-          const dropdown = bootstrap.Dropdown.getInstance(el);
-          if (dropdown) {
-            dropdown.toggle();
-          } else {
-            new bootstrap.Dropdown(el).toggle();
-          }
-        }
-      });
-    });
-
-    // Prevent dropdown menu from auto-closing on item click (mobile only)
-    document.querySelectorAll('.dropdown-menu .dropdown-item').forEach(item => {
-      item.addEventListener('click', e => {
-        if (window.innerWidth < 768) {
-          e.stopPropagation();
-        }
-      });
-    });
+    setupDropdownFix();
   });
 
-  // Load footer and set height
+  // Load footer
   loadInclude("footer-placeholder", "footer.html", () => {
     const footer = document.querySelector("footer");
     if (footer) {
@@ -190,7 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-// Helper to load header/footer HTML fragments
+// Load external fragments
 function loadInclude(id, file, callback) {
   fetch(file)
     .then(res => res.text())
@@ -203,7 +181,7 @@ function loadInclude(id, file, callback) {
     });
 }
 
-// Page loader and nav link handling
+// Load iframe pages and auto-collapse navbar on mobile (except dropdowns)
 function loadPage(page, element) {
   const frame = document.getElementById('content-frame');
   if (frame) frame.src = page;
@@ -211,14 +189,43 @@ function loadPage(page, element) {
   document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
   if (element) element.classList.add('active');
 
-  // Collapse nav menu on mobile if not a dropdown toggle
   if (!element.classList.contains('dropdown-toggle')) {
-    const navbarCollapse = document.querySelector('.navbar-collapse');
-    const bsCollapse = bootstrap.Collapse.getInstance(navbarCollapse);
-    if (bsCollapse) {
-      bsCollapse.hide();
-    }
+    collapseNavbar();
   }
+}
+
+// Collapse the navbar manually
+function collapseNavbar() {
+  const navbar = document.querySelector('.navbar-collapse');
+  const bsCollapse = bootstrap.Collapse.getInstance(navbar);
+  if (bsCollapse) bsCollapse.hide();
+}
+
+// 🛠️ Fix dropdown click behavior on mobile
+function setupDropdownFix() {
+  document.querySelectorAll('.dropdown-toggle').forEach(toggle => {
+    toggle.addEventListener('click', e => {
+      if (window.innerWidth < 768) {
+        e.stopPropagation();
+
+        const instance = bootstrap.Dropdown.getInstance(toggle);
+        if (instance) {
+          instance.toggle();
+        } else {
+          new bootstrap.Dropdown(toggle).toggle();
+        }
+      }
+    });
+  });
+
+  // Prevent dropdown menu from closing when tapping inside
+  document.querySelectorAll('.dropdown-menu').forEach(menu => {
+    menu.addEventListener('click', e => {
+      if (window.innerWidth < 768) {
+        e.stopPropagation();
+      }
+    });
+  });
 }
 
 async function checkNewLeads() {
