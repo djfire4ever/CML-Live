@@ -156,6 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.documentElement.style.setProperty('--header-height', `${header.offsetHeight}px`);
     }
 
+    // 🔧 Enable dropdown behavior for mobile
     setupDropdownFix();
   });
 
@@ -166,9 +167,19 @@ document.addEventListener('DOMContentLoaded', () => {
       document.documentElement.style.setProperty('--footer-height', `${footer.offsetHeight}px`);
     }
   });
+
+  // 📱 Collapse menu after selecting real links (not toggles)
+  document.body.addEventListener('click', (e) => {
+    const link = e.target.closest('.dropdown-item, .nav-link');
+    if (link && !link.classList.contains('dropdown-toggle')) {
+      const navbar = document.querySelector('.navbar-collapse');
+      const bsCollapse = bootstrap.Collapse.getInstance(navbar);
+      if (bsCollapse) bsCollapse.hide();
+    }
+  });
 });
 
-// Load external fragments
+// Load fragments
 function loadInclude(id, file, callback) {
   fetch(file)
     .then(res => res.text())
@@ -181,27 +192,16 @@ function loadInclude(id, file, callback) {
     });
 }
 
-// Load iframe pages and auto-collapse navbar on mobile (except dropdowns)
+// Load page into iframe and highlight nav item
 function loadPage(page, element) {
   const frame = document.getElementById('content-frame');
   if (frame) frame.src = page;
 
   document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
   if (element) element.classList.add('active');
-
-  if (!element.classList.contains('dropdown-toggle')) {
-    collapseNavbar();
-  }
 }
 
-// Collapse the navbar manually
-function collapseNavbar() {
-  const navbar = document.querySelector('.navbar-collapse');
-  const bsCollapse = bootstrap.Collapse.getInstance(navbar);
-  if (bsCollapse) bsCollapse.hide();
-}
-
-// 🛠️ Fix dropdown click behavior on mobile
+// 🛠️ Fix dropdown behavior on mobile
 function setupDropdownFix() {
   document.querySelectorAll('.dropdown-toggle').forEach(toggle => {
     toggle.addEventListener('click', e => {
@@ -218,7 +218,6 @@ function setupDropdownFix() {
     });
   });
 
-  // Prevent dropdown menu from closing when tapping inside
   document.querySelectorAll('.dropdown-menu').forEach(menu => {
     menu.addEventListener('click', e => {
       if (window.innerWidth < 768) {
