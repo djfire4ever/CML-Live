@@ -5,7 +5,9 @@ html, body {
   margin: 0;
   padding: 0;
   height: 100%;
-  overflow: auto;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
   font-family: "Courgette", cursive;
   background-color: var(--bs-light);
   color: var(--bs-dark);
@@ -16,7 +18,6 @@ html, body {
 .section,
 .tab-pane,
 .tab-content {
-  /* border: 2px solid;                    🔷 Search section border */
   max-width: 1000px;
   margin: 0 auto;
 }
@@ -25,21 +26,12 @@ html, body {
    🔲 HEADER & FOOTER PLACEHOLDERS
 ================================== */
 #header-placeholder {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
   height: var(--header-height);
-  z-index: 1000;
+  flex-shrink: 0;
 }
 
 #footer-placeholder {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
   height: var(--footer-height);
-  background-color: transparent;
-  z-index: 1000;
-  pointer-events: none;
+  flex-shrink: 0;
 }
+
