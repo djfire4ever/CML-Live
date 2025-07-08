@@ -153,17 +153,16 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  // Load header
   loadInclude("header-placeholder", "header.html", () => {
     const header = document.querySelector("header");
     if (header) {
       document.documentElement.style.setProperty('--header-height', `${header.offsetHeight}px`);
     }
 
-    setupDropdownFix(); // 👈 Important: Only after header is loaded!
+    // 🔁 ONLY run this after header has loaded
+    setupDropdownFix();
   });
 
-  // Load footer
   loadInclude("footer-placeholder", "footer.html", () => {
     const footer = document.querySelector("footer");
     if (footer) {
@@ -171,7 +170,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Auto-collapse nav after real link is clicked (not dropdown toggle)
   document.body.addEventListener('click', (e) => {
     const link = e.target.closest('.dropdown-item, .nav-link');
     if (link && !link.classList.contains('dropdown-toggle')) {
@@ -205,20 +203,22 @@ function loadPage(page, element) {
 // ✅ Handles mobile dropdown behavior
 function setupDropdownFix() {
   document.querySelectorAll('.dropdown-toggle').forEach(toggle => {
-    toggle.addEventListener('click', (e) => {
+    toggle.addEventListener('click', e => {
+      console.log('🟢 Clicked:', toggle.textContent.trim());
+
       if (window.innerWidth < 768) {
         e.preventDefault();
         e.stopPropagation();
 
-        const instance = bootstrap.Dropdown.getOrCreateInstance(toggle);
-        instance.toggle();
+        const dropdown = bootstrap.Dropdown.getOrCreateInstance(toggle);
+        dropdown.toggle();
       }
     });
   });
 
-  // Prevent closing dropdown if user taps inside it
+  // Allow clicking inside dropdown menu (prevent auto-close on mobile)
   document.querySelectorAll('.dropdown-menu').forEach(menu => {
-    menu.addEventListener('click', (e) => {
+    menu.addEventListener('click', e => {
       if (window.innerWidth < 768) {
         e.stopPropagation();
       }
