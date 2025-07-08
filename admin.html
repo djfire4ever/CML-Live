@@ -156,8 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.documentElement.style.setProperty('--header-height', `${header.offsetHeight}px`);
     }
 
-    // 🔧 Enable dropdown behavior for mobile
-    setupDropdownFix();
+    setupDropdownFix(); // 👈 Run fix after header loads
   });
 
   // Load footer
@@ -168,7 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // 📱 Collapse menu after selecting real links (not toggles)
+  // Collapse nav after clicking a link (not a dropdown toggle)
   document.body.addEventListener('click', (e) => {
     const link = e.target.closest('.dropdown-item, .nav-link');
     if (link && !link.classList.contains('dropdown-toggle')) {
@@ -179,7 +178,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-// Load fragments
 function loadInclude(id, file, callback) {
   fetch(file)
     .then(res => res.text())
@@ -192,7 +190,6 @@ function loadInclude(id, file, callback) {
     });
 }
 
-// Load page into iframe and highlight nav item
 function loadPage(page, element) {
   const frame = document.getElementById('content-frame');
   if (frame) frame.src = page;
@@ -201,25 +198,23 @@ function loadPage(page, element) {
   if (element) element.classList.add('active');
 }
 
-// 🛠️ Fix dropdown behavior on mobile
+// ✅ Mobile dropdown fix (only after header is loaded)
 function setupDropdownFix() {
   document.querySelectorAll('.dropdown-toggle').forEach(toggle => {
-    toggle.addEventListener('click', e => {
+    toggle.addEventListener('click', (e) => {
       if (window.innerWidth < 768) {
+        e.preventDefault();
         e.stopPropagation();
 
-        const instance = bootstrap.Dropdown.getInstance(toggle);
-        if (instance) {
-          instance.toggle();
-        } else {
-          new bootstrap.Dropdown(toggle).toggle();
-        }
+        const dropdown = bootstrap.Dropdown.getOrCreateInstance(toggle);
+        dropdown.toggle();
       }
     });
   });
 
+  // Prevent tap inside menu from closing it (on mobile)
   document.querySelectorAll('.dropdown-menu').forEach(menu => {
-    menu.addEventListener('click', e => {
+    menu.addEventListener('click', (e) => {
       if (window.innerWidth < 768) {
         e.stopPropagation();
       }
