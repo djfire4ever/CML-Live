@@ -156,12 +156,13 @@ document.addEventListener('DOMContentLoaded', () => {
       document.documentElement.style.setProperty('--header-height', `${header.offsetHeight}px`);
     }
 
-    // 🔁 Move dropdown logic here so it only runs after header is loaded
+    // ✅ Clean dropdown behavior for all toggles
     document.querySelectorAll(".dropdown-toggle").forEach(el => {
-      el.addEventListener("click", e => e.stopPropagation());
-
-      // Optional: Logging for debugging
-      el.addEventListener("click", () => {
+      el.addEventListener("click", (e) => {
+        if (window.innerWidth < 768) {
+          e.stopPropagation();
+        }
+        // Optional: Logging
         console.log("Dropdown toggled:", el.textContent.trim());
       });
     });
@@ -176,7 +177,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-// 🔁 Load reusable partial
 function loadInclude(id, file, callback) {
   fetch(file)
     .then(res => res.text())
@@ -189,7 +189,6 @@ function loadInclude(id, file, callback) {
     });
 }
 
-// 🔁 Page loader
 function loadPage(page, element) {
   const frame = document.getElementById('content-frame');
   if (frame) frame.src = page;
@@ -197,14 +196,15 @@ function loadPage(page, element) {
   document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
   if (element) element.classList.add('active');
 
-  collapseNavbar(); // Collapse menu on mobile after selection
+  collapseNavbar(); // Collapse nav on mobile
 }
 
-// 🔁 Collapse mobile nav
 function collapseNavbar() {
   const navbar = document.querySelector('.navbar-collapse');
   const bsCollapse = bootstrap.Collapse.getInstance(navbar);
-  if (bsCollapse) bsCollapse.hide();
+  if (bsCollapse) {
+    bsCollapse.hide();
+  }
 }
 
 async function checkNewLeads() {
