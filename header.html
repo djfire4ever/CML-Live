@@ -228,20 +228,4 @@
 </nav>
 
 <script>
-
-// Global fix (if needed)
-document.addEventListener("DOMContentLoaded", () => {
-  document.querySelectorAll(".dropdown-toggle").forEach(el => {
-    el.addEventListener("click", e => {
-      e.stopPropagation();
-    });
-  });
-});
-
-document.querySelectorAll('.dropdown-toggle').forEach(toggle => {
-  toggle.addEventListener('click', () => {
-    console.log('Dropdown toggled:', toggle.textContent.trim());
-  });
-});
-
 </script>

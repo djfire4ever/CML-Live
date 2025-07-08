@@ -149,13 +149,25 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+  // Load header and initialize header height + dropdown behavior
   loadInclude("header-placeholder", "header.html", () => {
     const header = document.querySelector("header");
     if (header) {
       document.documentElement.style.setProperty('--header-height', `${header.offsetHeight}px`);
     }
+
+    // 🔁 Move dropdown logic here so it only runs after header is loaded
+    document.querySelectorAll(".dropdown-toggle").forEach(el => {
+      el.addEventListener("click", e => e.stopPropagation());
+
+      // Optional: Logging for debugging
+      el.addEventListener("click", () => {
+        console.log("Dropdown toggled:", el.textContent.trim());
+      });
+    });
   });
 
+  // Load footer and initialize footer height
   loadInclude("footer-placeholder", "footer.html", () => {
     const footer = document.querySelector("footer");
     if (footer) {
@@ -164,6 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
+// 🔁 Load reusable partial
 function loadInclude(id, file, callback) {
   fetch(file)
     .then(res => res.text())
@@ -176,29 +189,23 @@ function loadInclude(id, file, callback) {
     });
 }
 
+// 🔁 Page loader
 function loadPage(page, element) {
   const frame = document.getElementById('content-frame');
   if (frame) frame.src = page;
+
   document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
   if (element) element.classList.add('active');
+
+  collapseNavbar(); // Collapse menu on mobile after selection
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  loadInclude("header-placeholder", "header.html");
-  loadInclude("footer-placeholder", "footer.html", () => {
-    const footer = document.querySelector("footer");
-    if (footer) {
-      document.documentElement.style.setProperty('--footer-height', `${footer.offsetHeight}px`);
-    }
-  });
-});
-
-document.addEventListener("DOMContentLoaded", () => {
-  checkNewLeads();
-
-  const tooltipTriggers = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-  tooltipTriggers.forEach(el => new bootstrap.Tooltip(el));
-});
+// 🔁 Collapse mobile nav
+function collapseNavbar() {
+  const navbar = document.querySelector('.navbar-collapse');
+  const bsCollapse = bootstrap.Collapse.getInstance(navbar);
+  if (bsCollapse) bsCollapse.hide();
+}
 
 async function checkNewLeads() {
   try {
