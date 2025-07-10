@@ -866,8 +866,8 @@ function updateCardHeaders(mode = "edit") {
     return parsed.toLocaleString("en-US", { style: "currency", currency: "USD" });
   };
 
-  updateDisplayText(`${prefix}card1-header-display`, `${getField(`${prefix}firstName`)} ${getField(`${prefix}lastName`)}`.trim(), "Client Info");
-  updateDisplayText(`${prefix}card2-header-display`, getField(`${prefix}eventDate`) || "Event Info");
+  updateDisplayText(`${prefix}card1-header-display`, `${getField(`${prefix}firstName`)} ${getField(`${prefix}lastName`)}`.trim(), "Add Client");
+  updateDisplayText(`${prefix}card2-header-display`, getField(`${prefix}eventDate`) || "Add Event Info");
   updateDisplayText(`${prefix}card3-header-display`, formatCurrency(getField(`${prefix}grandTotal`)));
   updateDisplayText(`${prefix}card4-header-display`, formatCurrency(getField(`${prefix}addonsTotal`)));
   updateDisplayText(`${prefix}card5-header-display`, formatCurrency(getField(`${prefix}balanceDue`)));
