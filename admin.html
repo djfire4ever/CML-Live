@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin Dashboard</title>
-<script src="config.js"></script>
 <style>
 @keyframes ring {
   0% { transform: rotate(0); }
@@ -151,32 +150,17 @@
   <button class="btn btn-sm debug-btn btn-outline-black text-info" onclick="showDebugInfo()">🔍 Debug</button>
 </div>
 
+<script src="config.js" defer></script>
+
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+  console.log('✅ DOM Ready');
+
   loadInclude("header-placeholder", "header.html", () => {
-    const header = document.querySelector("header");
-    if (header) {
-      document.documentElement.style.setProperty('--header-height', `${header.offsetHeight}px`);
-    }
-
-    // 🔁 ONLY run this after header has loaded
-    setupDropdownFix();
-  });
-
-  loadInclude("footer-placeholder", "footer.html", () => {
-    const footer = document.querySelector("footer");
-    if (footer) {
-      document.documentElement.style.setProperty('--footer-height', `${footer.offsetHeight}px`);
-    }
-  });
-
-  document.body.addEventListener('click', (e) => {
-    const link = e.target.closest('.dropdown-item, .nav-link');
-    if (link && !link.classList.contains('dropdown-toggle')) {
-      const navbar = document.querySelector('.navbar-collapse');
-      const bsCollapse = bootstrap.Collapse.getInstance(navbar);
-      if (bsCollapse) bsCollapse.hide();
-    }
+    console.log('✅ Header loaded');
+    attachDropdownHandlers();
+    setupNavbarCollapseFix();
+    setupNavbarHover();
   });
 });
 
@@ -192,6 +176,83 @@ function loadInclude(id, file, callback) {
     });
 }
 
+function attachDropdownHandlers() {
+  document.querySelectorAll('.dropdown-toggle').forEach(toggle => {
+    toggle.addEventListener('click', e => {
+      console.log('✅ Clicked dropdown toggle');
+      e.preventDefault();
+      e.stopPropagation();
+      bootstrap.Dropdown.getOrCreateInstance(toggle).toggle();
+    });
+  });
+}
+
+function setupNavbarCollapseFix() {
+  document.body.addEventListener('click', (e) => {
+    const navbar = document.querySelector('.navbar-collapse');
+    if (!navbar || !navbar.classList.contains('show')) return;
+
+    const toggle = e.target.closest('.dropdown-toggle');
+    if (toggle) {
+      console.log('⏸️ Click on dropdown toggle → prevent collapse');
+      return;
+    }
+
+    const link = e.target.closest('.nav-link, .dropdown-item');
+    if (link) {
+      console.log('👉 Clicked nav-link or dropdown-item');
+      if (link.classList.contains('dropdown-toggle')) {
+        console.log('⏸️ It is a toggle → do not collapse');
+        return;
+      }
+      console.log('✅ Collapse navbar');
+      const bsCollapse = bootstrap.Collapse.getInstance(navbar);
+      if (bsCollapse) bsCollapse.hide();
+      return;
+    }
+
+    const insideMenu = e.target.closest('.dropdown-menu');
+    if (insideMenu) {
+      console.log('⏸️ Click inside dropdown → prevent collapse');
+      return;
+    }
+  });
+}
+
+function setupNavbarHover() {
+  const navbarToggler = document.getElementById('navToggler');
+  const navMenu = document.getElementById('navmenu');
+  if (!navbarToggler || !navMenu) return;
+
+  let hoverTimeout;
+
+  navbarToggler.addEventListener('mouseenter', () => {
+    if (window.getComputedStyle(navbarToggler).display !== 'none') {
+      const bsCollapse = bootstrap.Collapse.getInstance(navMenu)
+        || new bootstrap.Collapse(navMenu, { toggle: false });
+      bsCollapse.show();
+    }
+  });
+
+  navMenu.addEventListener('mouseenter', () => {
+    clearTimeout(hoverTimeout);
+  });
+
+  navbarToggler.addEventListener('mouseleave', () => {
+    hoverTimeout = setTimeout(() => {
+      const bsCollapse = bootstrap.Collapse.getInstance(navMenu);
+      if (bsCollapse) bsCollapse.hide();
+    }, 300);
+  });
+
+  navMenu.addEventListener('mouseleave', () => {
+    hoverTimeout = setTimeout(() => {
+      const bsCollapse = bootstrap.Collapse.getInstance(navMenu);
+      if (bsCollapse) bsCollapse.hide();
+    }, 300);
+  });
+}
+
 function loadPage(page, element) {
   const frame = document.getElementById('content-frame');
   if (frame) frame.src = page;
@@ -200,39 +261,10 @@ function loadPage(page, element) {
   if (element) element.classList.add('active');
 }
 
-// ✅ Handles mobile dropdown behavior
-function setupDropdownFix() {
-  document.querySelectorAll('.dropdown-toggle').forEach(toggle => {
-    toggle.addEventListener('click', e => {
-      console.log('🟢 Clicked:', toggle.textContent.trim());
-
-      if (window.innerWidth < 768) {
-        e.preventDefault();
-        e.stopPropagation();
-
-        const dropdown = bootstrap.Dropdown.getOrCreateInstance(toggle);
-        dropdown.toggle();
-      }
-    });
-  });
-
-  // Allow clicking inside dropdown menu (prevent auto-close on mobile)
-  document.querySelectorAll('.dropdown-menu').forEach(menu => {
-    menu.addEventListener('click', e => {
-      if (window.innerWidth < 768) {
-        e.stopPropagation();
-      }
-    });
-  });
-}
-
 async function checkNewLeads() {
   try {
     const response = await fetch(`${scriptURL}?system=leads&action=getLeads`);
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
+    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
 
     const text = await response.text();
     if (!text) {
@@ -241,7 +273,6 @@ async function checkNewLeads() {
     }
 
     const leads = JSON.parse(text);
-
     if (!Array.isArray(leads)) {
       console.warn("⚠️ getLeads did not return an array.");
       return;
@@ -279,16 +310,12 @@ function updateLeadBadge(leads) {
   const badge = document.getElementById("leadNotifBadge");
   const btn = document.getElementById("leadNotifBtn");
   const dot = document.getElementById("leadNotifDot");
-
-  // Check if required elements exist
   if (!badge || !btn) {
     console.warn("🚫 leadNotifBadge or leadNotifBtn not found in DOM.");
-    return; // Exit the function if elements are not found
+    return;
   }
 
   const acknowledged = getAcknowledgedLeads();
-
-  // Filter new leads
   const newLeads = leads.filter(lead =>
     lead.Status?.toLowerCase() === "new" &&
     !acknowledged.includes(lead.LeadID)
@@ -296,31 +323,25 @@ function updateLeadBadge(leads) {
 
   const count = newLeads.length;
 
-  // Update badge and button with lead count
   if (count > 0) {
     badge.textContent = count;
     badge.classList.remove("d-none", "fade");
     badge.classList.add("pulse");
-
     if (dot) {
       dot.classList.remove("d-none");
       dot.classList.add("pulse");
     }
-
     btn.setAttribute("title", `${count} new lead${count === 1 ? "" : "s"}`);
   } else {
     badge.classList.add("d-none");
     badge.classList.remove("pulse");
-
     if (dot) {
       dot.classList.add("d-none");
       dot.classList.remove("pulse");
     }
-
     btn.setAttribute("title", "No new leads");
   }
 
-  // Reinitialize tooltip
   const tooltip = bootstrap.Tooltip.getInstance(btn);
   if (tooltip) tooltip.dispose();
   new bootstrap.Tooltip(btn);
@@ -353,66 +374,9 @@ function openLeadsPage() {
     });
 }
 
-  fetch('header.html')
-      .then(res => res.text())
-      .then(html => {
-        document.getElementById('header-placeholder').innerHTML = html;
-
-        // Wait a moment to ensure DOM is updated
-        setTimeout(() => {
-    const navLinks = document.querySelectorAll('#navmenu .nav-link');
-    const navbarToggler = document.getElementById('navToggler');
-    const navMenu = document.getElementById('navmenu');
-
-    if (navLinks.length && navbarToggler && navMenu) {
-      // Collapse on link click (mobile)
-      navLinks.forEach(link => {
-        link.addEventListener('click', () => {
-          if (window.getComputedStyle(navbarToggler).display !== 'none') {
-            const bsCollapse = bootstrap.Collapse.getInstance(navMenu)
-              || new bootstrap.Collapse(navMenu, { toggle: false });
-            bsCollapse.hide();
-          }
-        });
-      });
-
-    // ⬇️ Hover to open/close logic
-    let hoverTimeout;
-
-    navbarToggler.addEventListener('mouseenter', () => {
-      if (window.getComputedStyle(navbarToggler).display !== 'none') {
-        const bsCollapse = bootstrap.Collapse.getInstance(navMenu)
-          || new bootstrap.Collapse(navMenu, { toggle: false });
-        bsCollapse.show();
-      }
-    });
-
-    navMenu.addEventListener('mouseenter', () => {
-      clearTimeout(hoverTimeout);
-    });
-
-    navbarToggler.addEventListener('mouseleave', () => {
-      hoverTimeout = setTimeout(() => {
-        const bsCollapse = bootstrap.Collapse.getInstance(navMenu);
-        if (bsCollapse) bsCollapse.hide();
-      }, 300);
-    });
-
-    navMenu.addEventListener('mouseleave', () => {
-      hoverTimeout = setTimeout(() => {
-        const bsCollapse = bootstrap.Collapse.getInstance(navMenu);
-        if (bsCollapse) bsCollapse.hide();
-      }, 300);
-    });
-  } else {
-    console.warn("Navbar elements not found after injecting header.");
-  }
-}, 100);
-});
-
 // Auto-refresh every 60 seconds
 setInterval(checkNewLeads, 60000);
-
 </script>
+
 </body>
 </html>
