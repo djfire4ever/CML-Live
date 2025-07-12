@@ -1,8 +1,15 @@
+// --- Initialize pageMeta and error logging once, top of the file ---
+window.pageMeta = window.pageMeta || {};
+window.pageMeta.hasConfig = true;
+
+window.pageMeta.theme = getComputedStyle(document.documentElement)
+  .getPropertyValue('--bs-body-bg').trim() || 'Unknown';
+
 window._errorLog = [];
 window.addEventListener("error", (e) => {
   const msg = `[${new Date().toLocaleTimeString()}] ${e.message} at ${e.filename}:${e.lineno}`;
   window._errorLog.push(msg);
-  if (window._errorLog.length > 10) window._errorLog.shift(); // Keep only last 10
+  if (window._errorLog.length > 10) window._errorLog.shift();
 });
 
 // const scriptURL = "https://script.google.com/macros/s/AKfycbzd_0wJUUB8AyjmBd_Z5ZMjkch3RTWR66qbBFen_0li0KwcoVZVGBgRQWKzwePFRDjZ/exec";
@@ -85,51 +92,64 @@ function toggleLoader() {
   }
 }
 
+window.pageMeta.ready = false;    // will be true after loadScripts finishes
+
+// ==============================
+// ✅ Load CSS Resources
+// ==============================
 function loadStylesheets() {
   const head = document.head;
 
-  // Bootstrap 5.3.6 CSS
+  // Bootstrap CSS
   const bootstrapCSS = document.createElement('link');
   bootstrapCSS.rel = 'stylesheet';
   bootstrapCSS.href = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css';
   head.appendChild(bootstrapCSS);
+  window.pageMeta.hasBootstrapCSS = true;
 
   // Bootstrap Icons
   const bootstrapIcons = document.createElement('link');
   bootstrapIcons.rel = 'stylesheet';
   bootstrapIcons.href = 'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css';
   head.appendChild(bootstrapIcons);
+  window.pageMeta.hasBootstrapIcons = true;
 
-  // Font Awesome 6.7.2
+  // Font Awesome
   const fontAwesome = document.createElement('link');
   fontAwesome.rel = 'stylesheet';
   fontAwesome.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css';
   head.appendChild(fontAwesome);
+  window.pageMeta.hasFontAwesome = true;
 
-  // Base Custom Styles
+  // Custom CSS
   const customCSS = document.createElement('link');
   customCSS.rel = 'stylesheet';
   customCSS.href = 'style.css';
   head.appendChild(customCSS);
+  window.pageMeta.hasCustomCSS = true;
 }
 
+// ==============================
+// ✅ Load JS Resources
+// ==============================
 function loadScripts() {
   const body = document.body;
 
   if (window.scriptsAlreadyLoaded) return;
   window.scriptsAlreadyLoaded = true;
 
-  // ✅ Load Bootstrap
+  // Bootstrap JS
   const bootstrapScript = document.createElement('script');
   bootstrapScript.src = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js';
-  // for future use: <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
   bootstrapScript.defer = true;
-  bootstrapScript.onload = () => console.log('✅ Bootstrap loaded');
+  bootstrapScript.onload = () => {
+    console.log('✅ Bootstrap loaded');
+    window.pageMeta.hasBootstrap = true;
+  };
   body.appendChild(bootstrapScript);
 
-  // ✅ Only load FullCalendar on specific pages
+  // FullCalendar only on calendar.html
   if (["/calendar.html"].includes(window.location.pathname)) {
-    // Load core first, then load plugins sequentially
     const fullCalendarCore = document.createElement('script');
     fullCalendarCore.src = 'https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.17/index.global.min.js';
     fullCalendarCore.onload = () => {
@@ -144,8 +164,7 @@ function loadScripts() {
       ];
 
       let loadedCount = 0;
-
-      pluginScripts.forEach((src, i) => {
+      pluginScripts.forEach((src) => {
         const script = document.createElement('script');
         script.src = src;
         script.defer = true;
@@ -153,23 +172,73 @@ function loadScripts() {
           loadedCount++;
           if (loadedCount === pluginScripts.length) {
             console.log('✅ FullCalendar plugins loaded');
+            window.pageMeta.hasFullCalendar = true;
             window.dispatchEvent(new Event('FullCalendarLoaded'));
           }
         };
         body.appendChild(script);
       });
     };
-
     body.appendChild(fullCalendarCore);
   }
+
+  // Detect theme class applied to body
+  const themeClass = [...body.classList].find(cls => cls.startsWith('theme-')) || 'no-theme';
+  window.pageMeta.theme = themeClass;
+
+  window.pageMeta.ready = true;
 }
 
-// To be called on DOMContentLoaded:
+// ==============================
+// ✅ On DOM Ready
+// ==============================
 document.addEventListener('DOMContentLoaded', () => {
   console.log('✅ DOM Ready: loading styles and scripts...');
   loadStylesheets();
   loadScripts();
 });
+
+function checkParentResources() {
+  const pm = window.pageMeta || {};
+
+  const checks = [
+    { name: 'Config.js included', found: !!pm.hasConfig },
+    { name: 'Bootstrap CSS', found: !!pm.hasBootstrapCSS },
+    { name: 'Bootstrap Icons', found: !!pm.hasBootstrapIcons },
+    { name: 'Font Awesome', found: !!pm.hasFontAwesome },
+    { name: 'Custom CSS', found: !!pm.hasCustomCSS },
+    { name: 'Bootstrap JS', found: !!pm.hasBootstrap },
+    { name: 'FullCalendar', found: !!pm.hasFullCalendar },
+  ];
+
+  return {
+    checks,
+    theme: pm.theme || 'Unknown'
+  };
+}
+
+async function checkIframeResources() {
+  const frame = document.querySelector('#content-frame');
+  if (!frame) return { error: '❌ No iframe found' };
+
+  const win = frame.contentWindow;
+  const pm = win.pageMeta || {};
+
+  const checks = [
+    { name: 'Config.js included', found: !!pm.hasConfig },
+    { name: 'Bootstrap CSS', found: !!pm.hasBootstrapCSS },
+    { name: 'Bootstrap Icons', found: !!pm.hasBootstrapIcons },
+    { name: 'Font Awesome', found: !!pm.hasFontAwesome },
+    { name: 'Custom CSS', found: !!pm.hasCustomCSS },
+    { name: 'Bootstrap JS', found: !!pm.hasBootstrap },
+    { name: 'FullCalendar', found: !!pm.hasFullCalendar },
+  ];
+
+  return {
+    checks,
+    theme: pm.theme || 'Unknown'
+  };
+}
 
 // ✅ Load Dropdowns
 document.addEventListener("DOMContentLoaded", () => {
@@ -285,23 +354,28 @@ function getResourceStatus() {
   return [
     {
       name: "Bootstrap CSS",
-      loaded: !!document.querySelector('link[href*="bootstrap.min.css"]')
+      loaded: !!document.querySelector('link[href*="bootstrap.min.css"]'),
+      location: ""
     },
     {
       name: "Bootstrap Icons",
-      loaded: !!document.querySelector('link[href*="bootstrap-icons"]')
+      loaded: !!document.querySelector('link[href*="bootstrap-icons"]'),
+      location: ""
     },
     {
       name: "Font Awesome",
-      loaded: !!document.querySelector('link[href*="font-awesome"], link[href*="fontawesome"]')
+      loaded: !!document.querySelector('link[href*="font-awesome"], link[href*="fontawesome"]'),
+      location: ""
     },
     {
       name: "Custom CSS",
-      loaded: !!document.querySelector('link[href*="style.css"]')
+      loaded: !!document.querySelector('link[href*="style.css"]'),
+      location: ""
     },
     {
       name: "Bootstrap JS",
-      loaded: typeof bootstrap !== "undefined"
+      loaded: typeof bootstrap !== "undefined",
+      location: typeof bootstrap !== "undefined" ? "✅ Global" : "❌ Not Found"
     },
     {
       name: "FullCalendar",
@@ -313,17 +387,6 @@ function getResourceStatus() {
 
 function checkBackendVersion() {
   const versionCheckURL = `${scriptURL}?action=versionCheck`;
-  const resources = [
-    { name: "Bootstrap CSS", check: () => !!document.querySelector('link[href*="bootstrap.min.css"]') },
-    { name: "Bootstrap Icons", check: () => !!document.querySelector('link[href*="bootstrap-icons"]') },
-    { name: "Font Awesome", check: () => !!document.querySelector('link[href*="font-awesome"]') },
-    { name: "Custom CSS", check: () => !!document.querySelector('link[href*="style.css"]') },
-    { name: "Bootstrap JS", check: () => !!window.bootstrap },
-    { name: "FullCalendar",
-      status: window.FullCalendar ? "✅" : "⚠️ Not Loaded",
-      location: typeof window.FullCalendar !== "undefined" ? "Global" : "Unavailable"
-    }
-  ];
 
   const updateBadge = (statusEmoji, statusText, bgClass) => {
     const badgeBtn = document.querySelector("#debugBadge button");
@@ -360,13 +423,12 @@ function checkBackendVersion() {
         isLocal,
         error: err.message,
         timestamp: new Date().toISOString(),
-        resources: resources.map(r => ({ name: r.name, loaded: r.check() }))
+        resources: getResourceStatus() // Reuse same function for fallback
       };
       console.error("❌ Backend version check failed:", err);
       updateBadge("❌", "Disconnected", "btn-outline-danger");
     });
 }
-
 // 🔎 Show debug modal with version info
 async function showDebugInfo() {
   const debugOutput = {
@@ -376,11 +438,27 @@ async function showDebugInfo() {
     timestamp: new Date().toISOString(),
     currentPage: window.location.href,
     iframeSrc: document.querySelector("iframe")?.src || "N/A",
-    theme: getComputedStyle(document.documentElement).getPropertyValue('--bs-body-bg')?.trim() || "Not set",
+    parentTheme: "Unknown",
+    iframeTheme: "Unknown",
     recentErrors: window._errorLog?.slice(-5) || [],
-    ...window.backendMeta // 🧠 Merge all backendMeta values (status, scriptURL, isLocal, environment, resources, etc.)
+    ...window.backendMeta
   };
 
+  // ✅ Check iframe
+  try {
+    const iframeCheck = await checkIframeResources();
+    debugOutput.iframeChecks = iframeCheck.checks;
+    debugOutput.iframeTheme = iframeCheck.theme || debugOutput.iframeTheme;
+  } catch (e) {
+    console.warn('❌ Iframe resource check failed:', e);
+  }
+
+  // ✅ Check parent
+  const parentCheck = checkParentResources();
+  debugOutput.parentChecks = parentCheck.checks;
+  debugOutput.parentTheme = parentCheck.theme || debugOutput.parentTheme;
+
+  // ✅ Still run backend version check
   try {
     const res = await fetch(`${scriptURL}?action=versionCheck`);
     const data = await res.json();
@@ -394,7 +472,6 @@ async function showDebugInfo() {
     debugOutput.error = e.message;
   }
 
-  // 🧩 Build UI content
   const statusBadge = debugOutput.status.includes("✅")
     ? `<span class="badge bg-success">${debugOutput.status}</span>`
     : `<span class="badge bg-danger">${debugOutput.status}</span>`;
@@ -403,9 +480,17 @@ async function showDebugInfo() {
     ? debugOutput.recentErrors.map(e => `<li>${e}</li>`).join("")
     : "<li>None</li>";
 
-  const resources = (debugOutput.resources || [])
-    .map(r => `<tr><td>${r.name}</td><td>${r.loaded ? "✅" : "❌"}${r.location ? ` <span class="text-muted small">(${r.location})</span>` : ""}</td></tr>`)
-    .join("");
+  // ✅ Combine checks into rows for 3-column table
+  const combinedResources = debugOutput.parentChecks.map((parentCheck, idx) => {
+    const iframeCheck = debugOutput.iframeChecks?.[idx];
+    return `
+      <tr>
+        <td>${parentCheck.name}</td>
+        <td>${parentCheck.found ? "✅" : "❌"}</td>
+        <td>${iframeCheck?.found ? "✅" : "❌"}</td>
+      </tr>
+    `;
+  }).join("");
 
   const contentHTML = `
     <div class="mb-3">
@@ -416,11 +501,17 @@ async function showDebugInfo() {
       <ul class="list-group list-group-flush small">
         <li class="list-group-item"><strong>Current Page:</strong> ${window.location.href}</li>
         <li class="list-group-item"><strong>iFrame Src:</strong> ${debugOutput.iframeSrc}</li>
-        <li class="list-group-item"><strong>Theme Color:</strong> ${debugOutput.theme}</li>
       </ul>
     </div>
     <div class="mb-3">
-      <h6>🧠 Backend Info</h6>
+      <h6>🎨 Themes</h6>
+      <ul class="list-group list-group-flush small">
+        <li class="list-group-item"><strong>Parent Theme:</strong> ${debugOutput.parentTheme}</li>
+        <li class="list-group-item"><strong>iFrame Theme:</strong> ${debugOutput.iframeTheme}</li>
+      </ul>
+    </div>
+    <div class="mb-3">
+      <h6>🧩 Backend Info</h6>
       <ul class="list-group list-group-flush small">
         <li class="list-group-item"><strong>Script URL:</strong> ${debugOutput.scriptURL}</li>
         <li class="list-group-item"><strong>Deployed Version:</strong> ${debugOutput.deployedVersion}</li>
@@ -430,12 +521,16 @@ async function showDebugInfo() {
       </ul>
     </div>
     <div class="mb-3">
-      <h6>📦 Resources Loaded</h6>
+      <h6>📦 Resources</h6>
       <table class="table table-sm table-bordered small">
         <thead class="table-black text-info">
-          <tr><th>Resource</th><th>Status</th></tr>
+          <tr>
+            <th>Resource</th>
+            <th>Parent</th>
+            <th>iFrame</th>
+          </tr>
         </thead>
-        <tbody>${resources}</tbody>
+        <tbody>${combinedResources}</tbody>
       </table>
     </div>
     <div>
