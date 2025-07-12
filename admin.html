@@ -4,7 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin Dashboard</title>
+  
 <style>
+
+/* ===============================
+   Bell Ringing Animation
+================================ */
 @keyframes ring {
   0% { transform: rotate(0); }
   1% { transform: rotate(30deg); }
@@ -32,20 +37,44 @@
   100% { transform: rotate(0); }
 }
 
-.ringing i {
-  animation: ring 1s ease-in-out;
+.ringing::before {
+  animation: ring 1s ease-in-out infinite;
+  transform-origin: top center;
 }
 
-/* 🎯 Hover & focus effect */
+/* ===============================
+   Notification Bell Styling
+================================ */
 .notif-btn {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.notif-btn:hover i,
-.notif-btn:focus i {
+.notif-btn:hover i:not(.ringing),
+.notif-btn:focus i:not(.ringing) {
   transform: scale(1.1);
   text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
 }
+
+#leadNotifBadge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  transform: translate(50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px; /* or whatever looks good */
+  height: 20px; /* make it a circle */
+  padding: 0; /* no extra padding */
+  font-size: 1rem; /* adjust as needed */
+  line-height: 1;
+  /* background-color: blue; */
+  color: yellow; 
+}
+
+/* ===============================
+   Badge Pulse Animation
+================================ */
 @keyframes pulse {
   0% { transform: scale(1); opacity: 1; }
   50% { transform: scale(1.3); opacity: 0.7; }
@@ -53,36 +82,25 @@
 }
 
 .pulse {
-  animation: pulse-animation 5s infinite;
+  animation: pulse 5s infinite;
 }
 
-@keyframes pulse-animation {
-  0% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.2); opacity: 0.6; }
-  100% { transform: scale(1); opacity: 1; }
-}
-.flash-badge {
-  animation: flash 0.8s ease-in-out;
-}
-
-@keyframes flash {
-  0%   { transform: scale(1); background-color: #dc3545; }
-  50%  { transform: scale(1.3); background-color: #ff6b6b; }
-  100% { transform: scale(1); background-color: #dc3545; }
-}
+/* ===============================
+   Debug / Extra Styles (optional)
+================================ */
 #navToggler:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    border-radius: 4px;
-    cursor: pointer;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  cursor: pointer;
 }
-  
+
 #debugBadge button {
   min-width: 130px;
   text-align: left;
   white-space: nowrap;
 }
 
-/* ⚙️ Debug Badge Styling */
+/* Debug button & error state */
 .debug-btn {
   all: unset;
   font-size: 0.75rem;
@@ -106,7 +124,6 @@
   box-shadow: 0 0 8px rgba(13, 202, 240, 0.25);
 }
 
-/* 🔴 Pulse Effect for Error State */
 .debug-btn.error {
   animation: pulseError 1s infinite alternate;
 }
@@ -115,6 +132,7 @@
   from { box-shadow: 0 0 4px rgba(255, 0, 0, 0.3); }
   to   { box-shadow: 0 0 10px rgba(255, 0, 0, 0.6); }
 }
+
 @media (min-width: 768px) {
   .navbar-nav .dropdown:hover > .dropdown-menu {
     display: block;
@@ -122,7 +140,13 @@
   }
 }
 
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 </style>
+
 </head>
 
 <body class="d-flex flex-column" style="height: 100vh; overflow: hidden;">
@@ -138,7 +162,7 @@
         <h5 class="modal-title fs-6" id="debugModalLabel">🛠️ System Debug Info</h5>
         <button type="button" class="btn-close btn-close-white btn-sm" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="modal-body bg-light text-dark small">
+      <div class="modal-body bg-light text-black small">
         <div id="debugData"></div> <!-- ✨ Will be replaced with live content -->
       </div>
     </div>
@@ -150,18 +174,23 @@
   <button class="btn btn-sm debug-btn btn-outline-black text-info" onclick="showDebugInfo()">🔍 Debug</button>
 </div>
 
-<script src="config.js" defer></script>
+<script src="config.js"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   console.log('✅ DOM Ready');
 
   loadInclude("header-placeholder", "header.html", () => {
-    console.log('✅ Header loaded');
     attachDropdownHandlers();
     setupNavbarCollapseFix();
     setupNavbarHover();
+
+    // ✅ Bell JS must start AFTER header loads!
+    checkNewLeads();
+    setInterval(checkNewLeads, 60000);
   });
+
+  loadInclude("footer-placeholder", "footer.html");
 });
 
 function loadInclude(id, file, callback) {
@@ -179,7 +208,6 @@ function loadInclude(id, file, callback) {
 function attachDropdownHandlers() {
   document.querySelectorAll('.dropdown-toggle').forEach(toggle => {
     toggle.addEventListener('click', e => {
-      console.log('✅ Clicked dropdown toggle');
       e.preventDefault();
       e.stopPropagation();
       bootstrap.Dropdown.getOrCreateInstance(toggle).toggle();
@@ -193,29 +221,17 @@ function setupNavbarCollapseFix() {
     if (!navbar || !navbar.classList.contains('show')) return;
 
     const toggle = e.target.closest('.dropdown-toggle');
-    if (toggle) {
-      console.log('⏸️ Click on dropdown toggle → prevent collapse');
-      return;
-    }
+    if (toggle) return;
 
     const link = e.target.closest('.nav-link, .dropdown-item');
     if (link) {
-      console.log('👉 Clicked nav-link or dropdown-item');
-      if (link.classList.contains('dropdown-toggle')) {
-        console.log('⏸️ It is a toggle → do not collapse');
-        return;
-      }
-      console.log('✅ Collapse navbar');
+      if (link.classList.contains('dropdown-toggle')) return;
       const bsCollapse = bootstrap.Collapse.getInstance(navbar);
       if (bsCollapse) bsCollapse.hide();
       return;
     }
 
-    const insideMenu = e.target.closest('.dropdown-menu');
-    if (insideMenu) {
-      console.log('⏸️ Click inside dropdown → prevent collapse');
-      return;
-    }
+    if (e.target.closest('.dropdown-menu')) return;
   });
 }
 
@@ -261,100 +277,46 @@ function loadPage(page, element) {
   if (element) element.classList.add('active');
 }
 
+let lastCount = 0;
+
 async function checkNewLeads() {
   try {
     const response = await fetch(`${scriptURL}?system=leads&action=getLeads`);
     if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
 
-    const text = await response.text();
-    if (!text) {
-      console.warn("⚠️ No data received for leads.");
-      return;
+    const leads = await response.json();
+    if (!Array.isArray(leads)) return console.warn("⚠️ Leads data not an array");
+
+    const newLeads = leads.filter(
+      lead => (lead.Status || lead.status || "").trim().toLowerCase() === "new"
+    );
+    const count = newLeads.length;
+
+    const bell = document.getElementById("leadNotifBtn");
+    const badge = document.getElementById("leadNotifBadge");
+    const bellIcon = bell.querySelector("i");
+
+    if (count > 0) {
+      badge.textContent = count;
+      badge.classList.remove("d-none");
+
+      // Now this will find the span wrapping the icon and add the class
+      document.querySelector("#leadNotifBtn i").classList.add("ringing");
+
+      bell.setAttribute("title", `${count} new lead${count === 1 ? "" : "s"}`);
+    } else {
+      badge.textContent = "";
+      badge.classList.add("d-none");
+
+      document.querySelector("#leadNotifBtn i").classList.remove("ringing");
+
+      bell.setAttribute("title", "No new leads");
     }
 
-    const leads = JSON.parse(text);
-    if (!Array.isArray(leads)) {
-      console.warn("⚠️ getLeads did not return an array.");
-      return;
-    }
-
-    const latestLead = leads.at(-1);
-    if (!latestLead?.LeadID) {
-      console.warn("⚠️ Could not determine latest LeadID.");
-      return;
-    }
-
-    const latestLeadID = parseInt(latestLead.LeadID, 10);
-    const lastSeenLeadID = parseInt(localStorage.getItem("lastSeenLeadID") || "0", 10);
-    const dot = document.getElementById("leadNotifDot");
-
-    if (dot) {
-      if (latestLeadID > lastSeenLeadID) {
-        dot.classList.remove("d-none");
-        const bell = document.getElementById("leadNotifBtn");
-        bell.classList.add("ringing");
-        setTimeout(() => bell.classList.remove("ringing"), 1500);
-      } else {
-        dot.classList.add("d-none");
-      }
-    }
-
-    updateLeadBadge(leads);
+    lastCount = count;
 
   } catch (error) {
     console.error("❌ Error checking new leads:", error);
-  }
-}
-
-function updateLeadBadge(leads) {
-  const badge = document.getElementById("leadNotifBadge");
-  const btn = document.getElementById("leadNotifBtn");
-  const dot = document.getElementById("leadNotifDot");
-  if (!badge || !btn) {
-    console.warn("🚫 leadNotifBadge or leadNotifBtn not found in DOM.");
-    return;
-  }
-
-  const acknowledged = getAcknowledgedLeads();
-  const newLeads = leads.filter(lead =>
-    lead.Status?.toLowerCase() === "new" &&
-    !acknowledged.includes(lead.LeadID)
-  );
-
-  const count = newLeads.length;
-
-  if (count > 0) {
-    badge.textContent = count;
-    badge.classList.remove("d-none", "fade");
-    badge.classList.add("pulse");
-    if (dot) {
-      dot.classList.remove("d-none");
-      dot.classList.add("pulse");
-    }
-    btn.setAttribute("title", `${count} new lead${count === 1 ? "" : "s"}`);
-  } else {
-    badge.classList.add("d-none");
-    badge.classList.remove("pulse");
-    if (dot) {
-      dot.classList.add("d-none");
-      dot.classList.remove("pulse");
-    }
-    btn.setAttribute("title", "No new leads");
-  }
-
-  const tooltip = bootstrap.Tooltip.getInstance(btn);
-  if (tooltip) tooltip.dispose();
-  new bootstrap.Tooltip(btn);
-}
-
-function getAcknowledgedLeads() {
-  return JSON.parse(localStorage.getItem("acknowledgedLeadIDs")) || [];
-}
-
-function acknowledgeLead(id) {
-  const current = getAcknowledgedLeads();
-  if (!current.includes(id)) {
-    localStorage.setItem("acknowledgedLeadIDs", JSON.stringify([...current, id]));
   }
 }
 
@@ -362,20 +324,17 @@ function openLeadsPage() {
   const iframe = document.querySelector("iframe");
   iframe.src = "leads.html";
 
-  fetch(`${scriptURL}?system=leads&action=getLeads`)
-    .then(res => res.json())
-    .then(data => {
-      if (Array.isArray(data) && data.length > 0) {
-        const latestLeadID = parseInt(data.at(-1).LeadID, 10);
-        localStorage.setItem("lastSeenLeadID", latestLeadID);
-        const dot = document.getElementById("leadNotifDot");
-        if (dot) dot.classList.add("d-none");
-      }
-    });
-}
+  const bell = document.getElementById("leadNotifBtn");
+  const badge = document.getElementById("leadNotifBadge");
+  const bellIcon = bell.querySelector("i");
 
-// Auto-refresh every 60 seconds
-setInterval(checkNewLeads, 60000);
+  badge.textContent = "";
+  badge.classList.add("d-none");
+  bellIcon.classList.remove("ringing");
+  bell.setAttribute("title", "No new leads");
+
+  lastCount = 0;
+}
 </script>
 
 </body>

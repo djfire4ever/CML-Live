@@ -396,7 +396,7 @@ async function showDebugInfo() {
 
   // 🧩 Build UI content
   const statusBadge = debugOutput.status.includes("✅")
-    ? `<span class="badge bg-black">${debugOutput.status}</span>`
+    ? `<span class="badge bg-success">${debugOutput.status}</span>`
     : `<span class="badge bg-danger">${debugOutput.status}</span>`;
 
   const errors = debugOutput.recentErrors.length

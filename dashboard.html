@@ -56,9 +56,10 @@ body.bg-black .stat-button:active {
   </div>
 </div>
 
-<body class="d-flex flex-column bg-black">
+<body class="d-flex flex-column bg-black mt-3">
 <div class="container">
   <h2 class="text-center text-info">Welcome to Your Dashboard</h2>
+  <h2 class="text-center text-info">Now even faster than ever</h2>
     
 <!-- Row 1 -->
 <!-- Quick Links Accordion -->
@@ -233,124 +234,64 @@ body.bg-black .stat-button:active {
 
 <script>
   
-function fetchAndCount(action, elementId, system = null) {
-  const query = system ? `?system=${system}&action=${action}` : `?action=${action}`;
-  const url = `${scriptURL}${query}`;
+async function fetchDashboardStats() {
+  try {
+    const url = `${scriptURL}?action=getDashboardStats`;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
 
-  return fetch(url)
-    .then(async response => {
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
+    const data = await response.json();
 
-      const text = await response.text();
-      if (!text) {
-        console.warn(`⚠️ No data received for action: ${action}`);
-        return null;
-      }
+    // ✅ Simple counts
+    document.getElementById("totalClients").textContent = data.clients || 0;
+    document.getElementById("totalProducts").textContent = data.products || 0;
+    document.getElementById("totalMaterials").textContent = data.materials || 0;
+    document.getElementById("unpaidInvoiceCount").textContent = data.unpaidInvoices || 0;
+    document.getElementById("totalQuotes").textContent = data.quotes || 0;
 
-      return JSON.parse(text);
-    })
-    .then(data => {
-      const el = document.getElementById(elementId);
-      if (!el || data === null) return;
+    // ✅ Low stock
+    document.getElementById("lowStockCount").textContent = data.lowStockAlerts || 0;
 
-      // ✅ Count low stock alerts
-      if (action === "getLowStockAlerts" && Array.isArray(data)) {
-        el.textContent = data.length;
+    // ✅ Optional: render low stock list if you want
+    if (Array.isArray(data.lowStockDetails)) {
+      const list = document.getElementById("lowStockList");
+      list.innerHTML = data.lowStockDetails.length
+        ? data.lowStockDetails.map(item => `
+            <li class="list-group-item bg-black text-info">${item.matName} — ${item.onHand}</li>
+          `).join("")
+        : "<li class='list-group-item bg-black text-info'>✅ All stock levels healthy.</li>";
+    }
 
-        const list = document.getElementById("lowStockList");
-        list.innerHTML = "";
+    // ✅ Leads breakdown
+    if (Array.isArray(data.leads)) {
+      const today = new Date().toLocaleDateString();
+      let newCount = 0, pendingCount = 0, followupCount = 0;
 
-        if (data.length === 0) {
-          list.innerHTML = "<li class='list-group-item bg-black text-info'>✅ All stock levels healthy.</li>";
-          return;
+      data.leads.forEach(lead => {
+        const status = (lead.Status || lead.status || "").toLowerCase();
+        const followUpDate = lead.FollowUpDate || lead.followUpDate || "";
+        if (status === "new") newCount++;
+        if (status === "pending") pendingCount++;
+        if (followUpDate) {
+          const followDate = new Date(followUpDate).toLocaleDateString();
+          if (followDate === today) followupCount++;
         }
+      });
 
-        data.forEach((item, index) => {
-          const li = document.createElement("li");
-          li.className = `list-group-item list-group-item-action d-flex justify-content-between align-items-center text-info low-stock-row ${
-            index % 2 === 0 ? "bg-black" : "bg-black"
-          }`;
-          li.style.cursor = "pointer";
+      document.getElementById("newLeads").textContent = newCount;
+      document.getElementById("pendingLeads").textContent = pendingCount;
+      document.getElementById("followupLeads").textContent = followupCount;
+    }
 
-          li.innerHTML = `
-            <div class="w-90 text-start text-info">${item.matName}</div>
-            <div class="w-10 text-end text-info">${item.onHand}</div>
-          `;
-
-          li.addEventListener("click", () => {
-            if (item.supplierUrl) window.open(item.supplierUrl, "_blank");
-          });
-
-          list.appendChild(li);
-        });
-
-      // ✅ Count lead statuses
-      } else if (action === "getLeads" && Array.isArray(data)) {
-        const today = new Date().toLocaleDateString();
-        let count = 0;
-
-        switch (elementId) {
-          case "newLeads":
-            count = data.filter(lead => lead.Status === "New").length;
-            break;
-          case "followupLeads":
-            count = data.filter(lead =>
-              lead.FollowUpDate && formatDateForUser(lead.FollowUpDate) === today
-            ).length;
-            break;
-          case "pendingLeads":
-            count = data.filter(lead => lead.Status === "Pending").length;
-            break;
-          default:
-            count = data.length;
-        }
-
-        el.textContent = count;
-
-        const tbody = document.querySelector("#leadsTable tbody");
-        if (tbody) displayLeads(data);
-
-      // ✅ Count only unpaid invoices
-      } else if (action === "getInvDataForSearch" && elementId === "unpaidInvoiceCount") {
-        const unpaidCount = data.filter(row => {
-          const balance = parseFloat(row[11]);
-          return !isNaN(balance) && balance > 0;
-        }).length;
-
-        el.textContent = unpaidCount;
-
-      // ✅ Default: count all rows
-      } else {
-        el.textContent = Array.isArray(data) ? data.length : 0;
-      }
-    })
-    .catch(error => {
-      console.error(`❌ Error loading ${action}:`, error);
-      const el = document.getElementById(elementId);
-      if (el) el.textContent = "0";
-    });
+  } catch (err) {
+    console.error("❌ Error fetching dashboard stats:", err);
+  }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
   toggleLoader(true);
 
-  const fetchTasks = [
-    fetchAndCount("getDataForSearch", "totalClients"),
-    fetchAndCount("getProdDataForSearch", "totalProducts"),
-    fetchAndCount("getMatDataForSearch", "totalMaterials"),
-    // fetchAndCount("getInvDataForSearch", "totalInvoices"),
-    fetchAndCount("getInvDataForSearch", "unpaidInvoiceCount"),
-    fetchAndCount("getQuoteDataForSearch", "totalQuotes"),
-    fetchAndCount("getMatDataForSearch", "totalProducts"),
-    fetchAndCount("getLeads", "newLeads", "leads"),
-    fetchAndCount("getLeads", "followupLeads", "leads"),
-    fetchAndCount("getLeads", "pendingLeads", "leads"),
-    fetchAndCount("getLowStockAlerts", "lowStockCount", "materials")
-    ];
-
-  Promise.all(fetchTasks).finally(() => {
+  fetchDashboardStats().finally(() => {
     toggleLoader(false);
   });
 });
@@ -461,7 +402,6 @@ function loadCalendarSummaries() {
     console.error("❌ Error loading calendar summary:", err);
   });
 }
-
   loadCalendarSummaries();
 });
 
