@@ -45,3 +45,25 @@
 .accordion-button .badge {
   margin-left: auto;
 }
+
+.accordion-button::after {
+  /* Remove Bootstrap's built-in caret */
+  background-image: none !important;
+  filter: none !important;
+
+  /* Add your own caret that uses currentColor */
+  content: '';
+  display: inline-block;
+  margin-left: auto;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 0.2s ease-in-out;
+}
+
+/* Rotate caret when accordion is open */
+.accordion-button:not(.collapsed)::after {
+  transform: rotate(-135deg);
+}

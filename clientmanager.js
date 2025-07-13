@@ -234,3 +234,12 @@ addClientForm?.addEventListener("submit", async (e) => {
     toggleLoader();
   }
 });
+
+window.simulateIframeError = function() {
+  throw new Error("Simulated iframe error");
+};
+
+function boom() {
+  throw new Error("Simulated iframe error");
+}
+window.boom = boom;

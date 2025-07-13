@@ -2,9 +2,6 @@
 window.pageMeta = window.pageMeta || {};
 window.pageMeta.hasConfig = true;
 
-window.pageMeta.theme = getComputedStyle(document.documentElement)
-  .getPropertyValue('--bs-body-bg').trim() || 'Unknown';
-
 window._errorLog = [];
 window.addEventListener("error", (e) => {
   const msg = `[${new Date().toLocaleTimeString()}] ${e.message} at ${e.filename}:${e.lineno}`;
@@ -413,7 +410,8 @@ function checkBackendVersion() {
         resources
       };
 
-      console.log("✅ Backend Connected:", window.backendMeta);
+      // console.log("✅ Backend Connected:", window.backendMeta);
+      console.log("✅ Debug System Operational");
       updateBadge("✅", "Connected", "btn-outline-black");
     })
     .catch(err => {
@@ -429,8 +427,14 @@ function checkBackendVersion() {
       updateBadge("❌", "Disconnected", "btn-outline-danger");
     });
 }
+
 // 🔎 Show debug modal with version info
-async function showDebugInfo() {
+function showDebugInfo() {
+  toggleLoader(true);
+
+  // Let the loader actually show before blocking work
+  setTimeout(async () => {
+
   const debugOutput = {
     status: "⏳ Gathering info...",
     scriptURL: window.scriptURL || "⚠️ Not set",
@@ -447,18 +451,18 @@ async function showDebugInfo() {
   // ✅ Check iframe
   try {
     const iframeCheck = await checkIframeResources();
-    debugOutput.iframeChecks = iframeCheck.checks;
+    debugOutput.iframeChecks = iframeCheck.checks || [];
     debugOutput.iframeTheme = iframeCheck.theme || debugOutput.iframeTheme;
-  } catch (e) {
-    console.warn('❌ Iframe resource check failed:', e);
+  } catch (err) {
+    console.warn("❌ Iframe resource check failed:", err);
   }
 
   // ✅ Check parent
   const parentCheck = checkParentResources();
-  debugOutput.parentChecks = parentCheck.checks;
+  debugOutput.parentChecks = parentCheck.checks || [];
   debugOutput.parentTheme = parentCheck.theme || debugOutput.parentTheme;
 
-  // ✅ Still run backend version check
+  // ✅ Backend version check
   try {
     const res = await fetch(`${scriptURL}?action=versionCheck`);
     const data = await res.json();
@@ -467,82 +471,135 @@ async function showDebugInfo() {
     debugOutput.scriptURL = data.scriptURL || debugOutput.scriptURL;
     debugOutput.timestamp = data.timestamp;
     debugOutput.environment = data.environment;
-  } catch (e) {
+  } catch (err) {
     debugOutput.status = "❌ Failed to connect";
-    debugOutput.error = e.message;
+    debugOutput.error = err.message;
   }
 
   const statusBadge = debugOutput.status.includes("✅")
     ? `<span class="badge bg-success">${debugOutput.status}</span>`
     : `<span class="badge bg-danger">${debugOutput.status}</span>`;
 
-  const errors = debugOutput.recentErrors.length
-    ? debugOutput.recentErrors.map(e => `<li>${e}</li>`).join("")
-    : "<li>None</li>";
-
-  // ✅ Combine checks into rows for 3-column table
   const combinedResources = debugOutput.parentChecks.map((parentCheck, idx) => {
     const iframeCheck = debugOutput.iframeChecks?.[idx];
     return `
       <tr>
         <td>${parentCheck.name}</td>
-        <td>${parentCheck.found ? "✅" : "❌"}</td>
-        <td>${iframeCheck?.found ? "✅" : "❌"}</td>
+        <td class="text-center">${parentCheck.found ? "✅" : "❌"}</td>
+        <td class="text-center">${iframeCheck?.found ? "✅" : "❌"}</td>
       </tr>
     `;
   }).join("");
 
+  const recentErrors = debugOutput.recentErrors.length
+    ? debugOutput.recentErrors.map(e => `<li class="list-group-item py-1">${e}</li>`).join("")
+    : `<li class="list-group-item py-1 text-muted">None</li>`;
+
   const contentHTML = `
+
     <div class="mb-3">
-      <h6>Status ${statusBadge}</h6>
+      <div class="card shadow-sm border-success">
+        <div class="card-header bg-success text-light py-1">
+          <small>Status</small> ${statusBadge}
+        </div>
+      </div>
     </div>
+
     <div class="mb-3">
-      <h6>📄 Page Info</h6>
-      <ul class="list-group list-group-flush small">
-        <li class="list-group-item"><strong>Current Page:</strong> ${window.location.href}</li>
-        <li class="list-group-item"><strong>iFrame Src:</strong> ${debugOutput.iframeSrc}</li>
-      </ul>
+      <div class="card shadow-sm">
+        <div class="card-header bg-dark text-light py-1">
+          <small>📄 Page Info</small>
+        </div>
+        <div class="card-body p-2">
+          <ul class="list-group list-group-flush small mb-0">
+            <li class="list-group-item"><strong>Current Page:</strong> ${debugOutput.currentPage}</li>
+            <li class="list-group-item"><strong>Iframe Src:</strong> ${debugOutput.iframeSrc}</li>
+          </ul>
+        </div>
+      </div>
     </div>
+
     <div class="mb-3">
-      <h6>🎨 Themes</h6>
-      <ul class="list-group list-group-flush small">
-        <li class="list-group-item"><strong>Parent Theme:</strong> ${debugOutput.parentTheme}</li>
-        <li class="list-group-item"><strong>iFrame Theme:</strong> ${debugOutput.iframeTheme}</li>
-      </ul>
+      <div class="card shadow-sm">
+        <div class="card-header bg-primary text-light py-1">
+          <small>🎨 Themes</small>
+        </div>
+        <div class="card-body p-2">
+          <table class="table table-sm table-bordered small mb-0">
+            <thead class="table-black text-info">
+              <tr>
+                <th>Parent</th>
+                <th>Iframe</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>${debugOutput.parentTheme}</td>
+                <td>${debugOutput.iframeTheme}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
+
     <div class="mb-3">
-      <h6>🧩 Backend Info</h6>
-      <ul class="list-group list-group-flush small">
-        <li class="list-group-item"><strong>Script URL:</strong> ${debugOutput.scriptURL}</li>
-        <li class="list-group-item"><strong>Deployed Version:</strong> ${debugOutput.deployedVersion}</li>
-        <li class="list-group-item"><strong>Environment:</strong> ${debugOutput.environment}</li>
-        <li class="list-group-item"><strong>isLocal:</strong> ${debugOutput.isLocal}</li>
-        <li class="list-group-item"><strong>Timestamp:</strong> ${debugOutput.timestamp}</li>
-      </ul>
+      <div class="card shadow-sm">
+        <div class="card-header bg-info text-dark py-1">
+          <small>🧩 Backend Info</small>
+        </div>
+        <div class="card-body p-2">
+          <ul class="list-group list-group-flush small mb-0">
+            <li class="list-group-item text-break"><strong>Script URL:</strong> ${debugOutput.scriptURL}</li>
+            <li class="list-group-item text-break"><strong>Deployed Version:</strong> ${debugOutput.deployedVersion}</li>
+            <li class="list-group-item"><strong>Environment:</strong> ${debugOutput.environment || "Unknown"}</li>
+            <li class="list-group-item"><strong>isLocal:</strong> ${debugOutput.isLocal ? "Yes" : "No"}</li>
+            <li class="list-group-item"><strong>Timestamp:</strong> ${debugOutput.timestamp}</li>
+          </ul>
+        </div>
+      </div>
     </div>
+
     <div class="mb-3">
-      <h6>📦 Resources</h6>
-      <table class="table table-sm table-bordered small">
-        <thead class="table-black text-info">
-          <tr>
-            <th>Resource</th>
-            <th>Parent</th>
-            <th>iFrame</th>
-          </tr>
-        </thead>
-        <tbody>${combinedResources}</tbody>
-      </table>
+      <div class="card shadow-sm">
+        <div class="card-header bg-secondary text-light py-1">
+          <small>📦 Resources</small>
+        </div>
+        <div class="card-body p-2">
+          <table class="table table-sm table-bordered small mb-0">
+            <thead class="table-black text-info">
+              <tr>
+                <th>Resource</th>
+                <th class="text-center">Parent</th>
+                <th class="text-center">Iframe</th>
+              </tr>
+            </thead>
+            <tbody>${combinedResources}</tbody>
+          </table>
+        </div>
+      </div>
     </div>
-    <div>
-      <h6>⚠️ Recent Errors</h6>
-      <ul class="small">${errors}</ul>
+
+    <div class="mb-2">
+      <div class="card shadow-sm border-danger">
+        <div class="card-header bg-danger text-light py-1">
+          <small>⚠️ Recent Errors</small>
+        </div>
+        <div class="card-body p-2">
+          <ul class="list-group list-group-flush small mb-0">${recentErrors}</ul>
+        </div>
+      </div>
     </div>
+
   `;
 
   document.getElementById("debugData").innerHTML = contentHTML;
 
-  const modal = new bootstrap.Modal(document.getElementById("debugModal"));
-  modal.show();
+  // 👉 Hide loader now that content is ready
+    toggleLoader(false);
+    const modal = new bootstrap.Modal(document.getElementById("debugModal"));
+    modal.show();
+  }, 0);
 }
 
 // Automatically check version on load

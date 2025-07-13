@@ -148,6 +148,13 @@
 </style>
 
 </head>
+<!-- ⏳ Loader -->
+<div id="loadingOverlay" class="d-none">
+  <div class="text-center">
+    <div class="spinner-border" role="status"></div>
+    <p class="mt-4 text-info">Loading... Please wait...</p>
+  </div>
+</div>
 
 <body class="d-flex flex-column" style="height: 100vh; overflow: hidden;">
 <div id="header-placeholder"></div>
@@ -178,8 +185,6 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('✅ DOM Ready');
-
   loadInclude("header-placeholder", "header.html", () => {
     attachDropdownHandlers();
     setupNavbarCollapseFix();
@@ -336,9 +341,6 @@ function openLeadsPage() {
   lastCount = 0;
 }
 
-  console.log("✅ Is FullCalendar available?", typeof window.FullCalendar !== "undefined");
-  console.log("🔎 FullCalendar global:", window.FullCalendar);
-  
 </script>
 
 </body>

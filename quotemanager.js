@@ -1226,4 +1226,3 @@ function renderShoppingListModal(materials) {
 
 window.getProdDataForSearch = getProdDataForSearch;
 
-console.log("getProdDataForSearch on window?", typeof window.getProdDataForSearch);
