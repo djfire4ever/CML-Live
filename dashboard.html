@@ -67,11 +67,11 @@ body.bg-black .stat-button:active {
     <div class="accordion fade-in-card" id="quickLinksAccordion">
       <div class="accordion-item border-info">
         <h2 class="accordion-header" id="headingQuickLinks">
-          <button class="accordion-button collapsed bg-black text-info d-flex justify-content-between align-items-center" type="button" data-bs-toggle="collapse" data-bs-target="#collapseQuickLinks" aria-expanded="false" aria-controls="collapseQuickLinks">
+          <button class="accordion-button bg-black text-info d-flex justify-content-between align-items-center" type="button" data-bs-toggle="collapse" data-bs-target="#collapseQuickLinks" aria-expanded="true" aria-controls="collapseQuickLinks">
             <span><i class="fa-solid fa-link me-2"></i>Quick Links to Add</span>
           </button>
         </h2>
-      <div id="collapseQuickLinks" class="accordion-collapse" aria-labelledby="headingQuickLinks" data-bs-parent="#quickLinksAccordion">
+      <div id="collapseQuickLinks" class="accordion-collapse show" aria-labelledby="headingQuickLinks" data-bs-parent="#quickLinksAccordion">
         <div class="accordion-body bg-black text-light border-info">
           <div class="row g-2">
           <!-- Link 1 - Add Clients -->
@@ -116,11 +116,11 @@ body.bg-black .stat-button:active {
     <div class="accordion fade-in-card" id="statsAccordion">
       <div class="accordion-item border-info">
         <h2 class="accordion-header" id="headingStats">
-          <button class="accordion-button collapsed bg-black text-info " type="button" data-bs-toggle="collapse" data-bs-target="#collapseStats" aria-expanded="false" aria-controls="collapseStats">
+          <button class="accordion-button bg-black text-info " type="button" data-bs-toggle="collapse" data-bs-target="#collapseStats" aria-expanded="true" aria-controls="collapseStats">
             <i class="fa-solid fa-chart-line me-2"></i>All Stats
           </button>
         </h2>
-        <div id="collapseStats" class="accordion-collapse" aria-labelledby="headingStats">
+        <div id="collapseStats" class="accordion-collapse show" aria-labelledby="headingStats">
           <div class="accordion-body bg-black text-light border-info">
             <div class="row g-2">
               <div class="col-12"><button class="btn btn-outline-primary w-100 d-flex justify-content-between align-items-center" data-link="clientmanager.html#tab-search"><span>Total Clients:</span><span id="totalClients" class="fw-bold">--</span></button></div>
@@ -136,15 +136,15 @@ body.bg-black .stat-button:active {
   </div>
 
   <!-- Leads Accordion -->
-  <div class="col-md-4 col-lg-4 my-1">
+  <div class="col-md-4 col-lg-4 mt-1"> <!-- Leave mt-1 for proper spacing -->
     <div class="accordion fade-in-card" id="leadsAccordion">
       <div class="accordion-item border-info">
         <h2 class="accordion-header" id="headingLeads">
-          <button class="accordion-button collapsed bg-black text-info" type="button" data-bs-toggle="collapse" data-bs-target="#collapseLeads" aria-expanded="false" aria-controls="collapseLeads">
+          <button class="accordion-button bg-black text-info" type="button" data-bs-toggle="collapse" data-bs-target="#collapseLeads" aria-expanded="true" aria-controls="collapseLeads">
             <i class="fa-solid fa-address-card me-2"></i>Leads Overview
           </button>
         </h2>
-        <div id="collapseLeads" class="accordion-collapse" aria-labelledby="headingLeads">
+        <div id="collapseLeads" class="accordion-collapse show" aria-labelledby="headingLeads">
           <div class="accordion-body bg-black text-light border-info">
             <div class="row g-2">
               <div class="col-12"><button class="btn btn-outline-primary w-100 d-flex justify-content-between align-items-center"><span>New Leads:</span><span id="newLeads" class="fw-bold">0</span></button></div>
@@ -168,7 +168,7 @@ body.bg-black .stat-button:active {
     <div class="accordion fade-in-card" id="lowStockAccordion">
       <div class="accordion-item border-info">
         <h2 class="accordion-header" id="headingLowStock">
-          <button class="accordion-button collapsed bg-black text-info" type="button" data-bs-toggle="collapse" data-bs-target="#collapseLowStock" aria-expanded="false" aria-controls="collapseLowStock">
+          <button class="accordion-button bg-black text-info" type="button" data-bs-toggle="collapse" data-bs-target="#collapseLowStock" aria-expanded="true" aria-controls="collapseLowStock">
             <i class="fa-solid fa-boxes-stacked me-2"></i>Low Stock-Order<span id="lowStockCount" class="badge bg-primary rounded-pill ms-auto">0</span>
           </button>
         </h2>
@@ -186,9 +186,9 @@ body.bg-black .stat-button:active {
   <div class="accordion fade-in-card" id="calendarTodayAccordion">
     <div class="accordion-item border-info">
       <h2 class="accordion-header" id="headingToday">
-        <button class="accordion-button collapsed bg-black text-info" type="button"
+        <button class="accordion-button bg-black text-info" type="button"
                 data-bs-toggle="collapse" data-bs-target="#collapseToday"
-                aria-expanded="false" aria-controls="collapseToday">
+                aria-expanded="true" aria-controls="collapseToday">
           <i class="fa-solid fa-calendar-day me-2"></i>Today's Events
           <span id="todayEventCount" class="badge bg-primary rounded-pill ms-auto">0</span>
         </button>
@@ -208,9 +208,9 @@ body.bg-black .stat-button:active {
   <div class="accordion fade-in-card" id="calendarWeekAccordion">
     <div class="accordion-item border-info">
       <h2 class="accordion-header" id="headingWeekEvents">
-        <button class="accordion-button collapsed bg-black text-info" type="button"
+        <button class="accordion-button bg-black text-info" type="button"
                 data-bs-toggle="collapse" data-bs-target="#collapseWeekEvents"
-                aria-expanded="false" aria-controls="collapseWeekEvents">
+                aria-expanded="true" aria-controls="collapseWeekEvents">
           <i class="fa-solid fa-calendar-week me-2"></i>This Week's Events
           <span id="weekEventCount" class="badge bg-primary rounded-pill ms-auto">0</span>
         </button>

@@ -429,12 +429,20 @@ function checkBackendVersion() {
 }
 
 // 🔎 Show debug modal with version info
-function showDebugInfo() {
+async function showDebugInfo() {
+  const modalEl = document.getElementById("debugModal");
+  const modal = new bootstrap.Modal(modalEl);
+
+  // 1️⃣ Show modal immediately so loader inside it is visible
+  modal.show();
+
+  // 2️⃣ Show loader inside modal
   toggleLoader(true);
 
-  // Let the loader actually show before blocking work
-  setTimeout(async () => {
+  // 3️⃣ Give browser a moment to render loader
+  await new Promise(resolve => setTimeout(resolve, 50));
 
+  // 4️⃣ Now do your async work and build debug info
   const debugOutput = {
     status: "⏳ Gathering info...",
     scriptURL: window.scriptURL || "⚠️ Not set",
@@ -448,7 +456,6 @@ function showDebugInfo() {
     ...window.backendMeta
   };
 
-  // ✅ Check iframe
   try {
     const iframeCheck = await checkIframeResources();
     debugOutput.iframeChecks = iframeCheck.checks || [];
@@ -457,12 +464,10 @@ function showDebugInfo() {
     console.warn("❌ Iframe resource check failed:", err);
   }
 
-  // ✅ Check parent
   const parentCheck = checkParentResources();
   debugOutput.parentChecks = parentCheck.checks || [];
   debugOutput.parentTheme = parentCheck.theme || debugOutput.parentTheme;
 
-  // ✅ Backend version check
   try {
     const res = await fetch(`${scriptURL}?action=versionCheck`);
     const data = await res.json();
@@ -496,7 +501,6 @@ function showDebugInfo() {
     : `<li class="list-group-item py-1 text-muted">None</li>`;
 
   const contentHTML = `
-
     <div class="mb-3">
       <div class="card shadow-sm border-success">
         <div class="card-header bg-success text-light py-1">
@@ -590,16 +594,12 @@ function showDebugInfo() {
         </div>
       </div>
     </div>
-
   `;
 
   document.getElementById("debugData").innerHTML = contentHTML;
 
-  // 👉 Hide loader now that content is ready
-    toggleLoader(false);
-    const modal = new bootstrap.Modal(document.getElementById("debugModal"));
-    modal.show();
-  }, 0);
+  // 5️⃣ Hide loader now that content is ready
+  toggleLoader(false);
 }
 
 // Automatically check version on load

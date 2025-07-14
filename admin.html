@@ -148,13 +148,6 @@
 </style>
 
 </head>
-<!-- ⏳ Loader -->
-<div id="loadingOverlay" class="d-none">
-  <div class="text-center">
-    <div class="spinner-border" role="status"></div>
-    <p class="mt-4 text-info">Loading... Please wait...</p>
-  </div>
-</div>
 
 <body class="d-flex flex-column" style="height: 100vh; overflow: hidden;">
 <div id="header-placeholder"></div>
@@ -164,13 +157,20 @@
 <!-- 🔍 Backend Debug Modal -->
 <div class="modal fade" id="debugModal" tabindex="-1" aria-labelledby="debugModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered">
-    <div class="modal-content border border-info shadow-sm rounded-3">
+    <div class="modal-content border border-info shadow-sm rounded-3 position-relative">
+      <!-- Loader overlay INSIDE modal -->
+      <div id="loadingOverlay" class="d-none position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-75 d-flex flex-column justify-content-center align-items-center z-2">
+        <div class="spinner-border text-info" role="status"></div>
+        <p class="mt-3 text-info">Loading... Please wait...</p>
+      </div>
+
       <div class="modal-header py-2 bg-black text-info">
         <h5 class="modal-title fs-6" id="debugModalLabel">🛠️ System Debug Info</h5>
         <button type="button" class="btn-close btn-close-white btn-sm" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
+
       <div class="modal-body bg-light text-black small">
-        <div id="debugData"></div> <!-- ✨ Will be replaced with live content -->
+        <div id="debugData"></div>
       </div>
     </div>
   </div>

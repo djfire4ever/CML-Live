@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Client Manager</title>
 </head>
-<body class="theme-dark">
+<!-- <body class="theme-dark"> -->
+<body class="page-body" style="min-height: 100vh;" data-element="page-bg">
 
 <!-- 💧 Watermark -->
 <div class="watermark"></div>
@@ -84,9 +85,9 @@
 <!-- ➕ Add Client Tab -->
 <div class="tab-pane fade p-2" id="tab-add">
   <form id="addClientForm">
-    <div class="container"></div>
+    <div class="container">
       <div class="row g-3">
-        <div class="col-md-2 col-lg-2"><label>Phone Number</label><input type="tel" class="form-control" id="clientID"></div>
+        <div class="col-md-2 col-lg-2"><label>Phone Number</label><input type="text" class="form-control" id="clientID"></div>
         <div class="col-md-4 col-lg-4"><label>Email</label><input type="email" class="form-control" id="email"></div>
       </div>
       <div class="row g-3">
@@ -100,13 +101,12 @@
       <div class="row g-3">
         <div class="col-md-3 col-lg-3"><label>City</label><input type="text" class="form-control" id="city"></div>
         <div class="col-md-1 col-lg-1"><label>State</label><input type="text" class="form-control" id="state"></div>
-        <div class="col-md-2 col-lg-2 "><label>Zip</label><input type="number" class="form-control" id="zip"></div>
+        <div class="col-md-2 col-lg-2"><label>Zip</label><input type="number" class="form-control" id="zip"></div>
       </div>
       <div class="row g-3 mt-2">
         <div class="col-sm-2"><button type="submit" class="btn">📅 Save</button></div>
       </div>
     </div>
-  </div>
   </form>
 </div>
 
@@ -114,10 +114,10 @@
 <div class="tab-pane fade p-2" id="tab-edit">
   <form id="editClientForm">
     <input type="hidden" id="edit-clientID-hidden">
-    <div class="container"></div>
+    <div class="container">
       <div class="row g-3">
         <div class="col-md-2 col-lg-2"><label>Phone Number</label><input type="text" class="form-control" id="edit-clientID" readonly></div>
-        <div class="col-md-2 col-lg-4"><label>Email</label><input type="email" class="form-control" id="edit-email"></div>
+        <div class="col-md-4 col-lg-4"><label>Email</label><input type="email" class="form-control" id="edit-email"></div>
       </div>
       <div class="row g-3">
         <div class="col-md-2 col-lg-2"><label>First Name</label><input type="text" class="form-control" id="edit-firstName"></div>
@@ -125,18 +125,20 @@
         <div class="col-md-2 col-lg-2"><label>Nick Name</label><input type="text" class="form-control" id="edit-nickName"></div>
       </div>
       <div class="row g-3">
-        <div class="col-md-2 col-lg-6"><label>Street</label><input type="text" class="form-control" id="edit-street"></div>
+        <div class="col-md-6 col-lg-6"><label>Street</label><input type="text" class="form-control" id="edit-street"></div>
       </div>
       <div class="row g-3">
-        <div class="col-md-2 col-lg-3"><label>City</label><input type="text" class="form-control" id="edit-city"></div>
+        <div class="col-md-3 col-lg-3"><label>City</label><input type="text" class="form-control" id="edit-city"></div>
         <div class="col-md-1 col-lg-1"><label>State</label><input type="text" class="form-control" id="edit-state"></div>
         <div class="col-md-2 col-lg-2"><label>Zip</label><input type="number" class="form-control" id="edit-zip"></div>
       </div>
       <div class="row g-3 mt-2">
         <div class="col-sm-2"><button type="button" class="btn" id="save-changes">📅 Save</button></div>
       </div>
+    </div>
   </form>
-  </div>
+</div>
+
 </div> <!-- End tab-content -->
 </div> <!-- End container -->
 
@@ -164,6 +166,13 @@ function setupDynamicNavigation() {
 }
 
 setupDynamicNavigation();
+
+window.addEventListener('DOMContentLoaded', () => {
+  const theme = localStorage.getItem('selectedTheme');
+  if (theme) {
+    document.body.classList.add(theme);
+  }
+});
 
 </script>
 
