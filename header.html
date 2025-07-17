@@ -1,12 +1,12 @@
 <script src="config.js"></script>
 
 <style>
-/* ============ 
-   Dropdown Hover Behavior (Desktop) 
-============== */
+/* ============================
+   Desktop Hover (optional)
+   ============================ */
 @media (min-width: 768px) {
   .navbar-nav .dropdown:hover > .dropdown-menu {
-    display: block;
+    display: block; /* only affects desktop hover */
     animation: fadeIn 0.2s ease-in-out;
   }
 }
@@ -16,9 +16,10 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ============ 
-   Base Dropdown Menu 
-============== */
+/* ============================
+   Base Dropdown Menu Styling
+   (Visual only — no position/display)
+   ============================ */
 .dropdown-menu {
   background-color: var(--bs-black);
   border: 1px solid #444;
@@ -28,9 +29,9 @@
   box-shadow: 0 0 12px rgba(0, 255, 255, 0.05);
 }
 
-/* ============ 
-   Dropdown Item Defaults 
-============== */
+/* ============================
+   Dropdown Item Styling
+   ============================ */
 .dropdown-menu .dropdown-item {
   display: flex;
   align-items: center;
@@ -61,9 +62,9 @@
   color: var(--bs-black);
 }
 
-/* ============ 
-   Icon and Text Spacing (Navbar + Menu) 
-============== */
+/* ============================
+   Icon + Text Alignment
+   ============================ */
 .navbar-nav .nav-link,
 .dropdown-item {
   display: flex;
@@ -77,9 +78,9 @@
   text-align: center;
 }
 
-/* ============ 
-   Centered Nav Support 
-============== */
+/* ============================
+   Centered Nav Support (optional)
+   ============================ */
 .navbar-nav.centered-nav {
   flex-grow: 1;
   justify-content: center;
@@ -89,6 +90,7 @@
   right: 0;
   left: auto;
 }
+
 </style>
 
 <!-- Navigation Tabs -->
@@ -103,121 +105,123 @@
       <span class="navbar-toggler-icon"></span>
     </button>
 
-    <div class="collapse navbar-collapse" id="navmenu">
+  <div class="collapse navbar-collapse" id="navmenu">
       
-      <!-- Centered nav links -->
-      <ul class="navbar-nav centered-nav mx-auto">
+    <!-- Centered nav links -->
+    <ul class="navbar-nav centered-nav mx-auto">
 
-        <!-- Core -->
-        <li class="nav-item">
-          <a href="#" class="nav-link text-info" onclick="loadPage('dashboard.html', this)">
-            <i class="bi bi-speedometer2"></i> Dashboard
-          </a>
-        </li>
+      <!-- Core -->
+      <li class="nav-item">
+        <a href="#" class="nav-link text-info" onclick="loadPage('dashboard.html', this)">
+          <i class="bi bi-speedometer2"></i> Dashboard
+        </a>
+      </li>
 
-        <!-- People -->
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle text-primary" href="#" role="button">
-            <i class="bi bi-people-fill"></i> People
-          </a>
-          <ul class="dropdown-menu">
-            <li>
-              <a class="dropdown-item" href="#" onclick="loadPage('clientmanager.html', this)">
-                <i class="bi bi-person-badge"></i> Clients
-              </a>
-            </li>
-            <li>
-              <a class="dropdown-item" href="#" onclick="loadPage('leads.html', this)">
-                <i class="bi bi-person-lines-fill"></i> Leads
-              </a>
-            </li>
-          </ul>
-        </li>
+      <!-- People -->
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle text-primary" href="#" role="button">
+          <i class="bi bi-people-fill"></i> People
+        </a>
+        <ul class="dropdown-menu">
+          <li>
+            <a class="dropdown-item" href="#" onclick="loadPage('clientmanager.html', this)">
+              <i class="bi bi-person-badge"></i> Clients
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item" href="#" onclick="loadPage('leads.html', this)">
+              <i class="bi bi-person-lines-fill"></i> Leads
+            </a>
+          </li>
+        </ul>
+      </li>
 
-        <!-- Inventory -->
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle text-danger" href="#" role="button">
-            <i class="bi bi-box-seam"></i> Inventory
-          </a>
-          <ul class="dropdown-menu">
-            <li>
-              <a class="dropdown-item" href="#" onclick="loadPage('productmanager.html', this)">
-                <i class="bi bi-box-fill"></i> Products
-              </a>
-            </li>
-            <li>
-              <a class="dropdown-item" href="#" onclick="loadPage('materialmanager.html', this)">
-                <i class="bi bi-archive"></i> Materials
-              </a>
-            </li>
-          </ul>
-        </li>
+      <!-- Inventory -->
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle text-danger" href="#" role="button">
+          <i class="bi bi-box-seam"></i> Inventory
+        </a>
+        <ul class="dropdown-menu">
+          <li>
+            <a class="dropdown-item" href="#" onclick="loadPage('productmanager.html', this)">
+              <i class="bi bi-box-fill"></i> Products
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item" href="#" onclick="loadPage('materialmanager.html', this)">
+              <i class="bi bi-archive"></i> Materials
+            </a>
+          </li>
+        </ul>
+      </li>
 
-        <!-- Sales -->
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle text-warning" href="#" role="button">
-            <i class="bi bi-currency-dollar"></i> Sales
-          </a>
-          <ul class="dropdown-menu">
-            <li>
-              <a class="dropdown-item" href="#" onclick="loadPage('quotemanager.html', this)">
-                <i class="bi bi-clipboard-check"></i> Quotes
-              </a>
-            </li>
-            <li>
-              <a class="dropdown-item" href="#" onclick="loadPage('invoicemanager.html', this)">
-                <i class="bi bi-receipt"></i> Invoices / Payments
-              </a>
-            </li>
-          </ul>
-        </li>
+      <!-- Sales -->
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle text-warning" href="#" role="button">
+          <i class="bi bi-currency-dollar"></i> Sales
+        </a>
+        <ul class="dropdown-menu">
+          <li>
+            <a class="dropdown-item" href="#" onclick="loadPage('quotemanager.html', this)">
+              <i class="bi bi-clipboard-check"></i> Quotes
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item" href="#" onclick="loadPage('invoicemanager.html', this)">
+              <i class="bi bi-receipt"></i> Invoices / Payments
+            </a>
+          </li>
+        </ul>
+      </li>
 
-        <!-- Calendar -->
-        <li class="nav-item">
+      <!-- Calendar -->
+      <li class="nav-item">
           <a href="#" class="nav-link text-white" onclick="loadPage('calendar.html', this)">
             <i class="bi bi-calendar-week"></i> Calendar
           </a>
+      </li>
+    </ul>
+
+    <!-- Utility (left-aligned) -->
+    <ul class="navbar-nav ms-auto align-items-left">
+      <!-- ⚙️ Settings Dropdown -->
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle text-info" href="#" role="button">
+          ⚙️
+        </a>
+          <ul class="dropdown-menu">
+            <li>
+              <a class="dropdown-item" href="#" onclick="loadPage('settings.html', this)">
+                <i class="bi bi-sliders"></i> Settings
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item" href="#" onclick="loadPage('test.html', this)">
+                <i class="bi bi-terminal"></i> Test Mode
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item" href="#" onclick="loadPage('emailmanager.html', this)">
+                <i class="bi bi-envelope-paper"></i> Emails
+              </a>
+            </li>
+          </ul>
         </li>
+
+    <!-- 🔔 Leads Notification -->
+      <li class="nav-item">
+        <button id="leadNotifBtn"
+                class="btn btn-link text-primary position-relative notif-btn"
+                onclick="openLeadsPage()"
+                data-bs-toggle="tooltip"
+                title="No new leads">
+          <i class="bi bi-bell fs-5"></i>
+          <span id="leadNotifBadge"
+                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-black d-none"></span>
+        </button>
+      </li>
+
       </ul>
-
-        <!-- Utility (right-aligned) -->
-        <ul class="navbar-nav ms-auto align-items-center">
-          <li class="nav-item">
-            <button id="leadNotifBtn"
-                    class="btn btn-link text-primary position-relative notif-btn"
-                    onclick="openLeadsPage()"
-                    data-bs-toggle="tooltip"
-                    title="No new leads">
-              <i class="bi bi-bell fs-5"></i>
-              <span id="leadNotifBadge"
-                    class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-black d-none"></span>
-            </button>
-          </li>
-
-          <!-- ⚙️ Settings Dropdown -->
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle text-info" href="#" role="button" title="System Tools" data-bs-toggle="dropdown">
-              ⚙️
-            </a>
-            <ul class="dropdown-menu dropdown-menu-end">
-              <li>
-                <a class="dropdown-item" href="#" onclick="loadPage('settings.html', this)">
-                  <i class="bi bi-sliders"></i> Settings
-                </a>
-              </li>
-              <li>
-                <a class="dropdown-item" href="#" onclick="loadPage('test.html', this)">
-                  <i class="bi bi-terminal"></i> Test Mode
-                </a>
-              </li>
-              <li>
-                <a class="dropdown-item" href="#" onclick="loadPage('emailmanager.html', this)">
-                  <i class="bi bi-envelope-paper"></i> Emails
-                </a>
-              </li>
-            </ul>
-          </li>
-        </ul>
     </div>
   </div>
 </nav>
