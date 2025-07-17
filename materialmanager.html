@@ -236,6 +236,13 @@ function setupDynamicNavigation() {
 
 setupDynamicNavigation();
 
+window.addEventListener('DOMContentLoaded', () => {
+  const theme = localStorage.getItem('selectedTheme');
+  if (theme) {
+    document.body.classList.add(theme);
+  }
+});
+
 </script>
     
 <script src="config.js"></script>
