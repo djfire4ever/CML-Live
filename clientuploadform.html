@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Secure File Upload</title>
+<style>
+  .file-item { margin-bottom: 1rem; }
+  .progress { height: 20px; }
+  .file-note {
+  color: var(--bs-info); /* Bootstrap info color */
+}
+
+</style>
+</head>
+<body class="page-body" style="min-height: 100vh;" data-element="page-bg">
+<div class="watermark"></div>
+<div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3"></div>
+<div id="loadingOverlay" class="d-none">
+  <div class="text-center">
+    <div class="spinner-border" role="status"></div>
+    <p class="mt-4">Loading... Please wait...</p>
+  </div>
+</div>
+
+<div class="container mt-4">
+  <h3 id="greeting">Hi there, please upload up to 3 files. You may add a note for each file.</h3>
+
+  <div id="fileContainer"></div>
+  <button id="addFileBtn" class="btn btn-secondary mb-3">Add File</button>
+
+  <div class="mb-3">
+    <button id="uploadBtn" class="btn btn-primary" disabled>Upload Files</button>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script>
+const maxFiles = 3; 
+let filesArray = [];
+
+// 1️⃣ Greet client using query parameter
+const params = new URLSearchParams(window.location.search);
+const firstName = params.get("firstName") || "there";
+document.getElementById("greeting").textContent =
+  `Hi ${firstName}, please upload up to ${maxFiles} files. You may add a note for each file.`;
+
+// 2️⃣ Enable Upload button once at least one file is added
+function updateUploadButton() {
+  const hasFile = filesArray.some(f => f.file);
+  document.getElementById("uploadBtn").disabled = !hasFile;
+}
+
+// 3️⃣ Add file input
+const fileContainer = document.getElementById("fileContainer");
+document.getElementById("addFileBtn").addEventListener("click", () => {
+  if (filesArray.length >= maxFiles) return showToast(`Max ${maxFiles} files allowed.`, "warning");
+
+  const index = filesArray.length;
+  const div = document.createElement("div");
+  div.className = "file-item";
+  div.innerHTML = `
+    <input type="file" class="form-control mb-1" data-index="${index}">
+    <input type="text" class="form-control file-note" placeholder="Note for this file" data-index="${index}">
+    <div class="progress mt-1"><div class="progress-bar" style="width:0%">Waiting...</div></div>
+  `;
+  fileContainer.appendChild(div);
+
+  filesArray.push({ file: null, note: "" });
+
+  const fileInput = div.querySelector('input[type="file"]');
+  const noteInput = div.querySelector('input[type="text"]');
+
+  fileInput.addEventListener("change", (e) => {
+    filesArray[index].file = e.target.files[0];
+    updateUploadButton();
+  });
+
+  noteInput.addEventListener("input", (e) => {
+    filesArray[index].note = e.target.value;
+  });
+
+  updateUploadButton();
+});
+
+// 4️⃣ Upload files with fully smooth progress
+document.getElementById("uploadBtn").addEventListener("click", async () => {
+  if (!filesArray.length || !filesArray.some(f => f.file)) 
+    return showToast("Add at least one file.", "warning");
+
+  toggleLoader(true);
+  const clientID = params.get("clientID") || "";
+
+  for (let i = 0; i < filesArray.length; i++) {
+    const { file, note } = filesArray[i];
+    if (!file) continue;
+
+    const formData = new FormData();
+    formData.append("system", "clientUploads");
+    formData.append("action", "uploadFile");
+    formData.append("clientID", clientID);
+    formData.append("fileNote", note);
+    formData.append("file", file);
+
+    const progressBar = fileContainer.children[i].querySelector(".progress-bar");
+    progressBar.style.width = "0%";
+    progressBar.textContent = "Uploading...";
+
+    let width = 0;
+    let targetWidth = 90; // initial target before server response
+    const interval = setInterval(() => {
+      if (width < targetWidth) {
+        width += 1;
+        progressBar.style.width = `${width}%`;
+      }
+    }, 50);
+
+    try {
+      const res = await fetch(scriptURL, { method: "POST", body: formData });
+      const result = await res.json();
+
+      // Adjust targetWidth to 100% to finish smoothly
+      targetWidth = 100;
+
+      const finishInterval = setInterval(() => {
+        if (width < targetWidth) {
+          width += 1;
+          progressBar.style.width = `${width}%`;
+        } else {
+          clearInterval(finishInterval);
+          clearInterval(interval);
+
+          if (result.success) {
+            progressBar.classList.remove("bg-danger");
+            progressBar.classList.add("bg-success");
+            progressBar.textContent = "Uploaded ✓";
+            showToast(`File "${file.name}" uploaded successfully!`, "success");
+          } else {
+            progressBar.classList.remove("bg-success");
+            progressBar.classList.add("bg-danger");
+            progressBar.textContent = "Failed ❌";
+            console.error(result.message);
+            showToast(`Failed to upload file: ${file.name}`, "error");
+          }
+        }
+      }, 20); // smaller interval for smoother finish
+
+    } catch (err) {
+      clearInterval(interval);
+      progressBar.style.width = "100%";
+      progressBar.classList.remove("bg-success");
+      progressBar.classList.add("bg-danger");
+      progressBar.textContent = "Error ❌";
+      console.error(err);
+      showToast(`Error uploading file: ${file.name}`, "error");
+    }
+  }
+
+  toggleLoader(false);
+  showToast("All uploads complete.", "success");
+});
+
+// 5️⃣ Apply theme if selected
+window.addEventListener('DOMContentLoaded', () => {
+  const theme = localStorage.getItem('selectedTheme');
+  if (theme) document.body.classList.add(theme);
+});
+
+</script>
+
+</body>
+</html>
