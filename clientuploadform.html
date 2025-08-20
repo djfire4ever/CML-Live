@@ -82,7 +82,6 @@ document.getElementById("addFileBtn").addEventListener("click", () => {
   updateUploadButton();
 });
 
-// 4️⃣ Upload files with fully smooth progress
 document.getElementById("uploadBtn").addEventListener("click", async () => {
   if (!filesArray.length || !filesArray.some(f => f.file)) 
     return showToast("Add at least one file.", "warning");
@@ -106,7 +105,7 @@ document.getElementById("uploadBtn").addEventListener("click", async () => {
     progressBar.textContent = "Uploading...";
 
     let width = 0;
-    let targetWidth = 90; // initial target before server response
+    let targetWidth = 90;
     const interval = setInterval(() => {
       if (width < targetWidth) {
         width += 1;
@@ -117,19 +116,17 @@ document.getElementById("uploadBtn").addEventListener("click", async () => {
     try {
       const res = await fetch(scriptURL, { method: "POST", body: formData });
 
-      // Safe JSON parsing
+      // ✅ Safe JSON parsing
       let result;
       try {
         const text = await res.text();
         result = text ? JSON.parse(text) : {};
       } catch (err) {
-        console.warn("⚠️ Could not parse JSON, using raw text", err);
-        result = { success: false, message: await res.text() };
+        console.warn("⚠️ Could not parse JSON, using fallback", err);
+        result = { success: false, message: text || "No JSON returned" };
       }
 
-      // Adjust targetWidth to 100% to finish smoothly
       targetWidth = 100;
-
       const finishInterval = setInterval(() => {
         if (width < targetWidth) {
           width += 1;
@@ -151,7 +148,7 @@ document.getElementById("uploadBtn").addEventListener("click", async () => {
             showToast(`Failed to upload file: ${file.name}`, "error");
           }
         }
-      }, 20); // smaller interval for smoother finish
+      }, 20);
 
     } catch (err) {
       clearInterval(interval);
