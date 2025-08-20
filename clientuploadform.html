@@ -96,7 +96,7 @@ document.getElementById("uploadBtn").addEventListener("click", async () => {
 
     const formData = new FormData();
     formData.append("system", "clientUploads");
-    formData.append("action", "uploadFile");
+    formData.append("action", "saveUploadedFiles");
     formData.append("clientID", clientID);
     formData.append("fileNote", note);
     formData.append("file", file);

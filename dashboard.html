@@ -45,7 +45,8 @@ body.bg-black .stat-button:active {
 }
 </style>
 </head>
-
+<body class="d-flex flex-column bg-black mt-3">
+<!-- 💧 Watermark -->
 <div class="watermark"></div>
 
 <!-- Simple Loader Overlay -->
@@ -56,7 +57,6 @@ body.bg-black .stat-button:active {
   </div>
 </div>
 
-<body class="d-flex flex-column bg-black mt-3">
 <div class="container">
   <h2 class="text-center text-info">Welcome to Your New Dashboard</h2>
     
@@ -224,6 +224,27 @@ body.bg-black .stat-button:active {
   </div>
 </div>
 
+<!-- Recent Uploads Accordion -->
+<div class="col-md-4 col-lg-4 my-1">
+  <div class="accordion fade-in-card" id="recentUploadsAccordion">
+    <div class="accordion-item border-info">
+      <h2 class="accordion-header" id="headingUploads">
+        <button class="accordion-button bg-black text-info" type="button"
+                data-bs-toggle="collapse" data-bs-target="#collapseUploads"
+                aria-expanded="true" aria-controls="collapseUploads">
+          <i class="fa-solid fa-upload me-2"></i>Recent Uploads
+          <span id="recentUploadCountBadge" class="badge bg-primary rounded-pill ms-auto">0</span>
+        </button>
+      </h2>
+      <div id="collapseUploads" class="accordion-collapse collapse" aria-labelledby="headingUploads">
+        <div class="accordion-body bg-black text-info p-2" style="max-height: 300px; overflow-y: auto;">
+          <ul class="list-group list-group-flush" id="recentUploadsList"></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 </div>
 </div>
 </div>
@@ -249,7 +270,7 @@ async function fetchDashboardStats() {
     // ✅ Low stock
     document.getElementById("lowStockCount").textContent = data.lowStockAlerts || 0;
 
-    // ✅ Optional: render low stock list if you want
+    // ✅ Optional: render low stock list
     if (Array.isArray(data.lowStockDetails)) {
       const list = document.getElementById("lowStockList");
       list.innerHTML = data.lowStockDetails.length
@@ -261,7 +282,7 @@ async function fetchDashboardStats() {
 
     // ✅ Leads breakdown
     if (Array.isArray(data.leads)) {
-      const today = new Date().toLocaleDateString();
+      const todayStr = new Date().toLocaleDateString();
       let newCount = 0, pendingCount = 0, followupCount = 0;
 
       data.leads.forEach(lead => {
@@ -271,13 +292,48 @@ async function fetchDashboardStats() {
         if (status === "pending") pendingCount++;
         if (followUpDate) {
           const followDate = new Date(followUpDate).toLocaleDateString();
-          if (followDate === today) followupCount++;
+          if (followDate === todayStr) followupCount++;
         }
       });
 
       document.getElementById("newLeads").textContent = newCount;
       document.getElementById("pendingLeads").textContent = pendingCount;
       document.getElementById("followupLeads").textContent = followupCount;
+    }
+
+    // ✅ Recent Uploads (Last 7 Days, newest-first)
+    if (Array.isArray(data.clientUploads)) {
+      const uploadsList = document.getElementById("recentUploadsList");
+      const today = new Date();
+      const sevenDaysAgo = new Date(today);
+      sevenDaysAgo.setDate(today.getDate() - 7);
+
+      const recentUploads = data.clientUploads
+        .filter(u => {
+          const uploadDate = u.uploadDate ? new Date(u.uploadDate) : null;
+          return uploadDate && uploadDate >= sevenDaysAgo && uploadDate <= today;
+        })
+        .sort((a, b) => (new Date(b.uploadDate || 0)) - (new Date(a.uploadDate || 0)));
+
+      uploadsList.innerHTML = recentUploads.length
+        ? recentUploads.map(u => {
+            const uploadDateStr = u.uploadDate ? new Date(u.uploadDate).toLocaleString() : "No date";
+            const fileName = u.fileName || "No file uploaded";
+            const fileURL = u.fileURL || "#";
+
+            return `
+              <li class="list-group-item bg-black text-info">
+                <strong>${u.firstName || ""} ${u.lastName || ""}</strong> — ${fileName}
+                <br>
+                <small>${uploadDateStr}</small>
+                ${u.fileURL ? `<a href="${fileURL}" target="_blank" class="ms-2 text-decoration-none text-primary">View</a>` : ""}
+                ${u.fileNote ? `<br><em>Note: ${u.fileNote}</em>` : ""}
+              </li>
+            `;
+          }).join("")
+        : `<li class="list-group-item bg-black text-info">No uploads in the last 7 days.</li>`;
+
+      document.getElementById("recentUploadCountBadge").textContent = recentUploads.length;
     }
 
   } catch (err) {
