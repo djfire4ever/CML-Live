@@ -109,7 +109,15 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (!phone || !email) return showToast("Please select a client first.", "warning");
 
-    const payload = { clientID: phone, firstName, lastName, email, message };
+    const payload = {
+      system: "clientUploads",
+      action: "sendUploadLink",
+      clientID: phone,
+      firstName,
+      lastName,
+      email,
+      message
+    };
 
     try {
       const res = await fetch(`${scriptURL}?action=sendUploadLink`, {
