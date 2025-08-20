@@ -116,7 +116,16 @@ document.getElementById("uploadBtn").addEventListener("click", async () => {
 
     try {
       const res = await fetch(scriptURL, { method: "POST", body: formData });
-      const result = await res.json();
+
+      // Safe JSON parsing
+      let result;
+      try {
+        const text = await res.text();
+        result = text ? JSON.parse(text) : {};
+      } catch (err) {
+        console.warn("⚠️ Could not parse JSON, using raw text", err);
+        result = { success: false, message: await res.text() };
+      }
 
       // Adjust targetWidth to 100% to finish smoothly
       targetWidth = 100;
