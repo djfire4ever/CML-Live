@@ -7,7 +7,7 @@
     .file-item { margin-bottom: 1rem; }
     .progress { height: 20px; }
     .file-note { color: var(--bs-info); }
-    /* #loadingOverlay {
+    #loadingOverlay {
       position: fixed;
       inset: 0;
       background: rgba(255, 255, 255, 0.8);
@@ -15,7 +15,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-    } */
+    }
   </style>
 </head>
 <body class="page-body" style="min-height:100vh;" data-element="page-bg">
@@ -110,60 +110,83 @@
       updateUploadButton();
     });
 
-    // Upload files
-    document.getElementById("uploadBtn").addEventListener("click", async () => {
-      if (!filesArray.some(f => f.file)) {
-        return showToast("Add at least one file.", "warning");
+document.getElementById("uploadBtn").addEventListener("click", async () => {
+  if (!filesArray.some(f => f.file)) {
+    console.warn("No files selected");
+    return showToast("Add at least one file.", "warning");
+  }
+
+  toggleLoader(true);
+
+  for (let i = 0; i < filesArray.length; i++) {
+    const { file, note } = filesArray[i];
+    if (!file) continue;
+
+    const progressBar = document.querySelectorAll(".progress-bar")[i];
+    progressBar.style.width = "0%";
+    progressBar.textContent = "Uploading...";
+
+    console.group(`Uploading file #${i+1}: ${file.name}`);
+    console.log("File object:", file);
+    console.log("File note:", note);
+
+    try {
+      const formData = new FormData();
+      formData.append("clientID", clientID);
+      formData.append("firstName", firstName);
+      formData.append("lastName", lastName);
+      formData.append("email", email);
+      formData.append("fileNote", note);
+      formData.append("file", file, file.name);
+
+      console.log("FormData keys:");
+      for (const pair of formData.entries()) {
+        console.log(pair[0], pair[1]);
       }
 
-      toggleLoader(true);
+      const res = await fetch(scriptURL, {
+        method: "POST",
+        body: formData,
+      });
 
-      for (let i = 0; i < filesArray.length; i++) {
-        const { file, note } = filesArray[i];
-        if (!file) continue;
+      console.log("Fetch completed, status:", res.status, res.statusText);
 
-        const formData = new FormData();
-        formData.append("system", "clientUploads");
-        formData.append("action", "saveUploadedFiles");
-        formData.append("clientID", clientID);
-        formData.append("lastName", lastName);
-        formData.append("email", email);
-        formData.append("fileNote", note);
-        formData.append("file", file);
+      const text = await res.text();
+      console.log("Server response text:", text);
 
-        const progressBar = document.querySelectorAll(".progress-bar")[i];
-        progressBar.style.width = "0%";
-        progressBar.textContent = "Uploading...";
-
-        try {
-          const res = await fetch(scriptURL, { method: "POST", body: formData });
-          const text = await res.text();
-          let result;
-          try {
-            result = JSON.parse(text);
-          } catch {
-            result = { success: false, message: "Invalid server response." };
-          }
-
-          if (result.success) {
-            progressBar.classList.replace("bg-danger", "bg-success");
-            progressBar.textContent = "Uploaded ✓";
-            showToast(`File "${file.name}" uploaded successfully!`, "success");
-          } else {
-            progressBar.classList.add("bg-danger");
-            progressBar.textContent = "Failed ❌";
-            showToast(`Failed to upload file: ${file.name}`, "danger");
-          }
-        } catch (err) {
-          progressBar.classList.add("bg-danger");
-          progressBar.textContent = "Error ❌";
-          showToast(`Error uploading file: ${file.name}`, "danger");
-        }
+      let result;
+      try {
+        result = JSON.parse(text);
+      } catch (err) {
+        console.error("Failed to parse JSON:", err);
+        result = { success: false, message: "Invalid server response." };
       }
 
-      toggleLoader(false);
-      showToast("All uploads complete.", "success");
-    });
+      if (result.success) {
+        console.log("Upload success:", result);
+        progressBar.classList.replace("bg-danger", "bg-success");
+        progressBar.textContent = "Uploaded ✓";
+        showToast(`File "${file.name}" uploaded successfully!`, "success");
+      } else {
+        console.warn("Upload failed:", result);
+        progressBar.classList.add("bg-danger");
+        progressBar.textContent = "Failed ❌";
+        showToast(`Failed to upload file: ${file.name}`, "danger");
+      }
+
+    } catch (err) {
+      console.error("Fetch error:", err);
+      progressBar.classList.add("bg-danger");
+      progressBar.textContent = "Error ❌";
+      showToast(`Error uploading file: ${file.name}`, "danger");
+    }
+    console.groupEnd();
+  }
+
+  toggleLoader(false);
+  console.log("All uploads complete");
+  showToast("All uploads complete.", "success");
+});
 
     // Apply theme
     window.addEventListener('DOMContentLoaded', () => {
