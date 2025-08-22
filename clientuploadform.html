@@ -110,8 +110,11 @@
       updateUploadButton();
     });
 
+// Upload files button
+// Upload files with full logging
 document.getElementById("uploadBtn").addEventListener("click", async () => {
   if (!filesArray.some(f => f.file)) {
+    console.warn("⚠️ No files selected for upload.");
     return showToast("Add at least one file.", "warning");
   }
 
@@ -121,7 +124,7 @@ document.getElementById("uploadBtn").addEventListener("click", async () => {
     const { file, note } = filesArray[i];
     if (!file) continue;
 
-    console.log(`Uploading file #${i + 1}: ${file.name}`);
+    console.group(`📤 Uploading file #${i + 1}: ${file.name}`);
     console.log("File object:", file);
     console.log("File note:", note);
 
@@ -135,50 +138,142 @@ document.getElementById("uploadBtn").addEventListener("click", async () => {
     formData.append("fileNote", note);
     formData.append("file", file);
 
-    console.log("FormData keys:");
-    for (let key of formData.keys()) {
-      console.log(key, formData.get(key));
+    console.log("FormData keys/values:");
+    for (const pair of formData.entries()) {
+      console.log(pair[0], pair[1]);
     }
 
     const progressBar = document.querySelectorAll(".progress-bar")[i];
-    progressBar.style.width = "0%";
-    progressBar.textContent = "Uploading...";
+    if (progressBar) {
+      progressBar.style.width = "0%";
+      progressBar.textContent = "Uploading...";
+    }
 
     try {
       const res = await fetch(scriptURL, { method: "POST", body: formData });
-      console.log(`Fetch completed, status: ${res.status}`);
+      console.log("Fetch completed, status:", res.status, res.statusText);
 
-      const text = await res.text();
-      console.log("Server response text:", text);
+      const rawText = await res.text();
+      console.log("Raw server response text:", rawText);
 
       let result;
       try {
-        result = JSON.parse(text);
-      } catch {
-        result = { success: false, message: "Invalid server response." };
+        result = JSON.parse(rawText);
+        console.log("Parsed server response JSON:", result);
+      } catch (parseErr) {
+        console.error("❌ Failed to parse JSON response:", parseErr.message);
+        result = { success: false, message: "Invalid JSON format", details: parseErr.message, rawText };
       }
 
       if (result.success) {
-        progressBar.classList.replace("bg-danger", "bg-success");
-        progressBar.textContent = "Uploaded ✓";
+        console.log(`✅ File "${file.name}" uploaded successfully.`);
+        if (progressBar) {
+          progressBar.classList.replace("bg-danger", "bg-success");
+          progressBar.textContent = "Uploaded ✓";
+        }
         showToast(`File "${file.name}" uploaded successfully!`, "success");
       } else {
-        progressBar.classList.add("bg-danger");
-        progressBar.textContent = "Failed ❌";
-        console.error("Upload failed for file:", file.name, result);
+        console.warn(`❌ Upload failed for file: ${file.name}`, result);
+        if (progressBar) {
+          progressBar.classList.add("bg-danger");
+          progressBar.textContent = "Failed ❌";
+        }
         showToast(`Failed to upload file: ${file.name}`, "danger");
       }
     } catch (err) {
-      progressBar.classList.add("bg-danger");
-      progressBar.textContent = "Error ❌";
-      console.error("Error uploading file:", file.name, err);
+      console.error(`❌ Error uploading file: ${file.name}`, err);
+      if (progressBar) {
+        progressBar.classList.add("bg-danger");
+        progressBar.textContent = "Error ❌";
+      }
       showToast(`Error uploading file: ${file.name}`, "danger");
     }
+
+    console.groupEnd();
   }
 
   toggleLoader(false);
+  console.log("All uploads complete.");
   showToast("All uploads complete.", "success");
 });
+
+// Simulate a file upload entirely in-browser
+async function testManualUpload() {
+  console.log("🔹 Starting manual in-browser upload test");
+
+  // Create a tiny test file in memory
+  const testFile = new File(["Hello world from manual test!"], "manual-test.txt", {
+    type: "text/plain"
+  });
+
+  // Fake note
+  const testNote = "This is a manual test note";
+
+  // Add file to your filesArray for uploadBtn loop
+  const tempFilesArray = [{ file: testFile, note: testNote }];
+
+  // Loop through files just like uploadBtn
+  for (let i = 0; i < tempFilesArray.length; i++) {
+    const { file, note } = tempFilesArray[i];
+    console.group(`Manual test file #${i + 1}: ${file.name}`);
+    console.log("File object:", file);
+    console.log("File note:", note);
+
+    const formData = new FormData();
+    formData.append("system", "clientUploads");
+    formData.append("action", "saveUploadedFiles");
+    formData.append("clientID", "TEST-MANUAL-001");
+    formData.append("firstName", "Felix");
+    formData.append("lastName", "Client");
+    formData.append("email", "felix@example.com");
+    formData.append("fileNote", note);
+    formData.append("file", file);
+
+    // Debug: list FormData keys and values
+    console.log("FormData keys/values:");
+    for (let pair of formData.entries()) {
+      console.log(pair[0], pair[1]);
+    }
+
+    try {
+      const res = await fetch(scriptURL, {
+        method: "POST",
+        body: formData
+      });
+
+      console.log("Fetch completed, status:", res.status);
+      const text = await res.text();
+      console.log("Raw server response text:", text);
+
+      let result;
+      try {
+        const firstBrace = text.indexOf("{");
+        const lastBrace = text.lastIndexOf("}");
+        if (firstBrace >= 0 && lastBrace >= 0) {
+          const jsonStr = text.substring(firstBrace, lastBrace + 1);
+          result = JSON.parse(jsonStr);
+        } else {
+          throw new Error("No JSON braces found in response");
+        }
+      } catch (err) {
+        console.error("JSON parse error:", err, "Raw text:", text);
+        result = { success: false, message: "Invalid JSON from server", details: err.message };
+      }
+
+      if (result.success) {
+        console.log(`Manual test file "${file.name}" uploaded successfully!`, result);
+      } else {
+        console.error(`Manual test file "${file.name}" failed:`, result);
+      }
+    } catch (err) {
+      console.error("Fetch error during manual test:", err);
+    }
+
+    console.groupEnd();
+  }
+
+  console.log("🔹 Manual in-browser upload test complete");
+}
 
     // Apply theme
     window.addEventListener('DOMContentLoaded', () => {
