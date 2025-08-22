@@ -112,7 +112,7 @@
 
 document.getElementById("uploadBtn").addEventListener("click", async () => {
   if (!filesArray.some(f => f.file)) {
-    console.warn("No files selected");
+    console.warn("No files added.");
     return showToast("Add at least one file.", "warning");
   }
 
@@ -122,34 +122,35 @@ document.getElementById("uploadBtn").addEventListener("click", async () => {
     const { file, note } = filesArray[i];
     if (!file) continue;
 
-    const progressBar = document.querySelectorAll(".progress-bar")[i];
-    progressBar.style.width = "0%";
-    progressBar.textContent = "Uploading...";
-
-    console.group(`Uploading file #${i+1}: ${file.name}`);
+    console.log(`Uploading file #${i + 1}: ${file.name}`);
     console.log("File object:", file);
     console.log("File note:", note);
 
+    const formData = new FormData();
+    formData.append("system", "clientUploads");
+    formData.append("action", "saveUploadedFiles");
+    formData.append("clientID", clientID);
+    formData.append("firstName", firstName);
+    formData.append("lastName", lastName);
+    formData.append("email", email);
+    formData.append("fileNote", note);
+    formData.append("file", file);
+
+    // Log all FormData entries
+    console.log("FormData keys:");
+    for (const pair of formData.entries()) {
+      console.log(pair[0], pair[1]);
+    }
+
     try {
-      const formData = new FormData();
-      formData.append("clientID", clientID);
-      formData.append("firstName", firstName);
-      formData.append("lastName", lastName);
-      formData.append("email", email);
-      formData.append("fileNote", note);
-      formData.append("file", file, file.name);
-
-      console.log("FormData keys:");
-      for (const pair of formData.entries()) {
-        console.log(pair[0], pair[1]);
-      }
-
       const res = await fetch(scriptURL, {
         method: "POST",
         body: formData,
+        // keep credentials to avoid CORS issues
+        credentials: "same-origin",
       });
 
-      console.log("Fetch completed, status:", res.status, res.statusText);
+      console.log("Fetch completed, status:", res.status);
 
       const text = await res.text();
       console.log("Server response text:", text);
@@ -158,33 +159,24 @@ document.getElementById("uploadBtn").addEventListener("click", async () => {
       try {
         result = JSON.parse(text);
       } catch (err) {
-        console.error("Failed to parse JSON:", err);
-        result = { success: false, message: "Invalid server response." };
+        result = { success: false, message: "Invalid JSON format", details: err.message };
       }
 
       if (result.success) {
-        console.log("Upload success:", result);
-        progressBar.classList.replace("bg-danger", "bg-success");
-        progressBar.textContent = "Uploaded ✓";
+        console.log(`Upload succeeded for file: ${file.name}`);
         showToast(`File "${file.name}" uploaded successfully!`, "success");
       } else {
-        console.warn("Upload failed:", result);
-        progressBar.classList.add("bg-danger");
-        progressBar.textContent = "Failed ❌";
+        console.error(`Upload failed for file: ${file.name}`, result);
         showToast(`Failed to upload file: ${file.name}`, "danger");
       }
-
     } catch (err) {
-      console.error("Fetch error:", err);
-      progressBar.classList.add("bg-danger");
-      progressBar.textContent = "Error ❌";
+      console.error(`Error uploading file: ${file.name}`, err);
       showToast(`Error uploading file: ${file.name}`, "danger");
     }
-    console.groupEnd();
   }
 
   toggleLoader(false);
-  console.log("All uploads complete");
+  console.log("All uploads complete.");
   showToast("All uploads complete.", "success");
 });
 
