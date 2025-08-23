@@ -1,54 +1,47 @@
-<input type="file" id="fileInput">
-<button id="uploadBtn">Upload</button>
-<div id="status"></div>
+<script src="config.js"></script>
 
-<script src="config.js"></script> <!-- your global config with scriptURL -->
+<input type="file" id="f">
+<textarea id="noteInput" placeholder="Add a note (optional)"></textarea>
+<button id="b">Upload</button>
 
 <script>
-const uploadBtn = document.getElementById("uploadBtn");
-const fileInput = document.getElementById("fileInput");
-const statusDiv = document.getElementById("status");
+const b = document.getElementById("b");
+const f = document.getElementById("f");
+const noteInput = document.getElementById("noteInput");
 
-uploadBtn.addEventListener("click", async () => {
-  const file = fileInput.files[0];
-  if (!file) {
-    console.warn("No file selected");
-    statusDiv.textContent = "❌ Please select a file.";
-    return;
-  }
+b.addEventListener("click", async () => {
+  if (!f.files.length) return console.warn("No file selected");
 
-  const formData = new FormData();
-  formData.append("uploadedFile", file);   // must be 'uploadedFile'
-  formData.append("system", "clientUploads");
-  formData.append("action", "saveUploadedFiles");
+  const fd = new FormData();
+  fd.append("uploadedFile", f.files[0]);
+  fd.append("clientID", "12345");      // or dynamically set
+  fd.append("firstName", "Felix");     // or dynamically set
+  fd.append("fileNote", noteInput.value);
+  fd.append("system", "clientUploads");
+  fd.append("action", "saveUploadedFiles");
 
   try {
-    console.log("📤 Uploading file…", file.name);
-    const res = await fetch(scriptURL, { method: "POST", body: formData });
+    console.log("📤 Uploading file…", f.files[0].name);
+    const res = await fetch(scriptURL, { method: "POST", body: fd });
     const text = await res.text();
-
-    // Log the raw server response
     console.log("📡 Server raw response:", text);
 
-    // Try to parse JSON safely
     let result;
     try {
-      result = JSON.parse(text);
-    } catch (err) {
-      result = { success: false, message: "⚠️ Invalid JSON from server", details: err.message };
+      const firstBrace = text.indexOf("{");
+      const lastBrace = text.lastIndexOf("}");
+      result = JSON.parse(text.substring(firstBrace, lastBrace + 1));
+    } catch {
+      result = { success: false, message: "Invalid JSON from server" };
     }
 
     if (result.success) {
-      console.log(`✅ File uploaded successfully: ${file.name}`, result);
-      statusDiv.textContent = `✅ Uploaded: ${file.name}`;
+      console.log(`✅ Upload successful: ${f.files[0].name}`, result);
     } else {
       console.error(`❌ Upload failed:`, result);
-      statusDiv.textContent = `❌ Upload failed: ${result.message}`;
     }
-
   } catch (err) {
     console.error("Upload error:", err);
-    statusDiv.textContent = `❌ Upload error: ${err.message}`;
   }
 });
 </script>
