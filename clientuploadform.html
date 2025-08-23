@@ -111,89 +111,131 @@
     });
 
 // Upload files button
-document.getElementById("uploadBtn").addEventListener("click", async () => {
-  console.log("📤 Upload button clicked");
-
-  const fileInput = document.getElementById("fileInput");
-  const noteInput = document.getElementById("fileNote");
-  const files = fileInput.files;
-
-  if (!files.length) {
-    console.warn("⚠️ No file selected.");
-    alert("Please select a file before uploading.");
+document.addEventListener("DOMContentLoaded", () => {
+  const uploadBtn = document.getElementById("uploadBtn");
+  if (!uploadBtn) {
+    console.error("🚨 uploadBtn element not found in DOM.");
     return;
   }
 
-  const fileNote = noteInput.value || "";
-  console.log(`📝 File note entered: "${fileNote}"`);
+  uploadBtn.addEventListener("click", async () => {
+    console.log("📤 Upload button clicked");
 
-  // Loop through files
-  for (let i = 0; i < files.length; i++) {
-    const file = files[i];
-    console.group(`📦 Preparing upload for file #${i + 1}: ${file.name}`);
+    // Get elements safely
+    const fileInput = document.getElementById("fileInput");
+    const noteInput = document.getElementById("fileNote");
+    const clientIDEl = document.getElementById("clientID");
+    const firstNameEl = document.getElementById("firstName");
+    const lastNameEl = document.getElementById("lastName");
+    const emailEl = document.getElementById("email");
 
-    console.log("📑 File object details:", {
-      name: file.name,
-      size: file.size,
-      type: file.type,
-      lastModified: file.lastModified,
-      lastModifiedDate: file.lastModifiedDate
-    });
-
-    try {
-      const formData = new FormData();
-      formData.append("system", "clientUploads");
-      formData.append("action", "saveUploadedFiles");
-      formData.append("clientID", document.getElementById("clientID").value);
-      formData.append("firstName", document.getElementById("firstName").value);
-      formData.append("lastName", document.getElementById("lastName").value);
-      formData.append("email", document.getElementById("email").value);
-      formData.append("fileNote", fileNote);
-      formData.append("file", file);
-
-      // 🔎 Inspect FormData entries
-      console.log("🗂️ FormData keys/values:");
-      for (let [key, val] of formData.entries()) {
-        if (val instanceof File) {
-          console.log(`   ${key}: File { name: ${val.name}, size: ${val.size}, type: ${val.type} }`);
-        } else {
-          console.log(`   ${key}: ${val}`);
-        }
+    // Verify existence
+    const requiredEls = { fileInput, noteInput, clientIDEl, firstNameEl, lastNameEl, emailEl };
+    for (const [key, el] of Object.entries(requiredEls)) {
+      if (!el) {
+        console.error(`🚨 Missing required element: ${key}`);
       }
+    }
 
-      console.log("🚀 Sending fetch request to web app…");
-      const response = await fetch(YOUR_WEBAPP_URL, {
-        method: "POST",
-        body: formData
+    if (!fileInput || !fileInput.files) {
+      console.error("🚨 fileInput missing or not usable.");
+      return;
+    }
+
+    const files = fileInput.files;
+    const fileNote = noteInput ? noteInput.value : "";
+    console.log(`📝 File note: "${fileNote}"`);
+
+    if (!files.length) {
+      console.warn("⚠️ No file selected.");
+      alert("Please select a file before uploading.");
+      return;
+    }
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      console.group(`📦 Uploading file #${i + 1}: ${file.name}`);
+
+      console.log("📑 File object:", {
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        lastModified: file.lastModified,
+        lastModifiedDate: file.lastModifiedDate
       });
 
-      console.log("📡 Fetch completed.");
-      console.log("   Status:", response.status, response.statusText);
-      console.log("   Headers:", Object.fromEntries(response.headers.entries()));
-
-      const rawText = await response.text();
-      console.log("📜 Raw server response text:", rawText);
-
-      let parsed;
       try {
-        parsed = JSON.parse(rawText);
-        console.log("✅ Parsed server response JSON:", parsed);
+        const formData = new FormData();
+        formData.append("system", "clientUploads");
+        formData.append("action", "saveUploadedFiles");
+        formData.append("clientID", clientIDEl ? clientIDEl.value : "");
+        formData.append("firstName", firstNameEl ? firstNameEl.value : "");
+        formData.append("lastName", lastNameEl ? lastNameEl.value : "");
+        formData.append("email", emailEl ? emailEl.value : "");
+        formData.append("fileNote", fileNote);
+        formData.append("file", file);
+
+        // 🔎 Inspect FormData entries
+        console.log("🗂️ FormData entries:");
+        for (let [key, val] of formData.entries()) {
+          if (val instanceof File) {
+            console.log(`   ${key}: File { name: ${val.name}, size: ${val.size}, type: ${val.type} }`);
+          } else {
+            console.log(`   ${key}: ${val}`);
+          }
+        }
+
+        // 🧨 Build multipart preview
+        const boundary = "----WebKitFormBoundaryDEBUG";
+        let multipartPreview = "";
+        for (let [key, val] of formData.entries()) {
+          multipartPreview += `--${boundary}\r\n`;
+          if (val instanceof File) {
+            multipartPreview += `Content-Disposition: form-data; name="${key}"; filename="${val.name}"\r\n`;
+            multipartPreview += `Content-Type: ${val.type || "application/octet-stream"}\r\n\r\n`;
+            multipartPreview += `[Binary content omitted: ${val.size} bytes]\r\n`;
+          } else {
+            multipartPreview += `Content-Disposition: form-data; name="${key}"\r\n\r\n${val}\r\n`;
+          }
+        }
+        multipartPreview += `--${boundary}--`;
+        console.log("🧾 Multipart Payload Preview:\n", multipartPreview);
+
+        // 🚀 Send fetch
+        console.log("🚀 Sending fetch request…");
+        const response = await fetch(YOUR_WEBAPP_URL, {
+          method: "POST",
+          body: formData
+        });
+
+        console.log("📡 Fetch completed.");
+        console.log("   Status:", response.status, response.statusText);
+        console.log("   Headers:", Object.fromEntries(response.headers.entries()));
+
+        const rawText = await response.text();
+        console.log("📜 Raw server response:", rawText);
+
+        let parsed;
+        try {
+          parsed = JSON.parse(rawText);
+          console.log("✅ Parsed server response JSON:", parsed);
+        } catch (err) {
+          console.error("❌ Could not parse response as JSON:", err.message);
+        }
+
+        if (parsed && parsed.success) {
+          console.log("🎉 Upload succeeded:", file.name);
+        } else {
+          console.error("❌ Upload failed:", file.name, parsed || rawText);
+        }
+
       } catch (err) {
-        console.error("❌ Failed to parse server response as JSON:", err.message);
+        console.error("💥 Upload error for file:", file.name, err);
+      } finally {
+        console.groupEnd();
       }
-
-      if (parsed && parsed.success) {
-        console.log("🎉 Upload succeeded for file:", file.name);
-      } else {
-        console.error("❌ Upload failed for file:", file.name, parsed || rawText);
-      }
-
-    } catch (err) {
-      console.error("💥 Upload error for file:", file.name, err);
-    } finally {
-      console.groupEnd();
     }
-  }
+  });
 });
 
 // Simulate a file upload entirely in-browser
