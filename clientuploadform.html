@@ -111,90 +111,89 @@
     });
 
 // Upload files button
-// Upload files with full logging
 document.getElementById("uploadBtn").addEventListener("click", async () => {
-  if (!filesArray.some(f => f.file)) {
-    console.warn("⚠️ No files selected for upload.");
-    return showToast("Add at least one file.", "warning");
+  console.log("📤 Upload button clicked");
+
+  const fileInput = document.getElementById("fileInput");
+  const noteInput = document.getElementById("fileNote");
+  const files = fileInput.files;
+
+  if (!files.length) {
+    console.warn("⚠️ No file selected.");
+    alert("Please select a file before uploading.");
+    return;
   }
 
-  toggleLoader(true);
+  const fileNote = noteInput.value || "";
+  console.log(`📝 File note entered: "${fileNote}"`);
 
-  for (let i = 0; i < filesArray.length; i++) {
-    const { file, note } = filesArray[i];
-    if (!file) continue;
+  // Loop through files
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    console.group(`📦 Preparing upload for file #${i + 1}: ${file.name}`);
 
-    console.group(`📤 Uploading file #${i + 1}: ${file.name}`);
-    console.log("File object:", file);
-    console.log("File note:", note);
-
-    const formData = new FormData();
-    formData.append("system", "clientUploads");
-    formData.append("action", "saveUploadedFiles");
-    formData.append("clientID", clientID);
-    formData.append("firstName", firstName);
-    formData.append("lastName", lastName);
-    formData.append("email", email);
-    formData.append("fileNote", note);
-    formData.append("file", file);
-
-    console.log("FormData keys/values:");
-    for (const pair of formData.entries()) {
-      console.log(pair[0], pair[1]);
-    }
-
-    const progressBar = document.querySelectorAll(".progress-bar")[i];
-    if (progressBar) {
-      progressBar.style.width = "0%";
-      progressBar.textContent = "Uploading...";
-    }
+    console.log("📑 File object details:", {
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      lastModified: file.lastModified,
+      lastModifiedDate: file.lastModifiedDate
+    });
 
     try {
-      const res = await fetch(scriptURL, { method: "POST", body: formData });
-      console.log("Fetch completed, status:", res.status, res.statusText);
+      const formData = new FormData();
+      formData.append("system", "clientUploads");
+      formData.append("action", "saveUploadedFiles");
+      formData.append("clientID", document.getElementById("clientID").value);
+      formData.append("firstName", document.getElementById("firstName").value);
+      formData.append("lastName", document.getElementById("lastName").value);
+      formData.append("email", document.getElementById("email").value);
+      formData.append("fileNote", fileNote);
+      formData.append("file", file);
 
-      const rawText = await res.text();
-      console.log("Raw server response text:", rawText);
+      // 🔎 Inspect FormData entries
+      console.log("🗂️ FormData keys/values:");
+      for (let [key, val] of formData.entries()) {
+        if (val instanceof File) {
+          console.log(`   ${key}: File { name: ${val.name}, size: ${val.size}, type: ${val.type} }`);
+        } else {
+          console.log(`   ${key}: ${val}`);
+        }
+      }
 
-      let result;
+      console.log("🚀 Sending fetch request to web app…");
+      const response = await fetch(YOUR_WEBAPP_URL, {
+        method: "POST",
+        body: formData
+      });
+
+      console.log("📡 Fetch completed.");
+      console.log("   Status:", response.status, response.statusText);
+      console.log("   Headers:", Object.fromEntries(response.headers.entries()));
+
+      const rawText = await response.text();
+      console.log("📜 Raw server response text:", rawText);
+
+      let parsed;
       try {
-        result = JSON.parse(rawText);
-        console.log("Parsed server response JSON:", result);
-      } catch (parseErr) {
-        console.error("❌ Failed to parse JSON response:", parseErr.message);
-        result = { success: false, message: "Invalid JSON format", details: parseErr.message, rawText };
+        parsed = JSON.parse(rawText);
+        console.log("✅ Parsed server response JSON:", parsed);
+      } catch (err) {
+        console.error("❌ Failed to parse server response as JSON:", err.message);
       }
 
-      if (result.success) {
-        console.log(`✅ File "${file.name}" uploaded successfully.`);
-        if (progressBar) {
-          progressBar.classList.replace("bg-danger", "bg-success");
-          progressBar.textContent = "Uploaded ✓";
-        }
-        showToast(`File "${file.name}" uploaded successfully!`, "success");
+      if (parsed && parsed.success) {
+        console.log("🎉 Upload succeeded for file:", file.name);
       } else {
-        console.warn(`❌ Upload failed for file: ${file.name}`, result);
-        if (progressBar) {
-          progressBar.classList.add("bg-danger");
-          progressBar.textContent = "Failed ❌";
-        }
-        showToast(`Failed to upload file: ${file.name}`, "danger");
+        console.error("❌ Upload failed for file:", file.name, parsed || rawText);
       }
+
     } catch (err) {
-      console.error(`❌ Error uploading file: ${file.name}`, err);
-      if (progressBar) {
-        progressBar.classList.add("bg-danger");
-        progressBar.textContent = "Error ❌";
-      }
-      showToast(`Error uploading file: ${file.name}`, "danger");
+      console.error("💥 Upload error for file:", file.name, err);
+    } finally {
+      console.groupEnd();
     }
-
-    console.groupEnd();
   }
-
-  toggleLoader(false);
-  console.log("All uploads complete.");
-  showToast("All uploads complete.", "success");
 });
 
 // Simulate a file upload entirely in-browser
