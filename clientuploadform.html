@@ -121,18 +121,23 @@ document.addEventListener("DOMContentLoaded", () => {
   uploadBtn.addEventListener("click", async () => {
     console.log("📤 Upload button clicked");
 
+    // Disable the button while processing
+    uploadBtn.disabled = true;
+
     if (!filesArray.length || !filesArray.some(f => f.file)) {
-      console.warn("⚠️ No files to upload.");
+      console.warn("⚠️ No files selected for upload.");
       alert("Please add at least one file before uploading.");
+      uploadBtn.disabled = false;
       return;
     }
+
+    toggleLoader(true);
 
     for (let i = 0; i < filesArray.length; i++) {
       const { file, note } = filesArray[i];
       if (!file) continue;
 
       console.group(`📦 Uploading file #${i + 1}: ${file.name}`);
-
       console.log("📑 File object:", {
         name: file.name,
         size: file.size,
@@ -140,6 +145,7 @@ document.addEventListener("DOMContentLoaded", () => {
         lastModified: file.lastModified,
         lastModifiedDate: file.lastModifiedDate
       });
+      console.log("📝 File note:", note);
 
       try {
         const formData = new FormData();
@@ -149,10 +155,10 @@ document.addEventListener("DOMContentLoaded", () => {
         formData.append("firstName", firstName);
         formData.append("lastName", lastName);
         formData.append("email", email);
-        formData.append("fileNote", note || "");
+        formData.append("fileNote", note);
         formData.append("file", file);
 
-        // 🔎 Debug FormData
+        // Log all FormData entries
         console.log("🗂️ FormData entries:");
         for (let [key, val] of formData.entries()) {
           if (val instanceof File) {
@@ -162,14 +168,12 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         }
 
-        // 🚀 Send fetch
         console.log("🚀 Sending fetch request…");
-        const response = await fetch(scriptURL, {
-          method: "POST",
-          body: formData
-        });
+        const response = await fetch(scriptURL, { method: "POST", body: formData });
 
-        console.log("📡 Fetch completed. Status:", response.status, response.statusText);
+        console.log("📡 Fetch completed");
+        console.log("   Status:", response.status, response.statusText);
+        console.log("   Headers:", Object.fromEntries(response.headers.entries()));
 
         const rawText = await response.text();
         console.log("📜 Raw server response:", rawText);
@@ -177,23 +181,29 @@ document.addEventListener("DOMContentLoaded", () => {
         let parsed;
         try {
           parsed = JSON.parse(rawText);
-          console.log("✅ Parsed server response JSON:", parsed);
+          console.log("✅ Parsed JSON response:", parsed);
         } catch (err) {
-          console.error("❌ Could not parse response as JSON:", err.message);
+          console.error("❌ Failed to parse JSON:", err.message, "Raw text:", rawText);
         }
 
         if (parsed && parsed.success) {
           console.log("🎉 Upload succeeded:", file.name);
+          showToast(`File uploaded: ${file.name}`, "success");
         } else {
           console.error("❌ Upload failed:", file.name, parsed || rawText);
+          showToast(`Upload failed: ${file.name}`, "danger");
         }
 
       } catch (err) {
         console.error("💥 Upload error for file:", file.name, err);
+        showToast(`Error uploading: ${file.name}`, "danger");
       } finally {
         console.groupEnd();
       }
     }
+
+    toggleLoader(false);
+    updateUploadButton(); // Re-enable button if there are still files
   });
 });
 
