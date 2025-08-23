@@ -2,293 +2,63 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Client File Upload</title>
-  <style>
-    .file-item { margin-bottom: 1rem; }
-    .progress { height: 20px; }
-    .file-note { color: var(--bs-info); }
-    #loadingOverlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(255, 255, 255, 0.8);
-      z-index: 1050;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-  </style>
+  <title>Client Upload</title>
 </head>
-<body class="page-body" style="min-height:100vh;" data-element="page-bg">
-  <div class="watermark"></div>
-  <div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3"></div>
+<body>
+  <h2>Upload a File</h2>
 
-  <!-- Loader -->
-  <div id="loadingOverlay" class="d-none">
-    <div class="text-center">
-      <div class="spinner-border" role="status"></div>
-      <p class="mt-4">Loading... Please wait...</p>
-    </div>
-  </div>
+  <!-- File input -->
+  <input type="file" id="fileInput" required><br><br>
 
-  <div class="container mt-4">
-    <h3 id="greeting">Hi there, please upload up to 3 files. You may add a note for each file.</h3>
+  <!-- Optional note -->
+  <textarea id="noteInput" placeholder="Add a note (optional)"></textarea><br><br>
 
-    <div id="fileContainer"></div>
-    <button id="addFileBtn" class="btn btn-secondary mb-3">Add File</button>
+  <!-- Hidden client info -->
+  <input type="hidden" id="clientID" value="12345">
+  <input type="hidden" id="firstName" value="Felix">
 
-    <div>
-      <button id="uploadBtn" class="btn btn-primary" disabled>Upload Files</button>
-    </div>
-  </div>
+  <!-- Upload button -->
+  <button id="uploadBtn">Upload</button>
 
-  <script src="config.js"></script> <!-- This has all my glogal functions, variables and constants including scriptURL -->
+  <!-- Status -->
+  <div id="status"></div>
+
   <script>
-    const maxFiles = 3;
-    let filesArray = [];
+    document.getElementById("uploadBtn").addEventListener("click", async () => {
+      const fileInput   = document.getElementById("fileInput");
+      const noteInput   = document.getElementById("noteInput");
+      const clientID    = document.getElementById("clientID").value;
+      const firstName   = document.getElementById("firstName").value;
+      const statusDiv   = document.getElementById("status");
 
-    const params = new URLSearchParams(window.location.search);
-    const firstName = params.get("firstName") || "there";
-    const lastName = params.get("lastName") || "";
-    const email = params.get("email") || "";
-    const clientID = params.get("clientID") || "";
-
-    // Greet client
-    document.getElementById("greeting").textContent =
-      `Hi ${firstName}, please upload up to ${maxFiles} files. You may add a note for each file.`;
-
-    // Enable/disable upload button
-    function updateUploadButton() {
-      document.getElementById("uploadBtn").disabled = !filesArray.some(f => f.file);
-    }
-
-    // Show toast
-    function showToast(message, type="info") {
-      const toast = document.createElement("div");
-      toast.className = `toast align-items-center text-bg-${type} border-0 show mb-2`;
-      toast.role = "alert";
-      toast.innerHTML = `
-        <div class="d-flex">
-          <div class="toast-body">${message}</div>
-          <button type="button" class="btn-close btn-close-white me-2 m-auto"
-            data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>`;
-      document.getElementById("toastContainer").appendChild(toast);
-      setTimeout(() => toast.remove(), 5000);
-    }
-
-    // Toggle loader
-    function toggleLoader(show) {
-      document.getElementById("loadingOverlay").classList.toggle("d-none", !show);
-    }
-
-    // Add new file input
-    document.getElementById("addFileBtn").addEventListener("click", () => {
-      if (filesArray.length >= maxFiles) {
-        return showToast(`Max ${maxFiles} files allowed.`, "warning");
+      if (!fileInput.files.length) {
+        statusDiv.textContent = "❌ Please select a file.";
+        return;
       }
 
-      const index = filesArray.length;
-      const div = document.createElement("div");
-      div.className = "file-item";
-      div.innerHTML = `
-        <input type="file" class="form-control mb-1" data-index="${index}">
-        <input type="text" class="form-control file-note" placeholder="Note for this file" data-index="${index}">
-        <div class="progress mt-1"><div class="progress-bar" style="width:0%">Waiting...</div></div>
-      `;
-      document.getElementById("fileContainer").appendChild(div);
-
-      filesArray.push({ file: null, note: "" });
-
-      div.querySelector('input[type="file"]').addEventListener("change", (e) => {
-        filesArray[index].file = e.target.files[0];
-        updateUploadButton();
-      });
-      div.querySelector('input[type="text"]').addEventListener("input", (e) => {
-        filesArray[index].note = e.target.value;
-      });
-
-      updateUploadButton();
-    });
-
-// Upload files button
-document.addEventListener("DOMContentLoaded", () => {
-  const uploadBtn = document.getElementById("uploadBtn");
-  if (!uploadBtn) {
-    console.error("🚨 uploadBtn element not found in DOM.");
-    return;
-  }
-
-  uploadBtn.addEventListener("click", async () => {
-    console.log("📤 Upload button clicked");
-
-    // Disable the button while processing
-    uploadBtn.disabled = true;
-
-    if (!filesArray.length || !filesArray.some(f => f.file)) {
-      console.warn("⚠️ No files selected for upload.");
-      alert("Please add at least one file before uploading.");
-      uploadBtn.disabled = false;
-      return;
-    }
-
-    toggleLoader(true);
-
-    for (let i = 0; i < filesArray.length; i++) {
-      const { file, note } = filesArray[i];
-      if (!file) continue;
-
-      console.group(`📦 Uploading file #${i + 1}: ${file.name}`);
-      console.log("📑 File object:", {
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        lastModified: file.lastModified,
-        lastModifiedDate: file.lastModifiedDate
-      });
-      console.log("📝 File note:", note);
+      // Build FormData
+      const formData = new FormData();
+      formData.append("file", file);          // what uploadFile(e) uses
+      formData.append("uploadedFile", file);  // also accepted by doPost
+      formData.append("fileNote", noteInput.value);
+      formData.append("clientID", clientID);
+      formData.append("firstName", firstName);
 
       try {
-        const formData = new FormData();
-        formData.append("system", "clientUploads");
-        formData.append("action", "saveUploadedFiles");
-        formData.append("clientID", clientID);
-        formData.append("firstName", firstName);
-        formData.append("lastName", lastName);
-        formData.append("email", email);
-        formData.append("fileNote", note);
-        formData.append("file", file);
+        const res = await fetch("YOUR_WEB_APP_URL_HERE", {
+          method: "POST",
+          body: formData
+        });
 
-        // Log all FormData entries
-        console.log("🗂️ FormData entries:");
-        for (let [key, val] of formData.entries()) {
-          if (val instanceof File) {
-            console.log(`   ${key}: File { name: ${val.name}, size: ${val.size}, type: ${val.type} }`);
-          } else {
-            console.log(`   ${key}: ${val}`);
-          }
-        }
-
-        console.log("🚀 Sending fetch request…");
-        const response = await fetch(scriptURL, { method: "POST", body: formData });
-
-        console.log("📡 Fetch completed");
-        console.log("   Status:", response.status, response.statusText);
-        console.log("   Headers:", Object.fromEntries(response.headers.entries()));
-
-        const rawText = await response.text();
-        console.log("📜 Raw server response:", rawText);
-
-        let parsed;
-        try {
-          parsed = JSON.parse(rawText);
-          console.log("✅ Parsed JSON response:", parsed);
-        } catch (err) {
-          console.error("❌ Failed to parse JSON:", err.message, "Raw text:", rawText);
-        }
-
-        if (parsed && parsed.success) {
-          console.log("🎉 Upload succeeded:", file.name);
-          showToast(`File uploaded: ${file.name}`, "success");
+        const data = await res.json();
+        if (data.success) {
+          statusDiv.textContent = "✅ File uploaded successfully!";
         } else {
-          console.error("❌ Upload failed:", file.name, parsed || rawText);
-          showToast(`Upload failed: ${file.name}`, "danger");
-        }
-
-      } catch (err) {
-        console.error("💥 Upload error for file:", file.name, err);
-        showToast(`Error uploading: ${file.name}`, "danger");
-      } finally {
-        console.groupEnd();
-      }
-    }
-
-    toggleLoader(false);
-    updateUploadButton(); // Re-enable button if there are still files
-  });
-});
-
-// Simulate a file upload entirely in-browser
-async function testManualUpload() {
-  console.log("🔹 Starting manual in-browser upload test");
-
-  // Create a tiny test file in memory
-  const testFile = new File(["Hello world from manual test!"], "manual-test.txt", {
-    type: "text/plain"
-  });
-
-  // Fake note
-  const testNote = "This is a manual test note";
-
-  // Add file to your filesArray for uploadBtn loop
-  const tempFilesArray = [{ file: testFile, note: testNote }];
-
-  // Loop through files just like uploadBtn
-  for (let i = 0; i < tempFilesArray.length; i++) {
-    const { file, note } = tempFilesArray[i];
-    console.group(`Manual test file #${i + 1}: ${file.name}`);
-    console.log("File object:", file);
-    console.log("File note:", note);
-
-    const formData = new FormData();
-    formData.append("system", "clientUploads");
-    formData.append("action", "saveUploadedFiles");
-    formData.append("clientID", "TEST-MANUAL-001");
-    formData.append("firstName", "Felix");
-    formData.append("lastName", "Client");
-    formData.append("email", "felix@example.com");
-    formData.append("fileNote", note);
-    formData.append("file", file);
-
-    // Debug: list FormData keys and values
-    console.log("FormData keys/values:");
-    for (let pair of formData.entries()) {
-      console.log(pair[0], pair[1]);
-    }
-
-    try {
-      const res = await fetch(scriptURL, {
-        method: "POST",
-        body: formData
-      });
-
-      console.log("Fetch completed, status:", res.status);
-      const text = await res.text();
-      console.log("Raw server response text:", text);
-
-      let result;
-      try {
-        const firstBrace = text.indexOf("{");
-        const lastBrace = text.lastIndexOf("}");
-        if (firstBrace >= 0 && lastBrace >= 0) {
-          const jsonStr = text.substring(firstBrace, lastBrace + 1);
-          result = JSON.parse(jsonStr);
-        } else {
-          throw new Error("No JSON braces found in response");
+          statusDiv.textContent = "❌ Upload failed: " + data.message;
         }
       } catch (err) {
-        console.error("JSON parse error:", err, "Raw text:", text);
-        result = { success: false, message: "Invalid JSON from server", details: err.message };
+        statusDiv.textContent = "❌ Error: " + err.message;
       }
-
-      if (result.success) {
-        console.log(`Manual test file "${file.name}" uploaded successfully!`, result);
-      } else {
-        console.error(`Manual test file "${file.name}" failed:`, result);
-      }
-    } catch (err) {
-      console.error("Fetch error during manual test:", err);
-    }
-
-    console.groupEnd();
-  }
-
-  console.log("🔹 Manual in-browser upload test complete");
-}
-
-    // Apply theme
-    window.addEventListener('DOMContentLoaded', () => {
-      const theme = localStorage.getItem('selectedTheme');
-      if (theme) document.body.classList.add(theme);
     });
   </script>
 </body>
