@@ -38,8 +38,7 @@
 
       // Build FormData
       const formData = new FormData();
-      formData.append("file", file);          // what uploadFile(e) uses
-      formData.append("uploadedFile", file);  // also accepted by doPost
+      formData.append("uploadedFile", fileInput.files[0]);
       formData.append("fileNote", noteInput.value);
       formData.append("clientID", clientID);
       formData.append("firstName", firstName);
