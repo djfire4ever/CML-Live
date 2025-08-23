@@ -1,43 +1,54 @@
-<input type="file" id="f">
-<button id="b">Upload</button>
-<script src="config.js"></script> <!-- must define global scriptURL -->
-<script>
-const b = document.getElementById("b");
-const f = document.getElementById("f");
+<input type="file" id="fileInput">
+<button id="uploadBtn">Upload</button>
+<div id="status"></div>
 
-b.addEventListener("click", async () => {
-  if (!f.files.length) {
+<script src="config.js"></script> <!-- your global config with scriptURL -->
+
+<script>
+const uploadBtn = document.getElementById("uploadBtn");
+const fileInput = document.getElementById("fileInput");
+const statusDiv = document.getElementById("status");
+
+uploadBtn.addEventListener("click", async () => {
+  const file = fileInput.files[0];
+  if (!file) {
     console.warn("No file selected");
+    statusDiv.textContent = "❌ Please select a file.";
     return;
   }
 
-  const file = f.files[0];
-  const fd = new FormData();
-  fd.append("uploadedFile", file);
-  fd.append("system", "clientUploads");
-  fd.append("action", "saveUploadedFiles");
+  const formData = new FormData();
+  formData.append("uploadedFile", file);   // must be 'uploadedFile'
+  formData.append("system", "clientUploads");
+  formData.append("action", "saveUploadedFiles");
 
-  console.log("📤 Uploading file…", file.name);
   try {
-    const res = await fetch(scriptURL, { method: "POST", body: fd });
+    console.log("📤 Uploading file…", file.name);
+    const res = await fetch(scriptURL, { method: "POST", body: formData });
     const text = await res.text();
+
+    // Log the raw server response
     console.log("📡 Server raw response:", text);
 
+    // Try to parse JSON safely
     let result;
     try {
       result = JSON.parse(text);
     } catch (err) {
-      console.error("❌ Server returned invalid JSON:", err.message);
-      return;
+      result = { success: false, message: "⚠️ Invalid JSON from server", details: err.message };
     }
 
     if (result.success) {
       console.log(`✅ File uploaded successfully: ${file.name}`, result);
+      statusDiv.textContent = `✅ Uploaded: ${file.name}`;
     } else {
-      console.error(`❌ Upload failed: ${file.name}`, result);
+      console.error(`❌ Upload failed:`, result);
+      statusDiv.textContent = `❌ Upload failed: ${result.message}`;
     }
+
   } catch (err) {
-    console.error("❌ Upload error:", err);
+    console.error("Upload error:", err);
+    statusDiv.textContent = `❌ Upload error: ${err.message}`;
   }
 });
 </script>
