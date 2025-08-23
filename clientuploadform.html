@@ -1,37 +1,50 @@
-<input type="file" id="fileInput">
-<textarea id="noteInput" placeholder="Add a note (optional)"></textarea>
-<button id="uploadBtn">Upload</button>
-<div id="status"></div>
+<input type="file" id="f">
+<textarea id="noteInput" placeholder="Note"></textarea>
+<button id="b">Upload</button>
 
-<script src="config.js"></script>
+<script src="config.js"></script> <!-- Must define scriptURL -->
 
 <script>
-const uploadBtn = document.getElementById("uploadBtn");
-const fileInput = document.getElementById("fileInput");
+const b = document.getElementById("b");
+const f = document.getElementById("f");
 const noteInput = document.getElementById("noteInput");
 
-uploadBtn.addEventListener("click", async () => {
-  const file = fileInput.files[0];
-  if (!file) return console.error("No file selected");
+b.addEventListener("click", async () => {
+  if (!f.files.length) return console.warn("No file selected");
 
-  const formData = new FormData();
-  formData.append("system", "clientUploads");
-  formData.append("action", "saveUploadedFiles");
-  formData.append("clientID", "3863079249");
-  formData.append("firstName", "Felix");
-  formData.append("fileNote", noteInput.value || "");
-  formData.append("uploadedFile", file); // Must be exactly "uploadedFile"
+  const file = f.files[0];
+  const reader = new FileReader();
 
-  try {
-    const res = await fetch(scriptURL, { method: "POST", body: formData });
-    const data = await res.json();
-    if (data.success) {
-      console.log("✅ Upload successful!", data);
-    } else {
-      console.error("❌ Upload failed:", data);
+  reader.onload = async (e) => {
+    const base64Data = e.target.result.split(',')[1]; // remove data: prefix
+    const payload = {
+      system: "clientUploads",
+      action: "saveUploadedFiles",
+      clientID: new URLSearchParams(window.location.search).get("clientID"),
+      firstName: new URLSearchParams(window.location.search).get("firstName"),
+      fileNote: noteInput.value,
+      fileName: file.name,
+      fileData: base64Data
+    };
+
+    try {
+      const res = await fetch(scriptURL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await res.json();
+      if (result.success) {
+        console.log("✅ File uploaded successfully", result);
+      } else {
+        console.error("❌ Upload failed", result);
+      }
+    } catch (err) {
+      console.error(err);
     }
-  } catch (err) {
-    console.error("Upload error:", err);
-  }
+  };
+
+  reader.readAsDataURL(file);
 });
 </script>
