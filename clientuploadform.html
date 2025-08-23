@@ -121,39 +121,16 @@ document.addEventListener("DOMContentLoaded", () => {
   uploadBtn.addEventListener("click", async () => {
     console.log("📤 Upload button clicked");
 
-    // Get elements safely
-    const fileInput = document.getElementById("fileInput");
-    const noteInput = document.getElementById("fileNote");
-    const clientIDEl = document.getElementById("clientID");
-    const firstNameEl = document.getElementById("firstName");
-    const lastNameEl = document.getElementById("lastName");
-    const emailEl = document.getElementById("email");
-
-    // Verify existence
-    const requiredEls = { fileInput, noteInput, clientIDEl, firstNameEl, lastNameEl, emailEl };
-    for (const [key, el] of Object.entries(requiredEls)) {
-      if (!el) {
-        console.error(`🚨 Missing required element: ${key}`);
-      }
-    }
-
-    if (!fileInput || !fileInput.files) {
-      console.error("🚨 fileInput missing or not usable.");
+    if (!filesArray.length || !filesArray.some(f => f.file)) {
+      console.warn("⚠️ No files to upload.");
+      alert("Please add at least one file before uploading.");
       return;
     }
 
-    const files = fileInput.files;
-    const fileNote = noteInput ? noteInput.value : "";
-    console.log(`📝 File note: "${fileNote}"`);
+    for (let i = 0; i < filesArray.length; i++) {
+      const { file, note } = filesArray[i];
+      if (!file) continue;
 
-    if (!files.length) {
-      console.warn("⚠️ No file selected.");
-      alert("Please select a file before uploading.");
-      return;
-    }
-
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
       console.group(`📦 Uploading file #${i + 1}: ${file.name}`);
 
       console.log("📑 File object:", {
@@ -168,14 +145,14 @@ document.addEventListener("DOMContentLoaded", () => {
         const formData = new FormData();
         formData.append("system", "clientUploads");
         formData.append("action", "saveUploadedFiles");
-        formData.append("clientID", clientIDEl ? clientIDEl.value : "");
-        formData.append("firstName", firstNameEl ? firstNameEl.value : "");
-        formData.append("lastName", lastNameEl ? lastNameEl.value : "");
-        formData.append("email", emailEl ? emailEl.value : "");
-        formData.append("fileNote", fileNote);
+        formData.append("clientID", clientID);
+        formData.append("firstName", firstName);
+        formData.append("lastName", lastName);
+        formData.append("email", email);
+        formData.append("fileNote", note || "");
         formData.append("file", file);
 
-        // 🔎 Inspect FormData entries
+        // 🔎 Debug FormData
         console.log("🗂️ FormData entries:");
         for (let [key, val] of formData.entries()) {
           if (val instanceof File) {
@@ -185,32 +162,14 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         }
 
-        // 🧨 Build multipart preview
-        const boundary = "----WebKitFormBoundaryDEBUG";
-        let multipartPreview = "";
-        for (let [key, val] of formData.entries()) {
-          multipartPreview += `--${boundary}\r\n`;
-          if (val instanceof File) {
-            multipartPreview += `Content-Disposition: form-data; name="${key}"; filename="${val.name}"\r\n`;
-            multipartPreview += `Content-Type: ${val.type || "application/octet-stream"}\r\n\r\n`;
-            multipartPreview += `[Binary content omitted: ${val.size} bytes]\r\n`;
-          } else {
-            multipartPreview += `Content-Disposition: form-data; name="${key}"\r\n\r\n${val}\r\n`;
-          }
-        }
-        multipartPreview += `--${boundary}--`;
-        console.log("🧾 Multipart Payload Preview:\n", multipartPreview);
-
         // 🚀 Send fetch
         console.log("🚀 Sending fetch request…");
-        const response = await fetch(YOUR_WEBAPP_URL, {
+        const response = await fetch(scriptURL, {
           method: "POST",
           body: formData
         });
 
-        console.log("📡 Fetch completed.");
-        console.log("   Status:", response.status, response.statusText);
-        console.log("   Headers:", Object.fromEntries(response.headers.entries()));
+        console.log("📡 Fetch completed. Status:", response.status, response.statusText);
 
         const rawText = await response.text();
         console.log("📜 Raw server response:", rawText);
