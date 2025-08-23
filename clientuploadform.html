@@ -1,11 +1,18 @@
 <input type="file" id="f">
+<input type="text" id="note" placeholder="Add a note (optional)">
 <button id="b">Upload</button>
 
-<script src="config.js"></script> <!-- global scriptURL -->
+<script src="config.js"></script> <!-- Contains global scriptURL -->
 
 <script>
 const b = document.getElementById("b");
 const f = document.getElementById("f");
+const note = document.getElementById("note");
+
+// Grab URL params
+const params = new URLSearchParams(window.location.search);
+const clientID = params.get("clientID") || "";
+const firstName = params.get("firstName") || "";
 
 b.addEventListener("click", async () => {
   if (!f.files.length) return console.warn("No file selected");
@@ -13,25 +20,23 @@ b.addEventListener("click", async () => {
   const fd = new FormData();
   fd.append("system", "clientUploads");
   fd.append("action", "saveUploadedFiles");
-  fd.append("uploadedFile", f.files[0]); // MUST match Apps Script
+  fd.append("clientID", clientID);
+  fd.append("firstName", firstName);
+  fd.append("fileNote", note.value);
+  fd.append("uploadedFile", f.files[0]);
 
   try {
     console.log("📤 Uploading file…", f.files[0].name);
 
-    const res = await fetch(scriptURL, {
-      method: "POST",
-      body: fd // do NOT set Content-Type manually
-    });
-
+    const res = await fetch(scriptURL, { method: "POST", body: fd });
     const text = await res.text();
     console.log("📡 Server raw response:", text);
 
-    // Only attempt JSON parse if Apps Script returns JSON
     let result;
     try {
       result = JSON.parse(text);
     } catch {
-      console.warn("⚠️ Response is not JSON, showing raw text instead.");
+      console.warn("⚠️ Response is not JSON, displaying raw text.");
       result = { success: false, message: text };
     }
 
