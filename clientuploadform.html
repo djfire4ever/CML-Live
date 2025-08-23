@@ -9,49 +9,44 @@
 const uploadBtn = document.getElementById("uploadBtn");
 const fileInput = document.getElementById("fileInput");
 const noteInput = document.getElementById("noteInput");
-const statusDiv = document.getElementById("status");
 
-uploadBtn.addEventListener("click", async () => {
-  if (!fileInput.files.length) return console.warn("No file selected");
-
+uploadBtn.addEventListener("click", () => {
   const file = fileInput.files[0];
-  const reader = new FileReader();
+  if (!file) return console.error("No file selected");
 
+  const reader = new FileReader();
   reader.onload = async (e) => {
-    const base64Data = e.target.result.split(",")[1]; // remove prefix
+    const base64 = e.target.result.split(",")[1]; // get only the Base64 part
+
     const payload = {
       system: "clientUploads",
       action: "saveUploadedFiles",
-      clientID: window.clientID || "",   // from your config.js / page
-      firstName: window.firstName || "", // from your config.js / page
-      fileNote: noteInput.value,
+      clientID: "3863079249",
+      firstName: "Felix",
       fileName: file.name,
-      fileType: file.type,
-      fileBase64: base64Data
+      fileType: file.type || "application/octet-stream",
+      fileBase64: base64,
+      fileNote: noteInput.value || ""
     };
 
     try {
-      statusDiv.textContent = `📤 Uploading file… ${file.name}`;
       const res = await fetch(scriptURL, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
+        headers: { "Content-Type": "application/json" }
       });
 
-      const result = await res.json();
-      if (result.success) {
-        statusDiv.textContent = `✅ File uploaded successfully: ${file.name}`;
-        console.log(result);
+      const data = await res.json();
+      if (data.success) {
+        console.log("✅ Upload successful!", data);
       } else {
-        statusDiv.textContent = `❌ Upload failed: ${result.message}`;
-        console.error(result);
+        console.error("❌ Upload failed:", data);
       }
     } catch (err) {
-      statusDiv.textContent = `❌ Upload error: ${err.message}`;
-      console.error(err);
+      console.error("Upload error:", err);
     }
   };
-
-  reader.readAsDataURL(file);
+  
+  reader.readAsDataURL(file); // triggers onload with Base64
 });
 </script>
