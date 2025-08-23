@@ -10,43 +10,28 @@ const uploadBtn = document.getElementById("uploadBtn");
 const fileInput = document.getElementById("fileInput");
 const noteInput = document.getElementById("noteInput");
 
-uploadBtn.addEventListener("click", () => {
+uploadBtn.addEventListener("click", async () => {
   const file = fileInput.files[0];
   if (!file) return console.error("No file selected");
 
-  const reader = new FileReader();
-  reader.onload = async (e) => {
-    const base64 = e.target.result.split(",")[1]; // get only the Base64 part
+  const formData = new FormData();
+  formData.append("system", "clientUploads");
+  formData.append("action", "saveUploadedFiles");
+  formData.append("clientID", "3863079249");
+  formData.append("firstName", "Felix");
+  formData.append("fileNote", noteInput.value || "");
+  formData.append("uploadedFile", file); // Must be exactly "uploadedFile"
 
-    const payload = {
-      system: "clientUploads",
-      action: "saveUploadedFiles",
-      clientID: "3863079249",
-      firstName: "Felix",
-      fileName: file.name,
-      fileType: file.type || "application/octet-stream",
-      fileBase64: base64,
-      fileNote: noteInput.value || ""
-    };
-
-    try {
-      const res = await fetch(scriptURL, {
-        method: "POST",
-        body: JSON.stringify(payload),
-        headers: { "Content-Type": "application/json" }
-      });
-
-      const data = await res.json();
-      if (data.success) {
-        console.log("✅ Upload successful!", data);
-      } else {
-        console.error("❌ Upload failed:", data);
-      }
-    } catch (err) {
-      console.error("Upload error:", err);
+  try {
+    const res = await fetch(scriptURL, { method: "POST", body: formData });
+    const data = await res.json();
+    if (data.success) {
+      console.log("✅ Upload successful!", data);
+    } else {
+      console.error("❌ Upload failed:", data);
     }
-  };
-  
-  reader.readAsDataURL(file); // triggers onload with Base64
+  } catch (err) {
+    console.error("Upload error:", err);
+  }
 });
 </script>
