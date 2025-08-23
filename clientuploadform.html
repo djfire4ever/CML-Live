@@ -1,64 +1,49 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Client Upload</title>
-</head>
-<body>
-  <h2>Upload a File</h2>
+<input type="file" id="f">
+<button id="b">Upload</button>
 
-  <!-- File input -->
-  <input type="file" id="fileInput" required><br><br>
+<script src="config.js"></script> <!-- Your global config with scriptURL -->
 
-  <!-- Optional note -->
-  <textarea id="noteInput" placeholder="Add a note (optional)"></textarea><br><br>
+<script>
+const b = document.getElementById("b");
+const f = document.getElementById("f");
 
-  <!-- Hidden client info -->
-  <input type="hidden" id="clientID" value="12345">
-  <input type="hidden" id="firstName" value="Felix">
+b.addEventListener("click", async () => {
+  if (!f.files.length) return console.warn("No file selected");
 
-  <!-- Upload button -->
-  <button id="uploadBtn">Upload</button>
+  const fd = new FormData();
+  fd.append("system", "clientUploads");
+  fd.append("action", "saveUploadedFiles");
+  fd.append("uploadedFile", f.files[0]); // Must be exactly 'uploadedFile' for GAS
 
-  <!-- Status -->
-  <div id="status"></div>
-
-  <script>
-    document.getElementById("uploadBtn").addEventListener("click", async () => {
-      const fileInput   = document.getElementById("fileInput");
-      const noteInput   = document.getElementById("noteInput");
-      const clientID    = document.getElementById("clientID").value;
-      const firstName   = document.getElementById("firstName").value;
-      const statusDiv   = document.getElementById("status");
-
-      if (!fileInput.files.length) {
-        statusDiv.textContent = "❌ Please select a file.";
-        return;
-      }
-
-      // Build FormData
-      const formData = new FormData();
-      formData.append("uploadedFile", fileInput.files[0]);
-      formData.append("fileNote", noteInput.value);
-      formData.append("clientID", clientID);
-      formData.append("firstName", firstName);
-
-      try {
-        const res = await fetch("YOUR_WEB_APP_URL_HERE", {
-          method: "POST",
-          body: formData
-        });
-
-        const data = await res.json();
-        if (data.success) {
-          statusDiv.textContent = "✅ File uploaded successfully!";
-        } else {
-          statusDiv.textContent = "❌ Upload failed: " + data.message;
-        }
-      } catch (err) {
-        statusDiv.textContent = "❌ Error: " + err.message;
-      }
+  try {
+    console.log("📤 Uploading file…", f.files[0].name);
+    const res = await fetch(scriptURL, {
+      method: "POST",
+      body: fd
+      // Do NOT set 'Content-Type' manually; let browser handle it
     });
-  </script>
-</body>
-</html>
+
+    const text = await res.text();
+    console.log("📡 Server raw response:", text);
+
+    let result;
+    try {
+      // Apps Script often returns text even if JSON; extract JSON
+      const firstBrace = text.indexOf("{");
+      const lastBrace = text.lastIndexOf("}");
+      result = JSON.parse(text.substring(firstBrace, lastBrace + 1));
+    } catch (err) {
+      result = { success: false, message: "Invalid JSON from server" };
+    }
+
+    if (result.success) {
+      console.log(`✅ File uploaded successfully: ${f.files[0].name}`, result);
+    } else {
+      console.error(`❌ Upload failed:`, result);
+    }
+
+  } catch (err) {
+    console.error("💥 Upload error:", err);
+  }
+});
+</script>
