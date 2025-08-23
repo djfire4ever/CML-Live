@@ -1,7 +1,7 @@
 <input type="file" id="f">
 <button id="b">Upload</button>
 
-<script src="config.js"></script> <!-- Your global config with scriptURL -->
+<script src="config.js"></script> <!-- global scriptURL -->
 
 <script>
 const b = document.getElementById("b");
@@ -13,27 +13,26 @@ b.addEventListener("click", async () => {
   const fd = new FormData();
   fd.append("system", "clientUploads");
   fd.append("action", "saveUploadedFiles");
-  fd.append("uploadedFile", f.files[0]); // Must be exactly 'uploadedFile' for GAS
+  fd.append("uploadedFile", f.files[0]); // MUST match Apps Script
 
   try {
     console.log("📤 Uploading file…", f.files[0].name);
+
     const res = await fetch(scriptURL, {
       method: "POST",
-      body: fd
-      // Do NOT set 'Content-Type' manually; let browser handle it
+      body: fd // do NOT set Content-Type manually
     });
 
     const text = await res.text();
     console.log("📡 Server raw response:", text);
 
+    // Only attempt JSON parse if Apps Script returns JSON
     let result;
     try {
-      // Apps Script often returns text even if JSON; extract JSON
-      const firstBrace = text.indexOf("{");
-      const lastBrace = text.lastIndexOf("}");
-      result = JSON.parse(text.substring(firstBrace, lastBrace + 1));
-    } catch (err) {
-      result = { success: false, message: "Invalid JSON from server" };
+      result = JSON.parse(text);
+    } catch {
+      console.warn("⚠️ Response is not JSON, showing raw text instead.");
+      result = { success: false, message: text };
     }
 
     if (result.success) {
