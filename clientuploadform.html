@@ -1,28 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Client File Upload</title>
-  <style>
-    .file-item { margin-bottom: 1rem; }
-    .progress { height: 20px; }
-    .file-note { color: var(--bs-info); }
-    #loadingOverlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(255, 255, 255, 0.8);
-      z-index: 1050;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>Secure File Upload</title>
+<style>
+  .file-item { margin-bottom: 1rem; }
+  .progress { height: 20px; }
+  .file-note { color: var(--bs-info); }
+</style>
 </head>
-<body class="page-body" style="min-height:100vh;" data-element="page-bg">
+<body class="page-body" style="min-height: 100vh;" data-element="page-bg">
   <div class="watermark"></div>
   <div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3"></div>
-
-  <!-- Loader -->
   <div id="loadingOverlay" class="d-none">
     <div class="text-center">
       <div class="spinner-border" role="status"></div>
@@ -35,52 +24,33 @@
 
     <div id="fileContainer"></div>
     <button id="addFileBtn" class="btn btn-secondary mb-3">Add File</button>
-
-    <div>
+    <div class="mb-3">
       <button id="uploadBtn" class="btn btn-primary" disabled>Upload Files</button>
     </div>
   </div>
 
-  <script src="config.js"></script>
+  <script src="config.js"></script> <!-- Provides showToast, toggleLoader, scriptURL, etc. -->
+
   <script>
-    const maxFiles = 3;
+    const maxFiles = 3; 
     let filesArray = [];
 
     const params = new URLSearchParams(window.location.search);
     const firstName = params.get("firstName") || "there";
-    const lastName = params.get("lastName") || "";
-    const email = params.get("email") || "";
     const clientID = params.get("clientID") || "";
 
+    // Greet client
     document.getElementById("greeting").textContent =
       `Hi ${firstName}, please upload up to ${maxFiles} files. You may add a note for each file.`;
 
+    // Enable/disable Upload button
     function updateUploadButton() {
       document.getElementById("uploadBtn").disabled = !filesArray.some(f => f.file);
     }
 
-    function showToast(message, type="info") {
-      const toast = document.createElement("div");
-      toast.className = `toast align-items-center text-bg-${type} border-0 show mb-2`;
-      toast.role = "alert";
-      toast.innerHTML = `
-        <div class="d-flex">
-          <div class="toast-body">${message}</div>
-          <button type="button" class="btn-close btn-close-white me-2 m-auto"
-            data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>`;
-      document.getElementById("toastContainer").appendChild(toast);
-      setTimeout(() => toast.remove(), 5000);
-    }
-
-    function toggleLoader(show) {
-      document.getElementById("loadingOverlay").classList.toggle("d-none", !show);
-    }
-
+    // Add new file input
     document.getElementById("addFileBtn").addEventListener("click", () => {
-      if (filesArray.length >= maxFiles) {
-        return showToast(`Max ${maxFiles} files allowed.`, "warning");
-      }
+      if (filesArray.length >= maxFiles) return showToast(`Max ${maxFiles} files allowed.`, "warning");
 
       const index = filesArray.length;
       const div = document.createElement("div");
@@ -94,20 +64,24 @@
 
       filesArray.push({ file: null, note: "" });
 
-      div.querySelector('input[type="file"]').addEventListener("change", (e) => {
+      const fileInput = div.querySelector('input[type="file"]');
+      const noteInput = div.querySelector('input[type="text"]');
+
+      fileInput.addEventListener("change", e => {
         filesArray[index].file = e.target.files[0];
         updateUploadButton();
       });
-      div.querySelector('input[type="text"]').addEventListener("input", (e) => {
+      noteInput.addEventListener("input", e => {
         filesArray[index].note = e.target.value;
       });
 
       updateUploadButton();
     });
 
+    // Upload files using Base64
     document.getElementById("uploadBtn").addEventListener("click", async () => {
       if (!filesArray.length || !filesArray.some(f => f.file)) {
-        return alert("Please add at least one file before uploading.");
+        return showToast("Add at least one file.", "warning");
       }
 
       toggleLoader(true);
@@ -116,61 +90,63 @@
         const { file, note } = filesArray[i];
         if (!file) continue;
 
-        const progressBar = document.querySelectorAll(".progress-bar")[i];
-        progressBar.style.width = "20%";
-        progressBar.textContent = "Reading...";
+        const progressBar = document.getElementById("fileContainer").children[i]
+                            .querySelector(".progress-bar");
+        progressBar.style.width = "0%";
+        progressBar.textContent = "Uploading...";
 
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-          const base64Data = e.target.result.split(",")[1];
+        try {
+          const reader = new FileReader();
+          await new Promise((resolve, reject) => {
+            reader.onload = async e => {
+              const base64Data = e.target.result.split(',')[1];
+              const payload = {
+                system: "clientUploads",
+                action: "saveUploadedFiles",
+                clientID: clientID,
+                firstName: firstName,
+                fileName: file.name,
+                fileData: base64Data,
+                fileNote: note
+              };
 
-          const payload = {
-            system: "clientUploads",
-            action: "saveUploadedFiles",
-            clientID,
-            firstName,
-            lastName,
-            email,
-            fileNote: note,
-            fileName: file.name,
-            fileData: base64Data
-          };
+              const res = await fetch(scriptURL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+              });
 
-          try {
-            progressBar.style.width = "50%";
-            progressBar.textContent = "Uploading...";
+              const text = await res.text();
+              let result;
+              try { result = JSON.parse(text); } 
+              catch { result = { success: false, message: "Invalid JSON from server" }; }
 
-            const res = await fetch(scriptURL, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(payload)
-            });
-
-            const result = await res.json();
-            if (result.success) {
-              progressBar.style.width = "100%";
-              progressBar.textContent = "Done";
-              showToast(`File uploaded: ${file.name}`, "success");
-            } else {
-              progressBar.style.width = "100%";
-              progressBar.classList.add("bg-danger");
-              progressBar.textContent = "Failed";
-              showToast(`Upload failed: ${file.name}`, "danger");
-            }
-          } catch (err) {
-            progressBar.style.width = "100%";
-            progressBar.classList.add("bg-danger");
-            progressBar.textContent = "Error";
-            console.error(err);
-            showToast(`Error uploading: ${file.name}`, "danger");
-          }
-        };
-        reader.readAsDataURL(file);
+              if (result.success) {
+                progressBar.classList.add("bg-success");
+                progressBar.textContent = "Uploaded ✓";
+                showToast(`File "${file.name}" uploaded successfully!`, "success");
+              } else {
+                progressBar.classList.add("bg-danger");
+                progressBar.textContent = "Failed ❌";
+                showToast(`Failed to upload file: ${file.name}`, "error");
+              }
+              resolve();
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+          });
+        } catch (err) {
+          progressBar.classList.add("bg-danger");
+          progressBar.textContent = "Error ❌";
+          showToast(`Error uploading file: ${file.name}`, "error");
+        }
       }
 
       toggleLoader(false);
+      showToast("All uploads complete.", "success");
     });
 
+    // Apply saved theme
     window.addEventListener('DOMContentLoaded', () => {
       const theme = localStorage.getItem('selectedTheme');
       if (theme) document.body.classList.add(theme);
