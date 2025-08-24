@@ -4,9 +4,122 @@
 <meta charset="UTF-8">
 <title>Secure File Upload</title>
 <style>
-  .file-item { margin-bottom: 1rem; }
-  .progress { height: 20px; }
-  .file-note { color: var(--bs-info); }
+  /* Outer page container */
+  .page-container {
+    border: 0;
+    border-radius: 12px;
+    padding: 2rem;
+    max-width: 1200px;
+    width: 90%;
+    margin: 3rem auto;
+    background-color: var(--bs-black);
+    color: var(--bs-info);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+  }
+
+  /* Greeting */
+  #greeting {
+    margin-bottom: 2rem;
+  }
+  #greeting span:first-child {
+    font-weight: bold;
+    font-size: 1.8rem;
+    display: block;
+    margin-bottom: 0.2rem;
+  }
+  #greeting span:last-child {
+    font-size: 1rem;
+    display: block;
+    margin-top: 0.2rem;
+    color: var(--bs-info);
+  }
+
+  /* Inner upload section */
+  .upload-section {
+    border: 2px solid var(--bs-info);
+    border-radius: 12px;
+    padding: 2rem;
+    margin: 2rem 0;
+    background-color: var(--bs-black);
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* File items */
+  .file-item { 
+    margin-bottom: 1.8rem; 
+    padding: 1rem; 
+    background-color: var(--bs-black);
+    border-radius: 8px;
+    box-shadow: inset 0 0 10px rgba(255,255,255,0.05);
+    transition: transform 0.2s ease;
+  }
+  .file-item:hover { transform: translateY(-2px); }
+  .file-item label { font-weight: bold; display: block; margin-bottom: 0.3rem; }
+  .note-label { margin-top: 0.5rem; display: block; font-style: italic; color: var(--bs-info); }
+
+  /* File input styling */
+  input[type="file"] {
+    background-color: var(--bs-black);
+    color: var(--bs-info);
+    border: 1px solid var(--bs-info);
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    width: 100%;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+  }
+  input[type="file"]:hover,
+  input[type="file"]:focus {
+    background-color: rgba(255,255,255,0.05);
+    outline: none;
+  }
+  input[type="file"]::file-selector-button {
+    background-color: var(--bs-black);
+    color: var(--bs-info);
+    border: 1px solid var(--bs-info);
+    padding: 0.375rem 0.75rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+  }
+  input[type="file"]::file-selector-button:hover {
+    background-color: rgba(255,255,255,0.05);
+  }
+
+  /* Progress bar */
+  .progress {
+    height: 22px; 
+    margin-top: 0.5rem;
+    border-radius: 6px;
+    background-color: rgba(255,255,255,0.1);
+  }
+  .progress-bar {
+    background-color: var(--bs-info) !important;
+    font-weight: bold;
+    color: var(--bs-black);
+  }
+
+  /* Buttons */
+  #uploadBtn, #addFileBtn {
+    border-radius: 6px;
+    padding: 0.5rem 1.25rem;
+    font-weight: bold;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  #uploadBtn:hover, #addFileBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  }
+  #uploadBtn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  .text-center { text-align: center; }
+
+  /* Responsive adjustments */
+  @media(max-width:768px){
+    .page-container { width: 95%; padding: 1.5rem; }
+    .upload-section { padding: 1.5rem; }
+  }
 </style>
 </head>
 <body class="page-body" style="min-height: 100vh;" data-element="page-bg">
@@ -21,45 +134,77 @@
   </div>
 </div>
 
-<div class="container mt-4">
-  <h3 id="greeting">Hi there, please upload up to 3 files. You may add a note for each file.</h3>
+<!-- Page container -->
+<div class="page-container">
 
-  <div id="fileContainer"></div>
-  <button id="addFileBtn" class="btn btn-secondary mb-3">Add File</button>
-  <div class="mb-3">
+  <!-- Greeting -->
+  <h3 id="greeting">
+    <span>Hi there,</span>
+    <span>Please upload up to 3 files. You may add a note for each file.</span>
+  </h3>
+
+  <!-- Upload section -->
+  <div class="upload-section">
+    <div id="fileContainer"></div>
+    <button id="addFileBtn" class="btn btn-secondary mb-3">Add File</button>
+  </div>
+
+  <!-- Upload button -->
+  <div class="text-center mt-3">
     <button id="uploadBtn" class="btn btn-primary" disabled>Upload Files</button>
   </div>
+
 </div>
 
 <script src="config.js"></script>
+
 <script>
-const maxFiles = 3; 
+const maxFiles = 3;
 let filesArray = [];
+
+const addFileBtn = document.getElementById("addFileBtn");
+const fileContainer = document.getElementById("fileContainer");
+const uploadBtn = document.getElementById("uploadBtn");
 
 // Greet client
 const params = new URLSearchParams(window.location.search);
 const firstName = params.get("firstName") || "there";
-document.getElementById("greeting").textContent =
-  `Hi ${firstName}, please upload up to ${maxFiles} files. You may add a note for each file.`;
+const lastName  = params.get("lastName") || "";
+const email     = params.get("email") || "";
+
+document.getElementById("greeting").innerHTML =
+  `<span>Hi ${firstName},</span>
+   <span>Please upload up to ${maxFiles} files. You may add a note for each file.</span>`;
 
 // Enable/disable upload button
 function updateUploadButton() {
   const hasFile = filesArray.some(f => f.file);
-  document.getElementById("uploadBtn").disabled = !hasFile;
+  uploadBtn.disabled = !hasFile;
 }
 
-// Add file input
-const fileContainer = document.getElementById("fileContainer");
-document.getElementById("addFileBtn").addEventListener("click", () => {
-  if (filesArray.length >= maxFiles) return showToast(`Max ${maxFiles} files allowed.`, "warning");
+// Fade out element smoothly
+function fadeOut(el, duration = 300) {
+  el.style.transition = `opacity ${duration}ms`;
+  el.style.opacity = 0;
+  setTimeout(() => { el.style.display = "none"; }, duration);
+}
+
+// Add a new file input
+function addFileInput() {
+  if (filesArray.length >= maxFiles) {
+    fadeOut(addFileBtn); // fade out button
+    return showToast(`Max ${maxFiles} files allowed.`, "warning");
+  }
 
   const index = filesArray.length;
   const div = document.createElement("div");
   div.className = "file-item";
   div.innerHTML = `
+    <label>File ${index + 1}</label>
     <input type="file" class="form-control mb-1" data-index="${index}">
-    <input type="text" class="form-control file-note" placeholder="Note for this file" data-index="${index}">
-    <div class="progress mt-1"><div class="progress-bar" style="width:0%">Waiting...</div></div>
+    <label class="note-label">Add a note for this file</label>
+    <input type="text" class="form-control file-note" data-index="${index}">
+    <div class="progress"><div class="progress-bar" style="width:0%">Waiting...</div></div>
   `;
   fileContainer.appendChild(div);
 
@@ -77,11 +222,17 @@ document.getElementById("addFileBtn").addEventListener("click", () => {
     filesArray[index].note = e.target.value;
   });
 
-  updateUploadButton();
-});
+  // Fade out button if this is the last allowed file
+  if (filesArray.length >= maxFiles) fadeOut(addFileBtn);
 
-// Upload files with simulated progress
-document.getElementById("uploadBtn").addEventListener("click", async () => {
+  updateUploadButton();
+}
+
+// Attach click listener to Add File button
+addFileBtn.addEventListener("click", addFileInput);
+
+// Upload files
+uploadBtn.addEventListener("click", async () => {
   if (!filesArray.length || !filesArray.some(f => f.file)) {
     return showToast("Add at least one file.", "warning");
   }
@@ -97,7 +248,6 @@ document.getElementById("uploadBtn").addEventListener("click", async () => {
     progressBar.style.width = "0%";
     progressBar.textContent = "Uploading...";
 
-    // Simulate visual progress
     let progress = 0;
     const interval = setInterval(() => {
       progress = Math.min(progress + 5, 95);
@@ -115,8 +265,10 @@ document.getElementById("uploadBtn").addEventListener("click", async () => {
           const payload = {
             system: "clientUploads",
             action: "saveUploadedFiles",
-            clientID: clientID,
-            firstName: firstName,
+            clientID,
+            firstName,
+            lastName,  // included
+            email,     // included
             fileName: file.name,
             fileData: base64Data,
             fileNote: note
@@ -128,15 +280,14 @@ document.getElementById("uploadBtn").addEventListener("click", async () => {
             body: JSON.stringify(payload)
           });
 
-          const text = await res.text();
           let result;
-          try { result = JSON.parse(text); } 
+          try { result = await res.json(); } 
           catch { result = { success: false, message: "Invalid JSON from server" }; }
 
           if (result.success) {
             progressBar.classList.add("bg-success");
             progressBar.style.width = "100%";
-            progressBar.textContent = "Uploaded ✓";
+            progressBar.textContent = "File Uploaded ✓";
             showToast(`File "${file.name}" uploaded successfully!`, "success");
           } else {
             progressBar.classList.add("bg-danger");
@@ -159,7 +310,7 @@ document.getElementById("uploadBtn").addEventListener("click", async () => {
   }
 
   toggleLoader(false);
-  showToast("All uploads complete.", "success");
+  showToast("Your files have been successfully uploaded. Thank you!", "success");
 });
 
 // Apply theme
@@ -168,5 +319,6 @@ window.addEventListener('DOMContentLoaded', () => {
   if (theme) document.body.classList.add(theme);
 });
 </script>
+
 </body>
 </html>
