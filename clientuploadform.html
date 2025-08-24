@@ -1,50 +1,180 @@
-<input type="file" id="f">
-<textarea id="noteInput" placeholder="Note"></textarea>
-<button id="b">Upload</button>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Client File Upload</title>
+  <style>
+    .file-item { margin-bottom: 1rem; }
+    .progress { height: 20px; }
+    .file-note { color: var(--bs-info); }
+    #loadingOverlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(255, 255, 255, 0.8);
+      z-index: 1050;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body class="page-body" style="min-height:100vh;" data-element="page-bg">
+  <div class="watermark"></div>
+  <div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3"></div>
 
-<script src="config.js"></script> <!-- Must define scriptURL -->
+  <!-- Loader -->
+  <div id="loadingOverlay" class="d-none">
+    <div class="text-center">
+      <div class="spinner-border" role="status"></div>
+      <p class="mt-4">Loading... Please wait...</p>
+    </div>
+  </div>
 
-<script>
-const b = document.getElementById("b");
-const f = document.getElementById("f");
-const noteInput = document.getElementById("noteInput");
+  <div class="container mt-4">
+    <h3 id="greeting">Hi there, please upload up to 3 files. You may add a note for each file.</h3>
 
-b.addEventListener("click", async () => {
-  if (!f.files.length) return console.warn("No file selected");
+    <div id="fileContainer"></div>
+    <button id="addFileBtn" class="btn btn-secondary mb-3">Add File</button>
 
-  const file = f.files[0];
-  const reader = new FileReader();
+    <div>
+      <button id="uploadBtn" class="btn btn-primary" disabled>Upload Files</button>
+    </div>
+  </div>
 
-  reader.onload = async (e) => {
-    const base64Data = e.target.result.split(',')[1]; // remove data: prefix
-    const payload = {
-      system: "clientUploads",
-      action: "saveUploadedFiles",
-      clientID: new URLSearchParams(window.location.search).get("clientID"),
-      firstName: new URLSearchParams(window.location.search).get("firstName"),
-      fileNote: noteInput.value,
-      fileName: file.name,
-      fileData: base64Data
-    };
+  <script src="config.js"></script>
+  <script>
+    const maxFiles = 3;
+    let filesArray = [];
 
-    try {
-      const res = await fetch(scriptURL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+    const params = new URLSearchParams(window.location.search);
+    const firstName = params.get("firstName") || "there";
+    const lastName = params.get("lastName") || "";
+    const email = params.get("email") || "";
+    const clientID = params.get("clientID") || "";
+
+    document.getElementById("greeting").textContent =
+      `Hi ${firstName}, please upload up to ${maxFiles} files. You may add a note for each file.`;
+
+    function updateUploadButton() {
+      document.getElementById("uploadBtn").disabled = !filesArray.some(f => f.file);
+    }
+
+    function showToast(message, type="info") {
+      const toast = document.createElement("div");
+      toast.className = `toast align-items-center text-bg-${type} border-0 show mb-2`;
+      toast.role = "alert";
+      toast.innerHTML = `
+        <div class="d-flex">
+          <div class="toast-body">${message}</div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto"
+            data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>`;
+      document.getElementById("toastContainer").appendChild(toast);
+      setTimeout(() => toast.remove(), 5000);
+    }
+
+    function toggleLoader(show) {
+      document.getElementById("loadingOverlay").classList.toggle("d-none", !show);
+    }
+
+    document.getElementById("addFileBtn").addEventListener("click", () => {
+      if (filesArray.length >= maxFiles) {
+        return showToast(`Max ${maxFiles} files allowed.`, "warning");
+      }
+
+      const index = filesArray.length;
+      const div = document.createElement("div");
+      div.className = "file-item";
+      div.innerHTML = `
+        <input type="file" class="form-control mb-1" data-index="${index}">
+        <input type="text" class="form-control file-note" placeholder="Note for this file" data-index="${index}">
+        <div class="progress mt-1"><div class="progress-bar" style="width:0%">Waiting...</div></div>
+      `;
+      document.getElementById("fileContainer").appendChild(div);
+
+      filesArray.push({ file: null, note: "" });
+
+      div.querySelector('input[type="file"]').addEventListener("change", (e) => {
+        filesArray[index].file = e.target.files[0];
+        updateUploadButton();
+      });
+      div.querySelector('input[type="text"]').addEventListener("input", (e) => {
+        filesArray[index].note = e.target.value;
       });
 
-      const result = await res.json();
-      if (result.success) {
-        console.log("✅ File uploaded successfully", result);
-      } else {
-        console.error("❌ Upload failed", result);
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
+      updateUploadButton();
+    });
 
-  reader.readAsDataURL(file);
-});
-</script>
+    document.getElementById("uploadBtn").addEventListener("click", async () => {
+      if (!filesArray.length || !filesArray.some(f => f.file)) {
+        return alert("Please add at least one file before uploading.");
+      }
+
+      toggleLoader(true);
+
+      for (let i = 0; i < filesArray.length; i++) {
+        const { file, note } = filesArray[i];
+        if (!file) continue;
+
+        const progressBar = document.querySelectorAll(".progress-bar")[i];
+        progressBar.style.width = "20%";
+        progressBar.textContent = "Reading...";
+
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          const base64Data = e.target.result.split(",")[1];
+
+          const payload = {
+            system: "clientUploads",
+            action: "saveUploadedFiles",
+            clientID,
+            firstName,
+            lastName,
+            email,
+            fileNote: note,
+            fileName: file.name,
+            fileData: base64Data
+          };
+
+          try {
+            progressBar.style.width = "50%";
+            progressBar.textContent = "Uploading...";
+
+            const res = await fetch(scriptURL, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload)
+            });
+
+            const result = await res.json();
+            if (result.success) {
+              progressBar.style.width = "100%";
+              progressBar.textContent = "Done";
+              showToast(`File uploaded: ${file.name}`, "success");
+            } else {
+              progressBar.style.width = "100%";
+              progressBar.classList.add("bg-danger");
+              progressBar.textContent = "Failed";
+              showToast(`Upload failed: ${file.name}`, "danger");
+            }
+          } catch (err) {
+            progressBar.style.width = "100%";
+            progressBar.classList.add("bg-danger");
+            progressBar.textContent = "Error";
+            console.error(err);
+            showToast(`Error uploading: ${file.name}`, "danger");
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+
+      toggleLoader(false);
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const theme = localStorage.getItem('selectedTheme');
+      if (theme) document.body.classList.add(theme);
+    });
+  </script>
+</body>
+</html>
