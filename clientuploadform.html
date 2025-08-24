@@ -159,6 +159,7 @@
 <script src="config.js"></script>
 
 <script>
+// Max files
 const maxFiles = 3;
 let filesArray = [];
 
@@ -178,68 +179,70 @@ document.getElementById("greeting").innerHTML =
 
 // Enable/disable upload button
 function updateUploadButton() {
-  uploadBtn.disabled = !filesArray.some(f => f.file instanceof File);
+  uploadBtn.disabled = !filesArray.some(f => f.file);
 }
 
-// Fade out element smoothly
-function fadeOut(el, duration = 300) {
-  el.style.transition = `opacity ${duration}ms`;
-  el.style.opacity = 0;
-  setTimeout(() => { el.style.display = "none"; }, duration);
+// Utility to get file icon for non-images
+function getFileIcon(fileName) {
+  const ext = fileName.split('.').pop().toLowerCase();
+  const icons = {
+    pdf: '📄', doc: '📄', docx: '📄', txt: '📝', xls: '📊', xlsx: '📊',
+    csv: '📊', ppt: '📈', pptx: '📈', default: '📁'
+  };
+  return icons[ext] || icons.default;
 }
 
-// Create a file input row
-function createFileInput(index) {
+// Add a new file input slot
+function addFileInput(fileObj = { file: null, note: "" }) {
+  if (filesArray.length >= maxFiles) {
+    addFileBtn.style.display = "none";
+    return showToast(`Max ${maxFiles} files allowed.`, "warning");
+  }
+
+  const index = filesArray.length;
+  filesArray.push(fileObj);
+
   const div = document.createElement("div");
-  div.className = "file-item";
-  div.style.display = "flex";
-  div.style.flexDirection = "column";
-  div.style.marginBottom = "1.5rem";
+  div.className = "file-item d-flex align-items-center justify-content-between";
+  div.style.gap = "1rem";
 
-div.innerHTML = `
-  <label>File ${index + 1}</label>
-  <div style="display:flex; align-items:center; gap:10px;">
-    <input type="file" class="form-control file-input mb-1" data-index="${index}" style="flex:1;">
-    <img class="file-thumbnail" src="${filesArray[index].thumbnail || ''}" style="width:50px; height:50px; object-fit:cover; display:${filesArray[index].thumbnail ? 'inline-block' : 'none'}; border-radius:4px;">
-  </div>
-  <label class="note-label">Add a note for this file</label>
-  <input type="text" class="form-control file-note" data-index="${index}" value="${filesArray[index].note || ''}">
-  ${index > 0 ? `<button type="button" class="btn btn-sm btn-outline-danger removeFileBtn mt-2">Remove</button>` : ""}
-  <div class="progress mt-2"><div class="progress-bar" style="width:0%">Waiting...</div></div>
-`;
-
+  div.innerHTML = `
+    <div style="flex:1;">
+      <label>File ${index + 1}</label>
+      <input type="file" class="form-control mb-1 file-input" data-index="${index}">
+      <label class="note-label">Add a note for this file</label>
+      <input type="text" class="form-control file-note" data-index="${index}">
+    </div>
+    <div style="display:flex; flex-direction:column; align-items:center;">
+      <div class="file-preview mb-1" style="width:60px; height:60px; display:flex; justify-content:center; align-items:center; font-size:2rem; border-radius:6px; border:1px solid var(--bs-info); overflow:hidden;"></div>
+      ${index > 0 ? `<button type="button" class="btn btn-sm btn-outline-danger removeFileBtn">Remove</button>` : ""}
+    </div>
+  `;
   fileContainer.appendChild(div);
 
-  const fileInput = div.querySelector('input[type="file"]');
-  const noteInput = div.querySelector('input[type="text"]');
-  const fileNameSpan = div.querySelector(".file-name");
-  const thumbnail = div.querySelector(".file-thumbnail");
+  const fileInput = div.querySelector(".file-input");
+  const noteInput = div.querySelector(".file-note");
+  const preview = div.querySelector(".file-preview");
   const removeBtn = div.querySelector(".removeFileBtn");
 
-  // Handle file selection
+  // File selected
   fileInput.addEventListener("change", e => {
     const file = e.target.files[0] || null;
     filesArray[index].file = file;
 
-    if (file) {
-      fileNameSpan.textContent = file.name;
+    if (!file) {
+      preview.innerHTML = "";
+      return;
+    }
 
-      // Show thumbnail if image, else hide
-      if (file.type.startsWith("image/")) {
-        const reader = new FileReader();
-        reader.onload = ev => {
-          thumbnail.src = ev.target.result;
-          thumbnail.style.display = "inline-block";
-        };
-        reader.readAsDataURL(file);
-      } else {
-        thumbnail.src = "";
-        thumbnail.style.display = "none";
-      }
+    if (file.type.startsWith("image/")) {
+      const reader = new FileReader();
+      reader.onload = ev => {
+        preview.innerHTML = `<img src="${ev.target.result}" style="max-width:100%; max-height:100%;">`;
+      };
+      reader.readAsDataURL(file);
     } else {
-      fileNameSpan.textContent = "";
-      thumbnail.src = "";
-      thumbnail.style.display = "none";
+      preview.innerHTML = `<span>${getFileIcon(file.name)}</span>`;
     }
 
     updateUploadButton();
@@ -250,39 +253,40 @@ div.innerHTML = `
     filesArray[index].note = e.target.value;
   });
 
-  // Remove button (2nd and 3rd slots)
+  // Remove button
   if (removeBtn) {
-    removeBtn.addEventListener("click", () => {
-      filesArray.splice(index, 1);
-      refreshFileInputs();
-    });
+    removeBtn.addEventListener("click", () => removeFileInput(index));
   }
+
+  if (filesArray.length >= maxFiles) addFileBtn.style.display = "none";
 }
 
-// Re-render all file inputs
-function refreshFileInputs() {
-  fileContainer.innerHTML = "";
-  filesArray.forEach((item, idx) => createFileInput(idx));
+// Remove a file input slot
+function removeFileInput(index) {
+  filesArray.splice(index, 1);
+  const divToRemove = fileContainer.children[index];
+  if (divToRemove) divToRemove.remove();
+
+  Array.from(fileContainer.children).forEach((div, idx) => {
+    div.querySelector(".file-input").dataset.index = idx;
+    div.querySelector(".file-note").dataset.index = idx;
+    div.querySelector("label").textContent = `File ${idx + 1}`;
+    const removeBtn = div.querySelector(".removeFileBtn");
+    if (removeBtn) removeBtn.onclick = () => removeFileInput(idx);
+  });
 
   if (filesArray.length < maxFiles) {
     addFileBtn.style.display = "inline-block";
     addFileBtn.style.opacity = 1;
-  } else {
-    fadeOut(addFileBtn);
   }
 
   updateUploadButton();
 }
 
 // Add File button click
-addFileBtn.addEventListener("click", () => {
-  if (filesArray.length < maxFiles) {
-    filesArray.push({ file: null, note: "" });
-    refreshFileInputs();
-  }
-});
+addFileBtn.addEventListener("click", () => addFileInput());
 
-// Upload files
+// Upload files (same as before)
 uploadBtn.addEventListener("click", async () => {
   if (!filesArray.length || !filesArray.some(f => f.file)) {
     return showToast("Add at least one file.", "warning");
@@ -365,8 +369,7 @@ uploadBtn.addEventListener("click", async () => {
 });
 
 // Initialize with 1 file input
-filesArray.push({ file: null, note: "" });
-refreshFileInputs();
+addFileInput();
 
 // Apply theme after DOM is ready
 window.addEventListener('DOMContentLoaded', () => {
