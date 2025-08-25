@@ -143,6 +143,8 @@
     <span>Please upload up to 3 files. You may add a note for each file.</span>
   </h3>
 
+  <div id="alertsContainer" class="mb-3"></div>
+
   <!-- Upload section -->
   <div class="upload-section">
     <div id="fileContainer"></div>
@@ -166,6 +168,7 @@ let filesArray = [];
 const addFileBtn = document.getElementById("addFileBtn");
 const fileContainer = document.getElementById("fileContainer");
 const uploadBtn = document.getElementById("uploadBtn");
+const alertsContainer = document.getElementById("alertsContainer"); // ✅ for persistent alerts
 
 // Greet client
 const params = new URLSearchParams(window.location.search);
@@ -196,7 +199,7 @@ function getFileIcon(fileName) {
 function addFileInput(fileObj = { file: null, note: "" }) {
   if (filesArray.length >= maxFiles) {
     addFileBtn.style.display = "none";
-    return showToast(`Max ${maxFiles} files allowed.`, "warning");
+    return; // no toast here anymore
   }
 
   const index = filesArray.length;
@@ -290,14 +293,23 @@ function removeFileInput(index) {
 // Add File button click
 addFileBtn.addEventListener("click", () => addFileInput());
 
-// Upload files (same as before)
+// Upload files (with single persistent alert)
 uploadBtn.addEventListener("click", async () => {
+  alertsContainer.innerHTML = ""; // clear old alerts
+
   if (!filesArray.length || !filesArray.some(f => f.file)) {
-    return showToast("Add at least one file.", "warning");
+    alertsContainer.innerHTML = `
+      <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        Please add at least one file before uploading.
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    `;
+    return;
   }
 
   toggleLoader(true);
   const clientID = params.get("clientID") || "";
+  let anyFailed = false;
 
   for (let i = 0; i < filesArray.length; i++) {
     const { file, note } = filesArray[i];
@@ -347,12 +359,11 @@ uploadBtn.addEventListener("click", async () => {
             progressBar.classList.add("bg-success");
             progressBar.style.width = "100%";
             progressBar.textContent = "File Uploaded ✓";
-            showToast(`File "${file.name}" uploaded successfully!`, "success");
           } else {
+            anyFailed = true;
             progressBar.classList.add("bg-danger");
             progressBar.style.width = "100%";
             progressBar.textContent = "Failed ❌";
-            showToast(`Failed to upload file: ${file.name}`, "error");
           }
           resolve();
         };
@@ -361,15 +372,24 @@ uploadBtn.addEventListener("click", async () => {
       });
     } catch (err) {
       clearInterval(interval);
+      anyFailed = true;
       progressBar.classList.add("bg-danger");
       progressBar.style.width = "100%";
       progressBar.textContent = "Error ❌";
-      showToast(`Error uploading file: ${file.name}`, "error");
     }
   }
 
   toggleLoader(false);
-  showToast("Your files have been successfully uploaded. Thank you!", "success");
+
+  // Final alert (persistent)
+  alertsContainer.innerHTML = `
+    <div class="alert ${anyFailed ? "alert-danger" : "alert-success"} alert-dismissible fade show" role="alert">
+      ${anyFailed 
+        ? "Some files failed to upload. Please check and try again." 
+        : "All files have been successfully uploaded!"}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  `;
 });
 
 // Initialize with 1 file input
