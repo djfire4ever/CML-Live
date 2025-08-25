@@ -120,6 +120,7 @@
     .page-container { width: 95%; padding: 1.5rem; }
     .upload-section { padding: 1.5rem; }
   }
+  
 </style>
 </head>
 <body class="page-body" style="min-height: 100vh;" data-element="page-bg">
@@ -199,7 +200,7 @@ function getFileIcon(fileName) {
 function addFileInput(fileObj = { file: null, note: "" }) {
   if (filesArray.length >= maxFiles) {
     addFileBtn.style.display = "none";
-    return; // no toast here anymore
+    return;
   }
 
   const index = filesArray.length;
@@ -290,6 +291,12 @@ function removeFileInput(index) {
   updateUploadButton();
 }
 
+// Disable the whole upload section
+function disableUploadForm() {
+  const formEls = document.querySelectorAll("#fileContainer input, #fileContainer button, #addFileBtn, #uploadBtn");
+  formEls.forEach(el => el.disabled = true);
+}
+
 // Add File button click
 addFileBtn.addEventListener("click", () => addFileInput());
 
@@ -299,7 +306,7 @@ uploadBtn.addEventListener("click", async () => {
 
   if (!filesArray.length || !filesArray.some(f => f.file)) {
     alertsContainer.innerHTML = `
-      <div class="alert alert-warning alert-dismissible fade show" role="alert">
+      <div class="alert alert-info text-black alert-dismissible fade show" role="alert">
         Please add at least one file before uploading.
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
       </div>
@@ -390,6 +397,10 @@ uploadBtn.addEventListener("click", async () => {
       <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
   `;
+
+  if (!anyFailed) {
+    disableUploadForm(); // ✅ lock everything if successful
+  }
 });
 
 // Initialize with 1 file input
