@@ -43,6 +43,13 @@ body.bg-black .stat-button:active {
   transform: scale(0.98);
   box-shadow: none;
 }
+.upload-row.selected {
+  background-color: var(--bs-info) !important;
+  color: var(--bs-black) !important;
+  font-weight: bold;
+  border-left: 4px solid var(--bs-black);
+}
+
 </style>
 </head>
 <body class="d-flex flex-column bg-black mt-3">
@@ -245,6 +252,23 @@ body.bg-black .stat-button:active {
   </div>
 </div>
 
+<!-- Upload Details Modal -->
+<div class="modal fade" id="uploadDetailsModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content bg-black text-info">
+      <div class="modal-header">
+        <h5 class="modal-title">Upload Details</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="uploadDetailsContent" style="overflow-y:auto; max-height:500px;"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-danger" id="deleteUploadBtn">Delete File</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 </div>
 </div>
 </div>
@@ -252,12 +276,14 @@ body.bg-black .stat-button:active {
 
 <script>
   
+// ==============================
+// 1️⃣ Fetch Dashboard Stats
+// ==============================
 async function fetchDashboardStats() {
   try {
     const url = `${scriptURL}?action=getDashboardStats`;
     const response = await fetch(url);
     if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-
     const data = await response.json();
 
     // ✅ Simple counts
@@ -270,38 +296,7 @@ async function fetchDashboardStats() {
     // ✅ Low stock
     document.getElementById("lowStockCount").textContent = data.lowStockAlerts || 0;
 
-    // ✅ Optional: render low stock list
-    if (Array.isArray(data.lowStockDetails)) {
-      const list = document.getElementById("lowStockList");
-      list.innerHTML = data.lowStockDetails.length
-        ? data.lowStockDetails.map(item => `
-            <li class="list-group-item bg-black text-info">${item.matName} — ${item.onHand}</li>
-          `).join("")
-        : "<li class='list-group-item bg-black text-info'>✅ All stock levels healthy.</li>";
-    }
-
-    // ✅ Leads breakdown
-    if (Array.isArray(data.leads)) {
-      const todayStr = new Date().toLocaleDateString();
-      let newCount = 0, pendingCount = 0, followupCount = 0;
-
-      data.leads.forEach(lead => {
-        const status = (lead.Status || lead.status || "").toLowerCase();
-        const followUpDate = lead.FollowUpDate || lead.followUpDate || "";
-        if (status === "new") newCount++;
-        if (status === "pending") pendingCount++;
-        if (followUpDate) {
-          const followDate = new Date(followUpDate).toLocaleDateString();
-          if (followDate === todayStr) followupCount++;
-        }
-      });
-
-      document.getElementById("newLeads").textContent = newCount;
-      document.getElementById("pendingLeads").textContent = pendingCount;
-      document.getElementById("followupLeads").textContent = followupCount;
-    }
-
-    // ✅ Recent Uploads (Last 7 Days, newest-first)
+    // ✅ Recent uploads
     if (Array.isArray(data.clientUploads)) {
       const uploadsList = document.getElementById("recentUploadsList");
       const today = new Date();
@@ -315,38 +310,120 @@ async function fetchDashboardStats() {
         })
         .sort((a, b) => (new Date(b.uploadDate || 0)) - (new Date(a.uploadDate || 0)));
 
-      uploadsList.innerHTML = recentUploads.length
-        ? recentUploads.map(u => {
-            const uploadDateStr = u.uploadDate ? new Date(u.uploadDate).toLocaleString() : "No date";
-            const fileName = u.fileName || "No file uploaded";
-            const fileURL = u.fileURL || "#";
+      // Save globally
+      window._recentUploads = recentUploads;
 
-            return `
-              <li class="list-group-item bg-black text-info">
-                <strong>${u.firstName || ""} ${u.lastName || ""}</strong> — ${fileName}
-                <br>
-                <small>${uploadDateStr}</small>
-                ${u.fileURL ? `<a href="${fileURL}" target="_blank" class="ms-2 text-decoration-none text-primary">View</a>` : ""}
-                ${u.fileNote ? `<br><em>Note: ${u.fileNote}</em>` : ""}
-              </li>
-            `;
-          }).join("")
-        : `<li class="list-group-item bg-black text-info">No uploads in the last 7 days.</li>`;
+uploadsList.innerHTML = recentUploads.length
+  ? recentUploads.map((u, i) => {
+      const uploadDateStr = u.uploadDate ? new Date(u.uploadDate).toLocaleDateString() : "No date";
+
+      // Extract file extension from fileName
+      const fileExtMatch = u.fileName ? u.fileName.match(/\.(\w+)$/) : null;
+      const fileExt = fileExtMatch ? fileExtMatch[1].toLowerCase() : "unknown";
+
+      // Determine readable type from MIME
+      let typeLabel = "Unknown";
+      if (u.fileType?.startsWith("image/")) typeLabel = "Image";
+      else if (u.fileType?.startsWith("text/")) typeLabel = "Document";
+      else if (u.fileType?.startsWith("application/pdf")) typeLabel = "PDF";
+      else typeLabel = "File";
+
+      return `
+        <li class="list-group-item bg-black text-info upload-row" 
+            data-index="${i}" style="cursor:pointer;">
+          <div><strong>${u.firstName || ""} ${u.lastName || ""}</strong> • <small>${uploadDateStr}</small></div>
+          <div><small>${typeLabel} • ${fileExt}</small></div>
+        </li>
+      `;
+    }).join("")
+  : `<li class="list-group-item bg-black text-info">No uploads in the last 7 days.</li>`;
 
       document.getElementById("recentUploadCountBadge").textContent = recentUploads.length;
+
+      // ✅ Attach click events after rebuilding list
+      attachUploadRowEvents();
     }
 
   } catch (err) {
-    console.error("❌ Error fetching dashboard stats:", err);
+    console.error("Dashboard fetch error:", err);
   }
 }
 
+// ==============================
+// 2️⃣ Attach Click Events to Upload Rows
+// ==============================
+function attachUploadRowEvents() {
+  document.querySelectorAll(".upload-row").forEach((row, i) => {
+    row.addEventListener("click", () => {
+      const upload = window._recentUploads[i];
+
+      // Remove highlight from all rows
+      document.querySelectorAll(".upload-row").forEach(r => r.classList.remove("selected"));
+
+      // Highlight clicked row
+      row.classList.add("selected");
+
+      // Open modal
+      showUploadModal(upload);
+    });
+  });
+}
+
+// ==============================
+// 3️⃣ Show Modal
+// ==============================
+function showUploadModal(upload) {
+  const modalBody = document.getElementById("uploadDetailsContent");
+  const deleteBtn = document.getElementById("deleteUploadBtn");
+  const modalEl = document.getElementById("uploadDetailsModal");
+
+  // Render content
+  modalBody.innerHTML = `
+    <p><strong>Client:</strong> ${upload.firstName || ""} ${upload.lastName || ""}</p>
+    <p><strong>File:</strong> <a href="${upload.url || '#'}" target="_blank">${upload.fileName || "Unknown"}</a></p>
+    <p><strong>Date:</strong> ${upload.uploadDate ? new Date(upload.uploadDate).toLocaleString() : "Unknown"}</p>
+    ${upload.fileNote ? `<p><strong>Note:</strong> ${upload.fileNote}</p>` : ""}
+  `;
+
+  // Delete button logic
+  if (deleteBtn) {
+    deleteBtn.onclick = async () => {
+      if (!confirm("Are you sure you want to delete this file? This will not remove the log.")) return;
+      try {
+        const res = await fetch(scriptURL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            system: "clientUploads",
+            action: "deleteUpload",
+            uploadID: upload.uploadID
+          })
+        });
+        const result = await res.json();
+        if (result.success) {
+          alert("File deleted successfully.");
+          await fetchDashboardStats();
+          const inst = bootstrap.Modal.getInstance(modalEl);
+          if (inst) inst.hide();
+        } else {
+          alert("Failed to delete file.");
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Error deleting file.");
+      }
+    };
+  }
+
+  // Show modal
+  const modal = new bootstrap.Modal(modalEl);
+  modal.show();
+}
+
+// ✅ Run after DOM is ready
 document.addEventListener("DOMContentLoaded", () => {
   toggleLoader(true);
-
-  fetchDashboardStats().finally(() => {
-    toggleLoader(false);
-  });
+  fetchDashboardStats().finally(() => toggleLoader(false));
 });
 
 document.addEventListener('click', function (e) {

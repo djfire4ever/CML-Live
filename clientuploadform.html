@@ -306,7 +306,7 @@ uploadBtn.addEventListener("click", async () => {
 
   if (!filesArray.length || !filesArray.some(f => f.file)) {
     alertsContainer.innerHTML = `
-      <div class="alert alert-info text-black alert-dismissible fade show" role="alert">
+      <div class="alert alert-info bg-info text-black alert-dismissible fade show" role="alert">
         Please add at least one file before uploading.
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
       </div>
@@ -390,11 +390,10 @@ uploadBtn.addEventListener("click", async () => {
 
   // Final alert (persistent)
   alertsContainer.innerHTML = `
-    <div class="alert ${anyFailed ? "alert-danger" : "alert-success"} alert-dismissible fade show" role="alert">
+    <div class="alert ${anyFailed ? "alert-danger" : "alert-info"} ${anyFailed ? "text-light" : "bg-info text-dark"}" role="alert">
       ${anyFailed 
-        ? "Some files failed to upload. Please check and try again." 
+        ? "Some files failed to upload. Please check and try again."
         : "All files have been successfully uploaded!"}
-      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
   `;
 
