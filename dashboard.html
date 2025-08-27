@@ -426,7 +426,7 @@ function showUploadModal(upload) {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                   system: "clientUploads",
-                  action: "deleteUpload",
+                  action: "deleteUploadFile",
                   uploadID: upload.uploadID
                 })
               });
@@ -471,7 +471,7 @@ async function markUploadViewed(uploadID) {
     const res = await fetch(scriptURL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ system: "clientUploads", action: "markViewed", uploadID })
+      body: JSON.stringify({ system: "clientUploads", action: "markUploadViewed", uploadID })
     });
     const result = await res.json();
     if (!result.success) console.warn("Failed to mark upload as viewed:", result.message);
