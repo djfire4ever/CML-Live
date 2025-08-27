@@ -342,7 +342,7 @@ uploadBtn.addEventListener("click", async () => {
           const base64Data = e.target.result.split(',')[1];
           const payload = {
             system: "clientUploads",
-            action: "saveUploadedFiles",
+            action: "uploadFile",
             clientID,
             firstName,
             lastName,
