@@ -58,7 +58,7 @@ function showToast(message, type = "success", forLeadForm = false) {
   toast.setAttribute("role", "alert");
   
   toast.innerHTML = `
-    <div class="toast-header">
+    <div class="toast-header bg-info text-black">
         <strong class="me-auto">${headerText}</strong>
         <button type="button" class="btn-close btn-close-info" data-bs-dismiss="toast"></button>
     </div>

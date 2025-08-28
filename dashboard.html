@@ -49,6 +49,17 @@ body.bg-black .stat-button:active {
   font-weight: bold;
   border-left: 4px solid var(--bs-black);
 }
+.tooltip-inner {
+/*  font-size: 1.1rem;  slightly bigger font */
+  font-weight: bold;
+  background-color: var(--bs-black) !important; 
+}
+.tooltip-supplier {
+  color: var(--bs-info); 
+}
+.tooltip-no-supplier {
+  color: var(--bs-danger); 
+}
 
 </style>
 </head>
@@ -179,7 +190,7 @@ body.bg-black .stat-button:active {
       <div class="accordion-item border-info">
         <h2 class="accordion-header" id="headingLowStock">
           <button class="accordion-button bg-black text-info" type="button" data-bs-toggle="collapse" data-bs-target="#collapseLowStock" aria-expanded="true" aria-controls="collapseLowStock">
-            <i class="fa-solid fa-boxes-stacked me-2"></i>Low Stock-Order<span id="lowStockCount" class="badge bg-primary rounded-pill ms-auto">0</span>
+            <i class="fa-solid fa-boxes-stacked me-2"></i>Low Stock-Order<span id="lowStockCount" class="badge bg-info text-black rounded-pill ms-auto">0</span>
           </button>
         </h2>
         <div id="collapseLowStock" class="accordion-collapse collapse" aria-labelledby="headingLowStock" data-bs-parent="#lowStockAccordion">
@@ -200,7 +211,7 @@ body.bg-black .stat-button:active {
                 data-bs-toggle="collapse" data-bs-target="#collapseToday"
                 aria-expanded="true" aria-controls="collapseToday">
           <i class="fa-solid fa-calendar-day me-2"></i>Today's Events
-          <span id="todayEventCount" class="badge bg-primary rounded-pill ms-auto">0</span>
+          <span id="todayEventCount" class="badge bg-info text-black rounded-pill ms-auto">0</span>
         </button>
       </h2>
       <div id="collapseToday" class="accordion-collapse collapse" aria-labelledby="headingToday"
@@ -222,7 +233,7 @@ body.bg-black .stat-button:active {
                 data-bs-toggle="collapse" data-bs-target="#collapseWeekEvents"
                 aria-expanded="true" aria-controls="collapseWeekEvents">
           <i class="fa-solid fa-calendar-week me-2"></i>This Week's Events
-          <span id="weekEventCount" class="badge bg-primary rounded-pill ms-auto">0</span>
+          <span id="weekEventCount" class="badge bg-info text-black rounded-pill ms-auto">0</span>
         </button>
       </h2>
       <div id="collapseWeekEvents" class="accordion-collapse collapse" aria-labelledby="headingWeekEvents">
@@ -243,7 +254,7 @@ body.bg-black .stat-button:active {
                 data-bs-toggle="collapse" data-bs-target="#collapseUploads"
                 aria-expanded="true" aria-controls="collapseUploads">
           <i class="fa-solid fa-upload me-2"></i>Recent Uploads
-          <span id="recentUploadCountBadge" class="badge bg-primary rounded-pill ms-auto">0</span>
+          <span id="recentUploadCountBadge" class="badge bg-info text-black rounded-pill ms-auto">0</span>
         </button>
       </h2>
       <div id="collapseUploads" class="accordion-collapse collapse" aria-labelledby="headingUploads">
@@ -289,19 +300,60 @@ async function fetchDashboardStats() {
     if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
     const data = await response.json();
 
-    // Counts
+    // ---- Counts ----
     document.getElementById("totalClients").textContent = data.clients || 0;
     document.getElementById("totalProducts").textContent = data.products || 0;
     document.getElementById("totalMaterials").textContent = data.materials || 0;
     document.getElementById("unpaidInvoiceCount").textContent = data.unpaidInvoices || 0;
     document.getElementById("totalQuotes").textContent = data.quotes || 0;
-    document.getElementById("lowStockCount").textContent = data.lowStockAlerts || 0;
 
-    // Recent uploads
+    // ---- Low stock (badge + list) ----
+    const lowStockList = document.getElementById("lowStockList");
+    lowStockList.innerHTML = "";
+
+    let lowStockData = Array.isArray(data.lowStock) ? data.lowStock : [];
+
+    // Set badge
+    document.getElementById("lowStockCount").textContent = lowStockData.length || 0;
+
+    // Populate the accordion list
+    if (lowStockData.length > 0) {
+      lowStockData.forEach(item => {
+        const li = document.createElement("li");
+        li.className = "list-group-item list-group-item-action d-flex justify-content-between align-items-center text-info bg-black low-stock-row";
+        li.style.cursor = "pointer";
+
+        li.innerHTML = `
+          <div class="w-75 text-start">${item.matName}</div>
+          <div class="w-25 text-end">${item.onHand}</div>
+        `;
+
+        // Dynamic tooltip
+        li.setAttribute("data-bs-toggle", "tooltip");
+        li.setAttribute("data-bs-html", "true"); // allow HTML inside tooltip
+        li.setAttribute("title", item.supplierUrl
+          ? `Click to order from <span class="tooltip-supplier">${item.supplier || "supplier"}</span>`
+          : `<span class="tooltip-no-supplier">No supplier listed</span>`);
+
+        li.addEventListener("click", () => {
+          if (item.supplierUrl) window.open(item.supplierUrl, "_blank");
+        });
+
+        lowStockList.appendChild(li);
+      });
+
+      // Initialize all tooltips inside the list
+      const tooltipTriggerList = lowStockList.querySelectorAll('[data-bs-toggle="tooltip"]');
+      tooltipTriggerList.forEach(t => new bootstrap.Tooltip(t));
+
+    } else {
+      lowStockList.innerHTML = `<li class="list-group-item bg-black text-info">✅ All stock levels healthy.</li>`;
+    }
+
+    // ---- Recent uploads (unchanged) ----
     if (Array.isArray(data.clientUploads)) {
       const uploadsList = document.getElementById("recentUploadsList");
 
-      // Filter out deleted/expired uploads
       const filteredUploads = data.clientUploads
         .filter(u => !["DeletedByUser", "Expired"].includes(u.fileStatus))
         .sort((a, b) => (new Date(b.uploadDate || 0)) - (new Date(a.uploadDate || 0)));
@@ -319,7 +371,6 @@ async function fetchDashboardStats() {
             else if (u.fileType?.startsWith("text/")) typeLabel = "Document";
             else if (u.fileType === "application/pdf") typeLabel = "PDF";
 
-            // Status icon
             let statusIcon;
             switch ((u.fileStatus || "").toLowerCase()) {
               case "viewed":
@@ -353,6 +404,7 @@ async function fetchDashboardStats() {
 
       attachUploadRowEvents();
     }
+
   } catch (err) {
     console.error("Dashboard fetch error:", err);
   }
