@@ -5,12 +5,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Client Manager</title>
 </head>
-<!-- <body class="theme-dark"> -->
-<body class="page-body" style="min-height: 100vh;" data-element="page-bg">
+<style>
+  /* Modern button hover/focus effects */
+.client-row .btn {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.client-row .btn:hover, 
+.client-row .btn:focus {
+  transform: translateY(-2px);       /* slight lift */
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15); /* subtle shadow */
+}
+.bg-bronze {
+  background-color: #cd7f32 !important; /* Bronze */
+}
+
+</style>
+<body class="page-body" style="min-height:100vh;" data-element="page-bg">
 
 <!-- 💧 Watermark -->
 <div class="watermark"></div>
- 
+
 <!-- 🔔 Toast Notifications -->
 <div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3"></div>
 
@@ -22,162 +37,319 @@
   </div>
 </div>
 
-<!-- ⬝ Row Template -->
-<template id="rowTemplate">
-  <tr class="result-box" data-element="search-result-box">
-    <th class="clientID" scope="row"></th>
-    <th class="firstName"></th>
-    <th class="lastName"></th>
-    <th class="nickName"></th>
-    <th class="text-center">
-      <div class="btn-group" role="group">
-        <button type="button" class="btn btn-sm delete-button d-none">Confirm</button>
-        <button type="button" class="btn btn-sm before-delete-button" data-button-state="delete">Delete</button>
-      </div>
-    </th>
-  </tr>
-</template>
-
-<!-- ⬝ Client Manager Container -->
 <div class="container" data-element="main-container">
-  <h2 class="text-center" data-element="page-title">Client Management</h2>
+  <h2 class="text-center mb-3" data-element="page-title">Client Management</h2>
 
-<!-- 📍 Navigation Tabs -->
-  <ul class="nav nav-tabs" id="clientTabs">
-    <li class="nav-item">
-      <button class="nav-link active" data-element="nav-tab-button" data-bs-toggle="tab" data-bs-target="#tab-search">🔍 Search Client</button>
-    </li>
-    <li class="nav-item">
-      <button class="nav-link" data-element="nav-tab-button" data-bs-toggle="tab" data-bs-target="#tab-add">➕ Add Client</button>
-    </li>
-    <li class="nav-item">
-      <button class="nav-link" data-element="nav-tab-button" data-bs-toggle="tab" data-bs-target="#tab-edit" style="display:none;">✏️ Edit Client</button>
-    </li>
-  </ul>
-
-<!-- 📁 Tab Content -->
-<div class="tab-content client-tab-content" data-element="tab-content">
-
-<!-- 🔍 Search Tab -->
-<div class="tab-pane fade show active" id="tab-search" data-element="tab-group">
-  <div class="input-group mb-2">
-    <input type="text" class="form-control" id="searchInput" placeholder="🔍 search..." data-element="search-input-box">
-    <div class="input-group-append">
-      <span class="counter" id="searchCounter" data-element="search-counter">🔍</span>
-      <span class="counter" id="totalCounter" data-element="search-counter">0</span>
+  <!-- 🔍 Search + Counters -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="input-group w-50">
+      <input type="text" id="searchInput" class="form-control" placeholder="Search clients...">
+    </div>
+    <div class="d-flex gap-3">
+      <span class="badge bg-primary">Total: <span id="totalCounter">0</span></span>
+      <span class="badge bg-success">Active: <span id="activeCounter">0</span></span>
+      <span class="badge bg-danger">Found: <span id="searchCounter">0</span></span>
     </div>
   </div>
-  <table class="table table-hover" data-element="results-table">
-    <thead>
-      <tr>
-        <th>Phone #</th>
-        <th>First Name</th>
-        <th>Last Name</th>
-        <th>Nick Name</th>
-        <th></th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody id="searchResults" data-element="search-results"></tbody>
-  </table>
-</div>
 
-<!-- ➕ Add Client Tab -->
-<div class="tab-pane fade p-2" id="tab-add">
-  <form id="addClientForm">
-    <div class="container">
-      <div class="row g-3">
-        <div class="col-md-2 col-lg-2"><label>Phone Number</label><input type="text" class="form-control" id="clientID"></div>
-        <div class="col-md-4 col-lg-4"><label>Email</label><input type="email" class="form-control" id="email"></div>
-      </div>
-      <div class="row g-3">
-        <div class="col-md-2 col-lg-2"><label>First Name</label><input type="text" class="form-control" id="firstName"></div>
-        <div class="col-md-2 col-lg-2"><label>Last Name</label><input type="text" class="form-control" id="lastName"></div>
-        <div class="col-md-2 col-lg-2"><label>Nick Name</label><input type="text" class="form-control" id="nickName"></div>
-      </div>
-      <div class="row g-3">
-        <div class="col-md-6 col-lg-6"><label>Street</label><input type="text" class="form-control" id="street"></div>
-      </div>
-      <div class="row g-3">
-        <div class="col-md-3 col-lg-3"><label>City</label><input type="text" class="form-control" id="city"></div>
-        <div class="col-md-1 col-lg-1"><label>State</label><input type="text" class="form-control" id="state"></div>
-        <div class="col-md-2 col-lg-2"><label>Zip</label><input type="number" class="form-control" id="zip"></div>
-      </div>
-      <div class="row g-3 mt-2">
-        <div class="col-sm-2"><button type="submit" class="btn">📅 Save</button></div>
+  <!-- 🔍 Accordion for Clients -->
+  <div class="accordion" id="clientsAccordion">
+
+    <!-- ➕ Add New Client Accordion Card -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="heading-addClient">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-addClient" aria-expanded="false" aria-controls="collapse-addClient">
+          ➕ Add New Client
+        </button>
+      </h2>
+      <div id="collapse-addClient" class="accordion-collapse collapse" aria-labelledby="heading-addClient" data-bs-parent="#clientsAccordion">
+        <div class="accordion-body">
+          <form id="addClientFormAccordion">
+
+            <!-- ===== Clients Name Section ===== -->
+            <fieldset class="mb-1 p-2 border rounded border-info">
+              <legend class="small fw-bold">Clients Name</legend>
+              <div class="row gx-3 gy-1 align-items-center mt-2">
+                <div class="col-md-6">
+                  <label for="firstName">First Name</label>
+                  <input type="text" class="form-control form-control-sm" id="firstName">
+                </div>
+                <div class="col-md-6">
+                  <label for="lastName">Last Name</label>
+                  <input type="text" class="form-control form-control-sm" id="lastName">
+                </div>
+              </div>
+              <div class="row gx-3 gy-1 align-items-center mt-1">
+                <div class="col-md-6">
+                  <label for="nickName">Nick Name</label>
+                  <input type="text" class="form-control form-control-sm" id="nickName">
+                </div>
+              </div>
+            </fieldset>
+
+            <!-- ===== Contact Information Section ===== -->
+            <fieldset class="mb-1 p-2 border rounded border-info">
+              <legend class="small fw-bold">Contact Info</legend>
+              <div class="row gx-3 gy-1 align-items-center mt-2">
+                <div class="col-md-6">
+                  <label for="clientID">Phone</label>
+                  <input type="text" class="form-control form-control-sm" id="clientID">
+                </div>
+                <div class="col-md-6">
+                  <label for="email">Email</label>
+                  <input type="email" class="form-control form-control-sm" id="email">
+                </div>
+              </div>
+            </fieldset>
+
+            <!-- ===== Physical Address Section ===== -->
+            <fieldset class="mb-1 p-2 border rounded border-info">
+              <legend class="small fw-bold">Physical Address</legend>
+              <div class="row gx-3 gy-1 align-items-center mt-2">
+                <div class="col-md-12">
+                  <label for="street">Street</label>
+                  <input type="text" class="form-control form-control-sm" id="street">
+                </div>
+              </div>
+              <div class="row gx-3 gy-1 align-items-center mt-1">
+                <div class="col-md-6">
+                  <label for="city">City</label>
+                  <input type="text" class="form-control form-control-sm" id="city">
+                </div>
+                <div class="col-md-2">
+                  <label for="state">State</label>
+                  <input type="text" class="form-control form-control-sm" id="state">
+                </div>
+                <div class="col-md-4">
+                  <label for="zip">Zip</label>
+                  <input type="number" class="form-control form-control-sm" id="zip">
+                </div>
+              </div>
+            </fieldset>
+
+            <!-- ===== Buttons ===== -->
+            <div class="d-flex gap-1 mt-2">
+              <button type="submit" class="btn btn-success btn-sm rounded-pill">
+                <i class="bi bi-check me-1"></i> Save
+              </button>
+              <button type="button" class="btn btn-secondary btn-sm rounded-pill" id="addCancelBtn">
+                <i class="bi bi-x me-1"></i> Cancel
+              </button>
+            </div>
+
+          </form>
+        </div>
       </div>
     </div>
-  </form>
-</div>
 
-<!-- ✏️ Edit Client Tab -->
-<div class="tab-pane fade p-2" id="tab-edit">
-  <form id="editClientForm">
-    <input type="hidden" id="edit-clientID-hidden">
-    <div class="container">
-      <div class="row g-3">
-        <div class="col-md-2 col-lg-2"><label>Phone Number</label><input type="text" class="form-control" id="edit-clientID" readonly></div>
-        <div class="col-md-4 col-lg-4"><label>Email</label><input type="email" class="form-control" id="edit-email"></div>
-      </div>
-      <div class="row g-3">
-        <div class="col-md-2 col-lg-2"><label>First Name</label><input type="text" class="form-control" id="edit-firstName"></div>
-        <div class="col-md-2 col-lg-2"><label>Last Name</label><input type="text" class="form-control" id="edit-lastName"></div>
-        <div class="col-md-2 col-lg-2"><label>Nick Name</label><input type="text" class="form-control" id="edit-nickName"></div>
-      </div>
-      <div class="row g-3">
-        <div class="col-md-6 col-lg-6"><label>Street</label><input type="text" class="form-control" id="edit-street"></div>
-      </div>
-      <div class="row g-3">
-        <div class="col-md-3 col-lg-3"><label>City</label><input type="text" class="form-control" id="edit-city"></div>
-        <div class="col-md-1 col-lg-1"><label>State</label><input type="text" class="form-control" id="edit-state"></div>
-        <div class="col-md-2 col-lg-2"><label>Zip</label><input type="number" class="form-control" id="edit-zip"></div>
-      </div>
-      <div class="row g-3 mt-2">
-        <div class="col-sm-2"><button type="button" class="btn" id="save-changes">📅 Save</button></div>
+  </div> <!-- End clientsAccordion -->
+
+  
+  <!-- 🔍 Search Results Accordion -->
+  <div class="accordion mt-3" id="clientsSearchResults"></div>
+
+  <!-- Template for dynamic client rows -->
+<template id="rowTemplate">
+  <div class="accordion-item client-row">
+    <h2 class="accordion-header" id="heading-CLIENTID">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-CLIENTID" aria-expanded="false" aria-controls="collapse-CLIENTID">
+        <span class="client-name">CLIENTNAME</span>
+      </button>
+    </h2>
+    <div id="collapse-CLIENTID" class="accordion-collapse collapse" aria-labelledby="heading-CLIENTID" data-bs-parent="#clientsSearchResults">
+      <div class="accordion-body">
+        <div class="container">
+
+          <!-- ===== Clients Name Section ===== -->
+          <fieldset class="mb-1 p-2 border rounded border-info">
+            <div class="d-flex justify-content-between align-items-center">
+              <!-- Legend / client name -->
+              <legend class="small fw-bold mb-0">Clients Name</legend>
+
+              <!-- Tier read-only badge -->
+              <span class="tier badge bg-secondary" data-tier-id="TIERID">TIERSHOW</span>
+
+              <!-- Tier selector dropdown (hidden initially) -->
+              <select class="form-select form-select-sm tier-input d-none" title="Select tier" style="width: auto;">
+                <option value="New">New</option>
+                <option value="Bronze">Bronze</option>
+                <option value="Silver">Silver</option>
+                <option value="Gold">Gold</option>
+                <option value="Platinum">Platinum</option>
+              </select>
+            </div>
+
+            <!-- Name fields below -->
+            <div class="row gx-3 gy-1 align-items-center mt-2">
+              <div class="col-md-6">
+                <span class="firstName">FIRSTNAME</span>
+                <input type="text" class="form-control form-control-sm firstName-input d-none"
+                  placeholder="First name" value="FIRSTNAME" title="Enter first name">
+              </div>
+              <div class="col-md-6">
+                <span class="lastName">LASTNAME</span>
+                <input type="text" class="form-control form-control-sm lastName-input d-none"
+                  placeholder="Last name" value="LASTNAME" title="Enter last name">
+              </div>
+            </div>
+
+            <div class="row gx-3 gy-1 align-items-center mt-1">
+              <div class="col-md-6">
+                <span class="nickName">NICKNAME</span>
+                <input type="text" class="form-control form-control-sm nickName-input d-none"
+                  placeholder="Nickname (optional)" value="NICKNAME" title="Optional nickname">
+              </div>
+            </div>
+          </fieldset>
+
+          <!-- ===== Contact Information Section ===== -->
+          <fieldset class="mb-1 p-2 border rounded border-info">
+            <legend class="small fw-bold">Contact Info</legend>
+            <div class="row gx-3 gy-1 align-items-center mt-2">
+              <div class="col-md-6">
+                <span class="clientID">PHONE</span>
+                <input type="text" class="form-control form-control-sm clientID-input d-none"
+                  placeholder="digits only" value="PHONE" title="Phone number required">
+              </div>
+              <div class="col-md-6">
+                <span class="email">EMAIL</span>
+                <input type="email" class="form-control form-control-sm email-input d-none"
+                  placeholder="email@example.com" value="EMAIL" title="Valid email required">
+              </div>
+            </div>
+          </fieldset>
+
+          <!-- ===== Physical Address Section ===== -->
+          <fieldset class="mb-1 p-2 border rounded border-info">
+            <legend class="small fw-bold">Physical Address</legend>
+            <div class="row gx-3 gy-1 align-items-center mt-2">
+              <div class="col-md-12">
+                <span class="street">STREET</span>
+                <input type="text" class="form-control form-control-sm street-input d-none"
+                  placeholder="123 Main St" value="STREET" title="Street address required">
+              </div>
+            </div>
+            <div class="row gx-3 gy-1 align-items-center mt-1">
+              <div class="col-md-6">
+                <span class="city">CITY</span>
+                <input type="text" class="form-control form-control-sm city-input d-none"
+                  placeholder="City" value="CITY" title="City required">
+              </div>
+              <div class="col-md-2">
+                <span class="state">STATE</span>
+                <input type="text" class="form-control form-control-sm state-input d-none"
+                  placeholder="ST" value="STATE" title="State required">
+              </div>
+              <div class="col-md-4">
+                <span class="zip">ZIP</span>
+                <input type="text" class="form-control form-control-sm zip-input d-none"
+                  placeholder="12345" value="ZIP" title="Zip code required">
+              </div>
+            </div>
+          </fieldset>
+
+          <!-- ===== Tier Section ===== -->
+          <!-- <fieldset class="mb-1 p-2 border rounded border-info">
+            <legend class="small fw-bold d-flex justify-content-between align-items-center">
+              <span>Tier</span>
+              <span class="tier badge bg-secondary" data-tier-id="TIERID">TIERSHOW</span>
+            </legend>
+            <div class="row gx-3 gy-1 align-items-center mt-2">
+              <div class="col-md-6">
+                <select class="form-select form-select-sm tier-input d-none" title="Select tier">
+                  <option value="Bronze">Bronze</option>
+                  <option value="Silver">Silver</option>
+                  <option value="Gold">Gold</option>
+                  <option value="Platinum">Platinum</option>
+                </select>
+              </div>
+            </div>
+          </fieldset> -->
+
+          <!-- ===== Buttons ===== -->
+          <div class="d-flex gap-1 mt-2">
+            <!-- Edit button -->
+            <button type="button" class="btn btn-warning btn-sm rounded-pill edit-button" data-bs-toggle="tooltip" title="Edit">
+              <i class="bi bi-pencil me-1"></i> Edit
+            </button>
+            <!-- Save button (hidden initially) -->
+            <button type="button" class="btn btn-success btn-sm rounded-pill save-button d-none" data-bs-toggle="tooltip" title="Save">
+              <i class="bi bi-check me-1"></i> Save
+            </button>
+            <!-- Cancel button (hidden initially) -->
+            <button type="button" class="btn btn-secondary btn-sm rounded-pill cancel-button d-none" data-bs-toggle="tooltip" title="Cancel">
+              <i class="bi bi-x me-1"></i> Cancel
+            </button>
+            <!-- Confirm Delete button (hidden initially) -->
+            <button type="button" class="btn btn-danger btn-sm rounded-pill delete-button d-none" data-bs-toggle="tooltip" title="Confirm Delete">
+              <i class="bi bi-trash me-1"></i> Confirm
+            </button>
+            <!-- Initial Delete button -->
+            <button type="button" class="btn btn-outline-danger btn-sm rounded-pill before-delete-button" data-button-state="delete" data-bs-toggle="tooltip" title="Delete">
+              <i class="bi bi-trash me-1"></i> Delete
+            </button>
+          </div>
+          <!-- ===== Original Buttons ===== -->
+          <!-- <div class="row gx-3 gy-1 mt-2">
+            <div class="col-sm-2">
+              <button type="button" class="btn btn-sm btn-warning edit-button">✏️ Edit</button>
+              <button type="button" class="btn btn-sm btn-success save-button d-none">💾 Save</button>
+              <button type="button" class="btn btn-sm btn-secondary cancel-button d-none">❌ Cancel</button>
+              <button type="button" class="btn btn-sm btn-danger delete-button d-none">Confirm</button>
+              <button type="button" class="btn btn-sm btn-secondary before-delete-button" data-button-state="delete">Delete</button>
+            </div>
+          </div> -->
+          <!-- ===== New Buttons ===== -->
+          <!-- <div class="d-flex gap-1">
+            <button type="button" class="btn btn-warning btn-sm rounded-pill edit-button" data-bs-toggle="tooltip" title="Edit">
+              <i class="bi bi-pencil"></i> Edit
+            </button>
+            <button type="button" class="btn btn-success btn-sm rounded-pill save-button d-none" data-bs-toggle="tooltip" title="Save">
+              <i class="bi bi-check"></i> Save
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm rounded-pill cancel-button d-none" data-bs-toggle="tooltip" title="Cancel">
+              <i class="bi bi-x"></i> Cancel
+            </button>
+            <button type="button" class="btn btn-danger btn-sm rounded-pill delete-button d-none" data-bs-toggle="tooltip" title="Confirm Delete">
+              <i class="bi bi-trash"></i> Delete
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm rounded-pill before-delete-button" data-button-state="delete" data-bs-toggle="tooltip" title="Delete">
+              <i class="bi bi-trash"></i> Delete
+            </button>
+          </div> -->
+
+        </div>
       </div>
     </div>
-  </form>
-</div>
+  </div>
+</template>
 
-</div> <!-- End tab-content -->
 </div> <!-- End container -->
 
 <!-- 🧠 Scripts -->
 <script>
-
 function setupDynamicNavigation() {
   function activateTabFromHash() {
     var hash = window.location.hash;
     if (!hash) return;
-
     var targetTabButton = document.querySelector('[data-bs-target="' + hash + '"]');
     if (targetTabButton) {
       var tab = new bootstrap.Tab(targetTabButton);
       tab.show();
     }
   }
-
-  // Use window.onload for full page load
-  window.onload = function() {
-    activateTabFromHash();  // Ensures tab switch happens after everything is loaded
-  };
-
+  window.onload = function() { activateTabFromHash(); };
   window.addEventListener('hashchange', activateTabFromHash);
 }
-
 setupDynamicNavigation();
 
 window.addEventListener('DOMContentLoaded', () => {
   const theme = localStorage.getItem('selectedTheme');
-  if (theme) {
-    document.body.classList.add(theme);
-  }
+  if (theme) document.body.classList.add(theme);
 });
-
 </script>
 
-<script src="config.js"></script> <!-- this has all my glogal functions, variables and constants including scripturl -->
+<script src="config.js"></script>
 <script src="clientmanager.js"></script>
-
 </body>
 </html>
