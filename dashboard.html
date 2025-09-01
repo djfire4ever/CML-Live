@@ -60,6 +60,9 @@ body.bg-black .stat-button:active {
 .tooltip-no-supplier {
   color: var(--bs-danger); 
 }
+.text-bronze {
+  color: #cd7f32 !important; /* classic bronze color */
+}
 
 </style>
 </head>
@@ -183,8 +186,8 @@ body.bg-black .stat-button:active {
 </div>
 
 <!-- Row 2 -->
-<!-- Low-Stock Accordion -->
 <div class="row g-2 my-1">
+  <!-- Low-Stock Accordion -->
   <div class="col-md-4 col-lg-4 my-1">
     <div class="accordion fade-in-card" id="lowStockAccordion">
       <div class="accordion-item border-info">
@@ -202,88 +205,134 @@ body.bg-black .stat-button:active {
     </div>
   </div>
 
-<!-- 📅 Calendar Events Today Accordion -->
-<div class="col-md-4 col-lg-4 my-1">
-  <div class="accordion fade-in-card" id="calendarTodayAccordion">
-    <div class="accordion-item border-info">
-      <h2 class="accordion-header" id="headingToday">
-        <button class="accordion-button bg-black text-info" type="button"
-                data-bs-toggle="collapse" data-bs-target="#collapseToday"
-                aria-expanded="true" aria-controls="collapseToday">
-          <i class="fa-solid fa-calendar-day me-2"></i>Today's Events
-          <span id="todayEventCount" class="badge bg-info text-black rounded-pill ms-auto">0</span>
-        </button>
-      </h2>
-      <div id="collapseToday" class="accordion-collapse collapse" aria-labelledby="headingToday"
-           data-bs-parent="#calendarTodayAccordion">
-        <div class="accordion-body bg-black text-info p-2" style="max-height: 300px; overflow-y: auto;">
-          <ul class="list-group list-group-flush" id="todayEventList"></ul>
+  <!-- 📅 Calendar Events Today Accordion -->
+  <div class="col-md-4 col-lg-4 my-1">
+    <div class="accordion fade-in-card" id="calendarTodayAccordion">
+      <div class="accordion-item border-info">
+        <h2 class="accordion-header" id="headingToday">
+          <button class="accordion-button bg-black text-info" type="button"
+                  data-bs-toggle="collapse" data-bs-target="#collapseToday"
+                  aria-expanded="true" aria-controls="collapseToday">
+            <i class="fa-solid fa-calendar-day me-2"></i>Today's Events
+            <span id="todayEventCount" class="badge bg-info text-black rounded-pill ms-auto">0</span>
+          </button>
+        </h2>
+        <div id="collapseToday" class="accordion-collapse collapse" aria-labelledby="headingToday"
+            data-bs-parent="#calendarTodayAccordion">
+          <div class="accordion-body bg-black text-info p-2" style="max-height: 300px; overflow-y: auto;">
+            <ul class="list-group list-group-flush" id="todayEventList"></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 📆 Calendar Events This Week Accordion -->
+  <div class="col-md-4 col-lg-4 my-1">
+    <div class="accordion fade-in-card" id="calendarWeekAccordion">
+      <div class="accordion-item border-info">
+        <h2 class="accordion-header" id="headingWeekEvents">
+          <button class="accordion-button bg-black text-info" type="button"
+                  data-bs-toggle="collapse" data-bs-target="#collapseWeekEvents"
+                  aria-expanded="true" aria-controls="collapseWeekEvents">
+            <i class="fa-solid fa-calendar-week me-2"></i>This Week's Events
+            <span id="weekEventCount" class="badge bg-info text-black rounded-pill ms-auto">0</span>
+          </button>
+        </h2>
+        <div id="collapseWeekEvents" class="accordion-collapse collapse" aria-labelledby="headingWeekEvents">
+          <div class="accordion-body bg-black text-info p-2" style="max-height: 300px; overflow-y: auto;">
+            <div id="weekEventsGroup"></div>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- 📆 Calendar Events This Week Accordion -->
-<div class="col-md-4 col-lg-4 my-1">
-  <div class="accordion fade-in-card" id="calendarWeekAccordion">
-    <div class="accordion-item border-info">
-      <h2 class="accordion-header" id="headingWeekEvents">
-        <button class="accordion-button bg-black text-info" type="button"
-                data-bs-toggle="collapse" data-bs-target="#collapseWeekEvents"
-                aria-expanded="true" aria-controls="collapseWeekEvents">
-          <i class="fa-solid fa-calendar-week me-2"></i>This Week's Events
-          <span id="weekEventCount" class="badge bg-info text-black rounded-pill ms-auto">0</span>
-        </button>
-      </h2>
-      <div id="collapseWeekEvents" class="accordion-collapse collapse" aria-labelledby="headingWeekEvents">
-        <div class="accordion-body bg-black text-info p-2" style="max-height: 300px; overflow-y: auto;">
-          <div id="weekEventsGroup"></div>
+<!-- Row 3 -->
+<div class="row g-2 my-1">
+  <!-- Recent Uploads Accordion -->
+  <div class="col-md-4 col-lg-4 my-1">
+    <div class="accordion fade-in-card" id="recentUploadsAccordion">
+      <div class="accordion-item border-info">
+        <h2 class="accordion-header" id="headingUploads">
+          <button class="accordion-button bg-black text-info" type="button"
+                  data-bs-toggle="collapse" data-bs-target="#collapseUploads"
+                  aria-expanded="true" aria-controls="collapseUploads">
+            <i class="fa-solid fa-upload me-2"></i>Recent Uploads
+            <span id="recentUploadCountBadge" class="badge bg-info text-black rounded-pill ms-auto">0</span>
+          </button>
+        </h2>
+        <div id="collapseUploads" class="accordion-collapse collapse" aria-labelledby="headingUploads">
+          <div class="accordion-body bg-black text-info p-2" style="max-height: 300px; overflow-y: auto;">
+            <ul class="list-group list-group-flush" id="recentUploadsList"></ul>
+          </div>
         </div>
       </div>
     </div>
   </div>
-</div>
 
-<!-- Recent Uploads Accordion -->
-<div class="col-md-4 col-lg-4 my-1">
-  <div class="accordion fade-in-card" id="recentUploadsAccordion">
-    <div class="accordion-item border-info">
-      <h2 class="accordion-header" id="headingUploads">
-        <button class="accordion-button bg-black text-info" type="button"
-                data-bs-toggle="collapse" data-bs-target="#collapseUploads"
-                aria-expanded="true" aria-controls="collapseUploads">
-          <i class="fa-solid fa-upload me-2"></i>Recent Uploads
-          <span id="recentUploadCountBadge" class="badge bg-info text-black rounded-pill ms-auto">0</span>
-        </button>
-      </h2>
-      <div id="collapseUploads" class="accordion-collapse collapse" aria-labelledby="headingUploads">
-        <div class="accordion-body bg-black text-info p-2" style="max-height: 300px; overflow-y: auto;">
-          <ul class="list-group list-group-flush" id="recentUploadsList"></ul>
+  <!-- Tier Levels Accordion -->
+  <div class="col-md-4 col-lg-4 my-1">
+    <div class="accordion fade-in-card" id="tiersAccordion">
+      <div class="accordion-item border-info">
+        <h2 class="accordion-header" id="headingTiers">
+          <button class="accordion-button bg-black text-info" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTiers" aria-expanded="true" aria-controls="collapseTiers">
+            <i class="fa-solid fa-medal me-2"></i>Tier Levels
+          </button>
+        </h2>
+        <div id="collapseTiers" class="accordion-collapse collapse" aria-labelledby="headingTiers">
+          <div class="accordion-body bg-black text-light border-info">
+            <div class="row g-2">
+              <div class="col-12">
+                <button class="btn btn-outline-secondary w-100 d-flex justify-content-between align-items-center tier-btn" data-tier="New">
+                  <span class="text-info">🆕 New •</span><span id="tierNew" class="fw-bold text-info">--</span>
+                </button>
+              </div>
+              <div class="col-12">
+                <button class="btn btn-outline-secondary w-100 d-flex justify-content-between align-items-center tier-btn" data-tier="Bronze">
+                  <span class="text-bronze">🥉 Bronze •</span><span id="tierBronze" class="fw-bold text-bronze">--</span>
+                </button>
+              </div>
+              <div class="col-12">
+                <button class="btn btn-outline-info w-100 d-flex justify-content-between align-items-center tier-btn" data-tier="Silver">
+                  <span class="text-info">🥈 Silver •</span><span id="tierSilver" class="fw-bold text-info">--</span>
+                </button>
+              </div>
+              <div class="col-12">
+                <button class="btn btn-outline-warning w-100 d-flex justify-content-between align-items-center tier-btn" data-tier="Gold">
+                  <span class="text-warning">🥇 Gold •</span><span id="tierGold" class="fw-bold text-warning">--</span>
+                </button>
+              </div>
+              <div class="col-12">
+                <button class="btn btn-outline-danger w-100 d-flex justify-content-between align-items-center tier-btn" data-tier="Platinum">
+                  <span class="text-danger">💎 Platinum •</span><span id="tierPlatinum" class="fw-bold text-danger">--</span>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </div>
-</div>
 
-<!-- Upload Details Modal -->
-<div class="modal fade" id="uploadDetailsModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-lg modal-dialog-centered">
-    <div class="modal-content bg-black text-info">
-      <div class="modal-header">
-        <h5 class="modal-title">Upload Details</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body" id="uploadDetailsContent" style="overflow-y:auto; max-height:500px;"></div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-danger" id="deleteUploadBtn">Delete File</button>
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+  <!-- Upload Details Modal -->
+  <div class="modal fade" id="uploadDetailsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content bg-black text-info">
+        <div class="modal-header">
+          <h5 class="modal-title">Upload Details</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="uploadDetailsContent" style="overflow-y:auto; max-height:500px;"></div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-danger" id="deleteUploadBtn">Delete File</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-</div>
 </div>
 </div>
 </div>
@@ -307,6 +356,14 @@ async function fetchDashboardStats() {
     document.getElementById("unpaidInvoiceCount").textContent = data.unpaidInvoices || 0;
     document.getElementById("totalQuotes").textContent = data.quotes || 0;
 
+    // ---- Tier Counts ----
+    if (data.tiers) {
+      document.getElementById("tierNew").textContent = data.tiers.New || 0;
+      document.getElementById("tierBronze").textContent = data.tiers.Bronze || 0;
+      document.getElementById("tierSilver").textContent = data.tiers.Silver || 0;
+      document.getElementById("tierGold").textContent = data.tiers.Gold || 0;
+      document.getElementById("tierPlatinum").textContent = data.tiers.Platinum || 0;
+    }
     // ---- Low stock (badge + list) ----
     const lowStockList = document.getElementById("lowStockList");
     lowStockList.innerHTML = "";
@@ -657,6 +714,14 @@ function loadCalendarSummaries() {
   });
 }
   loadCalendarSummaries();
+});
+
+// ---- Attach click to iframe (adjust your iframe ID) ----
+document.querySelectorAll(".tier-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const tier = btn.dataset.tier;
+    window.location.href = `clientmanager.html#tier=${tier}`;
+  });
 });
 
 </script>

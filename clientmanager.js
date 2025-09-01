@@ -16,7 +16,17 @@ document.addEventListener("DOMContentLoaded", async () => {
   const resultsContainer = document.getElementById("clientsSearchResults");
   const addClientForm = document.getElementById("addClientFormAccordion");
   const FIELDS = ["clientID","firstName","lastName","nickName","email","street","city","state","zip","tier"];
+  
   let data = [];
+  let activeTierFilter = null; // Track tier filter from dashboard
+
+  // Clear Tier Filter button
+  document.getElementById("clearTierFilterBtn")?.addEventListener("click", () => {
+    activeTierFilter = null;
+    window.location.hash = "";
+    // showToast("📊 Showing all clients", "info");
+    renderResults();
+  });
 
   await loadClients();
 
@@ -30,11 +40,21 @@ document.addEventListener("DOMContentLoaded", async () => {
     try {
       const res = await fetch(scriptURL + "?action=getDataForSearch");
       data = await res.json();
+
+      // Check for tier filter in URL hash
+      const hash = window.location.hash;
+      if (hash.startsWith("#tier=")) {
+        activeTierFilter = decodeURIComponent(hash.replace("#tier=", ""));
+        // showToast(`📊 Showing ${activeTierFilter} clients`, "info");
+      }
+
       renderResults();
     } catch (err) {
       console.error(err);
       showToast("⚠️ Failed to load data", "error");
-    } finally { toggleLoader(false); }
+    } finally {
+      toggleLoader(false);
+    }
   }
 
   // ---- Render results ----
@@ -43,19 +63,31 @@ document.addEventListener("DOMContentLoaded", async () => {
     const words = val.split(/\s+/);
     resultsContainer.innerHTML = "";
 
-    const results = val 
-      ? data.filter(r => words.every(w => [0,1,2,3].some(i => r[i].toString().toLowerCase().includes(w))))
-      : [];
+    // Start with all clients
+    let results = val || activeTierFilter ? [...data] : [];
 
+    // Apply tier filter if active
+    if (activeTierFilter) {
+      results = results.filter(r => (r[10] || "New") === activeTierFilter);
+    }
+
+    // Apply search filter
+    if (val) {
+      results = results.filter(r => 
+        words.every(w => [0,1,2,3,10].some(i => r[i].toString().toLowerCase().includes(w)))
+      );
+    }
+
+    // Update counters
     document.getElementById("searchCounter").textContent = results.length;
     document.getElementById("totalCounter").textContent = data.length;
 
+    // Render each accordion row
     results.forEach(r => {
       const template = document.getElementById("rowTemplate").content.cloneNode(true);
       const item = template.querySelector(".accordion-item");
       const clientID = r[0];
 
-      // ---- Accordion elements ----
       const headerBtn = item.querySelector(".accordion-button");
       const collapseEl = item.querySelector(".accordion-collapse");
       const headerEl = item.querySelector(".accordion-header");
@@ -74,7 +106,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         tierID: r[9] || 0, tier: r[10] || "New"
       };
 
-      // ---- Header layout ----
       headerBtn.innerHTML = `
         <div class="row w-100 align-items-center">
           <div class="col-2 text-truncate">📞 ${values.clientID || "N/A"}</div>
@@ -84,7 +115,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       `;
       if (values.tier !== "New") headerBtn.classList.add(`bg-${TIER_COLORS[values.tier]}`, "text-black");
 
-      // ---- Populate card body fields ----
       FIELDS.forEach(f => {
         const span = item.querySelector(`.${f}`);
         const input = item.querySelector(`.${f}-input`);
@@ -103,13 +133,14 @@ document.addEventListener("DOMContentLoaded", async () => {
       const beforeDeleteBtn = item.querySelector(".before-delete-button");
       const tierInput = item.querySelector(".tier-input");
 
-      // ---- Helpers ----
       const toggleEditMode = editing => {
         FIELDS.forEach(f => {
           item.querySelector(`.${f}`)?.classList.toggle("d-none", editing);
           item.querySelector(`.${f}-input`)?.classList.toggle("d-none", !editing);
         });
-        [editBtn, saveBtn, cancelBtn, tierInput].forEach(el => el.classList.toggle("d-none", el !== editBtn ? !editing : editing));
+        [editBtn, saveBtn, cancelBtn, tierInput].forEach(el => 
+          el.classList.toggle("d-none", el !== editBtn ? !editing : editing)
+        );
       };
 
       const resetValues = () => {
@@ -120,7 +151,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         tierInput.value = values.tier;
       };
 
-      // ---- Event listeners ----
       editBtn.addEventListener("click", () => toggleEditMode(true));
       cancelBtn.addEventListener("click", () => { resetValues(); toggleEditMode(false); });
 
@@ -191,4 +221,5 @@ document.addEventListener("DOMContentLoaded", async () => {
       showToast("❌ Add error","error");
     } finally { toggleLoader(false); }
   }
+
 });
