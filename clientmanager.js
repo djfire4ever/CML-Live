@@ -6,7 +6,7 @@ const TIER_ICONS = { New: "🆕", Bronze: "🥉", Silver: "🥈", Gold: "🥇", 
 const getTierIcon = tier => TIER_ICONS[tier] || "🏷️";
 
 // ----- Email Templates Allowed -----
-const EMAIL_TEMPLATES_ALLOWED_KEYS = ["lead", "thankyou", "promo", "uploadlink"];
+const EMAIL_TEMPLATES_ALLOWED_KEYS = ["lead", "thankyou", "promo", "uploadlink", "tierupgrade"];
 
 document.addEventListener("DOMContentLoaded", async () => {
   const searchInput = document.getElementById("searchInput");
@@ -241,9 +241,12 @@ function openEmailModal(client, template) {
   const modalEl = document.getElementById("emailModal");
   const modal = new bootstrap.Modal(modalEl);
 
-  // Pre-fill recipient and subject
-  document.getElementById("emailTo").value = client.email;
-  document.getElementById("emailSubject").value = template.subject;
+  // Replace placeholders in subject
+  let subject = template.subject;
+  Object.keys(client).forEach(key => {
+    const re = new RegExp(`{{${key}}}`, "g");
+    subject = subject.replace(re, client[key] || "");
+  });
 
   // Replace placeholders in body
   let body = template.body;
@@ -259,19 +262,22 @@ function openEmailModal(client, template) {
                        `&firstName=${encodeURIComponent(client.firstName)}` +
                        `&lastName=${encodeURIComponent(client.lastName)}` +
                        `&email=${encodeURIComponent(client.email)}`;
-
     body = body.replace(/{{uploadLink}}/g, uploadLink);
   }
 
+  // Pre-fill fields
+  document.getElementById("emailTo").value = client.email;
+  document.getElementById("emailSubject").value = subject;
   document.getElementById("emailBody").value = body;
+
   modal.show();
 
   // Bind send button
   document.getElementById("sendEmailBtn").onclick = async () => {
     await sendEmail(
       client.email,
-      template.subject,
-      document.getElementById("emailBody").value,
+      subject,
+      body,
       modal
     );
   };
