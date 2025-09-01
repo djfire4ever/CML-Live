@@ -52,6 +52,93 @@
     </form>
   </div>
 
+  <!-- Placeholder Legend Accordion (Table Style) -->
+  <div class="container mt-4">
+    <div class="accordion" id="placeholderLegendAccordion">
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="legendHeading">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#legendCollapse" aria-expanded="false" aria-controls="legendCollapse">
+            📋 Placeholder Legend - [ Click here to see some placeholders you can add ]
+          </button>
+        </h2>
+        <div id="legendCollapse" class="accordion-collapse collapse" aria-labelledby="legendHeading" data-bs-parent="#placeholderLegendAccordion">
+          <div class="accordion-body">
+            <p>Click the 📋 button to copy a placeholder: (I can add more to this list upon demand)</p>
+            <div class="table-responsive">
+              <table class="table table-sm table-bordered">
+                <thead class="table-light">
+                  <tr>
+                    <th>Placeholder</th>
+                    <th>Description</th>
+                    <th>Copy</th>
+                  </tr>
+                </thead>
+                <tbody id="placeholderTableBody">
+                  <tr>
+                    <td><code>{{clientID}}</code></td>
+                    <td>Client's Phone number</td>
+                    <td><button class="btn btn-sm btn-outline-secondary" onclick="copyPlaceholder('{{clientID}}')">📋</button></td>
+                  </tr>
+                   <tr>
+                    <td><code>{{firstName}}</code></td>
+                    <td>Client's first name</td>
+                    <td><button class="btn btn-sm btn-outline-secondary" onclick="copyPlaceholder('{{firstName}}')">📋</button></td>
+                  </tr>
+                  <tr>
+                    <td><code>{{lastName}}</code></td>
+                    <td>Client's last name</td>
+                    <td><button class="btn btn-sm btn-outline-secondary" onclick="copyPlaceholder('{{lastName}}')">📋</button></td>
+                  </tr>
+                  <tr>
+                    <td><code>{{nickName}}</code></td>
+                    <td>Client's nickname</td>
+                    <td><button class="btn btn-sm btn-outline-secondary" onclick="copyPlaceholder('{{nickName}}')">📋</button></td>
+                  </tr>
+                  <tr>
+                    <td><code>{{email}}</code></td>
+                    <td>Client's email address</td>
+                    <td><button class="btn btn-sm btn-outline-secondary" onclick="copyPlaceholder('{{email}}')">📋</button></td>
+                  </tr>
+                  <tr>
+                  <tr>
+                    <td><code>{{street}}</code></td>
+                    <td>Client's Street</td>
+                    <td><button class="btn btn-sm btn-outline-secondary" onclick="copyPlaceholder('{{clientID}}')">📋</button></td>
+                  </tr>
+                  <tr>
+                    <td><code>{{city}}</code></td>
+                    <td>Client's City</td>
+                    <td><button class="btn btn-sm btn-outline-secondary" onclick="copyPlaceholder('{{clientID}}')">📋</button></td>
+                  </tr>
+                  <tr>
+                    <td><code>{{state}}</code></td>
+                    <td>Client's State</td>
+                    <td><button class="btn btn-sm btn-outline-secondary" onclick="copyPlaceholder('{{clientID}}')">📋</button></td>
+                  </tr>
+                  <tr>
+                    <td><code>{{zip}}</code></td>
+                    <td>Client's Zip</td>
+                    <td><button class="btn btn-sm btn-outline-secondary" onclick="copyPlaceholder('{{clientID}}')">📋</button></td>
+                  </tr>
+                  <tr>
+                    <td><code>{{tier}}</code></td>
+                    <td>Client's tier</td>
+                    <td><button class="btn btn-sm btn-outline-secondary" onclick="copyPlaceholder('{{tier}}')">📋</button></td>
+                  </tr>
+                    <td><code>{{uploadLink}}</code></td>
+                    <td>Upload URL</td>
+                    <td><button class="btn btn-sm btn-outline-secondary" onclick="copyPlaceholder('{{uploadLink}}')">📋</button></td>
+                  </tr>
+                  <!-- You can append more placeholders here -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
 <script src="config.js"></script> <!-- this has all my glogal functions, variables and constants including scripturl -->
 
 <script>
@@ -138,6 +225,14 @@ async function saveTemplate(e) {
 }
 
 window.onload = loadEmailTypes;
+
+// Simple copy-to-clipboard helper
+function copyPlaceholder(text) {
+  navigator.clipboard.writeText(text)
+    .then(() => showToast(`Copied ${text}`, "success"))
+    .catch(() => showToast(`Failed to copy`, "error"));
+}
+
 </script>
 
 </body>
