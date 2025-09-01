@@ -289,7 +289,15 @@
             <button type="button" class="btn btn-outline-danger btn-sm rounded-pill before-delete-button" data-button-state="delete" data-bs-toggle="tooltip" title="Delete">
               <i class="bi bi-trash me-1"></i> Delete
             </button>
+          <!-- Email Dropdown -->
+            <button type="button" class="btn btn-info btn-sm rounded-pill dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="bi bi-envelope"></i> Email
+            </button>
+            <ul class="dropdown-menu email-template-dropdown">
+              <!-- Populated dynamically by JS -->
+            </ul>
           </div>
+
           <!-- ===== Original Buttons ===== -->
           <!-- <div class="row gx-3 gy-1 mt-2">
             <div class="col-sm-2">
@@ -324,6 +332,38 @@
     </div>
   </div>
 </template>
+
+<!-- ===== Email Modal ===== -->
+<div class="modal fade" id="emailModal" tabindex="-1" aria-labelledby="emailModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="emailModalLabel">📧 Send Email</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="emailForm">
+          <div class="mb-3">
+            <label for="emailTo" class="form-label">To</label>
+            <input type="email" id="emailTo" class="form-control" readonly>
+          </div>
+          <div class="mb-3">
+            <label for="emailSubject" class="form-label">Subject</label>
+            <input type="text" id="emailSubject" class="form-control">
+          </div>
+          <div class="mb-3">
+            <label for="emailBody" class="form-label">Body</label>
+            <textarea id="emailBody" class="form-control" rows="10"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="sendEmailBtn" class="btn btn-primary">📨 Send Email</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 </div> <!-- End container -->
 
