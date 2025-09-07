@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Product Manager</title>
+  <style></style>
+</head>
+<body class="theme-dark">
+<div class="watermark"></div>
+
+<!-- Notification Toasts -->
+<div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3"></div>
+
+<!-- Loader -->
+<div id="loadingOverlay" class="d-none">
+  <div class="text-center">
+    <div class="spinner-border" role="status"></div>
+    <p class="mt-4">Loading... Please wait...</p>
+  </div>
+</div>
+
+<!-- Product Management Section -->
+<section class="text-sm-start py-4">
+  <div class="container">
+    <h2 class="text-center mb-4">Product Management</h2>
+
+<!-- Nav Tabs -->
+<ul class="nav nav-tabs" id="productTabs" role="tablist">
+  <li class="nav-item" role="presentation">
+    <button class="nav-link active" id="search-tab" data-bs-toggle="tab" data-bs-target="#search-product" type="button" role="tab" aria-controls="search-product" aria-selected="true">🔍 Search</button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="add-tab" data-bs-toggle="tab" data-bs-target="#add-product" type="button" role="tab" aria-controls="add-product" aria-selected="false">➕ Add</button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="edit-tab" data-bs-toggle="tab" data-bs-target="#edit-product" type="button" role="tab" aria-controls="edit-product" aria-selected="false" hidden>✏️ Edit</button>
+  </li>
+</ul>
+
+<!-- Row Template -->
+<template id="rowTemplate">
+  <tr class="result-box">
+    <td class="prodID"></td>
+    <td class="productName"></td>
+    <td class="productType"></td>
+    <td class="cost"></td>
+    <td class="retail"></td>
+    <td class="text-center">
+      <div class="btn-group" role="group">
+        <button type="button" class="btn btn-sm delete-button d-none">Confirm</button>
+        <button type="button" class="btn btn-sm before-delete-button" data-button-state="delete">Delete</button>
+      </div>
+    </td>
+  </tr>
+</template>
+
+<!-- Tab Content -->
+<div class="tab-content pt-3" id="productTabsContent">
+  
+<!-- Search Tab -->
+<div class="tab-pane fade show active" id="search-product" role="tabpanel" aria-labelledby="search-tab">
+  <div class="input-group mb-2">
+    <input type="text" class="form-control" id="searchInput" placeholder="🔍 search...">
+    <div class="input-group-append">
+      <span class="input-group-text" id="searchCounter">🔍</span>
+    </div>
+  </div>
+
+  <table class="table table-hover">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Cost</th>
+        <th>Retail</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody id="searchResults"></tbody>
+  </table>
+</div>
+
+<!-- Edit Tab -->
+<div class="tab-pane fade" id="edit-product" role="tabpanel" aria-labelledby="edit-tab">
+  <form id="editProductForm">
+    <input type="hidden" id="edit-prodID-hidden" />
+    <div class="row g-3 mt-1 mb-3">
+      <div class="col-sm-1"><label for="edit-prodID">ID#</label><input type="text" class="form-control" id="edit-prodID" readonly></div>
+      <div class="col-sm-4"><label for="fw-bold">Name</label><input type="text" class="form-control" id="edit-productName"></div>
+      <div class="col-sm-2"><label for="fw-bold">Type</label>
+        <input type="text" class="form-control" id="edit-productType" list="product-type-options-edit" placeholder="Select Type">
+        <datalist id="product-type-options-edit"></datalist>
+      </div>
+      <div class="col-sm-2"><label for="fw-bold">Total Cost $</label><input type="text" class="form-control" id="edit-totalProductCost" readonly></div>
+      <div class="col-sm-2"><label for="fw-bold">Total Retail $</label><input type="text" class="form-control" id="edit-totalProductRetail" readonly></div>
+      <div class="col-sm-1"><label for="fw-bold">C/Time</label><input type="text" class="form-control" id="edit-compTime"></div>
+    </div>
+
+    <div class="accordion mt-1 mb-1" id="edit-AccordionPR">
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="edit-headingProductsRows">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#edit-collapseProductsRows" aria-expanded="false" aria-controls="edit-collapseProductsRows">
+            <span><i class="fa-solid fa-boxes-stacked me-2"></i></span>
+            <span class="badge fs-6 ms-2" id="edit-partrow-header-display">Parts</span>
+          </button>
+        </h2>
+        <div id="edit-collapseProductsRows" class="accordion-collapse collapse" data-bs-parent="#edit-AccordionPR">
+          <div class="accordion-body">
+            <input type="hidden" id="edit-mat-id">
+            <input type="hidden" id="edit-cost">
+            <input type="hidden" id="edit-retail">
+            <div class="container-fluid px-0">
+              <div class="row mb-0 part-row-headers">
+                <div class="col-md-5">Part</div>
+                <div class="col-md-2">Qty</div>
+                <div class="col-md-2">Cost $</div>
+                <div class="col-md-2">Retail $</div>
+                <div class="col-md-1"></div>
+              </div>
+              <div id="edit-part-rows" data-mode="edit"></div>
+              <div class="row g-3 mt-1 mb-1">
+                <div class="col-sm-6"><button type="button" class="btn" id="edit-partRow">➕ Part</button></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-3 mt-1 mb-1">
+      <div class="col-sm-12"><label for="fw-bold">Description</label><input type="text" class="form-control" id="edit-description"></div>
+    </div>
+    <div class="row g-3 mt-1 mb-5">
+      <div class="col-sm-12"><button type="submit" class="btn" id="save-changes">💾 Save Changes</button></div>
+    </div>
+  </form>
+</div>
+
+<!-- Shared Part Options Datalist -->
+<datalist id="row-parts-selector"></datalist>
+
+<!-- Add Tab -->
+<div class="tab-pane fade" id="add-product" role="tabpanel" aria-labelledby="add-tab">
+  <form id="addProductForm">
+    <input type="hidden" id="add-prodID-hidden" />
+    <div class="row g-3 mt-1 mb-3">
+      <div class="col-sm-1"><label for="fw-bold">ID#</label><input type="text" class="form-control" id="add-prodID" readonly></div>
+      <div class="col-sm-4"><label for="fw-bold">Name</label><input type="text" class="form-control" id="add-productName"></div>
+      <div class="col-sm-2"><label for="fw-bold">Type</label>
+        <input type="text" class="form-control" id="add-productType" list="product-type-options-add" placeholder="Select Type">
+        <datalist id="product-type-options-add"></datalist>
+      </div>
+      <div class="col-sm-2"><label for="fw-bold">Total Cost $</label><input type="text" class="form-control" id="add-totalProductCost" readonly></div>
+      <div class="col-sm-2"><label for="fw-bold">Total Retail $</label><input type="text" class="form-control" id="add-totalProductRetail" readonly></div>
+      <div class="col-sm-1"><label for="fw-bold">C/Time</label><input type="text" class="form-control" id="add-compTime"></div>
+    </div>
+
+    <div class="accordion mt-1 mb-1" id="add-AccordionPR">
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="add-headingProductsRows">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#add-collapseProductsRows" aria-expanded="false" aria-controls="add-collapseProductsRows">
+            <span><i class="fa-solid fa-boxes-stacked me-2"></i></span>
+            <span class="badge fs-6 ms-2" id="add-partrow-header-display">Parts</span>
+          </button>
+        </h2>
+        <div id="add-collapseProductsRows" class="accordion-collapse collapse" data-bs-parent="#add-AccordionPR">
+          <div class="accordion-body">
+            <input type="hidden" id="add-mat-id">
+            <input type="hidden" id="add-cost">
+            <input type="hidden" id="add-retail">
+            <div class="container-fluid px-0">
+              <div class="row mb-0 part-row-headers">
+                <div class="col-md-5">Part</div>
+                <div class="col-md-2">Qty</div>
+                <div class="col-md-2">Cost $</div>
+                <div class="col-md-2">Retail $</div>
+                <div class="col-md-1"></div>
+              </div>
+              <div id="add-part-rows" data-mode="add"></div>
+              <div class="row g-3 mt-1 mb-1">
+                <div class="col-sm-6"><button type="button" class="btn" id="add-partRow">➕ Part</button></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-3 mt-1 mb-1">
+      <div class="col-sm-12"><label for="fw-bold">Description</label><input type="text" class="form-control" id="add-description"></div>
+    </div>
+    <div class="row g-3 mt-1 mb-5">
+      <div class="col-sm-12"><button type="submit" class="btn" id="submit">💾 Save</button></div>
+    </div>
+
+  </form>
+</div>
+
+</section>
+
+<script src="config.js" defer></script> <!-- this has all my glogal functions, variables and constants including scripturl -->
+<script src="productmanager.js" defer></script>
+
+<script>
+
+function setupDynamicNavigation() {
+  function activateTabFromHash() {
+    var hash = window.location.hash;
+    if (!hash) return;
+
+    var targetTabButton = document.querySelector('[data-bs-target="' + hash + '"]');
+    if (targetTabButton) {
+      var tab = new bootstrap.Tab(targetTabButton);
+      tab.show();
+    }
+  }
+
+  // Use window.onload for full page load
+  window.onload = function() {
+    activateTabFromHash();  // Ensures tab switch happens after everything is loaded
+  };
+
+  window.addEventListener('hashchange', activateTabFromHash);
+}
+
+setupDynamicNavigation();
+
+window.addEventListener('DOMContentLoaded', () => {
+  const theme = localStorage.getItem('selectedTheme');
+  if (theme) {
+    document.body.classList.add(theme);
+  }
+});
+
+</script>
+
+<!-- </script> -->
+
+</body>
+</html>

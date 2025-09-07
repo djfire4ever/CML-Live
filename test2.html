@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Popup Style Offcanvas</title>
+  <style>
+    /* Override Bootstrap offcanvas */
+    .offcanvas-popup {
+      width: 500px !important;   /* custom width */
+      max-width: 90%;            /* keep it responsive */
+      height: auto !important;   /* shrink to fit content */
+      border-radius: 12px;       /* rounded corners */
+      top: 10% !important;       /* offset from top */
+      left: 0;
+      right: 0;
+      margin: auto;              /* center horizontally */
+      bottom: auto;              /* don’t stretch full screen */
+    }
+  </style>
+</head>
+<body class="p-4">
+
+  <h1>Popup-Style Offcanvas Demo-Test 2</h1>
+  <button class="btn btn-primary" data-bs-toggle="offcanvas" data-bs-target="#popupCanvas">
+    Open Popup Offcanvas
+  </button>
+
+  <!-- Offcanvas -->
+  <div class="offcanvas offcanvas-top offcanvas-popup" tabindex="-1" id="popupCanvas">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title">Product Details</h5>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body">
+      <form>
+        <div class="mb-3">
+          <label for="prodName" class="form-label">Product Name</label>
+          <input type="text" class="form-control" id="prodName" placeholder="Enter product name">
+        </div>
+        <div class="mb-3">
+          <label for="prodType" class="form-label">Product Type</label>
+          <input type="text" class="form-control" id="prodType" placeholder="Enter product type">
+        </div>
+        <button type="submit" class="btn btn-success">Save</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+</body>
+</html>

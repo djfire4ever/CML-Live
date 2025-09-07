@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Product Manager - Dynamic Parts Modal</title>
+</head>
+<body class="bg-light p-4">
+
+  <div class="container">
+    <h2 class="mb-4">Product Manager-Test 3</h2>
+
+    <!-- Product Cards Grid -->
+    <div class="row g-3" id="productGrid">
+      <!-- Cards injected by JS -->
+    </div>
+  </div>
+
+  <!-- Parts Modal -->
+  <div class="modal fade" id="partsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Parts</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+
+          <!-- Dynamic Parts Rows -->
+          <div id="partsContainer"></div>
+          <button class="btn btn-sm btn-outline-success mt-2" id="addPartRow">+ Add Part</button>
+
+        </div>
+        <div class="modal-footer">
+          <div class="me-auto">
+            <strong>Total Cost:</strong> <span id="modalTotalCost">$0</span> &nbsp; | &nbsp;
+            <strong>Total Retail:</strong> <span id="modalTotalRetail">$0</span>
+          </div>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary">Save Changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script>
+    // Demo product data
+    const products = [
+      {
+        id: 1,
+        name: "Demo Product A",
+        type: "Widget",
+        cost: 150,
+        retail: 250,
+        parts: [
+          { matName: "Steel Rod", qty: 2, cost: 50, retail: 80 },
+          { matName: "Plastic Cap", qty: 1, cost: 20, retail: 30 },
+          { matName: "Screws", qty: 10, cost: 10, retail: 15 }
+        ]
+      },
+      {
+        id: 2,
+        name: "Demo Product B",
+        type: "Assembly",
+        cost: 300,
+        retail: 480,
+        parts: [
+          { matName: "Motor", qty: 1, cost: 120, retail: 180 },
+          { matName: "Wiring", qty: 5, cost: 40, retail: 60 },
+          { matName: "Casing", qty: 1, cost: 100, retail: 150 }
+        ]
+      }
+    ];
+
+    const productGrid = document.getElementById("productGrid");
+    const partsContainer = document.getElementById("partsContainer");
+    const modalTitle = document.querySelector("#partsModal .modal-title");
+    const modalTotalCost = document.getElementById("modalTotalCost");
+    const modalTotalRetail = document.getElementById("modalTotalRetail");
+
+    let activeProduct = null;
+
+    // Render product cards
+    function renderProducts() {
+      productGrid.innerHTML = "";
+      products.forEach(prod => {
+        const col = document.createElement("div");
+        col.className = "col-md-4";
+        col.innerHTML = `
+          <div class="card shadow-sm">
+            <div class="card-body">
+              <h5 class="card-title">${prod.name}</h5>
+              <p class="card-text">
+                <strong>Type:</strong> ${prod.type}<br>
+                <strong>Cost:</strong> $${prod.cost}<br>
+                <strong>Retail:</strong> $${prod.retail}<br>
+                <strong>Parts:</strong> ${prod.parts.length}
+              </p>
+              <button class="btn btn-sm btn-primary view-parts" data-id="${prod.id}" data-bs-toggle="modal" data-bs-target="#partsModal">View Parts</button>
+              <button class="btn btn-sm btn-secondary">Edit</button>
+              <button class="btn btn-sm btn-danger">Delete</button>
+            </div>
+          </div>
+        `;
+        productGrid.appendChild(col);
+      });
+
+      document.querySelectorAll(".view-parts").forEach(btn => {
+        btn.addEventListener("click", e => {
+          const id = parseInt(e.target.dataset.id, 10);
+          openPartsModal(id);
+        });
+      });
+    }
+
+    // Open parts modal for a product
+    function openPartsModal(productId) {
+      activeProduct = products.find(p => p.id === productId);
+      if (!activeProduct) return;
+
+      modalTitle.textContent = `Parts for ${activeProduct.name}`;
+      partsContainer.innerHTML = "";
+
+      activeProduct.parts.forEach(part => addPartRow(part));
+      recalcTotals();
+    }
+
+    // Add a part row to modal
+    function addPartRow(part = { matName: "", qty: 1, cost: 0, retail: 0 }) {
+      const row = document.createElement("div");
+      row.className = "row g-2 align-items-center mb-2 part-row";
+      row.innerHTML = `
+        <div class="col-md-5"><input type="text" class="form-control part-input" value="${part.matName}"></div>
+        <div class="col-md-2"><input type="number" class="form-control qty-input" value="${part.qty}"></div>
+        <div class="col-md-2"><input type="text" class="form-control cost-input" value="${part.cost}" readonly></div>
+        <div class="col-md-2"><input type="text" class="form-control retail-input" value="${part.retail}" readonly></div>
+        <div class="col-md-1"><button type="button" class="btn btn-sm btn-danger remove-row">✖</button></div>
+      `;
+
+      row.querySelector(".remove-row").addEventListener("click", () => {
+        row.remove();
+        recalcTotals();
+      });
+
+      partsContainer.appendChild(row);
+    }
+
+    // Recalculate totals
+    function recalcTotals() {
+      let totalCost = 0, totalRetail = 0;
+      partsContainer.querySelectorAll(".part-row").forEach(row => {
+        const qty = parseFloat(row.querySelector(".qty-input").value) || 0;
+        const cost = parseFloat(row.querySelector(".cost-input").value) || 0;
+        const retail = parseFloat(row.querySelector(".retail-input").value) || 0;
+        totalCost += qty * cost;
+        totalRetail += qty * retail;
+      });
+      modalTotalCost.textContent = `$${totalCost.toFixed(2)}`;
+      modalTotalRetail.textContent = `$${totalRetail.toFixed(2)}`;
+    }
+
+    // Add part row button
+    document.getElementById("addPartRow").addEventListener("click", () => {
+      addPartRow();
+    });
+
+    renderProducts();
+  </script>
+</body>
+</html>

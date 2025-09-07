@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Product Manager — Parts-in-Card Mockup</title>
+
+  <style>
+    /* Small visual niceties */
+    .product-card .card-header { cursor: pointer; }
+    .parts-container { max-height: 240px; overflow: auto; }
+    .part-row { gap: .5rem; align-items: center; }
+    .part-row .form-control[readonly] { background: #f8f9fa; }
+    .low-stock-badge { font-size: .75rem; }
+    .small-muted { font-size: .82rem; color: #6c757d; }
+    .header-badges span { margin-left: .5rem; }
+  </style>
+</head>
+<body class="bg-light p-4">
+
+  <div class="container">
+    <h3 class="mb-3">Product Manager (Parts-in-Card Mockup)-Test 1</h3>
+
+    <div class="row mb-3">
+      <div class="col">
+        <button id="addDemoProduct" class="btn btn-primary btn-sm">+ Add Demo Product</button>
+      </div>
+    </div>
+
+    <div id="productsAccordion" class="accordion"></div>
+
+    <!-- Template for product card -->
+    <template id="productCardTemplate">
+      <div class="accordion-item product-card mb-2">
+        <h2 class="accordion-header" id="heading-TEMPLATEID">
+          <button class="accordion-button collapsed d-flex align-items-center" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-TEMPLATEID" aria-expanded="false" aria-controls="collapse-TEMPLATEID">
+            <div class="w-100 d-flex align-items-center">
+              <div class="me-3 flex-grow-1">
+                <strong class="product-name"></strong>
+                <div class="small-muted"> <span class="product-updated"></span></div>
+              </div>
+              <div class="header-badges d-flex align-items-center text-end">
+                <span class="badge bg-info text-dark">Parts: <span class="parts-count">0</span></span>
+                <span class="badge bg-success ms-2">Cost: <span class="product-cost">$0.00</span></span>
+              </div>
+            </div>
+          </button>
+        </h2>
+
+        <div id="collapse-TEMPLATEID" class="accordion-collapse collapse" aria-labelledby="heading-TEMPLATEID" data-bs-parent="#productsAccordion">
+          <div class="accordion-body">
+            <div class="mb-2 d-flex gap-2">
+              <div class="flex-grow-1">
+                <label class="form-label mb-0 small">Product Name</label>
+                <input type="text" class="form-control form-control-sm product-name-input">
+              </div>
+              <div style="width: 10rem;">
+                <label class="form-label mb-0 small">Last Updated</label>
+                <input type="text" class="form-control form-control-sm product-updated-input" readonly>
+              </div>
+            </div>
+
+            <div class="mb-2">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <strong>Parts</strong>
+                <div>
+                  <button type="button" class="btn btn-sm btn-outline-primary add-part-btn">Add Part</button>
+                  <button type="button" class="btn btn-sm btn-success save-product-btn">Save</button>
+                </div>
+              </div>
+
+              <div class="parts-container border rounded p-2 bg-white">
+                <!-- part rows injected here -->
+                <div class="d-flex flex-column gap-2 parts-list"></div>
+              </div>
+
+              <div class="mt-2 d-flex justify-content-between">
+                <div class="small-muted">Max 15 parts per product</div>
+                <div>
+                  <span class="me-2">Total Cost: <strong class="product-cost-footer">$0.00</strong></span>
+                  <span class="ms-2">Total Retail: <strong class="product-retail-footer">$0.00</strong></span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <!-- Template for a part row -->
+    <template id="partRowTemplate">
+      <div class="row part-row">
+        <div class="col-5">
+          <input type="text" class="form-control form-control-sm part-input" list="materials-list" placeholder="Select Material...">
+        </div>
+        <div class="col-2">
+          <input type="number" min="0" class="form-control form-control-sm qty-input" value="0">
+        </div>
+        <div class="col-2">
+          <input type="text" readonly class="form-control form-control-sm row-cost-input" value="$0.00">
+        </div>
+        <div class="col-2">
+          <input type="text" readonly class="form-control form-control-sm row-retail-input" value="$0.00">
+        </div>
+        <div class="col-1 d-flex justify-content-end">
+          <button class="btn btn-outline-danger btn-sm remove-part-btn" title="Remove"><i class="bi bi-trash"></i>✖</button>
+        </div>
+      </div>
+    </template>
+
+    <!-- datalist for materials (autocomplete) -->
+    <datalist id="materials-list"></datalist>
+
+  </div>
+
+  <script src="config.js"></script>
+
+  <script>
+    // ==== DEMO DATA & UTILITIES ====
+    // Sample materialData: keyed by name for demo convenience
+    const materialData = {
+      "Steel Plate": { matID: "M001", unitPrice: 2.5, retail: 4.0, onHand: 12, reorder: 10 },
+      "Screw 1/4": { matID: "M002", unitPrice: 0.05, retail: 0.15, onHand: 200, reorder: 50 },
+      "Hinge 3in": { matID: "M003", unitPrice: 1.2, retail: 2.5, onHand: 3, reorder: 5 },
+      "Plastic Knob": { matID: "M004", unitPrice: 0.35, retail: 0.9, onHand: 150, reorder: 20 }
+    };
+
+    // Populate datalist
+    const materialsList = document.getElementById('materials-list');
+    Object.keys(materialData).forEach(name => {
+      const opt = document.createElement('option');
+      opt.value = name;
+      materialsList.appendChild(opt);
+    });
+
+    // ===== Core rendering / wiring logic =====
+    const productsAccordion = document.getElementById('productsAccordion');
+    const productTemplate = document.getElementById('productCardTemplate').content;
+    const partTemplate = document.getElementById('partRowTemplate').content;
+
+    // Keep a small in-memory products array for demo
+    const products = [];
+
+    function createDemoProduct(name = "Demo Product") {
+      const now = new Date();
+      return {
+        id: 'P' + Math.floor(Math.random()*9000 + 1000),
+        name,
+        parts: [
+          { matName: "Steel Plate", qty: 2 },
+          { matName: "Hinge 3in", qty: 4 }
+        ],
+        lastUpdated: now
+      };
+    }
+
+    function renderProducts() {
+      productsAccordion.innerHTML = '';
+      products.forEach((prod, index) => {
+        const clone = productTemplate.cloneNode(true);
+        const item = clone.querySelector('.product-card');
+        const collapse = clone.querySelector('.accordion-collapse');
+        const headerBtn = clone.querySelector('.accordion-button');
+        const productNameSpan = clone.querySelector('.product-name');
+        const productUpdated = clone.querySelector('.product-updated');
+        const productNameInput = clone.querySelector('.product-name-input');
+        const updatedInput = clone.querySelector('.product-updated-input');
+        const partsList = clone.querySelector('.parts-list');
+        const addPartBtn = clone.querySelector('.add-part-btn');
+        const partsCountSpan = clone.querySelector('.parts-count');
+        const productCostHeader = clone.querySelector('.product-cost');
+        const productCostFooter = clone.querySelector('.product-cost-footer');
+        const productRetailFooter = clone.querySelector('.product-retail-footer');
+        const saveBtn = clone.querySelector('.save-product-btn');
+
+        // set ids for collapse accessibility
+        const tid = prod.id + '-' + index;
+        headerBtn.setAttribute('data-bs-target', `#collapse-${tid}`);
+        collapse.id = `collapse-${tid}`;
+        clone.querySelector('.accordion-header').id = `heading-${tid}`;
+
+        // populate header and top fields
+        productNameSpan.textContent = prod.name;
+        productUpdated.textContent = formatDateForUser(prod.lastUpdated);
+        productNameInput.value = prod.name;
+        updatedInput.value = formatDateForUser(prod.lastUpdated);
+
+        // helper to recalc totals for product
+        function recalcTotals() {
+          let totalCost = 0;
+          let totalRetail = 0;
+          const rows = partsList.querySelectorAll('.part-row');
+          rows.forEach(row => {
+            const partName = row.querySelector('.part-input').value.trim();
+            const qty = Number(row.querySelector('.qty-input').value) || 0;
+            const mat = materialData[partName];
+            const cost = mat ? (mat.unitPrice * qty) : 0;
+            const retail = mat ? (mat.retail * qty) : 0;
+            row.querySelector('.row-cost-input').value = formatCurrency(cost);
+            row.querySelector('.row-retail-input').value = formatCurrency(retail);
+
+            // low-stock highlight for the row
+            if (mat && mat.onHand < mat.reorder) {
+              row.classList.add('border', 'border-warning', 'rounded', 'p-1');
+            } else {
+              row.classList.remove('border', 'border-warning', 'rounded', 'p-1');
+            }
+
+            totalCost += cost;
+            totalRetail += retail;
+          });
+          productCostHeader.textContent = formatCurrency(totalCost);
+          productCostFooter.textContent = formatCurrency(totalCost);
+          productRetailFooter.textContent = formatCurrency(totalRetail);
+          partsCountSpan.textContent = String(partsList.querySelectorAll('.part-row').length);
+        }
+
+        // builder: add a part row inside partsList
+        function addPartRow(initialName = '', initialQty = 0) {
+          if (partsList.querySelectorAll('.part-row').length >= 15) {
+            alert('Max 15 parts allowed per product.');
+            return;
+          }
+          const prow = partTemplate.cloneNode(true);
+          const row = prow.querySelector('.part-row');
+          const pInput = row.querySelector('.part-input');
+          const qInput = row.querySelector('.qty-input');
+          const removeBtn = row.querySelector('.remove-part-btn');
+
+          pInput.value = initialName;
+          qInput.value = initialQty;
+
+          // events
+          pInput.addEventListener('change', () => recalcTotals());
+          qInput.addEventListener('input', () => recalcTotals());
+          removeBtn.addEventListener('click', () => {
+            row.remove();
+            recalcTotals();
+          });
+
+          partsList.appendChild(row);
+          recalcTotals();
+        }
+
+        // populate initial parts
+        partsList.innerHTML = '';
+        (prod.parts || []).forEach(p => addPartRow(p.matName, p.qty));
+        if ((prod.parts || []).length === 0) addPartRow();
+
+        // add part button
+        addPartBtn.addEventListener('click', () => addPartRow());
+
+        // save handler (demo only: update in-memory object)
+        saveBtn.addEventListener('click', () => {
+          prod.name = productNameInput.value.trim() || prod.name;
+          prod.lastUpdated = new Date().toISOString();
+          // collect parts
+          prod.parts = [];
+          partsList.querySelectorAll('.part-row').forEach(row => {
+            const matName = row.querySelector('.part-input').value.trim();
+            const qty = Number(row.querySelector('.qty-input').value) || 0;
+            if (matName && qty > 0) prod.parts.push({ matName, qty });
+          });
+          // re-render everything to update header and date
+          renderProducts();
+        });
+
+        // append to main accordion
+        productsAccordion.appendChild(clone);
+
+        // recalc once more to ensure header/footer consistent
+        recalcTotals();
+      });
+    }
+
+    // Add demo product button
+    document.getElementById('addDemoProduct').addEventListener('click', () => {
+      products.unshift(createDemoProduct('New Product ' + (products.length + 1)));
+      renderProducts();
+      // open first accordion item
+      const firstCollapse = productsAccordion.querySelector('.accordion-collapse');
+      if (firstCollapse) {
+        const bs = bootstrap.Collapse.getOrCreateInstance(firstCollapse);
+        bs.show();
+      }
+    });
+
+    // initialize with two demo products
+    products.push(createDemoProduct('Starter Kit'));
+    products.push(createDemoProduct('Maintenance Set'));
+    renderProducts();
+  </script>
+  
+</body>
+</html>
