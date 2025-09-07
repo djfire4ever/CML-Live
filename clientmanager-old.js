@@ -40,168 +40,98 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
   
   // ✅ Search Function
-function search() {
-  const searchInputVal = document.getElementById("searchInput").value.toLowerCase().trim();
-  const searchWords = searchInputVal.split(/\s+/);
-  const resultsContainer = document.getElementById("clientsAccordion");
-  resultsContainer.innerHTML = "";
-
-  const resultsArray = searchInputVal === "" ? [] : data.filter(r =>
-    searchWords.every(word =>
-      [0,1,2,3].some(i => r[i].toString().toLowerCase().includes(word))
-    )
-  );
-
-  const searchCounter = document.getElementById("searchCounter");
-  const totalCounter = document.getElementById("totalCounter");
-
-  if (searchCounter) {
-    if (searchInputVal === "") searchCounter.style.display = "none";
-    else {
-      searchCounter.textContent = `${resultsArray.length} Clients Found`;
-      searchCounter.style.display = "inline-block";
-    }
-  }
-  if (totalCounter) totalCounter.textContent = `${data.length} Total Clients`;
-
-  if (!resultsArray.length) {
-    if (searchCounter) searchCounter.textContent = "🔍";
-    return;
-  }
-
-  resultsArray.forEach(r => {
-    const template = document.getElementById("rowTemplate").content.cloneNode(true);
-    const accordionItem = template.querySelector(".accordion-item");
-
-    accordionItem.querySelector(".accordion-button").setAttribute("data-bs-target", `#collapse-${r[0]}`);
-    accordionItem.querySelector(".accordion-collapse").id = `collapse-${r[0]}`;
-    accordionItem.querySelector(".accordion-header").id = `heading-${r[0]}`;
-    accordionItem.querySelector(".client-name").textContent = `${r[1]} ${r[2]}`;
-
-    const infoDiv = accordionItem.querySelector(".client-info");
-    infoDiv.innerHTML = `
-      <div><strong>Phone:</strong> <span class="field" data-field="clientID">${r[0]}</span></div>
-      <div><strong>Email:</strong> <span class="field" data-field="email">${r[4]}</span></div>
-      <div><strong>Nick:</strong> <span class="field" data-field="nickName">${r[3]}</span></div>
-      <div><strong>Address:</strong> 
-        <span class="field" data-field="street">${r[5]}</span>, 
-        <span class="field" data-field="city">${r[6]}</span>, 
-        <span class="field" data-field="state">${r[7]}</span> 
-        <span class="field" data-field="zip">${r[8]}</span>
-      </div>
-    `;
-
-    const deleteBtn = accordionItem.querySelector(".before-delete-button");
-    const confirmBtn = accordionItem.querySelector(".delete-button");
-
-    deleteBtn.dataset.clientid = r[0];
-    confirmBtn.dataset.clientid = r[0];
-
-    // Create Edit button
-    const editBtn = document.createElement("button");
-    editBtn.type = "button";
-    editBtn.className = "btn btn-sm btn-info mt-2";
-    editBtn.textContent = "Edit";
-    infoDiv.appendChild(editBtn);
-
-    let isEditing = false;
-    let originalValues = {};
-
-    editBtn.addEventListener("click", () => {
-      if (!isEditing) {
-        // Start editing
-        isEditing = true;
-        originalValues = {};
-        accordionItem.querySelectorAll(".field").forEach(span => {
-          const value = span.textContent;
-          originalValues[span.dataset.field] = value;
-          const input = document.createElement("input");
-          input.value = value;
-          input.className = "form-control form-control-sm mb-1";
-          input.dataset.field = span.dataset.field;
-          span.replaceWith(input);
-        });
-
-        // Change button to Save / Cancel
-        editBtn.textContent = "Save";
-        const cancelBtn = document.createElement("button");
-        cancelBtn.type = "button";
-        cancelBtn.className = "btn btn-sm btn-secondary mt-2 ms-2";
-        cancelBtn.textContent = "Cancel";
-        editBtn.after(cancelBtn);
-
-        cancelBtn.addEventListener("click", () => {
-          // Revert inputs back to spans
-          accordionItem.querySelectorAll("input").forEach(input => {
-            const span = document.createElement("span");
-            span.textContent = originalValues[input.dataset.field];
-            span.className = "field";
-            span.dataset.field = input.dataset.field;
-            input.replaceWith(span);
-          });
-          editBtn.textContent = "Edit";
-          cancelBtn.remove();
-          isEditing = false;
-        });
-
+  function search() {
+    const searchInput = document.getElementById("searchInput").value.toLowerCase().trim();
+    const searchResultsBox = document.getElementById("searchResults");
+    const searchWords = searchInput.split(/\s+/);
+    const searchColumns = [0, 1, 2, 3];
+    const resultsArray = searchInput === "" ? [] : data.filter(r =>
+      searchWords.every(word =>
+        searchColumns.some(i => r[i].toString().toLowerCase().includes(word))
+      )
+    );
+  
+    const searchCounter = document.getElementById("searchCounter");
+    const totalCounter = document.getElementById("totalCounter");
+  
+    if (searchCounter) {
+      if (searchInput === "") {
+        searchCounter.style.display = "none";
       } else {
-        // Save changes
-        const updatedInfo = {};
-        accordionItem.querySelectorAll("input").forEach(input => {
-          updatedInfo[input.dataset.field] = input.value.trim();
-        });
-
-        fetch(scriptURL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ system: "clients", action: "edit", clientID: r[0], clientInfo: updatedInfo })
-        })
-        .then(res => res.json())
-        .then(result => {
-          if (result.success) {
-            showToast("✅ Client updated!", "success");
-            search(); // refresh accordion
-          } else {
-            showToast("❌ Update failed.", "error");
-          }
-        })
-        .catch(() => showToast("❌ Update error.", "error"));
+        searchCounter.textContent = `${resultsArray.length} Clients Found`;
+        searchCounter.style.display = "inline-block";
       }
-    });
-
-    // Delete functionality
-    deleteBtn.addEventListener("click", e => {
-      e.stopPropagation();
-      const isDelete = deleteBtn.dataset.buttonState === "delete";
-      confirmBtn.classList.toggle("d-none", !isDelete);
-      deleteBtn.textContent = isDelete ? "Cancel" : "Delete";
-      deleteBtn.dataset.buttonState = isDelete ? "cancel" : "delete";
-    });
-
-    confirmBtn.addEventListener("click", async e => {
-      e.stopPropagation();
-      const clientID = e.currentTarget.dataset.clientid;
-      if (!clientID) return showToast("⚠️ Client ID missing", "error");
-
-      try {
-        const res = await fetch(scriptURL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ system: "clients", action: "delete", clientID })
+    }
+  
+    if (searchResultsBox) {
+      searchResultsBox.innerHTML = "";
+      totalCounter.textContent = `${data.length} Total Clients`;
+  
+      if (resultsArray.length === 0) {
+        searchCounter.textContent = "🔍";
+      } else {
+        resultsArray.forEach(r => {
+          const row = document.getElementById("rowTemplate").content.cloneNode(true);
+          const tr = row.querySelector("tr");
+          tr.querySelector(".clientID").textContent = r[0];
+          tr.querySelector(".firstName").textContent = r[1];
+          tr.querySelector(".lastName").textContent = r[2];
+          tr.querySelector(".nickName").textContent = r[3];
+          tr.dataset.clientid = r[0];
+  
+          const deleteBtn = tr.querySelector(".before-delete-button");
+          const confirmBtn = tr.querySelector(".delete-button");
+  
+          deleteBtn.dataset.clientid = r[0];
+          confirmBtn.dataset.clientid = r[0];
+  
+          tr.addEventListener("click", async () => {
+            // toggleLoader(true);
+            await populateEditForm(r[0]);
+            new bootstrap.Tab(document.querySelector('[data-bs-target="#tab-edit"]')).show();
+            // toggleLoader(false);
+          });
+  
+          deleteBtn.addEventListener("click", e => {
+            e.stopPropagation();
+            const isDelete = deleteBtn.dataset.buttonState === "delete";
+            confirmBtn.classList.toggle("d-none", !isDelete);
+            deleteBtn.textContent = isDelete ? "Cancel" : "Delete";
+            deleteBtn.dataset.buttonState = isDelete ? "cancel" : "delete";
+          });
+  
+          confirmBtn.addEventListener("click", async e => {
+            e.stopPropagation();
+            const clientID = e.currentTarget.dataset.clientid;
+            if (!clientID) return showToast("⚠️ Client ID missing", "error");
+  
+            // toggleLoader(true);
+            try {
+              const res = await fetch(scriptURL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ system: "clients", action: "delete", clientID })
+              });
+              const result = await res.json();
+              if (result.success) {
+                showToast("✅ Client deleted!", "success");
+                document.getElementById("searchInput").value = "";
+                searchResultsBox.innerHTML = "";
+                await setDataForSearch();
+              } else showToast("⚠️ Could not delete client.", "error");
+            } catch {
+              showToast("⚠️ Error occurred while deleting client.", "error");
+            } finally {
+              // toggleLoader(false);
+            }
+          });
+  
+          searchResultsBox.appendChild(tr);
         });
-        const result = await res.json();
-        if (result.success) {
-          showToast("✅ Client deleted!", "success");
-          search();
-        } else showToast("⚠️ Could not delete client.", "error");
-      } catch {
-        showToast("⚠️ Error occurred while deleting client.", "error");
       }
-    });
-
-    resultsContainer.appendChild(accordionItem);
-  });
-}
+    }
+    // toggleLoader(false);
+  }
   
 // ✅ Populate Edit Form
 function populateEditForm(clientID) {
@@ -304,12 +234,3 @@ addClientForm?.addEventListener("submit", async (e) => {
     toggleLoader();
   }
 });
-
-window.simulateIframeError = function() {
-  throw new Error("Simulated iframe error");
-};
-
-function boom() {
-  throw new Error("Simulated iframe error");
-}
-window.boom = boom;

@@ -56,7 +56,7 @@
   <div class="accordion" id="clientsAccordion">
 
     <!-- ➕ Add New Client Accordion Card -->
-    <div class="accordion-item">
+    <div class="accordion-item border-info">
       <h2 class="accordion-header" id="heading-addClient">
         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-addClient" aria-expanded="false" aria-controls="collapse-addClient">
           ➕ Add New Client
@@ -150,7 +150,7 @@
 
   <!-- Template for dynamic client rows -->
   <template id="rowTemplate">
-    <div class="accordion-item client-row">
+    <div class="accordion-item client-row border-info">
       <h2 class="accordion-header" id="heading-CLIENTID">
         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-CLIENTID" aria-expanded="false" aria-controls="collapse-CLIENTID">
           <span class="client-name">CLIENTNAME</span>
@@ -285,37 +285,37 @@
     </div>
   </template>
 
-  <!-- ===== Email Modal ===== -->
-  <div class="modal fade" id="emailModal" tabindex="-1" aria-labelledby="emailModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="emailModalLabel">📧 Send Email</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <form id="emailForm">
-            <div class="mb-3">
-              <label for="emailTo" class="form-label">To</label>
-              <input type="email" id="emailTo" class="form-control" readonly>
-            </div>
-            <div class="mb-3">
-              <label for="emailSubject" class="form-label">Subject</label>
-              <input type="text" id="emailSubject" class="form-control">
-            </div>
-            <div class="mb-3">
-              <label for="emailBody" class="form-label">Body</label>
-              <textarea id="emailBody" class="form-control" rows="10"></textarea>
-            </div>
-          </form>
-        </div>
-        <div class="modal-footer">
-          <button type="button" id="sendEmailBtn" class="btn btn-primary">📨 Send Email</button>
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        </div>
+<!-- ===== Email Modal ===== -->
+<div class="modal fade" id="emailModal" tabindex="-1" aria-labelledby="emailModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="emailModalLabel">📧 Send Email</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="emailForm">
+          <div class="mb-3">
+            <label for="emailTo" class="form-label">To</label>
+            <input type="email" id="emailTo" class="form-control" readonly>
+          </div>
+          <div class="mb-3">
+            <label for="emailSubject" class="form-label">Subject</label>
+            <input type="text" id="emailSubject" class="form-control">
+          </div>
+          <div class="mb-3">
+            <label for="emailBody" class="form-label">Body</label>
+            <textarea id="emailBody" class="form-control" rows="10"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="sendEmailBtn" class="btn btn-primary">📨 Send Email</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
       </div>
     </div>
   </div>
+</div>
 
 </div> <!-- End container -->
 

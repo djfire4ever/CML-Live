@@ -340,6 +340,12 @@ function formatCurrency(amount) {
   }).format(num);
 }
 
+function parseSafeNumber(raw) {
+  if (raw === undefined || raw === null) return 0;
+  const s = String(raw).replace(/[^0-9.-]+/g, "");
+  return parseFloat(s) || 0;
+}
+
 function formatPhoneNumber(number) {
   const digits = number.replace(/\D/g, "");
   if (digits.length !== 10) return number;
