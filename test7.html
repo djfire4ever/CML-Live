@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Product Manager - Parts Demo</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { padding: 1.5rem; background:#f8f9fa; }
+    .card-header .price { font-weight:700; font-size:1.1rem; }
+    .parts-table { max-height: 260px; overflow:auto; }
+    .part-row { gap: .5rem; align-items:center; }
+    .low-stock-dot { width:10px; height:10px; display:inline-block; border-radius:50%; background:#ffc107; margin-left:6px; }
+    .small-muted { font-size:.85rem; color:#6c757d; }
+    .badge-parts { font-size:.85rem; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h3 class="mb-3">Product Manager — Parts demo</h3>
+
+    <!-- Search + Add Product (demo only) -->
+    <div class="d-flex mb-3 gap-2">
+      <input id="searchProducts" class="form-control" placeholder="Search products..." />
+      <button id="btnAddDemoProduct" class="btn btn-primary">Add Demo Product</button>
+    </div>
+
+    <!-- Products Accordion -->
+    <div id="productsAccordion" class="accordion"></div>
+  </div>
+
+  <!-- Shared datalist for part autocomplete -->
+  <datalist id="materials-datalist"></datalist>
+
+<script>
+/* ===========================================
+   Demo data (materials + products)
+   =========================================== */
+const materials = {
+  // matName: { matID, unitPrice, onHand, reorderLevel }
+  "Screw (M3)": { matID: "m1", unitPrice: 0.12, onHand: 100, reorderLevel: 20 },
+  "Bracket (L)": { matID: "m2", unitPrice: 0.75, onHand: 5, reorderLevel: 10 },
+  "Panel (A)": { matID: "m3", unitPrice: 4.50, onHand: 12, reorderLevel: 5 },
+  "Display 6\"": { matID: "m4", unitPrice: 22.00, onHand: 3, reorderLevel: 6 },
+  "Battery Pack": { matID: "m5", unitPrice: 9.5, onHand: 8, reorderLevel: 4 },
+  "Case (plastic)": { matID: "m6", unitPrice: 3.25, onHand: 60, reorderLevel: 10 }
+};
+
+const productsData = [
+  { id: "p1", name: "Smart Sensor", type: "Electronics", lastUpdated: "09/01/2025", parts: [
+      { name: "Screw (M3)", qty: 6 },
+      { name: "Panel (A)", qty: 1 },
+      { name: "Battery Pack", qty: 1 }
+    ]},
+  { id: "p2", name: "Mounting Bracket Kit", type: "Hardware", lastUpdated: "09/03/2025", parts: [
+      { name: "Bracket (L)", qty: 2 },
+      { name: "Screw (M3)", qty: 8 }
+    ]}
+];
+
+/* ===========================================
+   Utilities
+   =========================================== */
+function parseNumberSafe(v) {
+  const n = Number(String(v).replace(/[^0-9.\-]/g, ""));
+  return isNaN(n) ? 0 : n;
+}
+function formatCurrency(n) {
+  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(Number(n||0));
+}
+function clampPartsCount(count) {
+  if (count > 15) return 15;
+  if (count < 0) return 0;
+  return count;
+}
+
+/* ===========================================
+   Render helpers
+   =========================================== */
+function populateMaterialsDatalist() {
+  const dl = document.getElementById("materials-datalist");
+  dl.innerHTML = "";
+  Object.keys(materials).forEach(name => {
+    const opt = document.createElement("option");
+    opt.value = name;
+    dl.appendChild(opt);
+  });
+}
+
+/* Product card template builder */
+function buildProductCard(prod) {
+  const accItem = document.createElement("div");
+  accItem.className = "accordion-item mb-2";
+
+  // Header: product summary
+  const headerId = `heading-${prod.id}`;
+  const collapseId = `collapse-${prod.id}`;
+
+  const header = document.createElement("h2");
+  header.className = "accordion-header";
+  header.id = headerId;
+
+  // header button (summary line)
+  const btn = document.createElement("button");
+  btn.className = "accordion-button collapsed d-flex align-items-center";
+  btn.type = "button";
+  btn.setAttribute("data-bs-toggle", "collapse");
+  btn.setAttribute("data-bs-target", `#${collapseId}`);
+  btn.setAttribute("aria-expanded", "false");
+  btn.setAttribute("aria-controls", collapseId);
+  btn.style.justifyContent = "space-between";
+
+  // left: title + type
+  const left = document.createElement("div");
+  left.style.flex = "1";
+  left.innerHTML = `<div class="fw-bold">${prod.name}</div><div class="small-muted">${prod.type}</div>`;
+
+  // right: price + parts count
+  const right = document.createElement("div");
+  right.className = "text-end";
+  right.innerHTML = `<div class="price" id="price-${prod.id}">${formatCurrency(0)}</div>
+                     <div class="small-muted">Parts: <span id="parts-count-${prod.id}">0</span></div>`;
+
+  btn.appendChild(left);
+  btn.appendChild(right);
+  header.appendChild(btn);
+
+  // Body
+  const collapse = document.createElement("div");
+  collapse.id = collapseId;
+  collapse.className = "accordion-collapse collapse";
+  collapse.setAttribute("aria-labelledby", headerId);
+
+  const body = document.createElement("div");
+  body.className = "accordion-body";
+
+  // Body content: product fields + parts section
+  body.innerHTML = `
+    <div class="mb-2">
+      <div class="row gx-2 align-items-center">
+        <div class="col"><strong>Last updated:</strong> <span class="last-updated">${prod.lastUpdated || ""}</span></div>
+        <div class="col text-end"><button class="btn btn-sm btn-outline-primary btn-add-part">Add Part</button></div>
+      </div>
+    </div>
+
+    <div class="mb-2 parts-section">
+      <div class="mb-1"><strong>Parts</strong> <span class="badge bg-secondary badge-parts parts-badge">0</span></div>
+      <div class="parts-table table-responsive border rounded p-2">
+        <!-- rows will be appended here -->
+        <div class="parts-rows container-fluid p-0"></div>
+      </div>
+      <div class="mt-2 d-flex justify-content-between align-items-center">
+        <div><small class="text-muted">Max 15 parts per product</small></div>
+        <div><strong>Total Cost:</strong> <span class="product-total-cost">$0.00</span></div>
+      </div>
+    </div>
+
+    <div class="mt-2">
+      <button class="btn btn-success btn-save-product">Save (demo)</button>
+      <button class="btn btn-danger btn-delete-product ms-2">Delete (demo)</button>
+    </div>
+  `;
+
+  collapse.appendChild(body);
+  accItem.appendChild(header);
+  accItem.appendChild(collapse);
+
+  // attach data
+  accItem._product = prod;
+
+  return accItem;
+}
+
+/* ===========================================
+   Parts row functions (add/update/remove)
+   =========================================== */
+function addPartRow(container, part = { name: "", qty: 0 }) {
+  // container is .parts-rows element
+  const currentCount = container.querySelectorAll(".part-row").length;
+  if (currentCount >= 15) {
+    alert("Max 15 parts per product.");
+    return null;
+  }
+
+  const row = document.createElement("div");
+  row.className = "row part-row mb-2 gx-2";
+
+  row.innerHTML = `
+    <div class="col-md-5">
+      <input class="form-control form-control-sm part-name" list="materials-datalist" placeholder="Material name" value="${escapeHtml(part.name)}">
+    </div>
+    <div class="col-md-2">
+      <input class="form-control form-control-sm part-qty" type="number" min="0" value="${escapeHtml(part.qty)}">
+    </div>
+    <div class="col-md-2">
+      <input class="form-control form-control-sm row-cost" readonly>
+    </div>
+    <div class="col-md-2">
+      <input class="form-control form-control-sm row-retail" readonly>
+    </div>
+    <div class="col-md-1 d-flex">
+      <button class="btn btn-danger btn-sm remove-part" title="Remove part">&times;</button>
+    </div>
+  `;
+
+  container.appendChild(row);
+
+  // Hook events
+  const nameInput = row.querySelector(".part-name");
+  const qtyInput = row.querySelector(".part-qty");
+  const removeBtn = row.querySelector(".remove-part");
+
+  nameInput.addEventListener("input", () => calculateRowAndTotals(row));
+  qtyInput.addEventListener("input", () => calculateRowAndTotals(row));
+  removeBtn.addEventListener("click", () => {
+    row.remove();
+    calculateProductTotals(container.closest(".accordion-body"));
+  });
+
+  // initial calc
+  calculateRowAndTotals(row);
+
+  return row;
+}
+
+function calculateRowAndTotals(rowOrRowElement) {
+  // can accept either a row element or a wrapper with many rows
+  const row = rowOrRowElement.classList && rowOrRowElement.classList.contains("part-row") ? rowOrRowElement : null;
+  if (!row) return;
+
+  const name = row.querySelector(".part-name").value.trim();
+  const qty = parseNumberSafe(row.querySelector(".part-qty").value);
+
+  const rowCostInput = row.querySelector(".row-cost");
+  const rowRetailInput = row.querySelector(".row-retail");
+
+  let unitPrice = 0;
+  let retail = 0;
+  let onHand = 0;
+  let reorder = 0;
+
+  if (name && materials[name]) {
+    unitPrice = Number(materials[name].unitPrice) || 0;
+    // for demo: retail = unitPrice * 1.5
+    retail = unitPrice * 1.5;
+    onHand = materials[name].onHand || 0;
+    reorder = materials[name].reorderLevel || 0;
+  }
+
+  const totalCost = qty * unitPrice;
+  const totalRetail = qty * retail;
+
+  rowCostInput.value = formatCurrency(totalCost);
+  rowRetailInput.value = formatCurrency(totalRetail);
+
+  // decorate row if low stock
+  if (name && materials[name] && qty > 0 && (materials[name].onHand < qty || materials[name].onHand < reorder)) {
+    row.classList.add("table-warning");
+  } else {
+    row.classList.remove("table-warning");
+  }
+
+  // update parent totals
+  const body = row.closest(".accordion-body");
+  calculateProductTotals(body);
+}
+
+/* Calculate product-level totals and header summary */
+function calculateProductTotals(body) {
+  if (!body) return;
+  const rows = body.querySelectorAll(".part-row");
+  let totalCost = 0;
+  let partsCount = 0;
+
+  rows.forEach(r => {
+    const val = r.querySelector(".row-cost").value || "";
+    const n = parseNumberSafe(val);
+    totalCost += n;
+    const qty = parseNumberSafe(r.querySelector(".part-qty").value);
+    if (qty > 0 && r.querySelector(".part-name").value.trim()) partsCount += 1;
+  });
+
+  // Update the display elements
+  const totalCostEl = body.querySelector(".product-total-cost");
+  if (totalCostEl) totalCostEl.textContent = formatCurrency(totalCost);
+
+  const badge = body.querySelector(".parts-badge");
+  if (badge) badge.textContent = String(rows.length);
+
+  // Update header summary
+  const card = body.closest(".accordion-item");
+  if (card) {
+    const prod = card._product;
+    const priceEl = document.getElementById(`price-${prod.id}`);
+    const partsCountEl = document.getElementById(`parts-count-${prod.id}`);
+    if (priceEl) priceEl.textContent = formatCurrency(totalCost);
+    if (partsCountEl) partsCountEl.textContent = String(partsCount);
+  }
+}
+
+/* Escape simple HTML in values */
+function escapeHtml(s) {
+  if (!s) return "";
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+/* ===========================================
+   Render all products
+   =========================================== */
+function renderAllProducts() {
+  populateMaterialsDatalist();
+
+  const acc = document.getElementById("productsAccordion");
+  acc.innerHTML = "";
+
+  productsData.forEach(prod => {
+    const card = buildProductCard(prod);
+    acc.appendChild(card);
+
+    // after appended, populate parts rows inside body
+    const body = card.querySelector(".accordion-body");
+    const rowsContainer = body.querySelector(".parts-rows");
+
+    // fill rows from product data
+    (prod.parts || []).forEach(p => addPartRow(rowsContainer, { name: p.name, qty: p.qty }));
+
+    // Hook add-part button
+    const addBtn = body.querySelector(".btn-add-part");
+    if (addBtn) addBtn.addEventListener("click", () => {
+      addPartRow(rowsContainer, { name:"", qty: 0 });
+    });
+
+    // Hook save/delete (demo)
+    const saveBtn = body.querySelector(".btn-save-product");
+    if (saveBtn) {
+      saveBtn.addEventListener("click", () => {
+        // gather data and replace product.parts
+        const newParts = [];
+        rowsContainer.querySelectorAll(".part-row").forEach(r => {
+          const nm = r.querySelector(".part-name").value.trim();
+          const q = parseNumberSafe(r.querySelector(".part-qty").value);
+          if (nm && q > 0) newParts.push({ name: nm, qty: q });
+        });
+        prod.parts = newParts;
+        prod.lastUpdated = new Date().toLocaleDateString("en-US");
+        body.querySelector(".last-updated").textContent = prod.lastUpdated;
+        calculateProductTotals(body);
+        alert("Saved (demo). Product parts updated in memory.");
+      });
+    }
+
+    const deleteBtn = body.querySelector(".btn-delete-product");
+    if (deleteBtn) {
+      deleteBtn.addEventListener("click", () => {
+        const idx = productsData.findIndex(p => p.id === prod.id);
+        if (idx !== -1) {
+          productsData.splice(idx,1);
+          renderAllProducts();
+        }
+      });
+    }
+
+    // Initial totals calc
+    calculateProductTotals(body);
+  });
+}
+
+/* Hook demo add product */
+document.addEventListener("DOMContentLoaded", () => {
+  renderAllProducts();
+
+  // Demo: add product button
+  const addDemo = document.getElementById("btnAddDemoProduct");
+  addDemo.addEventListener("click", () => {
+    const nextId = `p${Date.now()}`;
+    productsData.unshift({ id: nextId, name: "New Product", type: "Misc", lastUpdated: new Date().toLocaleDateString("en-US"), parts: [] });
+    renderAllProducts();
+    // open top accordion item
+    const firstCollapse = document.querySelector("#productsAccordion .accordion-collapse");
+    if (firstCollapse) {
+      const bs = bootstrap.Collapse.getOrCreateInstance(firstCollapse);
+      bs.show();
+    }
+  });
+
+  // Search basic filtering
+  const search = document.getElementById("searchProducts");
+  search.addEventListener("input", () => {
+    const q = search.value.trim().toLowerCase();
+    if (!q) {
+      // show all
+      productsData.forEach(p => {}); // nothing - we always re-render
+      renderAllProducts();
+      return;
+    }
+    // filter in-memory
+    const filtered = productsData.filter(p => (p.name + " " + p.type).toLowerCase().includes(q));
+    // render only filtered
+    const acc = document.getElementById("productsAccordion");
+    acc.innerHTML = "";
+    filtered.forEach(prod => {
+      const card = buildProductCard(prod);
+      acc.appendChild(card);
+      const body = card.querySelector(".accordion-body");
+      const rowsContainer = body.querySelector(".parts-rows");
+      (prod.parts || []).forEach(p => addPartRow(rowsContainer, { name: p.name, qty: p.qty }));
+      calculateProductTotals(body);
+      // minimal wiring for add and save in filtered view
+      body.querySelector(".btn-add-part")?.addEventListener("click", () => addPartRow(rowsContainer));
+      body.querySelector(".btn-save-product")?.addEventListener("click", () => {
+        prod.parts = Array.from(rowsContainer.querySelectorAll(".part-row")).map(r => ({
+          name: r.querySelector(".part-name").value.trim(),
+          qty: parseNumberSafe(r.querySelector(".part-qty").value)
+        }));
+        prod.lastUpdated = new Date().toLocaleDateString("en-US");
+        body.querySelector(".last-updated").textContent = prod.lastUpdated;
+        calculateProductTotals(body);
+      });
+    });
+  });
+});
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
+

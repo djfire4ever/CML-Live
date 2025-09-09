@@ -100,7 +100,7 @@ function loadStylesheets() {
   // Bootstrap CSS
   const bootstrapCSS = document.createElement('link');
   bootstrapCSS.rel = 'stylesheet';
-  bootstrapCSS.href = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css';
+  bootstrapCSS.href = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css';
   head.appendChild(bootstrapCSS);
   window.pageMeta.hasBootstrapCSS = true;
 
@@ -114,7 +114,7 @@ function loadStylesheets() {
   // Font Awesome
   const fontAwesome = document.createElement('link');
   fontAwesome.rel = 'stylesheet';
-  fontAwesome.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css';
+  fontAwesome.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css';
   head.appendChild(fontAwesome);
   window.pageMeta.hasFontAwesome = true;
 
@@ -137,7 +137,7 @@ function loadScripts() {
 
   // Bootstrap JS
   const bootstrapScript = document.createElement('script');
-  bootstrapScript.src = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js';
+  bootstrapScript.src = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js';
   bootstrapScript.defer = true;
   bootstrapScript.onload = () => {
     console.log('✅ Bootstrap loaded');
