@@ -88,6 +88,7 @@
 input::placeholder,
 textarea::placeholder,
 select::placeholder {
+  color: var(--text-color);
   font-weight: bold;
 }
 

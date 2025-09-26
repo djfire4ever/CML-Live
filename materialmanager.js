@@ -620,31 +620,3 @@ function initializePage() {
 // Run initializer when DOM is ready
 document.addEventListener("DOMContentLoaded", initializePage);
 
-
-// const addForm = document.getElementById("addMaterialFormAccordion");
-// if (addForm) addForm.addEventListener("submit", addMaterial);
-// const addCancelBtn = document.getElementById("addCancelBtn");
-// if (addCancelBtn) addCancelBtn.addEventListener("click", () => {
-//   const form = document.getElementById("addMaterialFormAccordion");
-//   if (form) form.reset();
-// });
-
-// // Set today's date in US format (MM/DD/YYYY) for add card
-// const today = new Date();
-// const mm = String(today.getMonth() + 1).padStart(2, "0");
-// const dd = String(today.getDate()).padStart(2, "0");
-// const yyyy = today.getFullYear();
-// const addDateSpan = document.getElementById("addMaterialDate");
-// if (addDateSpan) addDateSpan.textContent = `${mm}/${dd}/${yyyy}`;
-
-// // Hook autocalculations in add card
-// const addCardBody = document.querySelector("#collapse-addMaterial .accordion-body");
-// if (addCardBody) {
-//   ["matPrice", "unitQty", "onHand"].forEach(id => {
-//     const input = document.getElementById(id);
-//     if (input) {
-//       input.addEventListener("input", () => calculateAllForCard(addCardBody));
-//     }
-//   });
-// }
-

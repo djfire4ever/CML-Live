@@ -605,10 +605,6 @@ function calculateTotalProductCost() {
   }
 }
 
-function formatCurrency(num) {
-  return `$${parseFloat(num).toFixed(2)}`;
-}
-
 // ✅ Utility functions
 function getField(id) {
   return document.getElementById(id)?.value.trim() || "";

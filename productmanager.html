@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Product Manager</title>
+  <title>Product Manager-Old Tabs</title>
   <style></style>
 </head>
 <body class="theme-dark">
@@ -23,7 +23,7 @@
 <!-- Product Management Section -->
 <section class="text-sm-start py-4">
   <div class="container">
-    <h2 class="text-center mb-4">Product Management</h2>
+    <h2 class="text-center mb-4">Product Management (Original Tab System)</h2>
 
 <!-- Nav Tabs -->
 <ul class="nav nav-tabs" id="productTabs" role="tablist">
@@ -203,29 +203,8 @@
 <script src="config.js" defer></script> <!-- this has all my glogal functions, variables and constants including scripturl -->
 <script src="productmanager.js" defer></script>
 
+
 <script>
-
-function setupDynamicNavigation() {
-  function activateTabFromHash() {
-    var hash = window.location.hash;
-    if (!hash) return;
-
-    var targetTabButton = document.querySelector('[data-bs-target="' + hash + '"]');
-    if (targetTabButton) {
-      var tab = new bootstrap.Tab(targetTabButton);
-      tab.show();
-    }
-  }
-
-  // Use window.onload for full page load
-  window.onload = function() {
-    activateTabFromHash();  // Ensures tab switch happens after everything is loaded
-  };
-
-  window.addEventListener('hashchange', activateTabFromHash);
-}
-
-setupDynamicNavigation();
 
 window.addEventListener('DOMContentLoaded', () => {
   const theme = localStorage.getItem('selectedTheme');

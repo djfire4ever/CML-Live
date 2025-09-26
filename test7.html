@@ -1,429 +1,395 @@
-<!doctype html>
+<!--  Restore point -->
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Product Manager - Parts Demo</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <style>
-    body { padding: 1.5rem; background:#f8f9fa; }
-    .card-header .price { font-weight:700; font-size:1.1rem; }
-    .parts-table { max-height: 260px; overflow:auto; }
-    .part-row { gap: .5rem; align-items:center; }
-    .low-stock-dot { width:10px; height:10px; display:inline-block; border-radius:50%; background:#ffc107; margin-left:6px; }
-    .small-muted { font-size:.85rem; color:#6c757d; }
-    .badge-parts { font-size:.85rem; }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Product Manager</title>
+<style>
+/* Hide number input arrows (spinners) */
+.part-rows input.qty-input::-webkit-inner-spin-button,
+.part-rows input.qty-input::-webkit-outer-spin-button,
+#part-rows input.qty-input::-webkit-inner-spin-button,
+#part-rows input.qty-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+</style>
 </head>
-<body>
+<body class="page-body" style="min-height:100vh;" data-element="page-bg">
+<!-- 💧 Watermark -->
+<div class="watermark"></div>
+<!-- 🔔 Toast Notifications -->
+<div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3"></div>
 
-  <div class="container">
-    <h3 class="mb-3">Product Manager — Parts demo</h3>
+<!-- ⏳ Loader -->
+<div id="loadingOverlay" class="d-none">
+  <div class="text-center">
+    <div class="spinner-border" role="status"></div>
+    <p class="mt-4">Loading... Please wait...</p>
+  </div>
+</div>
 
-    <!-- Search + Add Product (demo only) -->
-    <div class="d-flex mb-3 gap-2">
-      <input id="searchProducts" class="form-control" placeholder="Search products..." />
-      <button id="btnAddDemoProduct" class="btn btn-primary">Add Demo Product</button>
+<!-- Product Management Section -->
+<div class="container">
+  <h2 class="text-center mb-4">Product Management</h2>
+
+  <!-- 🔍 Search + Counters -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="input-group w-50">
+      <input type="text" id="searchInput" class="form-control" placeholder="🔍 Search products...">
     </div>
-
-    <!-- Products Accordion -->
-    <div id="productsAccordion" class="accordion"></div>
+    <div class="d-flex gap-3">
+      <span class="badge bg-primary">Total: <span id="totalCounter">0</span></span>
+      <span class="badge bg-danger">Found: <span id="searchCounter">0</span></span>
+    </div>
   </div>
 
-  <!-- Shared datalist for part autocomplete -->
-  <datalist id="materials-datalist"></datalist>
+  <!-- Shared Part Options Datalist -->
+  <datalist id="row-parts-selector"></datalist>
+
+  <!-- ➕ Add New Product Accordion -->
+  <div class="accordion mb-3" id="addProductAccordion">
+    <div class="accordion-item border-info">
+      <h2 class="accordion-header" id="heading-addProduct">
+        <button class="accordion-button collapsed" type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#collapse-addProduct"
+                aria-expanded="false"
+                aria-controls="collapse-addProduct">
+          ➕ Add New Product
+        </button>
+      </h2>
+      <div id="collapse-addProduct" class="accordion-collapse collapse"
+          aria-labelledby="heading-addProduct"
+          data-bs-parent="#addProductAccordion">
+        <div class="accordion-body">
+          <form id="addProductForm">
+            <!-- ===== Product Info Section ===== -->
+            <fieldset class="mb-2 p-2 border rounded border-info">
+              <legend class="small fw-bold mb-0">
+                <div class="row w-100 gx-2">
+                  <div class="col-2 text-truncate"><span class="text-info">Product Details</span></div>
+                  <div class="col-2 text-truncate">ID # TBD</div>
+                <div class="col-6 text-truncate">
+                  <span class="text-info">Type:</span> 
+                  <span class="productType-legend text-warning"></span>
+                  <input type="text" class="form-control form-control-sm productType-input" list="product-type-options" placeholder="Select Type">
+                  <datalist id="product-type-options"></datalist>
+                </div>
+                  <!-- 👇 Hardcoded static date -->
+                  <div class="col-2 text-truncate"><span class="text-info">Updated:</span> <span class="prodDate text-warning">2025-09-19</span></div>
+                </div>
+              </legend>
+
+              <div class="row gx-3 gy-1 align-items-center mt-2">
+                <div class="col-md-4">
+                  <label class="form-label text-info">Product Name</label>
+                  <input type="text" class="form-control form-control-sm productName-input" id="productName">
+                </div>
+              <div class="col-4">
+                <label class="form-label">Description</label>
+                <span class="description text-warning"></span>
+                <textarea class="form-control form-control-sm description-input" rows="1" style="overflow:hidden; resize:none;"></textarea>
+              </div>
+               <div class="col-md-2">
+                  <label class="form-label text-info">Total Cost</label>
+                  <input type="text" class="form-control form-control-sm text-warning totalCost-input" style="border: none;" id="totalCost" readonly>
+                </div>
+                <div class="col-md-2">
+                  <label class="form-label text-info">Total Retail</label>
+                  <input type="text" class="form-control form-control-sm text-warning totalRetail-input" style="border: none;" id="totalRetail" readonly>
+                </div>
+              </div>
+            </fieldset>
+
+            <!-- ===== Parts Section Accordion ===== -->
+            <div class="accordion mt-2 mb-2" id="addProductPartsAccordion">
+              <div class="accordion-item border-info">
+                <h2 class="accordion-header" id="heading-addProductParts">
+                  <button class="accordion-button collapsed" type="button"
+                          data-bs-toggle="collapse"
+                          data-bs-target="#collapse-addProductParts"
+                          aria-expanded="false"
+                          aria-controls="collapse-addProductParts">
+                    <span><i class="fa-solid fa-tag me-2"></i></span>
+                    <span class="fs-6 ms-2" id="partrow-header-display">Parts</span>
+                  </button>
+                </h2>
+                <div id="collapse-addProductParts" class="accordion-collapse collapse"
+                    data-bs-parent="#addProductPartsAccordion">
+                  <div class="accordion-body">
+                    <div class="container-fluid px-0">
+                      <div class="row mb-0 part-row-headers">
+                        <div class="col-md-6">Part</div>
+                        <div class="col-md-1">Qty</div>
+                        <div class="col-md-2">Cost $</div>
+                        <div class="col-md-2">Retail $</div>
+                        <div class="col-md-1"></div>
+                      </div>
+                      <div id="part-rows" class="part-rows"></div>
+                      <div class="row g-3 mt-1 mb-1">
+                        <div class="col-sm-6">
+                          <button type="button" class="btn" id="add-partRow">➕ Part</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Save Button -->
+            <div class="row g-3 mt-2 mb-2">
+              <div class="col-sm-12 d-flex gap-2">
+                <button type="submit" class="btn btn-success btn-sm rounded-pill">💾 Save</button>
+                <button type="button" class="btn btn-secondary btn-sm rounded-pill" id="addProductCancel">❌ Cancel</button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🔍 Search Results Accordion -->
+  <div class="accordion" id="productSearchResults"></div>
+
+  <!-- Template for a single part row (not displayed) -->
+  <template id="partRowTemplate">
+    <div class="row align-items-center mb-2 part-row">
+      <!-- Part Name -->
+      <div class="col-md-6">
+        <span class="part-name-span text-warning"></span>
+        <input type="text" class="form-control form-control-sm part-input d-none" list="row-parts-selector">
+      </div>
+
+      <!-- Qty -->
+      <div class="col-md-1">
+        <span class="part-qty-span text-warning"></span>
+        <input type="number" class="form-control form-control-sm qty-input d-none">
+      </div>
+
+      <!-- Cost -->
+      <div class="col-md-2">
+        <span class="part-cost-span text-warning"></span>
+        <input type="text" class="form-control form-control-sm text-warning totalRowCost d-none" readonly>
+      </div>
+
+      <!-- Retail -->
+      <div class="col-md-2">
+        <span class="part-retail-span text-warning"></span>
+        <input type="text" class="form-control form-control-sm text-warning totalRowRetail d-none" readonly>
+      </div>
+
+      <!-- Remove Button -->
+      <div class="col-md-1 d-flex">
+        <button type="button" class="btn btn-danger btn-sm remove-part">
+          <i class="bi bi-trash"></i>
+        </button>
+      </div>
+    </div>
+  </template>
+
+  <!-- Template for dynamic product rows -->
+  <template id="rowTemplate">
+    <div class="accordion-item product-accordion border-info">
+      <h2 class="accordion-header">
+        <button class="accordion-button collapsed" type="button"
+                data-bs-toggle="collapse">
+          <div class="row w-100 text-truncate align-items-center gx-2">
+            <div class="col-1 text-center productType-icon"></div>
+            <div class="col-9 text-truncate fw-bold productName"></div>
+            <div class="col-2 totalRetail"></div>
+          </div>
+        </button>
+      </h2>
+
+      <div class="accordion-collapse collapse">
+        <div class="accordion-body">
+<!-- ===== Product Info Section ===== -->
+<fieldset id="productInfoFieldset" class="mb-2 p-2 border rounded border-info">
+
+  <!-- Main Content Row -->
+  <div class="d-flex flex-wrap justify-content-start align-items-start gap-3">
+
+    <!-- Left Column: Control Panel + Product Name + Thumbnail -->
+    <div id="productThumbnailColumn" class="d-flex" style="width:250px; height:250px;">
+
+      <!-- Control Panel -->
+      <div id="thumbnailControlPanel" 
+           class="d-flex flex-column justify-content-center align-items-center me-2"
+           style="width:50px;">
+        <button class="btn btn-sm btn-outline-info mb-1" title="Upload"><i class="bi bi-upload"></i></button>
+        <button class="btn btn-sm btn-outline-warning mb-1" title="Edit"><i class="bi bi-pencil"></i></button>
+        <button class="btn btn-sm btn-outline-danger mb-1" title="Delete"><i class="bi bi-trash"></i></button>
+      </div>
+
+      <!-- Thumbnail + Manage Gallery Button -->
+      <div class="d-flex flex-column align-items-center">
+        <input type="text" class="form-control form-control-sm productName-input mb-1 text-center" 
+               id="productName" placeholder="Product Name">
+        <img src="/images/placeholder.png" 
+             class="img-thumbnail mb-2"
+             alt="Product Thumbnail"
+             style="width:200px; height:200px;">
+
+        <!-- Manage Gallery Button -->
+        <button class="btn btn-sm btn-outline-info" 
+                data-bs-toggle="modal" 
+                data-bs-target="#imageManagerModal">
+          <i class="bi bi-images me-1"></i> Gallery Manager
+        </button>
+      </div>
+    </div>
+
+    <!-- Middle Column: Type + Updated + Description -->
+    <div id="productDescriptionColumn" class="d-flex flex-column" style="width:400px; height:200px;">
+
+      <!-- Product Type (inline label + input) -->
+      <div class="d-flex align-items-center mb-4">
+        <label for="productTypeInput" class="form-label text-info mb-0 me-2">Product Type:</label>
+        <input type="text" 
+               id="productTypeInput"
+               class="form-control form-control-sm productType-input"
+               list="product-type-options" 
+               placeholder="Select Type" 
+               style="max-width: 70%;">
+        <datalist id="product-type-options"></datalist>
+      </div>
+
+      <!-- Last Updated -->
+      <div class="mb-4">
+        <small class="text-info fw-bold">Updated:</small> 
+        <span id="productUpdated" class="prodDate text-warning">09-19-2025</span>
+      </div>
+
+      <!-- Description (single-line look) -->
+      <label for="productDescriptionInput" class="form-label mb-1">Description</label>
+      <textarea id="productDescriptionInput" 
+                class="form-control form-control-sm description-input"
+                rows="1"
+                style="resize:none; overflow:hidden;"
+                placeholder="Enter product description"></textarea>
+    </div>
+
+    <!-- Right Column: Totals -->
+    <!-- <div id="productTotalsColumn" 
+         class="d-flex flex-column align-items-center ps-3 border-start border-2 rounded bg-black shadow-sm"
+         style="width:150px; height:200px;">
+      <label for="totalCost" class="form-label text-info mb-1">Total Cost</label>
+      <input id="totalCost" type="text" 
+             class="form-control form-control-sm text-warning mb-2 totalCost-input" 
+             readonly>
+      <label for="totalRetail" class="form-label text-info mb-1">Total Retail</label>
+      <input id="totalRetail" type="text" 
+             class="form-control form-control-sm text-warning totalRetail-input" 
+             readonly>
+    </div> -->
+
+  </div>
+</fieldset>
+
+          <!-- Parts Section Accordion -->
+          <div class="accordion mt-2 mb-2 parts-accordion">
+            <div class="accordion-item border-info">
+              <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse">
+                  <span><i class="fa-solid fa-boxes-stacked me-2"></i></span>
+                  <span class="fs-6 ms-2 partrow-header-display">Parts</span>
+                </button>
+              </h2>
+              <div class="accordion-collapse collapse">
+                <div class="accordion-body">
+                  <div class="container-fluid px-0">
+
+                    <!-- Headers -->
+                    <div class="row mb-0 part-row-headers">
+                      <div class="col-md-6">Part</div>
+                      <div class="col-md-1">Qty</div>
+                      <div class="col-md-2">Cost $</div>
+                      <div class="col-md-2">Retail $</div>
+                      <div class="col-md-1"></div>
+                    </div>
+
+                    <!-- Container for cloned part rows -->
+                    <div class="part-rows"></div>
+
+                    <!-- Add Part Button -->
+                    <div class="row g-3 mt-1 mb-1">
+                      <div class="col-sm-6">
+                        <button type="button" class="btn btn-sm btn-outline-primary addPartBtn">➕ Part</button>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Buttons -->
+          <div class="d-flex gap-1 mt-2">
+            <button type="button" class="btn btn-warning btn-sm rounded-pill edit-button">
+              <i class="bi bi-pencil me-1"></i> Edit
+            </button>
+            <button type="button" class="btn btn-success btn-sm rounded-pill save-button d-none" disabled>
+              <i class="bi bi-check me-1"></i> Save
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm rounded-pill cancel-button d-none">
+              <i class="bi bi-x me-1"></i> Cancel
+            </button>
+            <div class="d-flex gap-1">
+              <button type="button" class="btn btn-outline-danger btn-sm rounded-pill before-delete-button">Delete</button>
+              <button type="button" class="btn btn-danger btn-sm rounded-pill delete-button d-none">Confirm</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </template>
+
+</div>
+
+<script src="config.js" defer></script> <!-- this has all my glogal functions, variables and constants including scripturl -->
+<script src="test7.js" defer></script>
 
 <script>
-/* ===========================================
-   Demo data (materials + products)
-   =========================================== */
-const materials = {
-  // matName: { matID, unitPrice, onHand, reorderLevel }
-  "Screw (M3)": { matID: "m1", unitPrice: 0.12, onHand: 100, reorderLevel: 20 },
-  "Bracket (L)": { matID: "m2", unitPrice: 0.75, onHand: 5, reorderLevel: 10 },
-  "Panel (A)": { matID: "m3", unitPrice: 4.50, onHand: 12, reorderLevel: 5 },
-  "Display 6\"": { matID: "m4", unitPrice: 22.00, onHand: 3, reorderLevel: 6 },
-  "Battery Pack": { matID: "m5", unitPrice: 9.5, onHand: 8, reorderLevel: 4 },
-  "Case (plastic)": { matID: "m6", unitPrice: 3.25, onHand: 60, reorderLevel: 10 }
-};
 
-const productsData = [
-  { id: "p1", name: "Smart Sensor", type: "Electronics", lastUpdated: "09/01/2025", parts: [
-      { name: "Screw (M3)", qty: 6 },
-      { name: "Panel (A)", qty: 1 },
-      { name: "Battery Pack", qty: 1 }
-    ]},
-  { id: "p2", name: "Mounting Bracket Kit", type: "Hardware", lastUpdated: "09/03/2025", parts: [
-      { name: "Bracket (L)", qty: 2 },
-      { name: "Screw (M3)", qty: 8 }
-    ]}
-];
+function setupDynamicNavigation() {
+  function activateTabFromHash() {
+    var hash = window.location.hash;
+    if (!hash) return;
 
-/* ===========================================
-   Utilities
-   =========================================== */
-function parseNumberSafe(v) {
-  const n = Number(String(v).replace(/[^0-9.\-]/g, ""));
-  return isNaN(n) ? 0 : n;
-}
-function formatCurrency(n) {
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(Number(n||0));
-}
-function clampPartsCount(count) {
-  if (count > 15) return 15;
-  if (count < 0) return 0;
-  return count;
-}
-
-/* ===========================================
-   Render helpers
-   =========================================== */
-function populateMaterialsDatalist() {
-  const dl = document.getElementById("materials-datalist");
-  dl.innerHTML = "";
-  Object.keys(materials).forEach(name => {
-    const opt = document.createElement("option");
-    opt.value = name;
-    dl.appendChild(opt);
-  });
-}
-
-/* Product card template builder */
-function buildProductCard(prod) {
-  const accItem = document.createElement("div");
-  accItem.className = "accordion-item mb-2";
-
-  // Header: product summary
-  const headerId = `heading-${prod.id}`;
-  const collapseId = `collapse-${prod.id}`;
-
-  const header = document.createElement("h2");
-  header.className = "accordion-header";
-  header.id = headerId;
-
-  // header button (summary line)
-  const btn = document.createElement("button");
-  btn.className = "accordion-button collapsed d-flex align-items-center";
-  btn.type = "button";
-  btn.setAttribute("data-bs-toggle", "collapse");
-  btn.setAttribute("data-bs-target", `#${collapseId}`);
-  btn.setAttribute("aria-expanded", "false");
-  btn.setAttribute("aria-controls", collapseId);
-  btn.style.justifyContent = "space-between";
-
-  // left: title + type
-  const left = document.createElement("div");
-  left.style.flex = "1";
-  left.innerHTML = `<div class="fw-bold">${prod.name}</div><div class="small-muted">${prod.type}</div>`;
-
-  // right: price + parts count
-  const right = document.createElement("div");
-  right.className = "text-end";
-  right.innerHTML = `<div class="price" id="price-${prod.id}">${formatCurrency(0)}</div>
-                     <div class="small-muted">Parts: <span id="parts-count-${prod.id}">0</span></div>`;
-
-  btn.appendChild(left);
-  btn.appendChild(right);
-  header.appendChild(btn);
-
-  // Body
-  const collapse = document.createElement("div");
-  collapse.id = collapseId;
-  collapse.className = "accordion-collapse collapse";
-  collapse.setAttribute("aria-labelledby", headerId);
-
-  const body = document.createElement("div");
-  body.className = "accordion-body";
-
-  // Body content: product fields + parts section
-  body.innerHTML = `
-    <div class="mb-2">
-      <div class="row gx-2 align-items-center">
-        <div class="col"><strong>Last updated:</strong> <span class="last-updated">${prod.lastUpdated || ""}</span></div>
-        <div class="col text-end"><button class="btn btn-sm btn-outline-primary btn-add-part">Add Part</button></div>
-      </div>
-    </div>
-
-    <div class="mb-2 parts-section">
-      <div class="mb-1"><strong>Parts</strong> <span class="badge bg-secondary badge-parts parts-badge">0</span></div>
-      <div class="parts-table table-responsive border rounded p-2">
-        <!-- rows will be appended here -->
-        <div class="parts-rows container-fluid p-0"></div>
-      </div>
-      <div class="mt-2 d-flex justify-content-between align-items-center">
-        <div><small class="text-muted">Max 15 parts per product</small></div>
-        <div><strong>Total Cost:</strong> <span class="product-total-cost">$0.00</span></div>
-      </div>
-    </div>
-
-    <div class="mt-2">
-      <button class="btn btn-success btn-save-product">Save (demo)</button>
-      <button class="btn btn-danger btn-delete-product ms-2">Delete (demo)</button>
-    </div>
-  `;
-
-  collapse.appendChild(body);
-  accItem.appendChild(header);
-  accItem.appendChild(collapse);
-
-  // attach data
-  accItem._product = prod;
-
-  return accItem;
-}
-
-/* ===========================================
-   Parts row functions (add/update/remove)
-   =========================================== */
-function addPartRow(container, part = { name: "", qty: 0 }) {
-  // container is .parts-rows element
-  const currentCount = container.querySelectorAll(".part-row").length;
-  if (currentCount >= 15) {
-    alert("Max 15 parts per product.");
-    return null;
+    var targetTabButton = document.querySelector('[data-bs-target="' + hash + '"]');
+    if (targetTabButton) {
+      var tab = new bootstrap.Tab(targetTabButton);
+      tab.show();
+    }
   }
 
-  const row = document.createElement("div");
-  row.className = "row part-row mb-2 gx-2";
+  // Use window.onload for full page load
+  window.onload = function() {
+    activateTabFromHash();  // Ensures tab switch happens after everything is loaded
+  };
 
-  row.innerHTML = `
-    <div class="col-md-5">
-      <input class="form-control form-control-sm part-name" list="materials-datalist" placeholder="Material name" value="${escapeHtml(part.name)}">
-    </div>
-    <div class="col-md-2">
-      <input class="form-control form-control-sm part-qty" type="number" min="0" value="${escapeHtml(part.qty)}">
-    </div>
-    <div class="col-md-2">
-      <input class="form-control form-control-sm row-cost" readonly>
-    </div>
-    <div class="col-md-2">
-      <input class="form-control form-control-sm row-retail" readonly>
-    </div>
-    <div class="col-md-1 d-flex">
-      <button class="btn btn-danger btn-sm remove-part" title="Remove part">&times;</button>
-    </div>
-  `;
-
-  container.appendChild(row);
-
-  // Hook events
-  const nameInput = row.querySelector(".part-name");
-  const qtyInput = row.querySelector(".part-qty");
-  const removeBtn = row.querySelector(".remove-part");
-
-  nameInput.addEventListener("input", () => calculateRowAndTotals(row));
-  qtyInput.addEventListener("input", () => calculateRowAndTotals(row));
-  removeBtn.addEventListener("click", () => {
-    row.remove();
-    calculateProductTotals(container.closest(".accordion-body"));
-  });
-
-  // initial calc
-  calculateRowAndTotals(row);
-
-  return row;
+  window.addEventListener('hashchange', activateTabFromHash);
 }
 
-function calculateRowAndTotals(rowOrRowElement) {
-  // can accept either a row element or a wrapper with many rows
-  const row = rowOrRowElement.classList && rowOrRowElement.classList.contains("part-row") ? rowOrRowElement : null;
-  if (!row) return;
+setupDynamicNavigation();
 
-  const name = row.querySelector(".part-name").value.trim();
-  const qty = parseNumberSafe(row.querySelector(".part-qty").value);
-
-  const rowCostInput = row.querySelector(".row-cost");
-  const rowRetailInput = row.querySelector(".row-retail");
-
-  let unitPrice = 0;
-  let retail = 0;
-  let onHand = 0;
-  let reorder = 0;
-
-  if (name && materials[name]) {
-    unitPrice = Number(materials[name].unitPrice) || 0;
-    // for demo: retail = unitPrice * 1.5
-    retail = unitPrice * 1.5;
-    onHand = materials[name].onHand || 0;
-    reorder = materials[name].reorderLevel || 0;
+window.addEventListener('DOMContentLoaded', () => {
+  const theme = localStorage.getItem('selectedTheme');
+  if (theme) {
+    document.body.classList.add(theme);
   }
-
-  const totalCost = qty * unitPrice;
-  const totalRetail = qty * retail;
-
-  rowCostInput.value = formatCurrency(totalCost);
-  rowRetailInput.value = formatCurrency(totalRetail);
-
-  // decorate row if low stock
-  if (name && materials[name] && qty > 0 && (materials[name].onHand < qty || materials[name].onHand < reorder)) {
-    row.classList.add("table-warning");
-  } else {
-    row.classList.remove("table-warning");
-  }
-
-  // update parent totals
-  const body = row.closest(".accordion-body");
-  calculateProductTotals(body);
-}
-
-/* Calculate product-level totals and header summary */
-function calculateProductTotals(body) {
-  if (!body) return;
-  const rows = body.querySelectorAll(".part-row");
-  let totalCost = 0;
-  let partsCount = 0;
-
-  rows.forEach(r => {
-    const val = r.querySelector(".row-cost").value || "";
-    const n = parseNumberSafe(val);
-    totalCost += n;
-    const qty = parseNumberSafe(r.querySelector(".part-qty").value);
-    if (qty > 0 && r.querySelector(".part-name").value.trim()) partsCount += 1;
-  });
-
-  // Update the display elements
-  const totalCostEl = body.querySelector(".product-total-cost");
-  if (totalCostEl) totalCostEl.textContent = formatCurrency(totalCost);
-
-  const badge = body.querySelector(".parts-badge");
-  if (badge) badge.textContent = String(rows.length);
-
-  // Update header summary
-  const card = body.closest(".accordion-item");
-  if (card) {
-    const prod = card._product;
-    const priceEl = document.getElementById(`price-${prod.id}`);
-    const partsCountEl = document.getElementById(`parts-count-${prod.id}`);
-    if (priceEl) priceEl.textContent = formatCurrency(totalCost);
-    if (partsCountEl) partsCountEl.textContent = String(partsCount);
-  }
-}
-
-/* Escape simple HTML in values */
-function escapeHtml(s) {
-  if (!s) return "";
-  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
-}
-
-/* ===========================================
-   Render all products
-   =========================================== */
-function renderAllProducts() {
-  populateMaterialsDatalist();
-
-  const acc = document.getElementById("productsAccordion");
-  acc.innerHTML = "";
-
-  productsData.forEach(prod => {
-    const card = buildProductCard(prod);
-    acc.appendChild(card);
-
-    // after appended, populate parts rows inside body
-    const body = card.querySelector(".accordion-body");
-    const rowsContainer = body.querySelector(".parts-rows");
-
-    // fill rows from product data
-    (prod.parts || []).forEach(p => addPartRow(rowsContainer, { name: p.name, qty: p.qty }));
-
-    // Hook add-part button
-    const addBtn = body.querySelector(".btn-add-part");
-    if (addBtn) addBtn.addEventListener("click", () => {
-      addPartRow(rowsContainer, { name:"", qty: 0 });
-    });
-
-    // Hook save/delete (demo)
-    const saveBtn = body.querySelector(".btn-save-product");
-    if (saveBtn) {
-      saveBtn.addEventListener("click", () => {
-        // gather data and replace product.parts
-        const newParts = [];
-        rowsContainer.querySelectorAll(".part-row").forEach(r => {
-          const nm = r.querySelector(".part-name").value.trim();
-          const q = parseNumberSafe(r.querySelector(".part-qty").value);
-          if (nm && q > 0) newParts.push({ name: nm, qty: q });
-        });
-        prod.parts = newParts;
-        prod.lastUpdated = new Date().toLocaleDateString("en-US");
-        body.querySelector(".last-updated").textContent = prod.lastUpdated;
-        calculateProductTotals(body);
-        alert("Saved (demo). Product parts updated in memory.");
-      });
-    }
-
-    const deleteBtn = body.querySelector(".btn-delete-product");
-    if (deleteBtn) {
-      deleteBtn.addEventListener("click", () => {
-        const idx = productsData.findIndex(p => p.id === prod.id);
-        if (idx !== -1) {
-          productsData.splice(idx,1);
-          renderAllProducts();
-        }
-      });
-    }
-
-    // Initial totals calc
-    calculateProductTotals(body);
-  });
-}
-
-/* Hook demo add product */
-document.addEventListener("DOMContentLoaded", () => {
-  renderAllProducts();
-
-  // Demo: add product button
-  const addDemo = document.getElementById("btnAddDemoProduct");
-  addDemo.addEventListener("click", () => {
-    const nextId = `p${Date.now()}`;
-    productsData.unshift({ id: nextId, name: "New Product", type: "Misc", lastUpdated: new Date().toLocaleDateString("en-US"), parts: [] });
-    renderAllProducts();
-    // open top accordion item
-    const firstCollapse = document.querySelector("#productsAccordion .accordion-collapse");
-    if (firstCollapse) {
-      const bs = bootstrap.Collapse.getOrCreateInstance(firstCollapse);
-      bs.show();
-    }
-  });
-
-  // Search basic filtering
-  const search = document.getElementById("searchProducts");
-  search.addEventListener("input", () => {
-    const q = search.value.trim().toLowerCase();
-    if (!q) {
-      // show all
-      productsData.forEach(p => {}); // nothing - we always re-render
-      renderAllProducts();
-      return;
-    }
-    // filter in-memory
-    const filtered = productsData.filter(p => (p.name + " " + p.type).toLowerCase().includes(q));
-    // render only filtered
-    const acc = document.getElementById("productsAccordion");
-    acc.innerHTML = "";
-    filtered.forEach(prod => {
-      const card = buildProductCard(prod);
-      acc.appendChild(card);
-      const body = card.querySelector(".accordion-body");
-      const rowsContainer = body.querySelector(".parts-rows");
-      (prod.parts || []).forEach(p => addPartRow(rowsContainer, { name: p.name, qty: p.qty }));
-      calculateProductTotals(body);
-      // minimal wiring for add and save in filtered view
-      body.querySelector(".btn-add-part")?.addEventListener("click", () => addPartRow(rowsContainer));
-      body.querySelector(".btn-save-product")?.addEventListener("click", () => {
-        prod.parts = Array.from(rowsContainer.querySelectorAll(".part-row")).map(r => ({
-          name: r.querySelector(".part-name").value.trim(),
-          qty: parseNumberSafe(r.querySelector(".part-qty").value)
-        }));
-        prod.lastUpdated = new Date().toLocaleDateString("en-US");
-        body.querySelector(".last-updated").textContent = prod.lastUpdated;
-        calculateProductTotals(body);
-      });
-    });
-  });
 });
+
 </script>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- </script> -->
+
 </body>
 </html>
-
-

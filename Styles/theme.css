@@ -52,10 +52,12 @@ body {
 #searchInput {
   background-color: var(--main-color);          /* Search input box background color */
   color: var(--text-color);                /* Search input text color */}
-#searchInput::placeholder {
-  color: var(--text-color);                        /* optional muted placeholder */
+#searchInput::placeholder,
+#productName::placeholder,
+#productDescriptionInput::placeholder {
+  color: var(--text-color);
+  opacity: 0.6; 
 }
-
 .counter {
   background-color: var(--main-color);          /* Search counter background color */
   color: var(--text-color);                /* Search counter text color */ 
@@ -182,6 +184,7 @@ input[list] {
 /* Placeholder styling for those fields */
 input[list]::placeholder {
   color: var(--text-color);
+  opacity: 0.6;
 }
 
 /* Optional: Add hover/focus styling to match your theme */
