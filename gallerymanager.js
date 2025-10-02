@@ -53,6 +53,26 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+// === Helper: Convert Google Drive link to thumbnail URL ===
+function convertGoogleDriveLink(url) {
+  if (!url) return url;
+
+  // If it's already a direct image URL, don't touch it
+  if (url.match(/\.(jpg|jpeg|png|gif|webp|avif)(\?.*)?$/i)) {
+    return url;
+  }
+
+  // Try to match Google Drive "file/d/FILE_ID" or "open?id=FILE_ID"
+  const driveMatch = url.match(/(?:\/d\/|id=)([a-zA-Z0-9_-]{20,})/);
+  if (driveMatch) {
+    const fileId = driveMatch[1];
+    return `https://drive.google.com/thumbnail?id=${fileId}`;
+  }
+
+  // Return unchanged if not recognized
+  return url;
+}
+
 // ===== Clear Slot =====
 function clearSlot(slot, isThumbnail = false) {
   slot.innerHTML = "";
@@ -80,7 +100,7 @@ function clearSlot(slot, isThumbnail = false) {
 
   slot.appendChild(imgContainer);
 
-  // Buttons (top-right)
+  // Buttons (top-right) only for non-thumbnail
   if (!isThumbnail) {
     const buttons = document.createElement("div");
     buttons.className = "slot-buttons";
@@ -106,6 +126,7 @@ function clearSlot(slot, isThumbnail = false) {
   const input = document.createElement("input");
   input.type = "text";
   input.placeholder = "Caption...";
+  input.className = "caption-input";
   captionDiv.appendChild(input);
   slot.appendChild(captionDiv);
 
@@ -123,7 +144,10 @@ function renderSlot(slot, data, index) {
   // --- Slot has an image ---
   if (data && data.url) {
     const img = document.createElement("img");
-    img.src = data.url;
+
+    // ✅ Always convert Google Drive link if needed
+    img.src = convertGoogleDriveLink(data.url);
+
     img.alt = index === 0 ? "Thumbnail" : `Gallery image ${index}`;
     imgContainer.appendChild(img);
   }
@@ -152,7 +176,7 @@ function renderSlot(slot, data, index) {
 
   slot.appendChild(imgContainer);
 
-  // --- Buttons ---
+  // --- Buttons (non-thumbnail with image) ---
   if (index !== 0 && data?.url) {
     const buttons = document.createElement("div");
     buttons.className = "slot-buttons";
@@ -516,3 +540,4 @@ async function openGalleryModal(prodID, productName) {
     });
   }
 });
+
