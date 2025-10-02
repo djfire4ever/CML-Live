@@ -5,13 +5,6 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<<<<<<< HEAD
-  <title>Product Manager-Old Tabs</title>
-  <style></style>
-</head>
-<body class="theme-dark">
-<div class="watermark"></div>
-=======
   <title>New Product Manager</title>
 <style>
 /* Hide number input arrows (spinners) */
@@ -50,7 +43,6 @@
   grid-template-rows: repeat(2, 1fr);
   gap: 1rem;
 }
->>>>>>> 3b76b9a (restorebapp)
 
 /* ===== Each Slot ===== */
 .gallery-slot {
@@ -202,14 +194,8 @@
 </div>
 
 <!-- Product Management Section -->
-<<<<<<< HEAD
-<section class="text-sm-start py-4">
-  <div class="container">
-    <h2 class="text-center mb-4">Product Management (Original Tab System)</h2>
-=======
 <div class="container">
   <h2 class="text-center mb-4">New Product Manager</h2>
->>>>>>> 3b76b9a (restorebapp)
 
   <!-- 🔍 Search + Counters -->
   <div class="d-flex justify-content-between align-items-center mb-3">
@@ -487,13 +473,10 @@
 <script src="test6.js" defer></script>
 <script src="gallerymanager.js" defer></script>
 
-
 <script>
 function renderInStockModal(product) {
   if (!product || !Array.isArray(product.parts)) return;
 
-<<<<<<< HEAD
-=======
   const tbody = document.getElementById("inStockTableBody");
   const totalUnitsEl = document.getElementById("inStockTotalUnits");
 
@@ -568,7 +551,6 @@ function renderInStockModal(product) {
   bsModal.show();
 }
 
->>>>>>> 3b76b9a (restorebapp)
 window.addEventListener('DOMContentLoaded', () => {
   const theme = localStorage.getItem('selectedTheme');
   if (theme) {
