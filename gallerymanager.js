@@ -18,59 +18,44 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ===== Create 8 slots =====
-  function createSlots() {
-    galleryGrid.innerHTML = "";
-    gallerySlots = [];
-    for (let i = 0; i < 8; i++) {
-      const slot = document.createElement("div");
-      slot.className = "gallery-slot";
+// ===== Create 8 slots =====
+function createSlots() {
+  const galleryGrid = document.getElementById("galleryGrid");
+  if (!galleryGrid) {
+    console.error("Gallery grid element not found in DOM!");
+    return;
+  }
 
-      const top = document.createElement("div");
-      top.className = "slot-top";
+  galleryGrid.innerHTML = "";
+  gallerySlots = [];
 
-      const imgContainer = document.createElement("div");
-      imgContainer.className = "slot-image-container";
-      top.appendChild(imgContainer);
+  for (let i = 0; i < 8; i++) {
+    const slot = document.createElement("div");
+    slot.className = "gallery-slot";
+    slot.dataset.index = i;
 
-      const buttons = document.createElement("div");
-      buttons.className = "slot-buttons";
-      top.appendChild(buttons);
+    const imgContainer = document.createElement("div");
+    imgContainer.className = "slot-image-container";
+    slot.appendChild(imgContainer);
 
-      slot.appendChild(top);
+    const buttons = document.createElement("div");
+    buttons.className = "slot-buttons";
+    slot.appendChild(buttons);
 
+    if (i !== 0) {
       const captionDiv = document.createElement("div");
       captionDiv.className = "slot-caption";
       const input = document.createElement("input");
       input.type = "text";
-      input.placeholder = "Caption...";
       input.className = "caption-input";
+      input.placeholder = "Caption...";
       captionDiv.appendChild(input);
       slot.appendChild(captionDiv);
-
-      galleryGrid.appendChild(slot);
-      gallerySlots.push(slot);
     }
+
+    galleryGrid.appendChild(slot);
+    gallerySlots.push(slot);
   }
-
-// === Helper: Convert Google Drive link to thumbnail URL ===
-function convertGoogleDriveLink(url) {
-  if (!url) return url;
-
-  // If it's already a direct image URL, don't touch it
-  if (url.match(/\.(jpg|jpeg|png|gif|webp|avif)(\?.*)?$/i)) {
-    return url;
-  }
-
-  // Try to match Google Drive "file/d/FILE_ID" or "open?id=FILE_ID"
-  const driveMatch = url.match(/(?:\/d\/|id=)([a-zA-Z0-9_-]{20,})/);
-  if (driveMatch) {
-    const fileId = driveMatch[1];
-    return `https://drive.google.com/thumbnail?id=${fileId}`;
-  }
-
-  // Return unchanged if not recognized
-  return url;
 }
 
 // ===== Clear Slot =====
@@ -135,52 +120,49 @@ function clearSlot(slot, isThumbnail = false) {
 
 // ===== Render Slot =====
 function renderSlot(slot, data, index) {
-  slot.innerHTML = "";
   slot.classList.remove("empty");
 
-  const imgContainer = document.createElement("div");
-  imgContainer.className = "slot-image-container";
+  const imgContainer = slot.querySelector(".slot-image-container");
+  const buttons = slot.querySelector(".slot-buttons");
 
-  // --- Slot has an image ---
-  if (data && data.url) {
-    const img = document.createElement("img");
+  imgContainer.innerHTML = "";
+  buttons.innerHTML = "";
 
-    // ✅ Always convert Google Drive link if needed
-    img.src = convertGoogleDriveLink(data.url);
-
-    img.alt = index === 0 ? "Thumbnail" : `Gallery image ${index}`;
-    imgContainer.appendChild(img);
-  }
-
-  // --- Thumbnail badge ---
+  // === Slot 0 (Thumbnail) ===
   if (index === 0) {
     const badge = document.createElement("span");
     badge.className = "slot-badge";
     badge.textContent = "📌Thumbnail";
     imgContainer.appendChild(badge);
 
-    if (!data || !data.url) {
+    if (data?.url) {
+      const img = document.createElement("img");
+      img.src = convertGoogleDriveLink(data.url);
+      img.alt = "Thumbnail";
+      imgContainer.appendChild(img);
+    } else {
       slot.classList.add("empty");
       const noThumb = document.createElement("div");
       noThumb.className = "text-center text-muted no-thumb-text";
       noThumb.textContent = "No Thumbnail";
       imgContainer.appendChild(noThumb);
     }
+
+    // DO NOT append caption for slot0
+    return;
   }
 
-  // --- Empty slot for 1+ ---
-  if (index > 0 && (!data || !data.url)) {
-    slot.classList.add("empty");
-    imgContainer.textContent = "+ Add Image";
-  }
+  // === Slots 1–7 ===
+  const captionInput = slot.querySelector(".caption-input");
+  captionInput.value = data?.caption || "";
 
-  slot.appendChild(imgContainer);
+  if (data?.url) {
+    const img = document.createElement("img");
+    img.src = convertGoogleDriveLink(data.url);
+    img.alt = `Gallery image ${index}`;
+    imgContainer.appendChild(img);
 
-  // --- Buttons (non-thumbnail with image) ---
-  if (index !== 0 && data?.url) {
-    const buttons = document.createElement("div");
-    buttons.className = "slot-buttons";
-
+    // Buttons
     const btnStar = document.createElement("button");
     btnStar.type = "button";
     btnStar.className = "btn btn-sm btn-outline-warning set-main";
@@ -193,19 +175,10 @@ function renderSlot(slot, data, index) {
     btnDel.textContent = "🗑";
     buttons.appendChild(btnDel);
 
-    slot.appendChild(buttons);
+  } else {
+    slot.classList.add("empty");
+    imgContainer.textContent = "+ Add Image";
   }
-
-  // --- Caption ---
-  const captionDiv = document.createElement("div");
-  captionDiv.className = "slot-caption";
-  const input = document.createElement("input");
-  input.type = "text";
-  input.className = "caption-input";
-  input.placeholder = "Caption...";
-  input.value = data?.caption || "";
-  captionDiv.appendChild(input);
-  slot.appendChild(captionDiv);
 }
 
 function populateGalleryModal(gallery, prodID, productName) {
@@ -263,21 +236,39 @@ function populateGalleryModal(gallery, prodID, productName) {
 }
 
   // ===== Event Delegation =====
+document.addEventListener("DOMContentLoaded", () => {
+  // Find the gallery modal explicitly
+  const galleryModal = document.getElementById("galleryManagerModal");
+  if (!galleryModal) return;
+
+  const galleryGrid = galleryModal.querySelector("#galleryGrid");
+  if (!galleryGrid) {
+    console.warn("Gallery Grid not found in Gallery Manager Modal!");
+    return;
+  }
+
+  // Now attach the event listener only to the gallery modal's grid
   galleryGrid.addEventListener("click", (e) => {
     const slot = e.target.closest(".gallery-slot");
     if (!slot) return;
 
+    // Ignore clicks on caption input
+    if (e.target.closest(".caption-input")) return;
+
     // Set Main
     if (e.target.closest(".set-main")) {
+      const gallerySlots = Array.from(galleryGrid.querySelectorAll(".gallery-slot"));
       const idx = gallerySlots.indexOf(slot);
       if (idx === 0) return console.warn("⚠️ Cannot set thumbnail as main.");
 
+      // Remove main badge from all other slots
       gallerySlots.forEach((s, i) => {
-        if (i === 0) return;
+        if (i === 0 || s === slot) return;
         const mb = s.querySelector(".main-badge");
         if (mb) mb.remove();
       });
 
+      // Add badge to clicked slot if not present
       const box = slot.querySelector(".slot-image-container");
       if (!box.querySelector(".main-badge")) {
         const mainBadge = document.createElement("span");
@@ -290,14 +281,18 @@ function populateGalleryModal(gallery, prodID, productName) {
 
     // Delete
     if (e.target.closest(".delete-image")) {
+      const gallerySlots = Array.from(galleryGrid.querySelectorAll(".gallery-slot"));
       const idx = gallerySlots.indexOf(slot);
       clearSlot(slot, idx === 0);
       return;
     }
 
-    // File Picker
-    openFilePickerForSlot(slot);
+    // Open file picker for empty space or image (not main badge)
+    if (!e.target.closest(".main-badge")) {
+      openFilePickerForSlot(slot);
+    }
   });
+});
 
   // ===== File Handling =====
   function openFilePickerForSlot(slot) {
@@ -369,7 +364,7 @@ if (saveButton) {
 
     if (!currentProdID) {
       console.warn("⚠️ No product selected. Aborting save.");
-      return alert("⚠️ No product selected.");
+      return showToast?.("⚠️ No product selected", "warning");
     }
 
     const state = collectState();
@@ -458,20 +453,19 @@ if (saveButton) {
       const result = await res.json();
       console.log("📤 Server response:", result);
 
-      if (result.success) {
-        console.log("✅ Gallery saved successfully!");
-        alert("✅ Gallery saved!");
-        if (result.gallery) {
-          console.log("🔄 Populating modal with updated gallery.");
-          populateGalleryModal(result.gallery, currentProdID, currentProductName);
-        }
-      } else {
-        console.warn("❌ Save failed:", result.message);
-        alert(result.message || "❌ Error saving gallery");
+    if (result.success) {
+      console.log("✅ Gallery saved successfully!");
+      showToast?.("✅ Gallery saved!", "success");
+      if (result.gallery) {
+        populateGalleryModal(result.gallery, currentProdID, currentProductName);
       }
+    } else {
+      console.warn("❌ Save failed:", result.message);
+      showToast?.(result.message || "❌ Error saving gallery", "danger");
+    }
     } catch (err) {
       console.error("❌ Network / Save error:", err);
-      alert("❌ Network error saving gallery");
+      showToast?.("❌ Network error saving gallery", "danger");
     } finally {
       if (typeof toggleLoader === "function") toggleLoader(false);
       console.log("💾 Save Gallery END");
@@ -497,23 +491,30 @@ if (saveButton) {
     openGalleryModal(currentProdID, currentProductName);
   });
 
+// ===== Open Gallery Modal =====
 async function openGalleryModal(prodID, productName) {
   currentProdID = prodID;
   currentProductName = productName;
 
-  const modal = document.getElementById("inStockModal");
-  const modalHeaderSpan = modal.querySelector(".modal-title");
-  modalHeaderSpan.textContent = productName;
+  const modal = document.getElementById("galleryManagerModal");
+  if (!modal) {
+    console.error("Gallery modal not found in DOM!");
+    return;
+  }
+
+  const modalHeaderSpan = modal.querySelector(".modal-title span");
+  if (modalHeaderSpan) modalHeaderSpan.textContent = productName;
 
   createSlots(); // Always 8 empty slots
 
   try {
+    toggleLoader(true); // Show loader immediately
+
     console.log("Fetching gallery for prodID:", prodID);
     const res = await fetch(`${scriptURL}?action=getGalleryByProdId&prodID=${prodID}`);
     const data = await res.json();
     console.log("Raw data from backend:", data);
 
-    // Only assign thumbnail if backend provides it
     const gallery = data?.success ? data.gallery : { thumbnail: null, images: [] };
     console.log("Gallery object used for rendering:", gallery);
 
@@ -527,8 +528,10 @@ async function openGalleryModal(prodID, productName) {
     }
   } catch (err) {
     console.error("Error fetching gallery:", err);
-    // Render all empty slots with placeholders
     gallerySlots.forEach((slot, idx) => renderSlot(slot, null, idx));
+    showToast("⚠️ Error loading gallery", "danger");
+  } finally {
+    toggleLoader(false); // Always hide loader before modal opens
   }
 
   new bootstrap.Modal(modal).show();

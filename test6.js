@@ -108,7 +108,7 @@ async function loadProducts() {
         prodID: product[0],
         productName: product[1],
         productType: product[2],
-        compTime: product[3],
+        thumbnailURL: product[3] || "",  // <-- changed from compTime
         parts,
         description: product[5],
         cost: parseFloat(product[6]) || 0,
@@ -172,19 +172,16 @@ document.addEventListener("DOMContentLoaded", async () => {
   // --- Load data ---
   await loadMaterialData();
   await loadProducts();
-  await loadDropdowns(); // optional if already loaded globally
+  loadDropdowns(); // optional if already loaded globally
 
-  // --- Render Add card first ---
+  // --- Render only the Add card initially ---
   renderProductCard(null);
 
-  // --- Render existing products ---
-  productData.forEach(p => renderProductCard(p));
-
-  // --- Update counters ---
+  // --- Initialize counters ---
   const totalCounter = document.getElementById("totalCounter");
   const searchCounter = document.getElementById("searchCounter");
   if (totalCounter) totalCounter.textContent = String(productData.length);
-  if (searchCounter) searchCounter.textContent = String(productData.length);
+  if (searchCounter) searchCounter.textContent = "0"; // no results yet
 
   // --- Live search filtering ---
   searchInput.addEventListener("input", () => {
@@ -192,20 +189,31 @@ document.addEventListener("DOMContentLoaded", async () => {
     const words = query.split(/\s+/).filter(Boolean);
 
     resultsContainer.innerHTML = "";
-    renderProductCard(null); // Add card first
+    renderProductCard(null); // always render Add card first
 
-    const filtered = query
-      ? productData.filter(prod =>
-          words.every(w =>
-            Object.values(prod).some(val => (val?.toString() || "").toLowerCase().includes(w))
-          )
+    if (query) {
+      const filtered = productData.filter(prod =>
+        words.every(w =>
+          Object.values(prod).some(val => (val?.toString() || "").toLowerCase().includes(w))
         )
-      : productData.slice();
+      );
 
-    filtered.forEach(p => renderProductCard(p));
+      filtered.forEach(p => renderProductCard(p));
+
+      if (searchCounter) searchCounter.textContent = String(filtered.length);
+    } else {
+      if (searchCounter) searchCounter.textContent = "0";
+    }
 
     if (totalCounter) totalCounter.textContent = String(productData.length);
-    if (searchCounter) searchCounter.textContent = String(filtered.length);
+  });
+
+  // Scroll card into center when accordion finishes expanding
+  document.addEventListener("shown.bs.collapse", (e) => {
+    const card = e.target.closest(".accordion-item.product-accordion");
+    if (!card) return;
+
+    card.scrollIntoView({ behavior: "smooth", block: "center" });
   });
 
   // ===== Delegated Click Handling =====
@@ -288,8 +296,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         if (result.success) {
           showToast(isNew ? "✅ Product added!" : "✅ Product updated!", "success");
-          if (isNew) card.dataset.prodId = result.prodID; // mark new card as existing
+          if (isNew) card.dataset.prodId = result.prodID;
           enableEditToggle(card, false, isAddCard);
+
+          await loadProducts();
+          refreshSearchResults(result.prodID);
+
         } else {
           showToast(result.message || "❌ Error saving product", "error");
         }
@@ -325,6 +337,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (result.success) {
           showToast("✅ Product deleted!", "success");
           card.remove();
+
+          await loadProducts();
+          refreshSearchResults();
+
         } else {
           showToast("⚠️ Could not delete product.", "error");
         }
@@ -334,65 +350,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       } finally {
         toggleLoader(false);
       }
-    }
-  });
-
-  // ===== Delegated Input Handling =====
-  document.addEventListener("input", (e) => {
-    const el = e.target;
-    if (!el || !el.closest) return;
-
-    const wrapper = el.closest(".accordion-item.product-accordion");
-    if (!wrapper) return;
-
-    const saveBtn = wrapper.querySelector(".save-button");
-    if (saveBtn) saveBtn.disabled = false;
-
-    // Sync Product Name
-    if (el.matches(".productName-input")) {
-      const bodySpan = wrapper.querySelector(".productName-body");
-      const header = wrapper.querySelector(".productName-header");
-      if (bodySpan) bodySpan.textContent = el.value.trim();
-      if (header) header.textContent = el.value.trim() || "Untitled Product";
-    }
-
-    // Sync Product Type
-    if (el.matches(".productType-input")) {
-      const bodySpan = wrapper.querySelector(".productType-body");
-      const icon = wrapper.querySelector(".productType-icon");
-      const val = el.value.trim();
-      if (bodySpan) bodySpan.textContent = val;
-      if (icon) {
-        icon.innerHTML =
-          val === "Product" ? '<i class="fa-solid fa-tag text-success"></i>' :
-          val === "Rental"  ? '<i class="fa-solid fa-key text-primary"></i>' :
-                              '<i class="fa-solid fa-box-open"></i>';
-      }
-    }
-
-    // Sync Description
-    if (el.matches(".description-input")) {
-      const bodySpan = wrapper.querySelector(".description-body");
-      if (bodySpan) bodySpan.textContent = el.value.trim();
-    }
-
-    // Recalculate totals for parts
-    if (el.matches(".part-input, .qty-input, input.totalRowCost, input.totalRowRetail")) {
-      const partsContainer = el.closest(".part-rows");
-      if (partsContainer) recalculateTotals(partsContainer);
-    }
-  });
-
-  // --- Show all datalist options on focus ---
-  document.addEventListener("focusin", (e) => {
-    const t = e.target;
-    if (t?.tagName === "INPUT" && t.hasAttribute("list") && t.value) {
-      const val = t.value;
-      t.value = "";
-      setTimeout(() => {
-        t.value = val;
-        t.setSelectionRange?.(val.length, val.length);
-      }, 0);
     }
   });
 });
@@ -448,6 +405,13 @@ async function renderProductCard(product = null) {
     wrapper.querySelector(".totalRetail-body").textContent = formatCurrency(product.retail ?? 0);
     wrapper.querySelector(".inStockValue-header").textContent = calculateInStock(product);
     wrapper.querySelector(".inStockValue-body").textContent = calculateInStock(product);
+
+    const inStockSpan = wrapper.querySelector(".inStockValue-body");
+    if (inStockSpan) {
+      inStockSpan.dataset.prodIndex = productData.indexOf(product); // or i if in a loop
+      inStockSpan.onclick = () => renderInStockModal(product);
+    }
+
     const iconElem = wrapper.querySelector(".productType-icon");
     if (iconElem) {
       iconElem.innerHTML =
@@ -455,7 +419,8 @@ async function renderProductCard(product = null) {
         product.productType === "Rental"  ? '<i class="fa-solid fa-key text-primary"></i>' :
                                             '<i class="fa-solid fa-box-open"></i>';
     }
-    const lastUpdated = wrapper.querySelector("#lastUpdated");
+
+    const lastUpdated = wrapper.querySelector(".lastUpdated");
     if (lastUpdated) lastUpdated.textContent = formatDateForUser(product.lastUpdated);
 
     // Populate parts
@@ -467,7 +432,7 @@ async function renderProductCard(product = null) {
                    parseFloat(p.qty) || 0,
                    parseFloat(p.cost) || 0,
                    parseFloat(p.retail) || 0,
-                   false) // Existing product rows start in read-only
+                   false) // read-only
       );
     }
 
@@ -486,15 +451,22 @@ async function renderProductCard(product = null) {
     if (partsContainer) addPartRow(partsContainer, "", 0, 0, 0, true);
 
     // Hide Delete/Cancel buttons explicitly
-    const beforeDeleteBtn = wrapper.querySelector(".before-delete-button");
-    const deleteBtn = wrapper.querySelector(".delete-button");
-    const cancelBtn = wrapper.querySelector(".cancel-button");
-    if (beforeDeleteBtn) beforeDeleteBtn.classList.add("d-none");
-    if (deleteBtn) deleteBtn.classList.add("d-none");
-    if (cancelBtn) cancelBtn.classList.add("d-none");
+    ["before-delete-button", "delete-button", "cancel-button"].forEach(cls => {
+      const btn = wrapper.querySelector(`.${cls}`);
+      if (btn) btn.classList.add("d-none");
+    });
 
     enableEditToggle(wrapper, true, isAddCard);
   }
+
+  // ===== Thumbnail Handling =====
+  const imgElem = wrapper.querySelector(".productThumbnail");
+  if (product?.thumbnailURL) {
+    imgElem.src = convertGoogleDriveLink(product.thumbnailURL);
+  } else {
+    imgElem.src = "/images/No_image_available.svg";
+  }
+  imgElem.style.display = "block";
 
   attachAutogrow(wrapper.querySelector(".productName-input"));
   attachAutogrow(wrapper.querySelector(".description-input"));
@@ -697,11 +669,6 @@ function recalculateTotals(partsContainer) {
   }
 }
 
-/**
- * Calculate maximum number of products that can be made from current stock.
- * @param {Object} product - Product object containing parts array [{ matName, qty }]
- * @returns {number} Maximum number of products in stock
- */
 function calculateInStock(product) {
   if (!product?.parts?.length) return 0;
 
@@ -721,5 +688,38 @@ function calculateInStock(product) {
   });
 
   return minStock === Infinity ? 0 : minStock;
+}
+
+function refreshSearchResults(focusProdID = null) {
+  const searchInput = document.getElementById(SELECTORS.searchInput);
+  const resultsContainer = document.getElementById(SELECTORS.resultsContainer);
+  if (!searchInput || !resultsContainer) return;
+
+  const query = (searchInput.value || "").toLowerCase().trim();
+  const words = query.split(/\s+/).filter(Boolean);
+
+  resultsContainer.innerHTML = "";
+  renderProductCard(null); // always render Add card first
+
+  const filtered = query
+    ? productData.filter(prod =>
+        words.every(w =>
+          Object.values(prod).some(val => (val?.toString() || "").toLowerCase().includes(w))
+        )
+      )
+    : productData.slice();
+
+  filtered.forEach(p => renderProductCard(p));
+
+  const totalCounter = document.getElementById("totalCounter");
+  const searchCounter = document.getElementById("searchCounter");
+  if (totalCounter) totalCounter.textContent = String(productData.length);
+  if (searchCounter) searchCounter.textContent = String(filtered.length);
+
+  // Scroll the focused product into view
+  if (focusProdID) {
+    const el = resultsContainer.querySelector(`.accordion-item[data-prod-id="${focusProdID}"]`);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
 }
 

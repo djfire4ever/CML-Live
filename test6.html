@@ -15,6 +15,13 @@
   -webkit-appearance: none;
   margin: 0;
 }
+/* Ensure parent containers don't clip the datalist popup */
+.accordion-body, 
+.part-rows, 
+.product-card {
+  overflow: visible !important;
+  position: relative; /* allows proper stacking */
+}
 #inStockModalContent table td,
 #inStockModalContent table th {
   border-left: none !important;
@@ -36,6 +43,7 @@
   background-color: var(--bs-info) !important;
   color: var(--bs-black) !important;
 }
+
 /* ===== Modal Grid ===== */
 .gallery-grid {
   display: grid;
@@ -47,21 +55,25 @@
 /* ===== Each Slot ===== */
 .gallery-slot {
   position: relative;
-  height: 250px;
-  width: 100%;
-  background: black;
-  border: 3px solid #0d6efd;
+  height: 250px; /* fixed height */
+  width: 250px;
   border-radius: 0.5rem;
   overflow: hidden;
+  background-color: var(--bs-black);
+  border: 3px solid rgba(13, 202, 240, 0.85);
   display: flex;
   justify-content: center;
   align-items: center;
-  transition: border-color 0.2s ease, background-color 0.2s ease;
+  transition: all 0.2s ease;
+  box-shadow: 0 0 15px rgba(13, 202, 240, 0.75), inset 0 0 8px rgba(13, 202, 240, 0.2);
 }
 
+/* Hover effect */
 .gallery-slot:hover {
-  border-color: #198754;
-  background-color: #2a2a2a;
+  transform: scale(1.05);
+  background-color: var(--bs-info);
+  border-color: rgba(13, 202, 240, 0.95);
+  box-shadow: 0 0 25px rgba(13, 202, 240, 0.95), inset 0 0 12px rgba(13, 202, 240, 0.3);
 }
 
 /* ===== Image Container ===== */
@@ -71,14 +83,18 @@
   border-radius: 0.5rem;
   overflow: hidden;
   position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
+/* Image inside slot */
 .slot-image-container img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   position: relative;
-  z-index: 10; /* ensures badges overlay image */
+  z-index: 10;
 }
 
 /* ===== Buttons Over Image (Top-Right) ===== */
@@ -101,8 +117,8 @@
   bottom: 0.5rem;
   left: 0.5rem;
   right: 0.5rem;
-  z-index: 20; /* above image */
-  background: rgba(33, 37, 41, 0.85); /* Darker background for contrast */
+  z-index: 20;
+  background: rgba(33, 37, 41, 0.85);
   border-radius: 0.3rem;
   padding: 0.4rem 0.6rem;
   text-align: center;
@@ -141,41 +157,55 @@
   box-shadow: 0 0 8px rgba(13, 202, 240, 0.8);
 }
 
-/* ===== Thumbnail Badge ===== */
+/* ===== Slot Badges ===== */
 .slot-badge {
   position: absolute;
-  top: 0.25rem;   /* fixed top-left */
+  top: 0.25rem;
   left: 0.25rem;
-  z-index: 30;    /* above image */
-  background: rgba(13, 202, 240, 0.85); /* info color */
+  z-index: 30;
+  background: rgba(13, 202, 240, 0.85);
   color: #fff;
   padding: 0.2rem 0.4rem;
   border-radius: 0.25rem;
   font-weight: 600;
   font-size: 0.85rem;
-  pointer-events: none; 
+  pointer-events: none;
   box-shadow: 0 2px 6px rgba(0,0,0,0.4);
 }
 
-/* ===== Add Image Placeholder (Empty Slots) ===== */
+/* ===== Each Slot ===== */
+.gallery-slot {
+  position: relative;
+  height: 250px;
+  width: 100%;
+  background: var(--bs-black);        /* base background for all slots */
+  border: 3px solid rgba(13, 202, 240, 0.85); /* border matches shadow */
+  border-radius: 0.5rem;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  box-shadow: 0 0 20px rgba(13, 202, 240, 0.85); /* base glow */
+}
+
+/* ===== Empty Slot Placeholder ===== */
 .gallery-slot.empty {
   display: flex;
-  justify-content: center; /* horizontal center */
-  align-items: center;     /* vertical center */
-  background-color: var(--bs-info); /* use Bootstrap info variable */
-  color: #fff;
+  justify-content: center;
+  align-items: center;
+  color: var(--bs-info);
   font-weight: bold;
   font-size: 1.2rem;
   text-align: center;
   cursor: pointer;
-  border: 3px dashed rgba(13, 202, 240, 0.8); /* optional dashed border */
-  border-radius: 0.5rem;
-  transition: transform 0.2s ease, background-color 0.2s ease;
 }
 
-.gallery-slot.empty:hover {
+.gallery-slot:hover {
   transform: scale(1.05);
-  background-color: rgba(49, 210, 242, 0.9); /* slightly brighter info color on hover */
+  background-color: var(--bs-info);       /* hover background */
+  border-color: rgba(13, 202, 240, 0.95); /* brighter border on hover */
+  box-shadow: 0 0 25px rgba(13, 202, 240, 0.95); /* stronger hover glow */
 }
 </style>
 </head>
@@ -248,7 +278,7 @@
                 </div>
 
                 <div class="d-flex flex-column align-items-center">
-                  <img src="/images/placeholder.png" class="img-thumbnail mb-2 productThumbnail"
+                  <img src="" class="img-thumbnail mb-2 productThumbnail"
                       alt="Product Thumbnail" style="width:200px; height:200px;">
                   <button class="btn btn-sm btn-outline-info openGalleryBtn">Gallery Manager</button>
                 </div>
@@ -406,7 +436,7 @@
 
 <!-- Gallery Manager Modal -->
 <div class="modal fade" id="galleryManagerModal" tabindex="-1">
-  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
     <div class="modal-content">
 
       <!-- Header -->
@@ -417,23 +447,9 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
 
-      <!-- Body -->
       <div class="modal-body">
-        <div class="gallery-grid">
-          <!-- Slot 0 (Thumbnail) -->
-          <div class="gallery-slot" data-index="0">
-            <div class="slot-box"></div>
-          </div>
-
-          <!-- Slots 1..8 (regular images) -->
-          <div class="gallery-slot" data-index="1"><div class="slot-box">+ Add Image</div></div>
-          <div class="gallery-slot" data-index="2"><div class="slot-box">+ Add Image</div></div>
-          <div class="gallery-slot" data-index="3"><div class="slot-box">+ Add Image</div></div>
-          <div class="gallery-slot" data-index="4"><div class="slot-box">+ Add Image</div></div>
-          <div class="gallery-slot" data-index="5"><div class="slot-box">+ Add Image</div></div>
-          <div class="gallery-slot" data-index="6"><div class="slot-box">+ Add Image</div></div>
-          <div class="gallery-slot" data-index="7"><div class="slot-box">+ Add Image</div></div>
-        </div>
+        <!-- Gallery grid will be populated dynamically -->
+        <div class="gallery-grid" id="galleryGrid"></div>
       </div>
 
       <!-- Footer -->
@@ -448,22 +464,42 @@
 
 <!-- In Stock Modal -->
 <div class="modal fade" id="inStockModal" tabindex="-1" aria-labelledby="inStockModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-xl modal-dialog-centered">
+  <div class="modal-dialog modal-lg">
     <div class="modal-content bg-dark text-light">
-      
       <div class="modal-header border-info">
         <h5 class="modal-title text-info" id="inStockModalLabel">Product Stock Details</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
 
       <div class="modal-body">
-        <!-- Gallery grid will be populated dynamically -->
-        <div class="gallery-grid" id="galleryGrid"></div>
+        <!-- Total units possible summary -->
+        <div class="mb-3">
+          <strong class="text-info">Total Units Possible: </strong>
+          <span id="inStockTotalUnits" class="fw-bold text-warning">0</span>
+        </div>
+
+        <!-- Dynamic stock table -->
+        <div id="inStockModalContent" class="table-responsive">
+          <table class="table table-black table-bordered table-hover mb-0">
+            <thead>
+              <tr>
+                <th>Part Name</th>
+                <th>Needed</th>
+                <th>On Hand</th>
+                <th>Order Requirement</th>
+              </tr>
+            </thead>
+            <tbody id="inStockTableBody">
+              <tr>
+                <td colspan="4" class="text-center text-secondary">Loading stock details...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <div class="modal-footer border-info">
-        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-outline-primary" id="saveGalleryChanges">Save Changes</button>
+        <button type="button" class="btn btn-outline-info" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -471,7 +507,7 @@
 
 <script src="config.js" defer></script> <!-- this has all my glogal functions, variables and constants including scripturl -->
 <script src="test6.js" defer></script>
-<script src="gallerymanager.js" defer></script>
+<script src="gallerymanager.js"></script>
 
 <script>
 function renderInStockModal(product) {

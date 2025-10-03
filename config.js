@@ -710,3 +710,22 @@ function renderTemplate(template, data) {
   });
 }
 
+// === Helper: Convert Google Drive link to thumbnail URL ===
+function convertGoogleDriveLink(url) {
+  if (!url) return url;
+
+  // If it's already a direct image URL, don't touch it
+  if (url.match(/\.(jpg|jpeg|png|gif|webp|avif)(\?.*)?$/i)) {
+    return url;
+  }
+
+  // Try to match Google Drive "file/d/FILE_ID" or "open?id=FILE_ID"
+  const driveMatch = url.match(/(?:\/d\/|id=)([a-zA-Z0-9_-]{20,})/);
+  if (driveMatch) {
+    const fileId = driveMatch[1];
+    return `https://drive.google.com/thumbnail?id=${fileId}`;
+  }
+
+  // Return unchanged if not recognized
+  return url;
+}
