@@ -1,170 +1,278 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Product Manager - Dynamic Parts Modal</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dynamic Product Catalog</title>
+<style>
+body { font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif; margin:20px; background:#f7f7f7; color:#333; }
+h1 { margin-bottom:20px; font-weight:600; display:inline-block; }
+#cartCounter { margin-left:20px; font-weight:bold; color:#007BFF; }
+.grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:20px; }
+.card { background:#fff; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.08); overflow:hidden; cursor:pointer; transition:transform 0.2s,box-shadow 0.2s; }
+.card:hover { transform:scale(1.03); box-shadow:0 6px 16px rgba(0,0,0,0.12); }
+.card img { width:100%; height:150px; object-fit:cover; }
+.card-content { padding:12px; }
+.card-content h3 { margin:8px 0 4px; font-size:16px; font-weight:600; }
+.card-content p.price { margin:0 0 4px; font-size:14px; font-weight:500; color:#007BFF; }
+.card-content p.desc { margin:0; font-size:12px; color:#666; }
+
+/* Modal */
+.modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); justify-content:center; align-items:center; }
+.modal-content { background:#fff; padding:20px; border-radius:12px; max-width:600px; width:90%; position:relative; display:flex; flex-direction:column; align-items:center; }
+.modal img.main { width:100%; height:400px; object-fit:cover; border-radius:8px; background:#f0f0f0; }
+.modal h2, .modal p { margin:8px 0 4px; text-align:center; }
+.modal p.caption { font-size:12px; color:#555; }
+.close { position:absolute; top:10px; right:10px; cursor:pointer; font-size:24px; }
+.modal p.caption { min-height:20px; margin:6px 0 0; font-size:12px; color:#555; text-align:center; }
+
+/* Thumbnails */
+.modal .thumbnails { display:flex; flex-wrap:wrap; justify-content:center; gap:5px; margin-top:10px; overflow:visible; }
+.modal .thumbnails img { width:60px; height:60px; object-fit:cover; border-radius:5px; cursor:pointer; border:2px solid transparent; flex-shrink:0; }
+.modal .thumbnails img.active { border-color:#007BFF; }
+
+/* Carousel buttons & Add to Cart */
+.carousel-controls { display:flex; justify-content:space-between; width:100%; margin-top:10px; }
+.carousel-controls button, #addToCartBtn { padding:5px 12px; font-size:14px; cursor:pointer; }
+#addToCartBtn { margin-top:10px; background:#007BFF; color:#fff; border:none; border-radius:5px; }
+
+/* Loader */
+.loader { display:none; position:absolute; top:10px; right:10px; font-size:14px; color:#007BFF; }
+</style>
 </head>
-<body class="bg-light p-4">
+<body>
 
-  <div class="container">
-    <h2 class="mb-4">Product Manager-Test 3</h2>
+<h1>Products</h1>
+<span id="cartCounter">Cart: 0</span>
+<span class="loader" id="loader">Loading...</span>
+<div class="grid" id="productGrid"></div>
 
-    <!-- Product Cards Grid -->
-    <div class="row g-3" id="productGrid">
-      <!-- Cards injected by JS -->
+<!-- Modal -->
+<div class="modal" id="productModal">
+  <div class="modal-content">
+    <span class="close" id="modalClose">&times;</span>
+    <img id="modalImage" class="main" src="" alt="">
+    <p class="caption" id="modalCaption"></p>
+    <h2 id="modalName"></h2>
+    <p id="modalPrice"></p>
+    <p id="modalDesc"></p>
+    <div class="carousel-controls">
+      <button id="prevBtn">&lt; Prev</button>
+      <button id="nextBtn">Next &gt;</button>
     </div>
+    <div class="thumbnails" id="modalThumbnails"></div>
+    <button id="addToCartBtn">Add to Cart</button>
   </div>
+</div>
 
-  <!-- Parts Modal -->
-  <div class="modal fade" id="partsModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Parts</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
+<script src="config.js"></script> <!-- this has all my glogal functions, variables and constants including scripturl -->
 
-          <!-- Dynamic Parts Rows -->
-          <div id="partsContainer"></div>
-          <button class="btn btn-sm btn-outline-success mt-2" id="addPartRow">+ Add Part</button>
+<script>
+let cart = [];
+let currentProduct = null;
+let currentCarouselIndex = 0;
+let autoRotateInterval = null;
 
-        </div>
-        <div class="modal-footer">
-          <div class="me-auto">
-            <strong>Total Cost:</strong> <span id="modalTotalCost">$0</span> &nbsp; | &nbsp;
-            <strong>Total Retail:</strong> <span id="modalTotalRetail">$0</span>
-          </div>
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          <button type="button" class="btn btn-primary">Save Changes</button>
-        </div>
+const grid = document.getElementById('productGrid');
+const modal = document.getElementById('productModal');
+const modalImage = document.getElementById('modalImage');
+const modalName = document.getElementById('modalName');
+const modalPrice = document.getElementById('modalPrice');
+const modalDesc = document.getElementById('modalDesc');
+const modalCaption = document.getElementById('modalCaption');
+const modalThumbnails = document.getElementById('modalThumbnails');
+const cartCounter = document.getElementById('cartCounter');
+const loader = document.getElementById('loader');
+
+// Fetch gallery for a product
+async function fetchGallery(prodID){
+  try {
+    toggleLoader(true);
+    console.log("Fetching gallery for prodID:", prodID);
+    const res = await fetch(`${scriptURL}?action=getGalleryByProdId&prodID=${prodID}`);
+    const data = await res.json();
+    const gallery = data?.success ? data.gallery : { thumbnail:null, images:[] };
+    return gallery;
+  } catch(err) {
+    console.error("Error fetching gallery:", err);
+    return { thumbnail:null, images:[] };
+  } finally {
+    toggleLoader(false);
+  }
+}
+
+// Fetch all products from backend
+async function fetchProducts(){
+  try {
+    toggleLoader(true);
+    const res = await fetch(`${scriptURL}?action=getAllProducts`);
+    const data = await res.json();
+    return data?.success ? data.products : [];
+  } catch(err) {
+    console.error("Error fetching products:", err);
+    return [];
+  } finally {
+    toggleLoader(false);
+  }
+}
+
+// --- Render products dynamically ---
+async function renderProducts() {
+  const products = await fetchProducts(); // Only products with images per your backend
+  grid.innerHTML = "";
+
+  products.forEach(product => {
+    // Use thumbnail if available, otherwise fallback to placeholder
+    const rawMain = product.thumbnailURL || "/images/No_image_available.svg";
+    const mainImage = convertGoogleDriveLink(rawMain);
+
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `
+      <img src="${mainImage}" alt="${product.productName}">
+      <div class="card-content">
+        <h3>${product.productName}</h3>
+        <p class="price">${product.price || ""}</p>
+        <p class="desc">${product.description || ""}</p>
       </div>
-    </div>
-  </div>
+    `;
 
-  <script src="config.js"></script>
-  <script>
-    // Demo product data
-    const products = [
-      {
-        id: 1,
-        name: "Demo Product A",
-        type: "Widget",
-        cost: 150,
-        retail: 250,
-        parts: [
-          { matName: "Steel Rod", qty: 2, cost: 50, retail: 80 },
-          { matName: "Plastic Cap", qty: 1, cost: 20, retail: 30 },
-          { matName: "Screws", qty: 10, cost: 10, retail: 15 }
-        ]
-      },
-      {
-        id: 2,
-        name: "Demo Product B",
-        type: "Assembly",
-        cost: 300,
-        retail: 480,
-        parts: [
-          { matName: "Motor", qty: 1, cost: 120, retail: 180 },
-          { matName: "Wiring", qty: 5, cost: 40, retail: 60 },
-          { matName: "Casing", qty: 1, cost: 100, retail: 150 }
-        ]
+    card.onclick = async () => {
+      const gallery = await fetchGallery(product.prodID);
+
+      const hasThumbnail = gallery.thumbnail && gallery.thumbnail.url;
+      const hasImages = gallery.images && gallery.images.length > 0;
+
+      if (!hasThumbnail && !hasImages) {
+        alert("No images available for this product.");
+        return;
       }
-    ];
 
-    const productGrid = document.getElementById("productGrid");
-    const partsContainer = document.getElementById("partsContainer");
-    const modalTitle = document.querySelector("#partsModal .modal-title");
-    const modalTotalCost = document.getElementById("modalTotalCost");
-    const modalTotalRetail = document.getElementById("modalTotalRetail");
+      openModal(product, gallery);
+    };
 
-    let activeProduct = null;
+    grid.appendChild(card);
+  });
+}
 
-    // Render product cards
-    function renderProducts() {
-      productGrid.innerHTML = "";
-      products.forEach(prod => {
-        const col = document.createElement("div");
-        col.className = "col-md-4";
-        col.innerHTML = `
-          <div class="card shadow-sm">
-            <div class="card-body">
-              <h5 class="card-title">${prod.name}</h5>
-              <p class="card-text">
-                <strong>Type:</strong> ${prod.type}<br>
-                <strong>Cost:</strong> $${prod.cost}<br>
-                <strong>Retail:</strong> $${prod.retail}<br>
-                <strong>Parts:</strong> ${prod.parts.length}
-              </p>
-              <button class="btn btn-sm btn-primary view-parts" data-id="${prod.id}" data-bs-toggle="modal" data-bs-target="#partsModal">View Parts</button>
-              <button class="btn btn-sm btn-secondary">Edit</button>
-              <button class="btn btn-sm btn-danger">Delete</button>
-            </div>
-          </div>
-        `;
-        productGrid.appendChild(col);
-      });
-
-      document.querySelectorAll(".view-parts").forEach(btn => {
-        btn.addEventListener("click", e => {
-          const id = parseInt(e.target.dataset.id, 10);
-          openPartsModal(id);
-        });
+// --- Modal logic ---
+function openModal(product, gallery) {
+  // Inline normalization
+  const slides = [];
+  if (gallery) {
+    if (gallery.thumbnail && gallery.thumbnail.url) {
+      slides.push({ url: convertGoogleDriveLink(gallery.thumbnail.url), caption: gallery.thumbnail.caption || "" });
+    }
+    if (Array.isArray(gallery.images)) {
+      gallery.images.forEach(img => {
+        if (!img) return;
+        const src = img.url || img.fileUrl || img.src || "";
+        if (src) slides.push({ url: convertGoogleDriveLink(src), caption: img.caption || "" });
       });
     }
+  }
 
-    // Open parts modal for a product
-    function openPartsModal(productId) {
-      activeProduct = products.find(p => p.id === productId);
-      if (!activeProduct) return;
+  currentProduct = { ...product, slides, rawGallery: gallery };
+  currentCarouselIndex = 0;
+  modal.style.display = "flex";
+  renderModal();        // render first slide immediately
+  startAutoRotate();    // start auto-rotate
+}
 
-      modalTitle.textContent = `Parts for ${activeProduct.name}`;
-      partsContainer.innerHTML = "";
+// Render modal safely (handles missing captions inline)
+function renderModal() {
+  const slides = currentProduct?.slides || [];
 
-      activeProduct.parts.forEach(part => addPartRow(part));
-      recalcTotals();
-    }
+  if (!slides.length) {
+    modalImage.classList.remove("visible");
+    modalImage.src = "/images/No_image_available.svg";
+    modalCaption.textContent = "";
+    modalCaption.classList.remove("has-caption");
+    modalName.textContent = currentProduct.productName || "";
+    modalPrice.textContent = currentProduct.price || "";
+    modalDesc.textContent = currentProduct.description || "";
+    modalThumbnails.innerHTML = "";
+    return;
+  }
 
-    // Add a part row to modal
-    function addPartRow(part = { matName: "", qty: 1, cost: 0, retail: 0 }) {
-      const row = document.createElement("div");
-      row.className = "row g-2 align-items-center mb-2 part-row";
-      row.innerHTML = `
-        <div class="col-md-5"><input type="text" class="form-control part-input" value="${part.matName}"></div>
-        <div class="col-md-2"><input type="number" class="form-control qty-input" value="${part.qty}"></div>
-        <div class="col-md-2"><input type="text" class="form-control cost-input" value="${part.cost}" readonly></div>
-        <div class="col-md-2"><input type="text" class="form-control retail-input" value="${part.retail}" readonly></div>
-        <div class="col-md-1"><button type="button" class="btn btn-sm btn-danger remove-row">✖</button></div>
-      `;
+  if (currentCarouselIndex >= slides.length) currentCarouselIndex = 0;
+  if (currentCarouselIndex < 0) currentCarouselIndex = slides.length - 1;
 
-      row.querySelector(".remove-row").addEventListener("click", () => {
-        row.remove();
-        recalcTotals();
-      });
+  const slide = slides[currentCarouselIndex];
 
-      partsContainer.appendChild(row);
-    }
+  modalImage.classList.remove("visible");
+  modalImage.src = slide.url;
+  modalImage.onload = () => modalImage.classList.add("visible");
 
-    // Recalculate totals
-    function recalcTotals() {
-      let totalCost = 0, totalRetail = 0;
-      partsContainer.querySelectorAll(".part-row").forEach(row => {
-        const qty = parseFloat(row.querySelector(".qty-input").value) || 0;
-        const cost = parseFloat(row.querySelector(".cost-input").value) || 0;
-        const retail = parseFloat(row.querySelector(".retail-input").value) || 0;
-        totalCost += qty * cost;
-        totalRetail += qty * retail;
-      });
-      modalTotalCost.textContent = `$${totalCost.toFixed(2)}`;
-      modalTotalRetail.textContent = `$${totalRetail.toFixed(2)}`;
-    }
+  if (slide.caption && slide.caption.trim().length > 0) {
+    modalCaption.textContent = slide.caption;
+    modalCaption.classList.add("has-caption");
+  } else {
+    modalCaption.textContent = "";
+    modalCaption.classList.remove("has-caption");
+  }
 
-    // Add part row button
-    document.getElementById("addPartRow").addEventListener("click", () => {
-      addPartRow();
-    });
+  modalName.textContent = currentProduct.productName || "";
+  modalPrice.textContent = currentProduct.price || "";
+  modalDesc.textContent = currentProduct.description || "";
 
-    renderProducts();
-  </script>
+  modalThumbnails.innerHTML = "";
+  slides.forEach((s, idx) => {
+    const t = document.createElement("img");
+    t.src = s.url;
+    t.alt = s.caption || `${currentProduct.productName} ${idx + 1}`;
+    t.className = idx === currentCarouselIndex ? "active" : "";
+    t.onclick = () => { currentCarouselIndex = idx; renderModal(); resetAutoRotate(); };
+    modalThumbnails.appendChild(t);
+  });
+}
+
+// --- Carousel controls ---
+function nextSlide() {
+  const slides = currentProduct?.slides || [];
+  if (!slides.length) return;
+  currentCarouselIndex = (currentCarouselIndex + 1) % slides.length;
+  renderModal();
+}
+
+function prevSlide() {
+  const slides = currentProduct?.slides || [];
+  if (!slides.length) return;
+  currentCarouselIndex = (currentCarouselIndex - 1 + slides.length) % slides.length;
+  renderModal();
+}
+
+function startAutoRotate() {
+  stopAutoRotate();
+  autoRotateInterval = setInterval(() => {
+    const slides = currentProduct?.slides || [];
+    if (!slides.length) return;
+    nextSlide();
+  }, 3000);
+}
+function stopAutoRotate() {
+  if (autoRotateInterval) {
+    clearInterval(autoRotateInterval);
+    autoRotateInterval = null; // clear reference
+  }
+}
+function resetAutoRotate() {
+  stopAutoRotate();
+  startAutoRotate();
+}
+
+// --- Event listeners ---
+document.getElementById('nextBtn').onclick = () => { nextSlide(); resetAutoRotate(); };
+document.getElementById('prevBtn').onclick = () => { prevSlide(); resetAutoRotate(); };
+document.getElementById('modalClose').onclick = () => { modal.style.display = "none"; stopAutoRotate(); };
+document.getElementById('addToCartBtn').onclick = () => {
+  cart.push({ id: currentProduct.prodID, name: currentProduct.productName, price: currentProduct.price });
+  cartCounter.textContent = `Cart: ${cart.length}`;
+  alert(`${currentProduct.productName} added to cart!`);
+};
+
+// --- Initialize ---
+renderProducts();
+</script>
 </body>
 </html>

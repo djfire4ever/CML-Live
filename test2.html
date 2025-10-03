@@ -1,51 +1,144 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Popup Style Offcanvas</title>
-  <style>
-    /* Override Bootstrap offcanvas */
-    .offcanvas-popup {
-      width: 500px !important;   /* custom width */
-      max-width: 90%;            /* keep it responsive */
-      height: auto !important;   /* shrink to fit content */
-      border-radius: 12px;       /* rounded corners */
-      top: 10% !important;       /* offset from top */
-      left: 0;
-      right: 0;
-      margin: auto;              /* center horizontally */
-      bottom: auto;              /* don’t stretch full screen */
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stylish Products Page with 7 Thumbnails</title>
+<style>
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  margin: 20px;
+  background: #f7f7f7;
+  color: #333;
+}
+
+h1 {
+  margin-bottom: 20px;
+  font-weight: 600;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill,minmax(220px,1fr));
+  gap: 20px;
+}
+
+.card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+  transform: scale(1.03);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+}
+
+.card img.main {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+}
+
+.card-content {
+  padding: 12px;
+}
+
+.card-content h3 {
+  margin: 8px 0 4px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.card-content p.price {
+  margin: 0 0 4px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #007BFF;
+}
+
+.card-content p.desc {
+  margin: 0;
+  font-size: 12px;
+  color: #666;
+}
+
+.thumbnails {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  padding: 8px 0 4px 0;
+}
+
+.thumbnails img {
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  object-fit: cover;
+  border-radius: 5px;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+.thumbnails img.active {
+  border-color: #007BFF;
+}
+
+/* Scrollbar styling for thumbnails */
+.thumbnails::-webkit-scrollbar {
+  height: 6px;
+}
+.thumbnails::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.2);
+  border-radius: 3px;
+}
+
+</style>
 </head>
-<body class="p-4">
+<body>
 
-  <h1>Popup-Style Offcanvas Demo-Test 2</h1>
-  <button class="btn btn-primary" data-bs-toggle="offcanvas" data-bs-target="#popupCanvas">
-    Open Popup Offcanvas
-  </button>
+<h1>Stylish Products Demo</h1>
 
-  <!-- Offcanvas -->
-  <div class="offcanvas offcanvas-top offcanvas-popup" tabindex="-1" id="popupCanvas">
-    <div class="offcanvas-header">
-      <h5 class="offcanvas-title">Product Details</h5>
-      <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
-    </div>
-    <div class="offcanvas-body">
-      <form>
-        <div class="mb-3">
-          <label for="prodName" class="form-label">Product Name</label>
-          <input type="text" class="form-control" id="prodName" placeholder="Enter product name">
-        </div>
-        <div class="mb-3">
-          <label for="prodType" class="form-label">Product Type</label>
-          <input type="text" class="form-control" id="prodType" placeholder="Enter product type">
-        </div>
-        <button type="submit" class="btn btn-success">Save</button>
-      </form>
-    </div>
-  </div>
+<div class="grid" id="productGrid"></div>
 
-  <script src="config.js"></script>
+<script>
+const products = [
+  {id:1, name:"Blue Sneakers", price:"$59.99", desc:"Comfortable sneakers for everyday wear.", images:["https://picsum.photos/400/300?random=101","https://picsum.photos/400/300?random=102","https://picsum.photos/400/300?random=103","https://picsum.photos/400/300?random=104","https://picsum.photos/400/300?random=105","https://picsum.photos/400/300?random=106","https://picsum.photos/400/300?random=107"]},
+  {id:2, name:"Red T-Shirt", price:"$19.99", desc:"Soft cotton t-shirt in vibrant red.", images:["https://picsum.photos/400/300?random=108","https://picsum.photos/400/300?random=109","https://picsum.photos/400/300?random=110","https://picsum.photos/400/300?random=111","https://picsum.photos/400/300?random=112","https://picsum.photos/400/300?random=113","https://picsum.photos/400/300?random=114"]},
+  {id:3, name:"Green Hoodie", price:"$39.99", desc:"Warm hoodie for chilly days.", images:["https://picsum.photos/400/300?random=115","https://picsum.photos/400/300?random=116","https://picsum.photos/400/300?random=117","https://picsum.photos/400/300?random=118","https://picsum.photos/400/300?random=119","https://picsum.photos/400/300?random=120","https://picsum.photos/400/300?random=121"]},
+  {id:4, name:"Yellow Hat", price:"$14.99", desc:"Stylish yellow hat for sunny days.", images:["https://picsum.photos/400/300?random=122","https://picsum.photos/400/300?random=123","https://picsum.photos/400/300?random=124","https://picsum.photos/400/300?random=125","https://picsum.photos/400/300?random=126","https://picsum.photos/400/300?random=127","https://picsum.photos/400/300?random=128"]}
+];
+
+function renderProducts(){
+  const grid = document.getElementById('productGrid');
+  grid.innerHTML = "";
+  products.forEach(p => {
+    const card = document.createElement('div');
+    card.className = "card";
+    let thumbsHTML = p.images.map((img, idx)=> `<img src="${img}" class="${idx===0?'active':''}" onclick="event.stopPropagation();changeCardImage(this,'${p.id}')">`).join('');
+    card.innerHTML = `<img src="${p.images[0]}" class="main" id="mainImage-${p.id}">
+                      <div class="card-content">
+                        <h3>${p.name}</h3>
+                        <p class="price">${p.price}</p>
+                        <p class="desc">${p.desc}</p>
+                        <div class="thumbnails">${thumbsHTML}</div>
+                      </div>`;
+    grid.appendChild(card);
+  });
+}
+
+function changeCardImage(thumb, productId){
+  const main = document.getElementById(`mainImage-${productId}`);
+  main.src = thumb.src;
+  thumb.parentElement.querySelectorAll('img').forEach(i=>i.classList.remove('active'));
+  thumb.classList.add('active');
+}
+
+renderProducts();
+</script>
+
 </body>
 </html>
