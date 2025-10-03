@@ -49,36 +49,26 @@ h1 { margin-bottom:20px; font-weight:600; display:inline-block; }
 
 <!-- Modal -->
 <div class="modal" id="productModal">
-  <div class="modal-dialog modal-lg modal-dialog-centered">
-    <div class="modal-content">
-      <span class="close" id="modalClose">&times;</span>
+  <div class="modal-content">
+    <span class="close" id="modalClose">&times;</span>
 
-      <!-- Carousel -->
-      <div id="productCarousel" class="carousel slide bg-dark" data-bs-ride="carousel">
-        <div class="carousel-indicators" id="carouselIndicators">
-          <!-- indicators injected dynamically -->
-        </div>
-        <div class="carousel-inner" id="carouselInner">
-          <!-- slides injected dynamically -->
-        </div>
-        <button class="carousel-control-prev" type="button" data-bs-target="#productCarousel" data-bs-slide="prev">
-          <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-          <span class="visually-hidden">Previous</span>
-        </button>
-        <button class="carousel-control-next" type="button" data-bs-target="#productCarousel" data-bs-slide="next">
-          <span class="carousel-control-next-icon" aria-hidden="true"></span>
-          <span class="visually-hidden">Next</span>
-        </button>
-      </div>
-
-      <!-- product info -->
-      <div class="p-3 text-center">
-        <h2 id="modalName"></h2>
-        <p id="modalPrice"></p>
-        <p id="modalDesc"></p>
-        <button id="addToCartBtn" class="btn btn-primary">Add to Cart</button>
-      </div>
+    <!-- carousel stage with overlay buttons -->
+    <div class="carousel-stage" id="carouselStage">
+      <button class="carousel-btn left" id="prevBtn" aria-label="Previous">&lt;</button>
+      <img id="modalImage" class="main" src="" alt="">
+      <button class="carousel-btn right" id="nextBtn" aria-label="Next">&gt;</button>
     </div>
+
+    <p class="caption" id="modalCaption"></p>
+    <h2 id="modalName"></h2>
+    <p id="modalPrice"></p>
+    <p id="modalDesc"></p>
+
+    <!-- thumbnails -->
+    <div class="thumbnails" id="modalThumbnails"></div>
+
+    <!-- add-to-cart -->
+    <button id="addToCartBtn">Add to Cart</button>
   </div>
 </div>
 
@@ -198,74 +188,50 @@ function openModal(product, gallery) {
 
 // Render modal safely (handles missing captions inline)
 function renderModal() {
-  if (!currentProduct || !currentProduct.images || !currentProduct.images.length) return;
+  const slides = currentProduct?.slides || [];
 
-  const modal = document.getElementById('productModal');
-  const carouselInner = document.getElementById('carouselInner');
-  const carouselIndicators = document.getElementById('carouselIndicators');
-  const modalName = document.getElementById('modalName');
-  const modalPrice = document.getElementById('modalPrice');
-  const modalDesc = document.getElementById('modalDesc');
+  if (!slides.length) {
+    modalImage.classList.remove("visible");
+    modalImage.src = "/images/No_image_available.svg";
+    modalCaption.textContent = "";
+    modalCaption.classList.remove("has-caption");
+    modalName.textContent = currentProduct.productName || "";
+    modalPrice.textContent = currentProduct.price || "";
+    modalDesc.textContent = currentProduct.description || "";
+    modalThumbnails.innerHTML = "";
+    return;
+  }
 
-  // Clear previous slides
-  carouselInner.innerHTML = '';
-  carouselIndicators.innerHTML = '';
+  if (currentCarouselIndex >= slides.length) currentCarouselIndex = 0;
+  if (currentCarouselIndex < 0) currentCarouselIndex = slides.length - 1;
 
-  // Build slides and indicators dynamically
-  currentProduct.images.forEach((img, idx) => {
-    // Slide
-    const slideDiv = document.createElement('div');
-    slideDiv.classList.add('carousel-item');
-    if (idx === 0) slideDiv.classList.add('active');
+  const slide = slides[currentCarouselIndex];
 
-    const imageEl = document.createElement('img');
-    imageEl.src = convertGoogleDriveLink(img.url || '');
-    imageEl.classList.add('d-block', 'w-100');
-    imageEl.alt = img.caption || `Slide ${idx + 1}`;
-    imageEl.style.height = '400px'; // fixed height
-    imageEl.style.objectFit = 'cover';
+  modalImage.classList.remove("visible");
+  modalImage.src = slide.url;
+  modalImage.onload = () => modalImage.classList.add("visible");
 
-    slideDiv.appendChild(imageEl);
+  if (slide.caption && slide.caption.trim().length > 0) {
+    modalCaption.textContent = slide.caption;
+    modalCaption.classList.add("has-caption");
+  } else {
+    modalCaption.textContent = "";
+    modalCaption.classList.remove("has-caption");
+  }
 
-    // Caption (optional)
-    if (img.caption) {
-      const captionDiv = document.createElement('div');
-      captionDiv.classList.add('carousel-caption', 'd-none', 'd-md-block');
-      const captionTitle = document.createElement('h5');
-      captionTitle.textContent = img.caption;
-      captionDiv.appendChild(captionTitle);
-      slideDiv.appendChild(captionDiv);
-    }
+  modalName.textContent = currentProduct.productName || "";
+  modalPrice.textContent = currentProduct.price || "";
+  modalDesc.textContent = currentProduct.description || "";
 
-    carouselInner.appendChild(slideDiv);
-
-    // Indicator
-    const indicatorBtn = document.createElement('button');
-    indicatorBtn.type = 'button';
-    indicatorBtn.setAttribute('data-bs-target', '#productCarousel');
-    indicatorBtn.setAttribute('data-bs-slide-to', idx);
-    indicatorBtn.setAttribute('aria-label', `Slide ${idx + 1}`);
-    if (idx === 0) {
-      indicatorBtn.classList.add('active');
-      indicatorBtn.setAttribute('aria-current', 'true');
-    }
-    carouselIndicators.appendChild(indicatorBtn);
+  modalThumbnails.innerHTML = "";
+  slides.forEach((s, idx) => {
+    const t = document.createElement("img");
+    t.src = s.url;
+    t.alt = s.caption || `${currentProduct.productName} ${idx + 1}`;
+    t.className = idx === currentCarouselIndex ? "active" : "";
+    t.onclick = () => { currentCarouselIndex = idx; renderModal(); resetAutoRotate(); };
+    modalThumbnails.appendChild(t);
   });
-
-  // Set product info
-  modalName.textContent = currentProduct.productName || '';
-  modalPrice.textContent = currentProduct.price ? `$${currentProduct.price}` : '';
-  modalDesc.textContent = currentProduct.desc || '';
-
-  // Show modal
-  modal.style.display = 'flex';
-
-  // Initialize Bootstrap carousel instance
-  const carouselEl = document.getElementById('productCarousel');
-  const bsCarousel = bootstrap.Carousel.getInstance(carouselEl) || new bootstrap.Carousel(carouselEl, { interval: 3000, ride: 'carousel' });
-
-  // Optional: reset to first slide
-  bsCarousel.to(0);
 }
 
 // --- Carousel controls ---
