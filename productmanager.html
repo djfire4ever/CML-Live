@@ -238,8 +238,9 @@
     </div>
   </div>
 
-  <!-- Shared Part Options Datalist -->
+  <!-- Shared Datalists -->
   <datalist id="row-parts-selector"></datalist>
+  <datalist id="product-type-selector"></datalist>
 
   <!-- 🔍 Search Results Accordion -->
   <div class="accordion" id="productSearchResults"></div>
@@ -302,9 +303,11 @@
                 <div class="d-flex align-items-center mb-2">
                   <label for="productTypeInput" class="form-label text-info mb-0 me-2">Product Type:</label>
                   <span class="productType-body text-warning me-2"></span>
-                  <input type="text" id="productTypeInput" class="form-control form-control-sm productType-input"
-                        list="product-type-options" placeholder="Select Type" style="max-width: 70%;">
-                  <datalist id="product-type-options"></datalist>
+                  <input type="text" id="productTypeInput"
+                        class="form-control form-control-sm productType-input"
+                        list="product-type-selector"
+                        placeholder="Select Category"
+                        style="max-width: 70%;">
                 </div>
 
                 <!-- Last Updated -->
@@ -506,7 +509,7 @@
 </div>
 
 <script src="config.js" defer></script> <!-- this has all my glogal functions, variables and constants including scripturl -->
-<script src="test6.js" defer></script>
+<script src="productmanager.js" defer></script>
 <script src="gallerymanager.js"></script>
 
 <script>
@@ -519,9 +522,18 @@ function renderInStockModal(product) {
   tbody.innerHTML = ""; // clear previous content
   let minUnits = Infinity;
 
-  const partsData = product.parts.map(part => {
+  // Step 1: unify like parts
+  const combinedParts = {};
+  product.parts.forEach(part => {
+    const name = part.matName;
+    const qty  = parseFloat(part.qty) || 0;
+    if (!combinedParts[name]) combinedParts[name] = { ...part, qty: 0 };
+    combinedParts[name].qty += qty; // sum quantities
+  });
+
+  const partsData = Object.values(combinedParts).map(part => {
     const material = materialByName[part.matName];
-    const needed = parseFloat(part.qty) || 0; // coerce qty
+    const needed = part.qty;
     const onHand = material?.onHand || 0;
     const supplierUrl = material?.supplierUrl || null;
 
@@ -541,26 +553,21 @@ function renderInStockModal(product) {
   // Render rows
   partsData.forEach(part => {
     const row = document.createElement("tr");
-
-    // Determine row text color and store it
     const textColor = part.orderRequirement > 0 ? "text-danger" : "text-success";
 
-    // Clickable row if supplier URL exists
     if (part.supplierUrl) {
       row.style.cursor = "pointer";
       row.addEventListener("click", () => window.open(part.supplierUrl, "_blank"));
     }
 
-    // Create cells and apply text color to each cell individually
     ["matName", "needed", "onHand", "orderRequirement"].forEach(key => {
       const cell = document.createElement("td");
       cell.textContent = part[key];
-      cell.classList.add(textColor);       // ensures BS doesn’t override
-      cell.style.backgroundColor = "#000"; // black background
+      cell.classList.add(textColor);
+      cell.style.backgroundColor = "#000";
       row.appendChild(cell);
     });
 
-    // Hover effect: change background color of all cells
     row.addEventListener("mouseenter", () => {
       row.querySelectorAll("td").forEach(td => {
         td.style.backgroundColor = part.orderRequirement > 0 ? "#330000" : "#003300";
@@ -581,9 +588,7 @@ function renderInStockModal(product) {
   // Show the modal
   const modalEl = document.getElementById("inStockModal");
   let bsModal = bootstrap.Modal.getInstance(modalEl);
-  if (!bsModal) {
-    bsModal = new bootstrap.Modal(modalEl);
-  }
+  if (!bsModal) bsModal = new bootstrap.Modal(modalEl);
   bsModal.show();
 }
 

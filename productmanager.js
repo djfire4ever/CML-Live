@@ -172,7 +172,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // --- Load data ---
   await loadMaterialData();
   await loadProducts();
-  loadDropdowns(); // optional if already loaded globally
+  // loadDropdowns(); // optional if already loaded globally
 
   // --- Render only the Add card initially ---
   renderProductCard(null);
@@ -471,6 +471,50 @@ async function renderProductCard(product = null) {
   attachAutogrow(wrapper.querySelector(".productName-input"));
   attachAutogrow(wrapper.querySelector(".description-input"));
 
+// ===== Product Type Datalist + Icon + Datalist population =====
+const typeInput = wrapper.querySelector(".productType-input");
+const iconElem  = wrapper.querySelector(".productType-icon");
+const typeDatalist = document.getElementById("product-type-selector");
+
+if (typeInput && iconElem && typeDatalist) {
+  // Populate datalist with unique product types
+  const uniqueProductTypes = [...new Set(productData.map(p => p.productType).filter(Boolean))];
+  typeDatalist.innerHTML = "";
+  uniqueProductTypes.forEach(type => {
+    const option = document.createElement("option");
+    option.value = type;
+    typeDatalist.appendChild(option);
+  });
+
+  // Update icon whenever value changes
+  typeInput.addEventListener("input", () => {
+    const val = typeInput.value;
+    iconElem.innerHTML =
+      val === "Product" ? '<i class="fa-solid fa-tag text-success"></i>' :
+      val === "Rental"  ? '<i class="fa-solid fa-key text-primary"></i>' :
+                          '<i class="fa-solid fa-box-open"></i>';
+  });
+
+  // Show all options on click/focus (but keep current value visible)
+  ['mousedown', 'focus'].forEach(evt => {
+    typeInput.addEventListener(evt, e => {
+      const currentValue = typeInput.value;
+      setTimeout(() => { typeInput.value = currentValue; }, 0);
+    });
+  });
+}
+
+  // ===== Product Name header listener =====
+  const nameInput = wrapper.querySelector(".productName-input");
+  const nameHeader = wrapper.querySelector(".productName-header");
+  const nameBody   = wrapper.querySelector(".productName-body"); // optional if you also want body sync
+  if (nameInput && nameHeader && nameBody) {
+    nameInput.addEventListener("input", () => {
+      nameHeader.textContent = nameInput.value;
+      nameBody.textContent   = nameInput.value;
+    });
+  }
+
   container.appendChild(clone);
 }
 
@@ -490,6 +534,7 @@ function addPartRow(partsContainer, name = "", qty = 0, cost = 0, retail = 0, wr
   const costSpan   = row.querySelector(".part-cost-span");
   const retailSpan = row.querySelector(".part-retail-span");
   const removeBtn  = row.querySelector(".remove-part");
+  const selectorInput = row.querySelector('input[list="row-parts-selector"]');
 
   // Fill values
   if (nameInput) nameInput.value = name;
@@ -499,24 +544,47 @@ function addPartRow(partsContainer, name = "", qty = 0, cost = 0, retail = 0, wr
   if (costSpan) costSpan.textContent = formatCurrency(cost);
   if (retailSpan) retailSpan.textContent = formatCurrency(retail);
 
+  // ===== Live updates =====
+  if (nameInput) {
+    nameInput.oninput = () => {
+      if (nameSpan) nameSpan.textContent = nameInput.value;
+      recalculateTotals(partsContainer);
+    };
+  }
+  if (qtyInput) {
+    qtyInput.oninput = () => recalculateTotals(partsContainer);
+  }
+
+  // ===== Selector datalist behavior =====
+  if (selectorInput) {
+    ['mousedown', 'focus'].forEach(evt =>
+      selectorInput.addEventListener(evt, () => selectorInput.value = '')
+    );
+
+    selectorInput.addEventListener('input', () => {
+      if (nameSpan) nameSpan.textContent = selectorInput.value;
+      recalculateTotals(partsContainer);
+    });
+  }
+
   // Mode visibility
   if (wrapperIsEditing) {
-    nameInput.classList.remove("d-none");
-    qtyInput.classList.remove("d-none");
-    nameSpan.classList.add("d-none");
-    qtySpan.classList.add("d-none");
+    nameInput?.classList.remove("d-none");
+    qtyInput?.classList.remove("d-none");
+    nameSpan?.classList.add("d-none");
+    qtySpan?.classList.add("d-none");
     if (removeBtn) removeBtn.style.display = "inline-block";
   } else {
-    nameInput.classList.add("d-none");
-    qtyInput.classList.add("d-none");
-    nameSpan.classList.remove("d-none");
-    qtySpan.classList.remove("d-none");
+    nameInput?.classList.add("d-none");
+    qtyInput?.classList.add("d-none");
+    nameSpan?.classList.remove("d-none");
+    qtySpan?.classList.remove("d-none");
     if (removeBtn) removeBtn.style.display = "none";
   }
 
   // Always keep cost/retail visible
-  if (costSpan) costSpan.classList.remove("d-none");
-  if (retailSpan) retailSpan.classList.remove("d-none");
+  costSpan?.classList.remove("d-none");
+  retailSpan?.classList.remove("d-none");
 
   // Remove handler
   if (removeBtn && !row.dataset.removeAttached) {
@@ -543,6 +611,7 @@ function enableEditToggle(wrapper, isEditing, isAddCard = false) {
   // --- Top buttons ---
   if (editBtn) editBtn.classList.toggle("d-none", isEditing || isAddCard);
   if (saveBtn) saveBtn.classList.toggle("d-none", !isEditing);
+  if (saveBtn) saveBtn.disabled = true; // always start disabled
   if (cancelBtn) cancelBtn.classList.toggle("d-none", !isEditing || isAddCard);
 
   if (addPartBtn) addPartBtn.style.display = isEditing ? "inline-block" : "none";
@@ -573,7 +642,7 @@ function enableEditToggle(wrapper, isEditing, isAddCard = false) {
       const qtySpan   = row.querySelector(".part-qty-span");
       const removeBtn = row.querySelector(".remove-part");
 
-      // Toggle name/qty
+      // Toggle name/qty visibility
       if (nameInput && nameSpan) {
         nameInput.classList.toggle("d-none", !isEditing);
         nameSpan.classList.toggle("d-none", isEditing);
@@ -589,6 +658,22 @@ function enableEditToggle(wrapper, isEditing, isAddCard = false) {
       // Cost/retail always visible
       row.querySelectorAll(".part-cost-span, .part-retail-span")
          .forEach(span => span.classList.remove("d-none"));
+    });
+  }
+
+  // --- Enable Save Button When Any Field Changes ---
+  if (isEditing && saveBtn) {
+    const editableFields = wrapper.querySelectorAll(
+      ".productName-input, .description-input, .productType-input, .part-input, .qty-input"
+    );
+    editableFields.forEach(input => {
+      // Avoid attaching multiple listeners
+      if (!input.dataset.listenerAttached) {
+        input.addEventListener("input", () => {
+          saveBtn.disabled = false;
+        });
+        input.dataset.listenerAttached = "1";
+      }
     });
   }
 }
@@ -672,20 +757,29 @@ function recalculateTotals(partsContainer) {
 function calculateInStock(product) {
   if (!product?.parts?.length) return 0;
 
-  let minStock = Infinity;
+  // Step 1: sum up quantities per material
+  const totalsByMaterial = {};
 
   product.parts.forEach(part => {
-    const material = materialByName[part.matName]; // look up by material name
-    // Coerce qty to number (parts may store qty as string)
+    const matName = part.matName;
     const qty = parseFloat(part.qty) || 0;
-    if (!material || qty <= 0) {
+    if (!totalsByMaterial[matName]) totalsByMaterial[matName] = 0;
+    totalsByMaterial[matName] += qty;
+  });
+
+  // Step 2: find max number of products we can make
+  let minStock = Infinity;
+
+  for (const [matName, totalQty] of Object.entries(totalsByMaterial)) {
+    const material = materialByName[matName]; // look up by material name
+    if (!material || totalQty <= 0) {
       minStock = 0; // missing material → cannot make product
-      return;
+      break;
     }
 
-    const maxByPart = Math.floor((material.onHand || 0) / qty);
+    const maxByPart = Math.floor((material.onHand || 0) / totalQty);
     if (maxByPart < minStock) minStock = maxByPart;
-  });
+  }
 
   return minStock === Infinity ? 0 : minStock;
 }
