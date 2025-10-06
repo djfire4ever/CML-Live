@@ -4,12 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dynamic Product Catalog</title>
+
 <style>
 body { font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif; margin:20px; background:#f7f7f7; color:#333; }
 h1 { margin-bottom:20px; font-weight:600; display:inline-block; }
 #cartCounter { margin-left:20px; font-weight:bold; color:#007BFF; }
 .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:20px; }
-.card { background:#fff; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.08); overflow:hidden; cursor:pointer; transition:transform 0.2s,box-shadow 0.2s; }
+.card { background:#fff; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.08); overflow:hidden; cursor:pointer; transition:transform 0.2s, box-shadow 0.2s; }
 .card:hover { transform:scale(1.03); box-shadow:0 6px 16px rgba(0,0,0,0.12); }
 .card img { width:100%; height:150px; object-fit:cover; }
 .card-content { padding:12px; }
@@ -17,58 +18,75 @@ h1 { margin-bottom:20px; font-weight:600; display:inline-block; }
 .card-content p.price { margin:0 0 4px; font-size:14px; font-weight:500; color:#007BFF; }
 .card-content p.desc { margin:0; font-size:12px; color:#666; }
 
-/* Modal */
-.modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); justify-content:center; align-items:center; }
-.modal-content { background:#fff; padding:20px; border-radius:12px; max-width:600px; width:90%; position:relative; display:flex; flex-direction:column; align-items:center; }
-.modal img.main { width:100%; height:400px; object-fit:cover; border-radius:8px; background:#f0f0f0; }
-.modal h2, .modal p { margin:8px 0 4px; text-align:center; }
-.modal p.caption { font-size:12px; color:#555; }
-.close { position:absolute; top:10px; right:10px; cursor:pointer; font-size:24px; }
-.modal p.caption { min-height:20px; margin:6px 0 0; font-size:12px; color:#555; text-align:center; }
+#productModal.modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); justify-content:center; align-items:center; }
+#productModal .modal-content { background:#fff; padding:20px; border-radius:12px; max-width:700px; width:90%; position:relative; display:flex; flex-direction:column; align-items:center; }
+#productModal .carousel-wrapper { position:relative; width:400px; height:400px; display:flex; justify-content:center; align-items:center; background:#f0f0f0; margin-bottom:10px; }
+#productModal img.main { width:400px; height:400px; object-fit:contain; display:block; border-radius:8px; }
+#productModal .carousel-btn { position:absolute; top:50%; transform:translateY(-50%); background:rgba(0,0,0,0.5); color:#fff; border:none; font-size:24px; padding:8px 12px; cursor:pointer; border-radius:4px; z-index:10; }
+#productModal .prev-btn { left:5px; }
+#productModal .next-btn { right:5px; }
+#productModal .caption { min-height:20px; margin:6px 0 10px; font-size:14px; color:#555; text-align:center; }
+#productModal .thumbnails { display:flex; justify-content:center; gap:5px; margin-bottom:10px; flex-wrap:nowrap; }
+#productModal .thumbnails img { flex:1 1 calc((100% - 6*5px)/7); max-width:60px; height:60px; object-fit:cover; border-radius:5px; cursor:pointer; border:2px solid transparent; transition:transform 0.2s ease, border-color 0.2s ease; }
+#productModal .thumbnails img:hover { transform:scale(1.1); border-color:#007BFF; }
+#productModal .thumbnails img.active { border-color:#007BFF; }
+#productModal #modalName, #productModal #modalPrice, #productModal #modalDesc { text-align:center; margin:4px 0; }
+#productModal #addToCartBtn { margin-top:10px; background:#007BFF; color:#fff; border:none; border-radius:5px; padding:8px 14px; cursor:pointer; }
+#productModal .close { position:absolute; top:10px; right:10px; cursor:pointer; font-size:24px; }
 
-/* Thumbnails */
-.modal .thumbnails { display:flex; flex-wrap:wrap; justify-content:center; gap:5px; margin-top:10px; overflow:visible; }
-.modal .thumbnails img { width:60px; height:60px; object-fit:cover; border-radius:5px; cursor:pointer; border:2px solid transparent; flex-shrink:0; }
-.modal .thumbnails img.active { border-color:#007BFF; }
+/* Global skeleton styling */
+.skeleton { background:linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%); background-size:200% 100%; animation:shimmer 1.5s infinite; border-radius:8px; }
+.skeleton-card { width:100%; height:150px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.08); margin-bottom:8px; }
+.skeleton-thumb { width:60px; height:60px; border-radius:5px; margin:2px; }
+.skeleton-modal { width:400px; height:400px; border-radius:8px; margin-bottom:10px; }
+@keyframes shimmer {0%{background-position:-200% 0;}100%{background-position:200% 0;}}
+.card.skeleton-card {width:100%;height:150px;margin-bottom:8px;border-radius:12px;overflow:hidden;position:relative;background:linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;display:flex;flex-direction:column;justify-content:flex-start;}
+.card.skeleton-card .skeleton-img {width:100%;height:90px;background:#ddd;margin-bottom:8px;border-radius:8px;}
+.card.skeleton-card .skeleton-title {width:60%;height:14px;background:#ddd;margin:0 0 4px;border-radius:4px;}
+.card.skeleton-card .skeleton-price {width:40%;height:12px;background:#ddd;margin:0 0 4px;border-radius:4px;}
+.card.skeleton-card .skeleton-desc {width:80%;height:10px;background:#ddd;border-radius:4px;}
 
-/* Carousel buttons & Add to Cart */
-.carousel-controls { display:flex; justify-content:space-between; width:100%; margin-top:10px; }
-.carousel-controls button, #addToCartBtn { padding:5px 12px; font-size:14px; cursor:pointer; }
-#addToCartBtn { margin-top:10px; background:#007BFF; color:#fff; border:none; border-radius:5px; }
-
-/* Loader */
-.loader { display:none; position:absolute; top:10px; right:10px; font-size:14px; color:#007BFF; }
+.modal .modal-loader { position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.7); display:flex; justify-content:center; align-items:center; z-index:1000; }
+#modalLoader { position:absolute; top:0; left:0; width:100%; height:100%; display:none; justify-content:center; align-items:center; z-index:1050; background:rgba(255,255,255,0); pointer-events:auto; }
+@keyframes spin { 0% { transform:rotate(0deg); } 100% { transform:rotate(360deg); } }
 </style>
+
 </head>
 <body>
 
 <h1>Products</h1>
 <span id="cartCounter">Cart: 0</span>
-<span class="loader" id="loader">Loading...</span>
 <div class="grid" id="productGrid"></div>
 
 <!-- Modal -->
-<div class="modal" id="productModal">
-  <div class="modal-content">
-    <span class="close" id="modalClose">&times;</span>
+<div class="modal fade" id="productModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content position-relative">
+      <span class="close" id="modalClose">&times;</span>
 
-    <!-- carousel stage with overlay buttons -->
-    <div class="carousel-stage" id="carouselStage">
-      <button class="carousel-btn left" id="prevBtn" aria-label="Previous">&lt;</button>
-      <img id="modalImage" class="main" src="" alt="">
-      <button class="carousel-btn right" id="nextBtn" aria-label="Next">&gt;</button>
+      <!-- Bootstrap Carousel -->
+      <div id="productCarousel" class="carousel slide" data-bs-ride="carousel">
+        <div class="carousel-indicators" id="carouselIndicators"></div>
+        <div class="carousel-inner" id="carouselInner"></div>
+        <button class="carousel-control-prev" type="button" data-bs-target="#productCarousel" data-bs-slide="prev">
+          <span class="carousel-control-prev-icon"></span>
+          <span class="visually-hidden">Previous</span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#productCarousel" data-bs-slide="next">
+          <span class="carousel-control-next-icon"></span>
+          <span class="visually-hidden">Next</span>
+        </button>
+      </div>
+
+      <div class="thumbnails d-flex justify-content-center flex-wrap mt-2" id="carouselThumbnails"></div>
+
+      <div class="text-center mt-3">
+        <h2 id="modalName"></h2>
+        <p id="modalPrice"></p>
+        <p id="modalDesc"></p>
+        <button id="addToCartBtn" class="btn btn-primary mt-2">Add to Cart</button>
+      </div>
     </div>
-
-    <p class="caption" id="modalCaption"></p>
-    <h2 id="modalName"></h2>
-    <p id="modalPrice"></p>
-    <p id="modalDesc"></p>
-
-    <!-- thumbnails -->
-    <div class="thumbnails" id="modalThumbnails"></div>
-
-    <!-- add-to-cart -->
-    <button id="addToCartBtn">Add to Cart</button>
   </div>
 </div>
 
@@ -77,213 +95,201 @@ h1 { margin-bottom:20px; font-weight:600; display:inline-block; }
 <script>
 let cart = [];
 let currentProduct = null;
-let currentCarouselIndex = 0;
 let autoRotateInterval = null;
 
-const grid = document.getElementById('productGrid');
-const modal = document.getElementById('productModal');
-const modalImage = document.getElementById('modalImage');
-const modalName = document.getElementById('modalName');
-const modalPrice = document.getElementById('modalPrice');
-const modalDesc = document.getElementById('modalDesc');
-const modalCaption = document.getElementById('modalCaption');
-const modalThumbnails = document.getElementById('modalThumbnails');
-const cartCounter = document.getElementById('cartCounter');
-const loader = document.getElementById('loader');
+document.addEventListener('DOMContentLoaded', () => {
+  const grid = document.getElementById('productGrid');
+  const modal = document.getElementById('productModal');
+  const modalName = document.getElementById('modalName');
+  const modalPrice = document.getElementById('modalPrice');
+  const modalDesc = document.getElementById('modalDesc');
+  const carouselInner = document.getElementById('carouselInner');
+  const carouselIndicators = document.getElementById('carouselIndicators');
+  const carouselThumbnails = document.getElementById('carouselThumbnails');
+  const addToCartBtn = document.getElementById('addToCartBtn');
+  const modalClose = document.getElementById('modalClose');
+  const cartCounter = document.getElementById('cartCounter');
 
-// Fetch gallery for a product
-async function fetchGallery(prodID){
-  try {
-    toggleLoader(true);
-    console.log("Fetching gallery for prodID:", prodID);
-    const res = await fetch(`${scriptURL}?action=getGalleryByProdId&prodID=${prodID}`);
-    const data = await res.json();
-    const gallery = data?.success ? data.gallery : { thumbnail:null, images:[] };
-    return gallery;
-  } catch(err) {
-    console.error("Error fetching gallery:", err);
-    return { thumbnail:null, images:[] };
-  } finally {
-    toggleLoader(false);
+  // Close modal
+  modalClose.onclick = () => { bootstrap.Modal.getInstance(modal)?.hide(); stopAutoRotate(); };
+
+  // Add to cart
+  addToCartBtn.onclick = () => {
+    if (!currentProduct) return;
+    cart.push({ id: currentProduct.prodID, name: currentProduct.productName, price: currentProduct.price });
+    cartCounter.textContent = `Cart: ${cart.length}`;
+    alert(`${currentProduct.productName} added to cart!`);
+  };
+
+  // Fetch products
+  async function fetchProducts() {
+    try {
+      const res = await fetch(`${scriptURL}?action=getAllProducts`);
+      const data = await res.json();
+      return data?.success ? data.products : [];
+    } catch (err) { console.error(err); return []; }
   }
-}
 
-// Fetch all products from backend
-async function fetchProducts(){
-  try {
-    toggleLoader(true);
-    const res = await fetch(`${scriptURL}?action=getAllProducts`);
-    const data = await res.json();
-    return data?.success ? data.products : [];
-  } catch(err) {
-    console.error("Error fetching products:", err);
-    return [];
-  } finally {
-    toggleLoader(false);
+  // Fetch gallery
+  async function fetchGallery(prodID) {
+    try {
+      const res = await fetch(`${scriptURL}?action=getGalleryByProdId&prodID=${prodID}`);
+      const data = await res.json();
+      return data?.success ? data.gallery : { thumbnail:null, images:[] };
+    } catch (err) { console.error(err); return { thumbnail:null, images:[] }; }
   }
-}
 
-// --- Render products dynamically ---
+  // Render product grid with skeletons
 async function renderProducts() {
-  const products = await fetchProducts(); // Only products with images per your backend
-  grid.innerHTML = "";
+  grid.innerHTML = '';
+  const skeletonCount = 6;
+  for (let i = 0; i < skeletonCount; i++) {
+    const sk = document.createElement('div');
+    sk.className = 'card skeleton-card';
+    sk.innerHTML = `
+      <div class="skeleton-img"></div>
+      <div class="skeleton-title"></div>
+      <div class="skeleton-price"></div>
+      <div class="skeleton-desc"></div>
+    `;
+    grid.appendChild(sk);
+  }
+
+  const products = await fetchProducts();
+  grid.innerHTML = '';
+
+  if (!products.length) {
+    grid.innerHTML = '<p class="text-center text-muted">No products available</p>';
+    return;
+  }
 
   products.forEach(product => {
-    // Use thumbnail if available, otherwise fallback to placeholder
-    const rawMain = product.thumbnailURL || "/images/No_image_available.svg";
-    const mainImage = convertGoogleDriveLink(rawMain);
-
-    const card = document.createElement("div");
-    card.className = "card";
+    if (!product.thumbnailURL) return;
+    const mainImage = convertGoogleDriveLink(product.thumbnailURL);
+    const card = document.createElement('div');
+    card.className = 'card';
     card.innerHTML = `
       <img src="${mainImage}" alt="${product.productName}">
       <div class="card-content">
         <h3>${product.productName}</h3>
-        <p class="price">${product.price || ""}</p>
-        <p class="desc">${product.description || ""}</p>
+        <p class="price">${product.price || ''}</p>
+        <p class="desc">${product.description || ''}</p>
       </div>
     `;
-
-    card.onclick = async () => {
-      const gallery = await fetchGallery(product.prodID);
-
-      const hasThumbnail = gallery.thumbnail && gallery.thumbnail.url;
-      const hasImages = gallery.images && gallery.images.length > 0;
-
-      if (!hasThumbnail && !hasImages) {
-        alert("No images available for this product.");
-        return;
-      }
-
-      openModal(product, gallery);
+    card.onclick = () => {
+      openModal(product, null);
+      fetchGallery(product.prodID).then(gallery => {
+        if (!gallery?.images?.length) {
+          carouselInner.innerHTML = '<div class="p-5 text-center text-muted">No images available</div>';
+          return;
+        }
+        currentProduct = { ...product, gallery };
+        renderCarousel();
+        startAutoRotate();
+      });
     };
-
     grid.appendChild(card);
   });
 }
 
-// --- Modal logic ---
-function openModal(product, gallery) {
-  // Inline normalization
-  const slides = [];
-  if (gallery) {
-    if (gallery.thumbnail && gallery.thumbnail.url) {
-      slides.push({ url: convertGoogleDriveLink(gallery.thumbnail.url), caption: gallery.thumbnail.caption || "" });
+  // Open modal with skeleton
+  function openModal(product, gallery) {
+    carouselInner.innerHTML = '';
+    carouselIndicators.innerHTML = '';
+    carouselThumbnails.innerHTML = '';
+    modalName.textContent = product.productName || '';
+    modalPrice.textContent = product.price ? `$${product.price}` : '';
+    modalDesc.textContent = product.description || '';
+
+    const skMain = document.createElement('div');
+    skMain.className = 'skeleton';
+    carouselInner.appendChild(skMain);
+    for (let i = 0; i < 3; i++) {
+      const sk = document.createElement('div');
+      sk.className = 'skeleton-thumb';
+      carouselThumbnails.appendChild(sk);
     }
-    if (Array.isArray(gallery.images)) {
-      gallery.images.forEach(img => {
-        if (!img) return;
-        const src = img.url || img.fileUrl || img.src || "";
-        if (src) slides.push({ url: convertGoogleDriveLink(src), caption: img.caption || "" });
-      });
+
+    new bootstrap.Modal(modal).show();
+  }
+
+  // Render carousel
+  function renderCarousel() {
+    carouselInner.innerHTML = '';
+    carouselIndicators.innerHTML = '';
+    carouselThumbnails.innerHTML = '';
+
+    if (!currentProduct?.gallery?.images?.length) {
+      carouselInner.innerHTML = '<div class="p-5 text-center text-muted">No images available</div>';
+      return;
     }
+
+    const carouselEl = document.getElementById('productCarousel');
+    const bsCarousel = bootstrap.Carousel.getOrCreateInstance(carouselEl, { interval: 3000, wrap: true });
+
+    currentProduct.gallery.images.forEach((img, i) => {
+      const item = document.createElement('div');
+      item.className = `carousel-item ${i === 0 ? 'active' : ''}`;
+      const slideImg = document.createElement('img');
+      slideImg.src = convertGoogleDriveLink(img.url);
+      slideImg.className = 'd-block w-100';
+      slideImg.style.width = '400px';
+      slideImg.style.height = '400px';
+      slideImg.style.objectFit = 'contain';
+      item.appendChild(slideImg);
+
+      if (img.caption) {
+        const captionDiv = document.createElement('div');
+        captionDiv.className = 'carousel-caption d-none d-md-block';
+        const captionH5 = document.createElement('h5');
+        captionH5.textContent = img.caption;
+        captionDiv.appendChild(captionH5);
+        item.appendChild(captionDiv);
+      }
+
+      carouselInner.appendChild(item);
+
+      const ind = document.createElement('button');
+      ind.setAttribute('data-bs-target', '#productCarousel');
+      ind.setAttribute('data-bs-slide-to', i);
+      ind.setAttribute('aria-label', `Slide ${i+1}`);
+      if (i === 0) ind.classList.add('active');
+      carouselIndicators.appendChild(ind);
+
+      const thumb = document.createElement('img');
+      thumb.src = convertGoogleDriveLink(img.url);
+      thumb.style.width = '60px';
+      thumb.style.height = '60px';
+      thumb.style.objectFit = 'cover';
+      thumb.style.cursor = 'pointer';
+      thumb.style.margin = '2px';
+      thumb.style.flex = '0 0 auto';
+      if (i === 0) thumb.style.border = '2px solid #007BFF';
+      thumb.onclick = () => {
+        document.querySelectorAll('#carouselThumbnails img').forEach(t => t.style.border = '2px solid transparent');
+        thumb.style.border = '2px solid #007BFF';
+        bsCarousel.to(i);
+      };
+      carouselThumbnails.appendChild(thumb);
+    });
   }
 
-  currentProduct = { ...product, slides, rawGallery: gallery };
-  currentCarouselIndex = 0;
-  modal.style.display = "flex";
-  renderModal();        // render first slide immediately
-  startAutoRotate();    // start auto-rotate
-}
-
-// Render modal safely (handles missing captions inline)
-function renderModal() {
-  const slides = currentProduct?.slides || [];
-
-  if (!slides.length) {
-    modalImage.classList.remove("visible");
-    modalImage.src = "/images/No_image_available.svg";
-    modalCaption.textContent = "";
-    modalCaption.classList.remove("has-caption");
-    modalName.textContent = currentProduct.productName || "";
-    modalPrice.textContent = currentProduct.price || "";
-    modalDesc.textContent = currentProduct.description || "";
-    modalThumbnails.innerHTML = "";
-    return;
+  // Auto-rotate
+  function startAutoRotate() {
+    stopAutoRotate();
+    const bsCarousel = bootstrap.Carousel.getInstance(document.getElementById('productCarousel'));
+    if (!bsCarousel) return;
+    autoRotateInterval = setInterval(()=>bsCarousel.next(),3000);
   }
-
-  if (currentCarouselIndex >= slides.length) currentCarouselIndex = 0;
-  if (currentCarouselIndex < 0) currentCarouselIndex = slides.length - 1;
-
-  const slide = slides[currentCarouselIndex];
-
-  modalImage.classList.remove("visible");
-  modalImage.src = slide.url;
-  modalImage.onload = () => modalImage.classList.add("visible");
-
-  if (slide.caption && slide.caption.trim().length > 0) {
-    modalCaption.textContent = slide.caption;
-    modalCaption.classList.add("has-caption");
-  } else {
-    modalCaption.textContent = "";
-    modalCaption.classList.remove("has-caption");
+  function stopAutoRotate() {
+    if (autoRotateInterval){ clearInterval(autoRotateInterval); autoRotateInterval=null; }
   }
+  modal.addEventListener('mouseenter', stopAutoRotate);
+  modal.addEventListener('mouseleave', startAutoRotate);
 
-  modalName.textContent = currentProduct.productName || "";
-  modalPrice.textContent = currentProduct.price || "";
-  modalDesc.textContent = currentProduct.description || "";
-
-  modalThumbnails.innerHTML = "";
-  slides.forEach((s, idx) => {
-    const t = document.createElement("img");
-    t.src = s.url;
-    t.alt = s.caption || `${currentProduct.productName} ${idx + 1}`;
-    t.className = idx === currentCarouselIndex ? "active" : "";
-    t.onclick = () => { currentCarouselIndex = idx; renderModal(); resetAutoRotate(); };
-    modalThumbnails.appendChild(t);
-  });
-}
-
-// --- Carousel controls ---
-function nextSlide() {
-  const slides = currentProduct?.slides || [];
-  if (!slides.length) return;
-  currentCarouselIndex = (currentCarouselIndex + 1) % slides.length;
-  renderModal();
-}
-
-function prevSlide() {
-  const slides = currentProduct?.slides || [];
-  if (!slides.length) return;
-  currentCarouselIndex = (currentCarouselIndex - 1 + slides.length) % slides.length;
-  renderModal();
-}
-
-function startAutoRotate() {
-  stopAutoRotate();
-  autoRotateInterval = setInterval(() => {
-    const slides = currentProduct?.slides || [];
-    if (!slides.length) return;
-    nextSlide();
-  }, 3000);
-}
-function stopAutoRotate() {
-  if (autoRotateInterval) {
-    clearInterval(autoRotateInterval);
-    autoRotateInterval = null;
-  }
-}
-function resetAutoRotate() {
-  stopAutoRotate();
-  startAutoRotate();
-}
-
-// --- Pause/resume on hover ---
-modal.addEventListener("mouseenter", stopAutoRotate);
-modal.addEventListener("mouseleave", startAutoRotate);
-
-// --- Event listeners ---
-document.getElementById('nextBtn').onclick = () => { nextSlide(); resetAutoRotate(); };
-document.getElementById('prevBtn').onclick = () => { prevSlide(); resetAutoRotate(); };
-document.getElementById('modalClose').onclick = () => { modal.style.display = "none"; stopAutoRotate(); };
-document.getElementById('addToCartBtn').onclick = () => {
-  cart.push({ id: currentProduct.prodID, name: currentProduct.productName, price: currentProduct.price });
-  cartCounter.textContent = `Cart: ${cart.length}`;
-  alert(`${currentProduct.productName} added to cart!`);
-};
-
-// --- Initialize ---
-renderProducts();
+  renderProducts();
+});
 </script>
+
 </body>
 </html>
