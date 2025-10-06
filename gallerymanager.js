@@ -1,6 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const modal = document.getElementById("inStockModal");
-  const modalHeaderSpan = modal.querySelector("#inStockModalLabel");
+  const modal = document.getElementById("galleryManagerModal");
   const saveButton = modal.querySelector("#saveGalleryChanges");
   const galleryGrid = modal.querySelector("#galleryGrid");
 
@@ -18,529 +17,415 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-// ===== Create 8 slots =====
-function createSlots() {
-  const galleryGrid = document.getElementById("galleryGrid");
-  if (!galleryGrid) {
-    console.error("Gallery grid element not found in DOM!");
-    return;
+  function createSlots(count = 8) {
+    galleryGrid.innerHTML = "";
+    gallerySlots = [];
+    for (let i = 0; i < count; i++) {
+      const slot = document.createElement("div");
+      slot.className = "gallery-slot";
+      slot.dataset.index = i;
+      slot.draggable = i !== 0;
+      const imgContainer = document.createElement("div");
+      imgContainer.className = "slot-image-container";
+      if (i === 0) imgContainer.textContent = "Thumbnail";
+      else imgContainer.textContent = "+ Add Image";
+      slot.appendChild(imgContainer);
+      if (i !== 0) {
+        const buttons = document.createElement("div");
+        buttons.className = "slot-buttons";
+        buttons.innerHTML = `
+          <button type="button" class="btn btn-sm btn-outline-warning set-main">⭐</button>
+          <button type="button" class="btn btn-sm btn-outline-danger delete-image">🗑</button>`;
+        slot.appendChild(buttons);
+        const captionDiv = document.createElement("div");
+        captionDiv.className = "slot-caption";
+        captionDiv.innerHTML = `<input type="text" class="caption-input" placeholder="Caption...">`;
+        slot.appendChild(captionDiv);
+      }
+      galleryGrid.appendChild(slot);
+      gallerySlots.push(slot);
+    }
   }
 
-  galleryGrid.innerHTML = "";
-  gallerySlots = [];
-
-  for (let i = 0; i < 8; i++) {
-    const slot = document.createElement("div");
-    slot.className = "gallery-slot";
-    slot.dataset.index = i;
-
-    const imgContainer = document.createElement("div");
-    imgContainer.className = "slot-image-container";
-    slot.appendChild(imgContainer);
-
-    const buttons = document.createElement("div");
-    buttons.className = "slot-buttons";
-    slot.appendChild(buttons);
-
-    if (i !== 0) {
+  function clearSlot(slot, isThumbnail = false) {
+    slot.innerHTML = "";
+    slot.classList.remove("empty");
+    const container = document.createElement("div");
+    container.className = "slot-image-container";
+    if (isThumbnail) container.textContent = "Thumbnail";
+    else container.textContent = "+ Add Image";
+    slot.appendChild(container);
+    if (!isThumbnail) {
+      const buttons = document.createElement("div");
+      buttons.className = "slot-buttons";
+      buttons.innerHTML = `
+        <button type="button" class="btn btn-sm btn-outline-warning set-main">⭐</button>
+        <button type="button" class="btn btn-sm btn-outline-danger delete-image">🗑</button>`;
+      slot.appendChild(buttons);
       const captionDiv = document.createElement("div");
       captionDiv.className = "slot-caption";
-      const input = document.createElement("input");
-      input.type = "text";
-      input.className = "caption-input";
-      input.placeholder = "Caption...";
-      captionDiv.appendChild(input);
+      captionDiv.innerHTML = `<input type="text" class="caption-input" placeholder="Caption...">`;
       slot.appendChild(captionDiv);
     }
-
-    galleryGrid.appendChild(slot);
-    gallerySlots.push(slot);
-  }
-}
-
-// ===== Clear Slot =====
-function clearSlot(slot, isThumbnail = false) {
-  slot.innerHTML = "";
-  slot.classList.remove("empty");
-
-  const imgContainer = document.createElement("div");
-  imgContainer.className = "slot-image-container";
-
-  if (isThumbnail) {
-    // Badge for thumbnail always
-    const badge = document.createElement("span");
-    badge.className = "slot-badge";
-    badge.textContent = "📌Thumbnail";
-    imgContainer.appendChild(badge);
-
-    const noThumb = document.createElement("div");
-    noThumb.className = "text-center text-muted no-thumb-text";
-    noThumb.textContent = "No Thumbnail";
-    imgContainer.appendChild(noThumb);
-  } else {
-    // Empty placeholder
-    slot.classList.add("empty");
-    imgContainer.textContent = "+ Add Image";
+    slot.file = null;
+    if (!isThumbnail) slot.classList.add("empty");
   }
 
-  slot.appendChild(imgContainer);
-
-  // Buttons (top-right) only for non-thumbnail
-  if (!isThumbnail) {
-    const buttons = document.createElement("div");
-    buttons.className = "slot-buttons";
-
-    const btnStar = document.createElement("button");
-    btnStar.type = "button";
-    btnStar.className = "btn btn-sm btn-outline-warning set-main";
-    btnStar.textContent = "⭐";
-    buttons.appendChild(btnStar);
-
-    const btnDel = document.createElement("button");
-    btnDel.type = "button";
-    btnDel.className = "btn btn-sm btn-outline-danger delete-image";
-    btnDel.textContent = "🗑";
-    buttons.appendChild(btnDel);
-
-    slot.appendChild(buttons);
-  }
-
-  // Caption
-  const captionDiv = document.createElement("div");
-  captionDiv.className = "slot-caption";
-  const input = document.createElement("input");
-  input.type = "text";
-  input.placeholder = "Caption...";
-  input.className = "caption-input";
-  captionDiv.appendChild(input);
-  slot.appendChild(captionDiv);
-
-  slot.file = null;
-}
-
-// ===== Render Slot =====
-function renderSlot(slot, data, index) {
-  slot.classList.remove("empty");
-
-  const imgContainer = slot.querySelector(".slot-image-container");
-  const buttons = slot.querySelector(".slot-buttons");
-
-  imgContainer.innerHTML = "";
-  buttons.innerHTML = "";
-
-  // === Slot 0 (Thumbnail) ===
-  if (index === 0) {
-    const badge = document.createElement("span");
-    badge.className = "slot-badge";
-    badge.textContent = "📌Thumbnail";
-    imgContainer.appendChild(badge);
-
+  function renderSlot(slot, data, index) {
+    slot.classList.remove("empty");
+    const imgContainer = slot.querySelector(".slot-image-container");
+    const buttons = slot.querySelector(".slot-buttons");
+    imgContainer.innerHTML = "";
+    if (buttons) buttons.innerHTML = "";
+    if (index === 0) {
+      const badge = document.createElement("span");
+      badge.className = "slot-badge";
+      badge.textContent = "📌Thumbnail";
+      imgContainer.appendChild(badge);
+      if (data?.url) {
+        const img = document.createElement("img");
+        img.src = convertGoogleDriveLink(data.url);
+        img.alt = "Thumbnail";
+        imgContainer.appendChild(img);
+      } else slot.classList.add("empty");
+      return;
+    }
+    const captionInput = slot.querySelector(".caption-input");
+    captionInput.value = data?.caption || "";
     if (data?.url) {
       const img = document.createElement("img");
       img.src = convertGoogleDriveLink(data.url);
-      img.alt = "Thumbnail";
+      img.alt = `Gallery image ${index}`;
       imgContainer.appendChild(img);
-    } else {
-      slot.classList.add("empty");
-      const noThumb = document.createElement("div");
-      noThumb.className = "text-center text-muted no-thumb-text";
-      noThumb.textContent = "No Thumbnail";
-      imgContainer.appendChild(noThumb);
-    }
-
-    // DO NOT append caption for slot0
-    return;
-  }
-
-  // === Slots 1–7 ===
-  const captionInput = slot.querySelector(".caption-input");
-  captionInput.value = data?.caption || "";
-
-  if (data?.url) {
-    const img = document.createElement("img");
-    img.src = convertGoogleDriveLink(data.url);
-    img.alt = `Gallery image ${index}`;
-    imgContainer.appendChild(img);
-
-    // Buttons
-    const btnStar = document.createElement("button");
-    btnStar.type = "button";
-    btnStar.className = "btn btn-sm btn-outline-warning set-main";
-    btnStar.textContent = "⭐";
-    buttons.appendChild(btnStar);
-
-    const btnDel = document.createElement("button");
-    btnDel.type = "button";
-    btnDel.className = "btn btn-sm btn-outline-danger delete-image";
-    btnDel.textContent = "🗑";
-    buttons.appendChild(btnDel);
-
-  } else {
-    slot.classList.add("empty");
-    imgContainer.textContent = "+ Add Image";
-  }
-}
-
-function populateGalleryModal(gallery, prodID, productName) {
-  console.log("========================================");
-  console.log("📌 populateGalleryModal START");
-  console.log("🆔 Product ID:", prodID);
-  console.log("🏷️ Product Name:", productName);
-  console.log("📥 Raw gallery object:", gallery);
-
-  const modal = document.getElementById("galleryManagerModal");
-  const galleryGrid = modal.querySelector(".gallery-grid");
-
-  // Set product name in modal title
-  const titleSpan = modal.querySelector("#galleryProductName");
-  if (titleSpan) titleSpan.textContent = productName;
-
-  // Clear previous grid
-  galleryGrid.innerHTML = "";
-
-  const slots = [];
-
-  // Create 9 slots (0 = thumbnail, 1-8 = images)
-  for (let i = 0; i < 9; i++) {
-    const slot = document.createElement("div");
-    slot.className = "gallery-slot";
-    slot.dataset.index = i;
-
-    slots.push(slot);
-    galleryGrid.appendChild(slot);
-  }
-
-  // --- Slot 0: Thumbnail ---
-  const thumbData = gallery.thumbnail || null;
-  renderSlot(slots[0], thumbData, 0);
-
-  // --- Slots 1–8: Other images ---
-  let imgIndex = 0;
-  for (let i = 1; i < 9; i++) {
-    const imgData = gallery.images?.[imgIndex] || null;
-    renderSlot(slots[i], imgData, i);
-    if (imgData) imgIndex++;
-  }
-
-  console.log(`✅ Final images count after populate: ${imgIndex}`);
-  console.log("🎨 Slots rendered for Product:", prodID, "-", productName);
-  console.log("========================================");
-
-  // Show modal
-  new bootstrap.Modal(modal).show();
-
-  // Reset on modal close
-  modal.addEventListener("hidden.bs.modal", () => {
-    slots.forEach((slot, idx) => clearSlot(slot, idx === 0));
-  }, { once: true });
-}
-
-  // ===== Event Delegation =====
-document.addEventListener("DOMContentLoaded", () => {
-  // Find the gallery modal explicitly
-  const galleryModal = document.getElementById("galleryManagerModal");
-  if (!galleryModal) return;
-
-  const galleryGrid = galleryModal.querySelector("#galleryGrid");
-  if (!galleryGrid) {
-    console.warn("Gallery Grid not found in Gallery Manager Modal!");
-    return;
-  }
-
-  // Now attach the event listener only to the gallery modal's grid
-  galleryGrid.addEventListener("click", (e) => {
-    const slot = e.target.closest(".gallery-slot");
-    if (!slot) return;
-
-    // Ignore clicks on caption input
-    if (e.target.closest(".caption-input")) return;
-
-    // Set Main
-    if (e.target.closest(".set-main")) {
-      const gallerySlots = Array.from(galleryGrid.querySelectorAll(".gallery-slot"));
-      const idx = gallerySlots.indexOf(slot);
-      if (idx === 0) return console.warn("⚠️ Cannot set thumbnail as main.");
-
-      // Remove main badge from all other slots
-      gallerySlots.forEach((s, i) => {
-        if (i === 0 || s === slot) return;
-        const mb = s.querySelector(".main-badge");
-        if (mb) mb.remove();
-      });
-
-      // Add badge to clicked slot if not present
-      const box = slot.querySelector(".slot-image-container");
-      if (!box.querySelector(".main-badge")) {
+      buttons.innerHTML = `
+        <button type="button" class="btn btn-sm btn-outline-warning set-main">⭐</button>
+        <button type="button" class="btn btn-sm btn-outline-danger delete-image">🗑</button>`;
+      if (data.isMain) {
         const mainBadge = document.createElement("span");
         mainBadge.className = "slot-badge main-badge";
         mainBadge.textContent = "⭐ Main";
-        box.appendChild(mainBadge);
+        imgContainer.appendChild(mainBadge);
       }
-      return;
+    } else {
+      slot.classList.add("empty");
+      imgContainer.textContent = "+ Add Image";
     }
-
-    // Delete
-    if (e.target.closest(".delete-image")) {
-      const gallerySlots = Array.from(galleryGrid.querySelectorAll(".gallery-slot"));
-      const idx = gallerySlots.indexOf(slot);
-      clearSlot(slot, idx === 0);
-      return;
-    }
-
-    // Open file picker for empty space or image (not main badge)
-    if (!e.target.closest(".main-badge")) {
-      openFilePickerForSlot(slot);
-    }
-  });
-});
+    slot.file = data?.file || null;
+  }
 
   // ===== File Handling =====
   function openFilePickerForSlot(slot) {
     const input = document.createElement("input");
     input.type = "file";
     input.accept = "image/*";
-    input.click();
     input.addEventListener("change", () => {
       const file = input.files[0];
       if (file && file.type.startsWith("image/")) handleFile(file, slot);
     });
+    input.click();
   }
 
   function handleFile(file, slot) {
     const reader = new FileReader();
     reader.onload = (ev) => {
       const imgContainer = slot.querySelector(".slot-image-container");
-      imgContainer.innerHTML = "";
-      const img = document.createElement("img");
-      img.src = ev.target.result;
-      imgContainer.appendChild(img);
-
-      const idx = gallerySlots.indexOf(slot);
-      if (idx !== 0) {
-        const buttons = slot.querySelector(".slot-buttons");
-        if (!buttons.querySelector(".set-main")) {
-          const btnStar = document.createElement("button");
-          btnStar.type = "button";
-          btnStar.className = "btn btn-sm btn-outline-warning set-main";
-          btnStar.textContent = "⭐";
-          buttons.appendChild(btnStar);
-        }
-        if (!buttons.querySelector(".delete-image")) {
-          const btnDel = document.createElement("button");
-          btnDel.type = "button";
-          btnDel.className = "btn btn-sm btn-outline-danger delete-image";
-          btnDel.textContent = "🗑";
-          buttons.appendChild(btnDel);
-        }
+      imgContainer.innerHTML = `<img src="${ev.target.result}" alt="Uploaded Image">`;
+      const buttons = slot.querySelector(".slot-buttons");
+      if (buttons && !buttons.querySelector(".set-main")) {
+        buttons.innerHTML = `
+          <button type="button" class="btn btn-sm btn-outline-warning set-main">⭐</button>
+          <button type="button" class="btn btn-sm btn-outline-danger delete-image">🗑</button>`;
       }
-
       slot.file = file;
+      slot.classList.remove("empty");
+      normalizeGallerySlots();
     };
     reader.readAsDataURL(file);
   }
 
+  // ===== Click Handlers =====
+  galleryGrid.addEventListener("click", (e) => {
+    const slot = e.target.closest(".gallery-slot");
+    if (!slot || e.target.closest(".caption-input")) return;
+    // Set Main
+    if (e.target.closest(".set-main")) {
+      gallerySlots.slice(1).forEach(s => s.querySelector(".main-badge")?.remove());
+      const box = slot.querySelector(".slot-image-container");
+      if (!box.querySelector(".main-badge")) {
+        const badge = document.createElement("span");
+        badge.className = "slot-badge main-badge";
+        badge.textContent = "⭐ Main";
+        box.appendChild(badge);
+      }
+      return;
+    }
+    // Delete
+    if (e.target.closest(".delete-image")) {
+      const idx = gallerySlots.indexOf(slot);
+      clearSlot(slot, idx === 0);
+      normalizeGallerySlots();
+      return;
+    }
+    // Add / Replace Image
+    if (!e.target.closest(".main-badge")) openFilePickerForSlot(slot);
+  });
+
   // ===== Collect State =====
   function collectState() {
+    const normalSlots = gallerySlots.slice(1); // slots 1–7
+    const images = normalSlots
+      .filter(slot => slot.file || slot.querySelector("img"))
+      .map(slot => ({
+        slot,
+        img: slot.querySelector(".slot-image-container img"),
+        file: slot.file,
+        caption: slot.querySelector(".caption-input")?.value || "",
+        isMain: !!slot.querySelector(".main-badge"),
+      }));
+
+    // Find the main image
+    let mainImage = images.find(i => i.isMain);
+    if (!mainImage && images.length) mainImage = images[0]; // default to first image
+
+    // Put main image first
+    const ordered = [mainImage, ...images.filter(i => i !== mainImage)];
+
+    // Clear all slots first
+    normalSlots.forEach(slot => clearSlot(slot, false));
+
+    // Render ordered images into slots
+    ordered.forEach((data, idx) => {
+      const slot = normalSlots[idx];
+      slot.file = data.file;
+
+      // Append existing img element or uploaded image
+      const imgContainer = slot.querySelector(".slot-image-container");
+      imgContainer.innerHTML = "";
+      if (data.img) imgContainer.appendChild(data.img);
+
+      // Caption input
+      const captionDiv = slot.querySelector(".slot-caption input");
+      if (captionDiv) captionDiv.value = data.caption;
+
+      // Main badge
+      slot.querySelector(".main-badge")?.remove();
+      if (data === mainImage) {
+        const badge = document.createElement("span");
+        badge.className = "slot-badge main-badge";
+        badge.textContent = "⭐ Main";
+        imgContainer.appendChild(badge);
+      }
+
+      slot.classList.remove("empty");
+    });
+
+    // Return full state including thumbnail (slot0)
     return gallerySlots.map((slot, idx) => {
       const img = slot.querySelector(".slot-image-container img");
-      const caption = slot.querySelector(".caption-input")?.value || "";
       return {
         file: slot.file || null,
         url: img ? img.src : null,
-        caption,
+        caption: slot.querySelector(".caption-input")?.value || "",
         isThumbnail: idx === 0,
         isMain: idx !== 0 && !!slot.querySelector(".main-badge"),
-        sortOrder: idx + 1
+        sortOrder: idx + 1,
       };
     });
   }
 
-if (saveButton) {
-  saveButton.addEventListener("click", async () => {
-    console.log("========================================");
-    console.log("💾 Save Gallery START");
-    console.log("🆔 Current Product ID:", currentProdID);
-    console.log("🏷️ Current Product Name:", currentProductName);
+  // ===== Normalize Slots (compact + isMain) =====
+  function normalizeGallerySlots() {
+    const slots = gallerySlots.slice(1); // slots 1–7
+    // Include slots that have either a file or an <img> anywhere inside the slot
+    const images = slots.filter(s => s.file || s.querySelector(".slot-image-container img"));
 
-    if (!currentProdID) {
-      console.warn("⚠️ No product selected. Aborting save.");
-      return showToast?.("⚠️ No product selected", "warning");
-    }
+    if (!images.length) return; // nothing to normalize
 
-    const state = collectState();
-    console.log("📥 Collected gallery state from frontend:", JSON.stringify(state, null, 2));
+    // Find main image
+    let mainSlot = images.find(s => s.querySelector(".main-badge"));
+    if (!mainSlot) mainSlot = images[0]; // default to first image
 
-    const payload = {
-      system: "galleries",
-      action: "edit",
-      prodID: currentProdID,
-      productName: currentProductName,
-      thumbnail: null,
-      images: []
-    };
-
-    // ----- Handle Thumbnail (Slot 0) -----
-    const thumb = state[0];
-
-    if (thumb.file) {
-      // User uploaded a new thumbnail
-      payload.thumbnail = {
-        fileName: thumb.file.name,
-        fileMime: thumb.file.type,
-        fileData: await fileToBase64(thumb.file),
-        caption: thumb.caption,
-        sortOrder: 1,
-        isMain: true
-      };
-      console.log("📌Thumbnail from file:", payload.thumbnail.fileName);
-
-    } else if (thumb.url) {
-      // Existing URL from backend (previously saved thumbnail)
-      payload.thumbnail = {
-        url: thumb.url,
-        caption: thumb.caption,
-        sortOrder: 1,
-        isMain: true
-      };
-      console.log("📌Thumbnail from URL:", payload.thumbnail.url);
-
-    } else {
-      // NO thumbnail—do NOT send anything
-      payload.thumbnail = null;
-      console.warn("⚠️ No thumbnail selected, slot0 is empty. Nothing will be sent for thumbnail.");
-    }
-
-    // ----- Handle Remaining Images (slots 1+) -----
-    const otherImgs = await Promise.all(
-      state.slice(1).map((img, idx) => {
-        if (img.file) {
-          return fileToBase64(img.file).then(b64 => ({
-            fileName: img.file.name,
-            fileMime: img.file.type,
-            fileData: b64,
-            caption: img.caption,
-            sortOrder: idx + 2,
-            isMain: img.isMain
-          }));
-        } else if (img.url) {
-          return {
-            url: img.url,
-            caption: img.caption,
-            sortOrder: idx + 2,
-            isMain: img.isMain
-          };
+    // Rebuild slots 1–7 in order
+    images.forEach((slot, idx) => {
+      const container = slot.querySelector(".slot-image-container");
+      const badge = container.querySelector(".main-badge");
+      if (slot === mainSlot) {
+        if (!badge) {
+          const mainBadge = document.createElement("span");
+          mainBadge.className = "slot-badge main-badge";
+          mainBadge.textContent = "⭐ Main";
+          container.appendChild(mainBadge);
         }
-        console.log(`🕳️ Slot ${idx + 1} is empty, skipping.`);
-        return null;
-      })
-    ).then(arr => arr.filter(Boolean));
+      } else badge?.remove();
+    });
 
-    payload.images = otherImgs; // <-- DO NOT push thumbnail again
+    for (let i = 0; i < 7; i++) {
+      const slot = slots[i];
+      const imgSlot = images[i] || null;
 
-    console.log("📦 Final payload to send:", JSON.stringify(payload, null, 2));
-
-    // ----- Send Payload -----
-    try {
-      if (typeof toggleLoader === "function") toggleLoader(true);
-      console.log("🌐 Sending payload to backend...");
-
-      const res = await fetch(scriptURL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-
-      const result = await res.json();
-      console.log("📤 Server response:", result);
-
-    if (result.success) {
-      console.log("✅ Gallery saved successfully!");
-      showToast?.("✅ Gallery saved!", "success");
-      if (result.gallery) {
-        populateGalleryModal(result.gallery, currentProdID, currentProductName);
+      if (imgSlot) {
+        slot.innerHTML = imgSlot.innerHTML;
+        slot.file = imgSlot.file || null;
+        slot.classList.remove("empty");
+      } else {
+        clearSlot(slot, false);
       }
-    } else {
-      console.warn("❌ Save failed:", result.message);
-      showToast?.(result.message || "❌ Error saving gallery", "danger");
     }
-    } catch (err) {
-      console.error("❌ Network / Save error:", err);
-      showToast?.("❌ Network error saving gallery", "danger");
-    } finally {
-      if (typeof toggleLoader === "function") toggleLoader(false);
-      console.log("💾 Save Gallery END");
-      console.log("========================================");
-    }
-  });
-}
+  }
 
-  // ===== Open Gallery Modal =====
+  // ===== Open Modal =====
   document.body.addEventListener("click", async (e) => {
     const btn = e.target.closest(".openGalleryBtn");
     if (!btn) return;
-
     const productCard = btn.closest(".product-accordion");
     if (!productCard) return;
-
     currentProdID = productCard.dataset.prodId;
     currentProductName =
       productCard.querySelector(".productName-input")?.value ||
       productCard.querySelector(".productName-header")?.textContent ||
       "Unnamed Product";
-
-    openGalleryModal(currentProdID, currentProductName);
+    await openGalleryModal(currentProdID, currentProductName);
   });
 
-// ===== Open Gallery Modal =====
-async function openGalleryModal(prodID, productName) {
-  currentProdID = prodID;
-  currentProductName = productName;
-
-  const modal = document.getElementById("galleryManagerModal");
-  if (!modal) {
-    console.error("Gallery modal not found in DOM!");
-    return;
-  }
-
-  const modalHeaderSpan = modal.querySelector(".modal-title span");
-  if (modalHeaderSpan) modalHeaderSpan.textContent = productName;
-
-  createSlots(); // Always 8 empty slots
-
-  try {
-    toggleLoader(true); // Show loader immediately
-
-    console.log("Fetching gallery for prodID:", prodID);
-    const res = await fetch(`${scriptURL}?action=getGalleryByProdId&prodID=${prodID}`);
-    const data = await res.json();
-    console.log("Raw data from backend:", data);
-
-    const gallery = data?.success ? data.gallery : { thumbnail: null, images: [] };
-    console.log("Gallery object used for rendering:", gallery);
-
-    // --- Render thumbnail (slot0) ---
-    renderSlot(gallerySlots[0], gallery.thumbnail || null, 0);
-
-    // --- Render remaining images (slots 1–7) ---
-    for (let i = 1; i < 8; i++) {
-      const imgData = gallery.images?.[i - 1] || null;
-      renderSlot(gallerySlots[i], imgData, i);
+  async function openGalleryModal(prodID, productName) {
+    currentProdID = prodID;
+    currentProductName = productName;
+    createSlots(8);
+    try {
+      toggleLoader?.(true);
+      const res = await fetch(`${scriptURL}?action=getGalleryByProdId&prodID=${prodID}`);
+      const data = await res.json();
+      const gallery = data?.success ? data.gallery : { thumbnail: null, images: [] };
+      renderSlot(gallerySlots[0], gallery.thumbnail || null, 0);
+      for (let i = 1; i < 8; i++) renderSlot(gallerySlots[i], gallery.images?.[i - 1] || null, i);
+      normalizeGallerySlots();
+    } catch (err) {
+      console.error("Error fetching gallery:", err);
+      gallerySlots.forEach((slot, idx) => renderSlot(slot, null, idx));
+      showToast?.("⚠️ Error loading gallery", "danger");
+    } finally {
+      toggleLoader?.(false);
     }
-  } catch (err) {
-    console.error("Error fetching gallery:", err);
-    gallerySlots.forEach((slot, idx) => renderSlot(slot, null, idx));
-    showToast("⚠️ Error loading gallery", "danger");
-  } finally {
-    toggleLoader(false); // Always hide loader before modal opens
-  }
-
-  new bootstrap.Modal(modal).show();
-
+    new bootstrap.Modal(modal).show();
     modal.addEventListener("hidden.bs.modal", () => {
       gallerySlots.forEach((slot, idx) => clearSlot(slot, idx === 0));
       currentProdID = null;
       currentProductName = "";
+    }, { once: true });
+  }
+
+// ===== Save =====
+saveButton?.addEventListener("click", async () => {
+  if (!currentProdID) return showToast?.("⚠️ No product selected", "warning");
+
+  const state = collectState();
+  const payload = {
+    system: "galleries",
+    action: "edit",
+    prodID: currentProdID,
+    productName: currentProductName,
+    thumbnail: null,
+    images: []
+  };
+
+  const thumb = state[0];
+  if (thumb.file) payload.thumbnail = {
+    fileName: thumb.file.name,
+    fileMime: thumb.file.type,
+    fileData: await fileToBase64(thumb.file),
+    caption: thumb.caption,
+    sortOrder: 1,
+    isMain: true
+  };
+  else if (thumb.url) payload.thumbnail = {
+    url: thumb.url,
+    caption: thumb.caption,
+    sortOrder: 1,
+    isMain: true
+  };
+
+  payload.images = await Promise.all(state.slice(1).map(async (img, idx) => {
+    if (img.file) return {
+      fileName: img.file.name,
+      fileMime: img.file.type,
+      fileData: await fileToBase64(img.file),
+      caption: img.caption,
+      sortOrder: idx + 2,
+      isMain: img.isMain
+    };
+    if (img.url) return {
+      url: img.url,
+      caption: img.caption,
+      sortOrder: idx + 2,
+      isMain: img.isMain
+    };
+    return null;
+  })).then(arr => arr.filter(Boolean));
+
+  try {
+    toggleLoader?.(true);
+    const res = await fetch(scriptURL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
     });
+    const result = await res.json();
+
+    if (result.success) {
+      showToast?.("✅ Gallery saved!", "success");
+
+      // Close the modal
+      const bsModal = bootstrap.Modal.getInstance(document.getElementById("galleryManagerModal"));
+      bsModal?.hide();
+
+    } else showToast?.(result.message || "❌ Error saving gallery", "danger");
+
+  } catch (err) {
+    console.error(err);
+    showToast?.("❌ Network error saving gallery", "danger");
+  } finally {
+    toggleLoader?.(false);
   }
 });
 
+  // ===== Drag & Drop =====
+  let draggedSlot = null, placeholder = null;
+  galleryGrid.addEventListener("dragstart", e => {
+    const slot = e.target.closest(".gallery-slot");
+    if (!slot || slot.dataset.index === "0" || slot.classList.contains("empty")) return;
+    draggedSlot = slot;
+    e.dataTransfer.effectAllowed = "move";
+    slot.classList.add("dragging");
+    placeholder = document.createElement("div");
+    placeholder.className = "gallery-slot placeholder";
+    placeholder.style.height = `${slot.offsetHeight}px`;
+    placeholder.style.width = `${slot.offsetWidth}px`;
+    slot.parentNode.insertBefore(placeholder, slot.nextSibling);
+  });
+  galleryGrid.addEventListener("dragover", e => {
+    e.preventDefault();
+    const target = e.target.closest(".gallery-slot");
+    if (!draggedSlot || !target || target === draggedSlot || target.dataset.index==="0") return;
+    const rect = target.getBoundingClientRect();
+    const next = e.clientY - rect.top > rect.height/2 ? target.nextSibling : target;
+    galleryGrid.insertBefore(placeholder, next);
+  });
+  galleryGrid.addEventListener("drop", e => {
+    e.preventDefault();
+    if (!placeholder || !draggedSlot) return;
+    galleryGrid.insertBefore(draggedSlot, placeholder);
+    draggedSlot.classList.remove("dragging");
+    placeholder.remove();
+    placeholder = null;
+    draggedSlot = null;
+    gallerySlots = Array.from(galleryGrid.querySelectorAll(".gallery-slot"));
+    gallerySlots.forEach((s,i)=>s.dataset.index=i);
+    normalizeGallerySlots();
+  });
+  galleryGrid.addEventListener("dragend", e => {
+    if (draggedSlot) draggedSlot.classList.remove("dragging");
+    placeholder?.remove();
+    draggedSlot = null;
+    placeholder = null;
+  });
+});
