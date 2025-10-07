@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Main Admin Page</title>
-</head>
   
 <style>
 
@@ -148,10 +147,11 @@
 
 </style>
 
+</head>
 
 <body class="d-flex flex-column" style="height: 100vh; overflow: hidden;">
 <div id="header-placeholder"></div>
-<iframe id="content-frame" src="dashboard.html"></iframe>
+<iframe id="content-frame" src="dashboardglobaltest.html"></iframe>
 <div id="footer-placeholder"></div>
 
 <!-- 🔍 Backend Debug Modal -->
@@ -187,7 +187,7 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  loadInclude("header-placeholder", "header-admin.html", () => {
+  loadInclude("header-placeholder", "headerglobaltest.html", () => {
     attachDropdownHandlers();
     setupNavbarCollapseFix();
     setupNavbarHover();
@@ -197,7 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // setInterval(checkNewLeads, 60000);
   });
 
-  loadInclude("footer-placeholder", "footer-admin.html");
+  loadInclude("footer-placeholder", "footerglobaltest.html");
 });
 
 function loadInclude(id, file, callback) {

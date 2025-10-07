@@ -43,14 +43,8 @@
 </style>
 </head>
 <body class="page-body" style="min-height:100vh;" data-element="page-bg">
-
-<!-- Watermark -->
 <div class="watermark"></div>
-
-<!-- Toast Notifications -->
 <div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3"></div>
-
-<!-- Loader -->
 <div id="loadingOverlay" class="d-none">
   <div class="text-center">
     <div class="spinner-border" role="status"></div>
@@ -84,7 +78,10 @@
   </div>
 </div>
 
-<script src="config.js"></script>
+<script type="module" src="global.js"></script>
+<!-- <script type="module" src="client.js"></script> -->
+<script type="module" src="admin.js"></script>
+
 <script>
 const maxFiles = 5;
 let filesArray = [];
@@ -97,6 +94,7 @@ const userSelect = document.getElementById("userSelect");
 function updateUploadButton() {
   uploadBtn.disabled = !filesArray.length || !userSelect.value;
 }
+
 function getFileIcon(fileName) {
   const ext = fileName.split('.').pop().toLowerCase();
   const icons = { pdf:'📄', doc:'📄', docx:'📄', txt:'📝', xls:'📊', xlsx:'📊', csv:'📊', ppt:'📈', pptx:'📈', default:'📁' };

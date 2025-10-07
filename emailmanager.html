@@ -2,22 +2,15 @@
 <html>
 <head>
   <title>Email Manager</title>
-  <style>
-    #emailBody {
-      height: 200px;
-    }
-  </style>
 </head>
-<!-- Theme -->
+<style>
+  #emailBody {
+    height: 200px;
+  }
+</style>
 <body class="theme-dark p-4">
-
-<!-- 💧 Watermark -->
 <div class="watermark"></div>
-
-<!-- 🔔 Toast Notifications -->
 <div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3"></div>
-
-<!-- ⏳ Loader -->
 <div id="loadingOverlay" class="d-none">
   <div class="text-center">
     <div class="spinner-border" role="status"></div>
@@ -139,7 +132,9 @@
     </div>
   </div>
 
-<script src="config.js"></script> <!-- this has all my glogal functions, variables and constants including scripturl -->
+<script type="module" src="global.js"></script>
+<!-- <script type="module" src="client.js"></script> -->
+<script type="module" src="admin.js"></script>
 
 <script>
 let templates = {};

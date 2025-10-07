@@ -6,6 +6,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>New Product Manager</title>
+</head>
 
 <style>
 .part-rows input.qty-input::-webkit-inner-spin-button, .part-rows input.qty-input::-webkit-outer-spin-button, #part-rows input.qty-input::-webkit-inner-spin-button, #part-rows input.qty-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
@@ -31,8 +32,6 @@
 .gallery-slot.dragging { opacity: 0.45; border: 2px dashed #0dcaf0; transform: scale(1.05) rotate(2deg); box-shadow: 0 0 35px rgba(13, 202, 240, 0.95); z-index: 50; }
 .gallery-slot.placeholder { background: #eaf7ff; border: 2px dashed #0dcaf0; opacity: 0.7; transform: scale(1.02); transition: all 0.15s ease; }
 </style>
-
-</head>
 
 <body class="page-body" style="min-height:100vh;" data-element="page-bg">
 <!-- 💧 Watermark -->
@@ -333,7 +332,9 @@
   </div>
 </div>
 
-<script src="config.js" defer></script> <!-- this has all my glogal functions, variables and constants including scripturl -->
+<script type="module" src="global.js"></script>
+<!-- <script type="module" src="client.js"></script> -->
+<script type="module" src="admin.js"></script>
 <script src="productmanager.js" defer></script>
 <script src="gallerymanager.js"></script>
 

@@ -4,16 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Quote Manager</title>
-  <style>
-  </style>
 </head>
+<style>
+</style>
 <body class="theme-dark">
 <div class="watermark"></div>
-
-<!-- Notification Toasts -->
 <div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3"></div>
-
-<!-- Loader -->
 <div id="loadingOverlay" class="d-none">
   <div class="text-center">
     <div class="spinner-border" role="status"></div>
@@ -1075,6 +1071,11 @@
   </div>
 </div>
 
+<script type="module" src="global.js"></script>
+<!-- <script type="module" src="client.js"></script> -->
+<script type="module" src="admin.js"></script>
+<script src="quotemanager.js"></script>
+
 <script>
 
 // Function to open the URL in a new tab
@@ -1124,10 +1125,5 @@ window.addEventListener('DOMContentLoaded', () => {
 
 </script>
   
-<script src="config.js"></script> <!-- this has all my glogal functions, variables and constants including scripturl -->
-<script src="quotemanager.js"></script>
-
-<!-- </script> -->
-
 </body>
 </html>
