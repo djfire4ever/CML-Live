@@ -1,6 +1,7 @@
-// Restore Point 11:30PM 9/2/2025
+// Restore Point 9/28/2025 6:30 PM
 
-// ----- Global Config -----
+// ====== Global Config & State ======
+
 const SELECTORS = {
   searchInput: "searchInput",
   resultsContainer: "productSearchResults",
@@ -14,56 +15,67 @@ const SELECTORS = {
 };
 
 let productData = [];
-let materialData = {}; // matID -> { matID, name, unitPrice }
-let materialByName = {}; // name -> material object (fast lookup)
+let materialData = {};   // matID -> { matID, name, unitPrice, ... }
+let materialByName = {}; // name -> material object
 const maxParts = 15;
 
 function roundUpToStep(value, step = 0.05) {
   return Math.ceil(value / step) * step;
 }
 
-// ----- DOM Ready -----
-document.addEventListener("DOMContentLoaded", async () => {
-  const searchInput = document.getElementById(SELECTORS.searchInput);
-  if (!searchInput) return;
+// ====== Attach autogrow to textarea ======
+function attachAutogrow(textarea) {
+  if (!textarea || textarea.tagName !== 'TEXTAREA') return;
 
-  await loadMaterialData();
-  await loadProducts();
-  await loadDropdowns();
+  const BUFFER_PX = 3;
+  const initialRows = parseInt(textarea.getAttribute('rows'), 10) || 1;
 
-  searchInput.addEventListener("input", renderResults);
-  renderResults();          // initial render
-  setupAddProductForm();
+  const autoGrow = () => {
+    textarea.style.height = 'auto';
+    textarea.style.height = (textarea.scrollHeight + BUFFER_PX) + 'px';
+  };
 
-  // Live totals for any part row input
-  document.addEventListener("input", (e) => {
-    const el = e.target;
-    if (!el || !el.closest) return;
-    if (el.matches(".part-input, .qty-input, input.totalRowCost, input.totalRowRetail")) {
-      const partsContainer = el.closest(".part-rows");
-      if (partsContainer) recalculateTotals(partsContainer);
+  textarea.addEventListener('input', autoGrow);
+  textarea.addEventListener('focus', autoGrow);
+
+  const ensureVisibleAndGrow = () => {
+    const visible = textarea.offsetParent !== null && getComputedStyle(textarea).display !== 'none';
+    if (visible) {
+      autoGrow();
+      return;
     }
-  });
+    const mo = new MutationObserver(() => {
+      if (textarea.offsetParent !== null && getComputedStyle(textarea).display !== 'none') {
+        autoGrow();
+        mo.disconnect();
+      }
+    });
+    mo.observe(textarea, { attributes: true, attributeFilter: ['class', 'style'] });
+    const fallbackId = setInterval(() => {
+      if (textarea.offsetParent !== null && getComputedStyle(textarea).display !== 'none') {
+        autoGrow();
+        clearInterval(fallbackId);
+        mo.disconnect();
+      }
+    }, 50);
+    setTimeout(() => clearInterval(fallbackId), 3000);
+  };
 
-  document.addEventListener("change", (e) => {
-    const el = e.target;
-    if (!el || !el.closest) return;
-    if (el.matches(".part-input, .qty-input")) {
-      const partsContainer = el.closest(".part-rows");
-      if (partsContainer) recalculateTotals(partsContainer);
-    }
-  });
+  requestAnimationFrame(ensureVisibleAndGrow);
 
-  // Show all datalist options on focus
-  document.addEventListener("focusin", (e) => {
-    const t = e.target;
-    if (t?.tagName === "INPUT" && t.hasAttribute("list") && t.value) {
-      const val = t.value;
-      t.value = "";
-      setTimeout(() => { t.value = val; t.setSelectionRange?.(val.length, val.length); }, 0);
-    }
-  });
-});
+  const form = textarea.closest('form');
+  if (form) {
+    const origReset = form.reset.bind(form);
+    form.reset = function () {
+      origReset();
+      textarea.rows = initialRows;
+      textarea.style.height = '';
+      setTimeout(() => autoGrow(), 0);
+    };
+  }
+
+  return autoGrow;
+}
 
 // ----- Load Products -----
 async function loadProducts() {
@@ -96,6 +108,7 @@ async function loadProducts() {
         prodID: product[0],
         productName: product[1],
         productType: product[2],
+        thumbnailURL: product[3] || "",  // <-- changed from compTime
         parts,
         description: product[5],
         cost: parseFloat(product[6]) || 0,
@@ -150,432 +163,522 @@ async function loadMaterialData() {
   }
 }
 
-// ----- Render Products Accordion -----
-function renderResults() {
+// ====== DOM Ready (Unified Product Card Approach) ======
+document.addEventListener("DOMContentLoaded", async () => {
   const searchInput = document.getElementById(SELECTORS.searchInput);
   const resultsContainer = document.getElementById(SELECTORS.resultsContainer);
+  if (!searchInput || !resultsContainer) return;
+
+  // --- Load data ---
+  await loadMaterialData();
+  await loadProducts();
+  // loadDropdowns(); // optional if already loaded globally
+
+  // --- Render only the Add card initially ---
+  renderProductCard(null);
+
+  // --- Initialize counters ---
+  const totalCounter = document.getElementById("totalCounter");
+  const searchCounter = document.getElementById("searchCounter");
+  if (totalCounter) totalCounter.textContent = String(productData.length);
+  if (searchCounter) searchCounter.textContent = "0"; // no results yet
+
+  // --- Live search filtering ---
+  searchInput.addEventListener("input", () => {
+    const query = (searchInput.value || "").toLowerCase().trim();
+    const words = query.split(/\s+/).filter(Boolean);
+
+    resultsContainer.innerHTML = "";
+    renderProductCard(null); // always render Add card first
+
+    if (query) {
+      const filtered = productData.filter(prod =>
+        words.every(w =>
+          Object.values(prod).some(val => (val?.toString() || "").toLowerCase().includes(w))
+        )
+      );
+
+      filtered.forEach(p => renderProductCard(p));
+
+      if (searchCounter) searchCounter.textContent = String(filtered.length);
+    } else {
+      if (searchCounter) searchCounter.textContent = "0";
+    }
+
+    if (totalCounter) totalCounter.textContent = String(productData.length);
+  });
+
+  // Scroll card into center when accordion finishes expanding
+  document.addEventListener("shown.bs.collapse", (e) => {
+    const card = e.target.closest(".accordion-item.product-accordion");
+    if (!card) return;
+
+    card.scrollIntoView({ behavior: "smooth", block: "center" });
+  });
+
+  // ===== Delegated Click Handling =====
+  document.addEventListener("click", async (e) => {
+    const btn = e.target.closest("button");
+    if (!btn) return;
+
+    const card = btn.closest(".accordion-item.product-accordion");
+    if (!card) return;
+
+    const partsContainer = card.querySelector(".part-rows");
+    const beforeDeleteBtn = card.querySelector(".before-delete-button");
+    const deleteBtn = card.querySelector(".delete-button");
+    const saveBtn = card.querySelector(".save-button");
+
+    const isAddCard = !card.dataset.prodId; // Add card detection
+
+    // --- Edit / Cancel ---
+    if (btn.classList.contains("edit-button")) enableEditToggle(card, true, isAddCard);
+    if (btn.classList.contains("cancel-button")) enableEditToggle(card, false, isAddCard);
+
+    // --- +Part ---
+    if (btn.classList.contains("addPartBtn") && partsContainer) {
+      if (partsContainer.querySelectorAll(".part-row").length >= maxParts) {
+        return showToast("⚠️ Max parts reached", "warning");
+      }
+      addPartRow(partsContainer, "", 0, 0, 0, true);
+      recalculateTotals(partsContainer);
+      if (saveBtn) saveBtn.disabled = false;
+    }
+
+    // --- Remove Part ---
+    if (btn.classList.contains("remove-part") && partsContainer) {
+      const row = btn.closest(".part-row");
+      if (row) {
+        row.remove();
+        recalculateTotals(partsContainer);
+        if (saveBtn) saveBtn.disabled = false;
+      }
+    }
+
+    // --- Save (Add / Edit) ---
+    if (btn.classList.contains("save-button")) {
+      const prodID = card.dataset.prodId;
+      const isNew = !prodID;
+
+      const partsArray = Array.from(card.querySelectorAll(".part-row")).map(row => ({
+        matName: row.querySelector(".part-input")?.value || "",
+        qty: parseFloat(row.querySelector(".qty-input")?.value) || 0,
+        cost: parseFloat(row.querySelector(".totalRowCost")?.dataset.raw) || 0,
+        retail: parseFloat(row.querySelector(".totalRowRetail")?.dataset.raw) || 0
+      }));
+
+      const totalCostNumeric = partsArray.reduce((sum, p) => sum + p.cost, 0);
+      const totalRetailNumeric = partsArray.reduce((sum, p) => sum + p.retail, 0);
+
+      const productInfo = {
+        productName: card.querySelector(".productName-input")?.value.trim(),
+        productType: card.querySelector(".productType-input")?.value.trim(),
+        description: card.querySelector(".description-input")?.value.trim(),
+        parts: partsArray,
+        partsJSON: isNew ? partsArray : JSON.stringify(partsArray),
+        cost: totalCostNumeric,
+        retail: totalRetailNumeric
+      };
+
+      try {
+        toggleLoader(true);
+        const res = await fetch(scriptURL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            system: "products",
+            action: isNew ? "add" : "edit",
+            ...(isNew ? { productInfo } : { prodID, productInfo })
+          })
+        });
+
+        const result = await res.json();
+
+        if (result.success) {
+          showToast(isNew ? "✅ Product added!" : "✅ Product updated!", "success");
+          if (isNew) card.dataset.prodId = result.prodID;
+          enableEditToggle(card, false, isAddCard);
+
+          await loadProducts();
+          refreshSearchResults(result.prodID);
+
+        } else {
+          showToast(result.message || "❌ Error saving product", "error");
+        }
+      } catch (err) {
+        console.error(err);
+        showToast("❌ Network error saving product", "error");
+      } finally {
+        toggleLoader(false);
+      }
+    }
+
+    // --- Delete Confirm ---
+    if (btn === beforeDeleteBtn) {
+      const isDelete = beforeDeleteBtn.dataset.buttonState === "delete";
+      beforeDeleteBtn.textContent = isDelete ? "Cancel" : "Delete";
+      beforeDeleteBtn.dataset.buttonState = isDelete ? "cancel" : "delete";
+      if (deleteBtn) deleteBtn.classList.toggle("d-none", !isDelete);
+    }
+
+    // --- Delete Action ---
+    if (btn === deleteBtn) {
+      const prodID = card.dataset.prodId;
+      if (!prodID) return showToast("⚠️ Product ID missing", "error");
+
+      toggleLoader(true);
+      try {
+        const res = await fetch(scriptURL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ system: "products", action: "delete", prodID })
+        });
+        const result = await res.json();
+        if (result.success) {
+          showToast("✅ Product deleted!", "success");
+          card.remove();
+
+          await loadProducts();
+          refreshSearchResults();
+
+        } else {
+          showToast("⚠️ Could not delete product.", "error");
+        }
+      } catch (err) {
+        console.error(err);
+        showToast("⚠️ Error deleting product.", "error");
+      } finally {
+        toggleLoader(false);
+      }
+    }
+  });
+});
+
+// ====== Render Product Card ======
+async function renderProductCard(product = null) {
+  const container = document.getElementById(SELECTORS.resultsContainer);
+  if (!container) return;
+
   const template = document.getElementById(SELECTORS.rowTemplate);
-  if (!searchInput || !resultsContainer || !template) return;
+  if (!template) return;
 
-  const query = (searchInput.value || "").toLowerCase().trim();
-  const words = query.split(/\s+/).filter(Boolean);
+  const clone = template.content.cloneNode(true);
+  const wrapper = clone.querySelector(".accordion-item");
+  if (!wrapper) return;
 
-  const filtered = query
-    ? productData.filter(prod => words.every(w =>
-        Object.values(prod).some(val => (val?.toString() || "").toLowerCase().includes(w))
-      ))
-    : productData.slice();
+  const prodID = product?.prodID?.toString() ?? "";
+  if (prodID) wrapper.dataset.prodId = prodID;
 
-  resultsContainer.innerHTML = "";
-
-  filtered.forEach((prod) => {
-    const prodID = prod.prodID?.toString() ?? "";
-    const clone = template.content.cloneNode(true);
-    const wrapper = clone.querySelector(".accordion-item");
-    if (!wrapper) return;
-    wrapper.dataset.prodId = prodID;
-
-    // Wire collapse IDs
-    [["h2.accordion-header", ".accordion-button", ".accordion-collapse", ""],
-     [".parts-accordion h2.accordion-header", ".parts-accordion .accordion-button", ".parts-accordion .accordion-collapse", "parts-"]]
-    .forEach(([header, btnSel, collapseSel, prefix]) => {
-      const h = wrapper.querySelector(header);
-      const b = h ? h.querySelector(".accordion-button") : null;
+  // Wire collapse IDs
+  [["h2.accordion-header", ".accordion-button", ".accordion-collapse", ""],
+   [".parts-accordion h2.accordion-header", ".parts-accordion .accordion-button", ".parts-accordion .accordion-collapse", "parts-"]]
+    .forEach(([headerSel, btnSel, collapseSel, prefix]) => {
+      const h = wrapper.querySelector(headerSel);
       const c = wrapper.querySelector(collapseSel);
       if (!h || !c) return;
-      const hId = `${prefix}heading-${prodID}`;
-      const cId = `${prefix}collapse-${prodID}`;
+      const hId = `${prefix}heading-${prodID || "add"}`;
+      const cId = `${prefix}collapse-${prodID || "add"}`;
       h.id = hId;
-      if (b) b.setAttribute("data-bs-target", `#${cId}`), b.setAttribute("aria-controls", cId);
+      const btn = h.querySelector(".accordion-button");
+      if (btn) {
+        btn.setAttribute("data-bs-target", `#${cId}`);
+        btn.setAttribute("aria-controls", cId);
+      }
       c.id = cId;
       c.setAttribute("aria-labelledby", hId);
       if (!prefix) c.setAttribute("data-bs-parent", `#${SELECTORS.resultsContainer}`);
     });
 
-    // Populate fields
-    const fields = {
-      productName: wrapper.querySelector(".productName"),
-      totalRetail: wrapper.querySelector(".totalRetail"),
-      totalCostBody: wrapper.querySelector(".totalCost-body"),
-      prodID: wrapper.querySelector(".prodID"),
-      productType: wrapper.querySelector(".productType-legend"),
-      prodDate: wrapper.querySelector(".prodDate"),
-      nameBody: wrapper.querySelector(".productName-body"),
-      description: wrapper.querySelector(".description"),
-      totalRetailBody: wrapper.querySelector(".totalRetail-body"),
-      inStockBody: wrapper.querySelector(".inStockValue"),          // body span
-      inStockHeader: wrapper.querySelector(".inStockValue-header") // header span
-    };
+  const partsContainer = wrapper.querySelector(".part-rows");
+  const isAddCard = !product;
 
-    // In renderResults, after selecting the inStock spans:
-    const inStockValue = calculateInStock(prod);
+  if (product) {
+    // Existing product
+    wrapper.querySelector(".productName-header").textContent = product.productName ?? "";
+    wrapper.querySelector(".productName-body").textContent = product.productName ?? "";
+    wrapper.querySelector(".productName-input").value = product.productName ?? "";
+    wrapper.querySelector(".description-body").textContent = product.description ?? "";
+    wrapper.querySelector(".description-input").value = product.description ?? "";
+    wrapper.querySelector(".productType-body").textContent = product.productType ?? "";
+    wrapper.querySelector(".productType-input").value = product.productType ?? "";
+    wrapper.querySelector(".totalRetail-header").textContent = formatCurrency(product.retail ?? 0);
+    wrapper.querySelector(".totalRetail-body").textContent = formatCurrency(product.retail ?? 0);
+    wrapper.querySelector(".inStockValue-header").textContent = calculateInStock(product);
+    wrapper.querySelector(".inStockValue-body").textContent = calculateInStock(product);
 
-    if (fields.inStockBody) {
-      fields.inStockBody.textContent = inStockValue;
-      fields.inStockBody.onclick = () => renderInStockModal(prod);
+    const inStockSpan = wrapper.querySelector(".inStockValue-body");
+    if (inStockSpan) {
+      inStockSpan.dataset.prodIndex = productData.indexOf(product); // or i if in a loop
+      inStockSpan.onclick = () => renderInStockModal(product);
     }
 
-    if (fields.inStockHeader) {
-      fields.inStockHeader.textContent = inStockValue;
-      fields.inStockHeader.onclick = () => renderInStockModal(prod);
-    }
-
-    // Populate other fields
-    if (fields.totalCostBody) fields.totalCostBody.textContent = formatCurrency(prod.cost ?? 0);
-    if (fields.totalRetailBody) fields.totalRetailBody.textContent = formatCurrency(prod.retail ?? 0);
-    if (fields.productName) fields.productName.textContent = prod.productName ?? "";
-    if (fields.totalRetail) fields.totalRetail.textContent = formatCurrency(prod.retail ?? 0);
-    if (fields.prodID) fields.prodID.textContent = prod.prodID ?? "";
-    if (fields.productType) fields.productType.textContent = prod.productType ?? "";
-    if (fields.prodDate) fields.prodDate.textContent = formatDateForUser(prod.lastUpdated) || "—";
-
-    // Prefill editable inputs
-    const editableFields = [
-      { span: fields.nameBody, inputCls: ".productName-input", value: prod.productName },
-      { span: fields.description, inputCls: ".description-input", value: prod.description },
-      { span: fields.productType, inputCls: ".productType-input", value: prod.productType }
-    ];
-    editableFields.forEach(f => {
-      if (!f.span) return;
-      f.span.textContent = f.value ?? "";
-      const input = wrapper.querySelector(f.inputCls);
-      if (input) {
-        input.value = f.value ?? "";
-        input.classList.add("d-none"); // ensure readonly by default
-        attachAutogrow(input);
-      }
-    });
-
-    // ProductType icon
     const iconElem = wrapper.querySelector(".productType-icon");
     if (iconElem) {
-      iconElem.innerHTML = (prod.productType === "Product")
-        ? '<i class="fa-solid fa-tag text-success"></i>'
-        : prod.productType === "Rental"
-          ? '<i class="fa-solid fa-key text-primary"></i>'
-          : "";
+      iconElem.innerHTML =
+        product.productType === "Product" ? '<i class="fa-solid fa-tag text-success"></i>' :
+        product.productType === "Rental"  ? '<i class="fa-solid fa-key text-primary"></i>' :
+                                            '<i class="fa-solid fa-box-open"></i>';
     }
 
-    // Populate parts (readonly)
-    const partsContainer = wrapper.querySelector(".part-rows");
-    if (partsContainer && Array.isArray(prod.parts)) {
+    const lastUpdated = wrapper.querySelector(".lastUpdated");
+    if (lastUpdated) lastUpdated.textContent = formatDateForUser(product.lastUpdated);
+
+    // Populate parts
+    if (partsContainer && Array.isArray(product.parts)) {
       partsContainer.innerHTML = "";
-      prod.parts.forEach(p => addPartRow(partsContainer, p.matName ?? p.name ?? "", p.qty ?? 0));
-      recalculateTotals(partsContainer);
+      product.parts.forEach(p => 
+        addPartRow(partsContainer,
+                   p.matName ?? "",
+                   parseFloat(p.qty) || 0,
+                   parseFloat(p.cost) || 0,
+                   parseFloat(p.retail) || 0,
+                   false) // read-only
+      );
     }
 
-    // Update parts header count
-    const headerDisplay = wrapper.querySelector(".partrow-header-display");
-    if (headerDisplay && partsContainer) {
-      headerDisplay.textContent = `Parts • ${partsContainer.querySelectorAll(".part-row").length}`;
-    }
+    enableEditToggle(wrapper, false, isAddCard);
 
-    // Add Part button
-    const addPartBtn = wrapper.querySelector(".addPartBtn");
-    if (addPartBtn && partsContainer) {
-      addPartBtn.addEventListener("click", () => {
-        if (partsContainer.querySelectorAll(".part-row").length >= maxParts) return showToast("⚠️ Max parts reached","warning");
-        addPartRow(partsContainer, "", 0, 0, 0, false, true);
-        recalculateTotals(partsContainer);
-        if (headerDisplay) headerDisplay.textContent = `Parts • ${partsContainer.querySelectorAll(".part-row").length}`;
-      });
-    }
+  } else {
+    // Add card
+    wrapper.querySelector(".productName-header").textContent = "➕ Add New Product";
+    wrapper.querySelector(".totalRetail-header").textContent = formatCurrency(0);
+    wrapper.querySelector(".totalRetail-body").textContent = formatCurrency(0);
+    wrapper.querySelector(".inStockValue-header").textContent = "0";
+    wrapper.querySelector(".inStockValue-body").textContent = "0";
+    wrapper.querySelector(".productType-icon").innerHTML = '<i class="fa-solid fa-box-open"></i>';
+    wrapper.querySelector(".lastUpdated").textContent = formatDateForUser(new Date());
 
-    // Wire edit toggle (readonly by default)
-    enableEditToggle(wrapper);
+    if (partsContainer) addPartRow(partsContainer, "", 0, 0, 0, true);
 
-    resultsContainer.appendChild(clone);
-  });
-
-  // Update counters
-  const totalCounter = document.getElementById("totalCounter");
-  if (totalCounter) totalCounter.textContent = String(productData.length);
-  const searchCounter = document.getElementById("searchCounter");
-  if (searchCounter) searchCounter.textContent = String(filtered.length);
-}
-
-// ----- Enable Edit Toggle with Save/Delete wired to backend
-function enableEditToggle(wrapper) {
-  const editBtn = wrapper.querySelector(".edit-button");
-  const saveBtn = wrapper.querySelector(".save-button");
-  const cancelBtn = wrapper.querySelector(".cancel-button");
-  const beforeDeleteBtn = wrapper.querySelector(".before-delete-button");
-  const deleteBtn = wrapper.querySelector(".delete-button");
-
-  if (!editBtn || !saveBtn || !cancelBtn || !beforeDeleteBtn || !deleteBtn) return;
-
-  const fields = {
-    productName: { span: wrapper.querySelector(".productName-body"), input: wrapper.querySelector(".productName-input") },
-    description: { span: wrapper.querySelector(".description"), input: wrapper.querySelector(".description-input") },
-    productType: { span: wrapper.querySelector(".productType-legend"), input: wrapper.querySelector(".productType-input") }
-  };
-
-  const iconElem = wrapper.querySelector(".productType-icon");
-  const partsContainer = wrapper.querySelector(".part-rows");
-  const addPartBtn = wrapper.querySelector(".addPartBtn");
-
-  const toggleEditMode = (editing) => {
-    // Buttons
-    editBtn.classList.toggle("d-none", editing);
-    saveBtn.classList.toggle("d-none", !editing);
-    cancelBtn.classList.toggle("d-none", !editing);
-    saveBtn.disabled = !editing; // initially disabled
-
-    // Main fields
-    Object.values(fields).forEach(f => {
-      if (!f.span || !f.input) return;
-      f.span.classList.toggle("d-none", editing);
-      f.input.classList.toggle("d-none", !editing);
-      if (editing) f.input.value = f.span.textContent.trim();
+    // Hide Delete/Cancel buttons explicitly
+    ["before-delete-button", "delete-button", "cancel-button"].forEach(cls => {
+      const btn = wrapper.querySelector(`.${cls}`);
+      if (btn) btn.classList.add("d-none");
     });
 
-    // Parts rows
-    if (partsContainer) {
-      partsContainer.querySelectorAll(".part-row").forEach((row, rowIndex) => {
-        const nameInput = row.querySelector(".part-input");
-        const qtyInput = row.querySelector(".qty-input");
-        const nameSpan = row.querySelector(".part-name-span");
-        const qtySpan = row.querySelector(".part-qty-span");
-        const costInput = row.querySelector(".totalRowCost");
-        const retailInput = row.querySelector(".totalRowRetail");
-        const costSpan = row.querySelector(".part-cost-span");
-        const retailSpan = row.querySelector(".part-retail-span");
-        const removeBtn = row.querySelector(".remove-part");
+    enableEditToggle(wrapper, true, isAddCard);
+  }
 
-        if (editing) {
-          [nameInput, qtyInput, costInput, retailInput].forEach(el => el && el.classList.remove("d-none"));
-          [nameSpan, qtySpan, costSpan, retailSpan].forEach(el => el && el.classList.add("d-none"));
-          nameInput.value = nameSpan.textContent.trim();
-          qtyInput.value = parseFloat(qtySpan.textContent) || 0;
-          const parsedCost = parseFloat(costInput.dataset.raw || 0);
-          const parsedRetail = parseFloat(retailInput.dataset.raw || 0);
-          costInput.dataset.raw = String(parsedCost);
-          retailInput.dataset.raw = String(parsedRetail);
-          costInput.value = formatCurrency(parsedCost);
-          retailInput.value = formatCurrency(parsedRetail);
+  // ===== Thumbnail Handling =====
+  const imgElem = wrapper.querySelector(".productThumbnail");
+  if (product?.thumbnailURL) {
+    imgElem.src = convertGoogleDriveLink(product.thumbnailURL);
+  } else {
+    imgElem.src = "/images/No_image_available.svg";
+  }
+  imgElem.style.display = "block";
 
-          if (removeBtn) removeBtn.style.display = "";
-        } else {
-          [nameInput, qtyInput, costInput, retailInput].forEach(el => el && el.classList.add("d-none"));
-          [nameSpan, qtySpan, costSpan, retailSpan].forEach(el => el && el.classList.remove("d-none"));
-          nameSpan.textContent = nameInput.value;
-          qtySpan.textContent = qtyInput.value;
-          costSpan.textContent = formatCurrency(parseFloat(costInput.dataset.raw || 0));
-          retailSpan.textContent = formatCurrency(parseFloat(retailInput.dataset.raw || 0));
+  attachAutogrow(wrapper.querySelector(".productName-input"));
+  attachAutogrow(wrapper.querySelector(".description-input"));
 
-          if (removeBtn) removeBtn.style.display = "none";
-        }
+// ===== Product Type Datalist + Icon + Datalist population =====
+const typeInput = wrapper.querySelector(".productType-input");
+const iconElem  = wrapper.querySelector(".productType-icon");
+const typeDatalist = document.getElementById("product-type-selector");
 
-        // Input listeners (enable save + recalc totals)
-        if (editing && !row.dataset.listenersAttached) {
-          if (nameInput) nameInput.addEventListener("input", () => { recalculateTotals(partsContainer); saveBtn.disabled = false; });
-          if (qtyInput) qtyInput.addEventListener("input", () => { recalculateTotals(partsContainer); saveBtn.disabled = false; });
-          if (removeBtn) removeBtn.addEventListener("click", () => { setTimeout(() => recalculateTotals(partsContainer), 0); saveBtn.disabled = false; });
-          row.dataset.listenersAttached = "1";
-        }
-      });
-
-      if (addPartBtn) addPartBtn.style.display = editing ? "" : "none";
-    }
-  };
-
-  const updateIcon = () => {
-    const val = fields.productType.input?.classList.contains("d-none")
-      ? fields.productType.span?.textContent.trim()
-      : fields.productType.input?.value;
-    if (!iconElem) return;
-    iconElem.innerHTML = val === "Product"
-      ? '<i class="fa-solid fa-tag text-success"></i>'
-      : val === "Rental"
-        ? '<i class="fa-solid fa-key text-primary"></i>'
-        : "";
-  };
-
-  // Edit/Cancel
-  editBtn.addEventListener("click", () => { toggleEditMode(true); updateIcon(); });
-  cancelBtn.addEventListener("click", () => { toggleEditMode(false); updateIcon(); });
-
-  // Save wired to backend
-  saveBtn.addEventListener("click", async () => {
-    const prodID = wrapper.dataset.prodId;
-
-    // normalize totals to numeric strings (strip currency formatting)
-    const totalCostEl = partsContainer.querySelector(".totalCost-input");
-    const totalRetailEl = partsContainer.querySelector(".totalRetail-input");
-    const totalCostNumeric = parseFloat((totalCostEl?.textContent || totalCostEl?.value || '').toString().replace(/[^0-9.-]+/g, '')) || 0;
-    const totalRetailNumeric = parseFloat((totalRetailEl?.textContent || totalRetailEl?.value || '').toString().replace(/[^0-9.-]+/g, '')) || 0;
-
-    const partsArray = Array.from(partsContainer.querySelectorAll(".part-row"))
-      .map(r => {
-        const name = r.querySelector(".part-input")?.value.trim() || '';
-        const qtyRaw = r.querySelector(".qty-input")?.value ?? r.querySelector(".part-qty-span")?.textContent ?? '0';
-        const qtyNum = parseFloat(qtyRaw.toString().replace(/[^0-9.-]+/g, '')) || 0;
-        // return qty as string to match Add behavior and other systems
-        return { matName: name, qty: String(qtyNum) };
-      })
-      .filter(p => p.matName && parseFloat(p.qty) > 0);
-
-    const productInfo = {
-      productName: fields.productName.input.value,
-      productType: fields.productType.input.value,
-      description: fields.description.input.value,
-      cost: totalCostNumeric,
-      retail: totalRetailNumeric,
-      parts: partsArray, // raw array for compatibility
-      // Send partsJSON as a JSON string for the edit path. The edit backend
-      // writes productObj[key] directly into the sheet, so sending a string
-      // ensures the cell contains a proper JSON array string (no {key=value} form).
-      partsJSON: JSON.stringify(partsArray)
-    };
-
-    toggleLoader();
-    try {
-      const res = await fetch(scriptURL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ system: "products", action: "edit", prodID, productInfo })
-      });
-      const result = await res.json();
-      if (result.success) {
-        showToast(result.data || "✅ Product updated!");
-        toggleEditMode(false);
-      } else {
-        showToast(result.message || "❌ Error updating product!", "error");
-      }
-    } catch (err) {
-      console.error(err);
-      showToast("❌ Error updating product!", "error");
-    } finally { toggleLoader(); }
+if (typeInput && iconElem && typeDatalist) {
+  // Populate datalist with unique product types
+  const uniqueProductTypes = [...new Set(productData.map(p => p.productType).filter(Boolean))];
+  typeDatalist.innerHTML = "";
+  uniqueProductTypes.forEach(type => {
+    const option = document.createElement("option");
+    option.value = type;
+    typeDatalist.appendChild(option);
   });
 
-  // Delete workflow
-  beforeDeleteBtn.addEventListener("click", () => {
-    const isDelete = beforeDeleteBtn.dataset.buttonState === "delete";
-    beforeDeleteBtn.textContent = isDelete ? "Cancel" : "Delete";
-    beforeDeleteBtn.dataset.buttonState = isDelete ? "cancel" : "delete";
-    deleteBtn.classList.toggle("d-none", !isDelete);
+  // Update icon whenever value changes
+  typeInput.addEventListener("input", () => {
+    const val = typeInput.value;
+    iconElem.innerHTML =
+      val === "Product" ? '<i class="fa-solid fa-tag text-success"></i>' :
+      val === "Rental"  ? '<i class="fa-solid fa-key text-primary"></i>' :
+                          '<i class="fa-solid fa-box-open"></i>';
   });
 
-  deleteBtn.addEventListener("click", () => {
-    const prodID = wrapper.dataset.prodId;
-    if (!prodID) return showToast("⚠️ Product ID missing", "error");
-    toggleLoader();
-    fetch(scriptURL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ system: "products", action: "delete", prodID })
-    })
-    .then(res => res.json())
-    .then(result => {
-      if (result.success) {
-        showToast("✅ Product deleted!", "success");
-        wrapper.remove();
-      } else showToast("⚠️ Could not delete product.", "error");
-    })
-    .catch(() => showToast("⚠️ Error deleting product.", "error"))
-    .finally(toggleLoader);
+  // Show all options on click/focus (but keep current value visible)
+  ['mousedown', 'focus'].forEach(evt => {
+    typeInput.addEventListener(evt, e => {
+      const currentValue = typeInput.value;
+      setTimeout(() => { typeInput.value = currentValue; }, 0);
+    });
   });
-
-  if (fields.productType.input) fields.productType.input.addEventListener("input", updateIcon);
-
-  // Start readonly
-  toggleEditMode(false);
 }
 
-// ----- Add Part Row (attach listeners inline; no helper functions) -----
-function addPartRow(partsContainer, name = "", qty = 0, cost = 0, retail = 0, isAddCard = false, editingRow = false) {
-  const template = document.getElementById("partRowTemplate");
-  if (!template) {
-    console.warn("❌ Part row template not found!");
-    return;
+  // ===== Product Name header listener =====
+  const nameInput = wrapper.querySelector(".productName-input");
+  const nameHeader = wrapper.querySelector(".productName-header");
+  const nameBody   = wrapper.querySelector(".productName-body"); // optional if you also want body sync
+  if (nameInput && nameHeader && nameBody) {
+    nameInput.addEventListener("input", () => {
+      nameHeader.textContent = nameInput.value;
+      nameBody.textContent   = nameInput.value;
+    });
   }
+
+  container.appendChild(clone);
+}
+
+// ====== Enable/Disable Edit Mode ======
+function enableEditToggle(wrapper, isEditing, isAddCard = false) {
+  const editBtn         = wrapper.querySelector(".edit-button");
+  const saveBtn         = wrapper.querySelector(".save-button");
+  const cancelBtn       = wrapper.querySelector(".cancel-button");
+  const addPartBtn      = wrapper.querySelector(".addPartBtn");
+  const beforeDeleteBtn = wrapper.querySelector(".before-delete-button");
+  const deleteBtn       = wrapper.querySelector(".delete-button");
+
+  // --- Top buttons ---
+  if (editBtn) editBtn.classList.toggle("d-none", isEditing || isAddCard);
+  if (saveBtn) saveBtn.classList.toggle("d-none", !isEditing);
+  if (saveBtn) saveBtn.disabled = true; // always start disabled
+  if (cancelBtn) cancelBtn.classList.toggle("d-none", !isEditing || isAddCard);
+
+  if (addPartBtn) addPartBtn.style.display = isEditing ? "inline-block" : "none";
+  if (beforeDeleteBtn) beforeDeleteBtn.style.display = isAddCard ? "none" : "inline-block";
+  if (deleteBtn) deleteBtn.classList.toggle("d-none", true); // Always hidden until delete confirmation
+
+  // --- Main fields ---
+  [
+    [".productName-body", ".productName-input"],
+    [".description-body", ".description-input"],
+    [".productType-body", ".productType-input"]
+  ].forEach(([bodySel, inputSel]) => {
+    const body = wrapper.querySelector(bodySel);
+    const input = wrapper.querySelector(inputSel);
+    if (body && input) {
+      body.classList.toggle("d-none", isEditing);
+      input.classList.toggle("d-none", !isEditing);
+    }
+  });
+
+  // --- Parts ---
+  const partsContainer = wrapper.querySelector(".part-rows");
+  if (partsContainer) {
+    partsContainer.querySelectorAll(".part-row").forEach(row => {
+      const nameInput = row.querySelector(".part-input");
+      const qtyInput  = row.querySelector(".qty-input");
+      const nameSpan  = row.querySelector(".part-name-span");
+      const qtySpan   = row.querySelector(".part-qty-span");
+      const removeBtn = row.querySelector(".remove-part");
+
+      // Toggle name/qty visibility
+      if (nameInput && nameSpan) {
+        nameInput.classList.toggle("d-none", !isEditing);
+        nameSpan.classList.toggle("d-none", isEditing);
+      }
+      if (qtyInput && qtySpan) {
+        qtyInput.classList.toggle("d-none", !isEditing);
+        qtySpan.classList.toggle("d-none", isEditing);
+      }
+
+      // Remove button only visible for existing products in edit mode
+      if (removeBtn) removeBtn.style.display = (isEditing && !isAddCard) ? "inline-block" : "none";
+
+      // Cost/retail always visible
+      row.querySelectorAll(".part-cost-span, .part-retail-span")
+         .forEach(span => span.classList.remove("d-none"));
+    });
+  }
+
+  // --- Enable Save Button When Any Field Changes ---
+  if (isEditing && saveBtn) {
+    const editableFields = wrapper.querySelectorAll(
+      ".productName-input, .description-input, .productType-input, .part-input, .qty-input"
+    );
+    editableFields.forEach(input => {
+      // Avoid attaching multiple listeners
+      if (!input.dataset.listenerAttached) {
+        input.addEventListener("input", () => {
+          saveBtn.disabled = false;
+        });
+        input.dataset.listenerAttached = "1";
+      }
+    });
+  }
+}
+
+// ===== Add Part Row =====
+function addPartRow(partsContainer, name = "", qty = 0, cost = 0, retail = 0, wrapperIsEditing = true) {
+  const template = document.getElementById("partRowTemplate");
+  if (!template || !partsContainer) return;
 
   const clone = template.content.cloneNode(true);
   const row = clone.querySelector(".part-row");
   if (!row) return;
 
-  const nameSpan = row.querySelector(".part-name-span");
-  const nameInput = row.querySelector(".part-input");
-  const qtySpan = row.querySelector(".part-qty-span");
-  const qtyInput = row.querySelector(".qty-input");
-  const costSpan = row.querySelector(".part-cost-span");
-  const costInput = row.querySelector(".totalRowCost");
+  const nameInput  = row.querySelector(".part-input");
+  const qtyInput   = row.querySelector(".qty-input");
+  const nameSpan   = row.querySelector(".part-name-span");
+  const qtySpan    = row.querySelector(".part-qty-span");
+  const costSpan   = row.querySelector(".part-cost-span");
   const retailSpan = row.querySelector(".part-retail-span");
-  const retailInput = row.querySelector(".totalRowRetail");
-  const removeBtn = row.querySelector(".remove-part");
+  const removeBtn  = row.querySelector(".remove-part");
+  const selectorInput = row.querySelector('input[list="row-parts-selector"]');
 
-  // Readonly presentation
-  nameSpan.textContent = name;
-  qtySpan.textContent = String(qty);
-  costSpan.textContent = formatCurrency(cost || 0);
-  retailSpan.textContent = formatCurrency(retail || 0);
-
-  // Prefill inputs
+  // Fill values
   if (nameInput) nameInput.value = name;
   if (qtyInput) qtyInput.value = qty;
-  if (costInput) { costInput.dataset.raw = String(cost || 0); costInput.value = formatCurrency(cost || 0); }
-  if (retailInput) { retailInput.dataset.raw = String(retail || 0); retailInput.value = formatCurrency(retail || 0); }
+  if (nameSpan) nameSpan.textContent = name;
+  if (qtySpan) qtySpan.textContent = qty;
+  if (costSpan) costSpan.textContent = formatCurrency(cost);
+  if (retailSpan) retailSpan.textContent = formatCurrency(retail);
 
-  // If this is an Add card row or explicitly requested as editable, show inputs
-  if (isAddCard || editingRow) {
-    if (nameInput) nameInput.classList.remove("d-none");
-    if (qtyInput) qtyInput.classList.remove("d-none");
-    if (costInput) costInput.classList.remove("d-none");
-    if (retailInput) retailInput.classList.remove("d-none");
-    if (nameSpan) nameSpan.classList.add("d-none");
-    if (qtySpan) qtySpan.classList.add("d-none");
-    if (costSpan) costSpan.classList.add("d-none");
-    if (retailSpan) retailSpan.classList.add("d-none");
+  // ===== Live updates =====
+  if (nameInput) {
+    nameInput.oninput = () => {
+      if (nameSpan) nameSpan.textContent = nameInput.value;
+      recalculateTotals(partsContainer);
+    };
+  }
+  if (qtyInput) {
+    qtyInput.oninput = () => recalculateTotals(partsContainer);
+  }
+
+  // ===== Selector datalist behavior =====
+  if (selectorInput) {
+    ['mousedown', 'focus'].forEach(evt =>
+      selectorInput.addEventListener(evt, () => selectorInput.value = '')
+    );
+
+    selectorInput.addEventListener('input', () => {
+      if (nameSpan) nameSpan.textContent = selectorInput.value;
+      recalculateTotals(partsContainer);
+    });
+  }
+
+  // Mode visibility
+  if (wrapperIsEditing) {
+    nameInput?.classList.remove("d-none");
+    qtyInput?.classList.remove("d-none");
+    nameSpan?.classList.add("d-none");
+    qtySpan?.classList.add("d-none");
+    if (removeBtn) removeBtn.style.display = "inline-block";
   } else {
-    // ensure readonly inputs are hidden
-    if (nameInput) nameInput.classList.add("d-none");
-    if (qtyInput) qtyInput.classList.add("d-none");
-    if (costInput) costInput.classList.add("d-none");
-    if (retailInput) retailInput.classList.add("d-none");
-    if (nameSpan) nameSpan.classList.remove("d-none");
-    if (qtySpan) qtySpan.classList.remove("d-none");
-    if (costSpan) costSpan.classList.remove("d-none");
-    if (retailSpan) retailSpan.classList.remove("d-none");
+    nameInput?.classList.add("d-none");
+    qtyInput?.classList.add("d-none");
+    nameSpan?.classList.remove("d-none");
+    qtySpan?.classList.remove("d-none");
+    if (removeBtn) removeBtn.style.display = "none";
   }
 
-  // Attach listeners ONCE for this row:
-  if (!row.dataset.listenersAttached) {
-    // input -> sync span + totals
-    if (nameInput) {
-      nameInput.addEventListener("input", () => {
-        // sync span (for live preview)
-        if (nameSpan) nameSpan.textContent = nameInput.value;
-        recalculateTotals(partsContainer);
-        console.log("addPartRow: name input changed:", nameInput.value);
-      });
-    }
-    if (qtyInput) {
-      qtyInput.addEventListener("input", () => {
-        if (qtySpan) qtySpan.textContent = qtyInput.value;
-        recalculateTotals(partsContainer);
-      });
-    }
+  // Always keep cost/retail visible
+  costSpan?.classList.remove("d-none");
+  retailSpan?.classList.remove("d-none");
 
-    // Remove button
-    if (removeBtn) {
-      removeBtn.addEventListener("click", () => {
-        console.log("addPartRow: remove button clicked");
-        row.remove();
-        recalculateTotals(partsContainer);
-      });
-    }
-
-    row.dataset.listenersAttached = "1";
+  // Remove handler
+  if (removeBtn && !row.dataset.removeAttached) {
+    removeBtn.addEventListener("click", () => {
+      row.remove();
+      recalculateTotals(partsContainer);
+    });
+    row.dataset.removeAttached = "1";
   }
 
-  // Append the row to the container
   partsContainer.appendChild(row);
-
-  // Immediately recalc totals so UI reflects this new row
   recalculateTotals(partsContainer);
 }
 
-// ----- Recalculate Totals
+// ----- Recalculate Totals (updated: also updates header total retail and in-stock) -----
 function recalculateTotals(partsContainer) {
   if (!partsContainer) return;
 
@@ -593,7 +696,6 @@ function recalculateTotals(partsContainer) {
     totalCost += cost;
     totalRetail += retail;
 
-    // Update both spans and inputs
     const costSpan = row.querySelector(".part-cost-span");
     const retailSpan = row.querySelector(".part-retail-span");
     const costInput = row.querySelector(".totalRowCost");
@@ -615,21 +717,33 @@ function recalculateTotals(partsContainer) {
     }
   });
 
-  // ---- Update totals for Product Accordion (readonly view)
   const wrapper = partsContainer.closest(".accordion-item.product-accordion");
   if (wrapper) {
     const costSpan = wrapper.querySelector(".totalCost-body");
     const retailSpan = wrapper.querySelector(".totalRetail-body");
+    const retailHeader = wrapper.querySelector(".totalRetail-header");
+
     if (costSpan) costSpan.textContent = formatCurrency(totalCost);
     if (retailSpan) retailSpan.textContent = formatCurrency(totalRetail);
+    if (retailHeader) retailHeader.textContent = formatCurrency(totalRetail);
 
     const badge = wrapper.querySelector(".partrow-header-display");
     if (badge) {
       badge.textContent = `Parts • ${partsContainer.querySelectorAll(".part-row").length}`;
     }
+
+    const parts = Array.from(partsContainer.querySelectorAll(".part-row")).map(row => ({
+      matName: row.querySelector(".part-input")?.value || "",
+      qty: parseFloat(row.querySelector(".qty-input")?.value) || 0
+    }));
+    const stock = calculateInStock({ parts });
+
+    const inStockBody = wrapper.querySelector(".inStockValue-body");
+    const inStockHeader = wrapper.querySelector(".inStockValue-header");
+    if (inStockBody) inStockBody.textContent = String(stock);
+    if (inStockHeader) inStockHeader.textContent = String(stock);
   }
 
-  // Update totals for Add Product form
   const addForm = partsContainer.closest("#addProductForm");
   if (addForm) {
     const totalCostSpan = addForm.querySelector(".totalCost-input");
@@ -640,338 +754,84 @@ function recalculateTotals(partsContainer) {
   }
 }
 
-// ----- Setup Add Product Form -----
-function setupAddProductForm() {
-  const form = document.getElementById("addProductForm");
-  const partContainer = document.getElementById("part-rows");
-  const addBtn = document.getElementById("add-partRow");
-  const productTypeInput = form.querySelector(".productType-input");
-  const productTypeLegend = form.querySelector(".productType-legend");
-  const prodNameInput = form.querySelector(".productName-input");
-  const descInput = form.querySelector(".description-input");
-  const prodDateSpan = form.querySelector(".prodDate");
-
-  // Header references
-  const headerWrapper = form.closest(".accordion-item")?.querySelector(".accordion-button");
-  const headerProdName = headerWrapper?.querySelector(".productName");
-  const headerTotalRetail = headerWrapper?.querySelector(".totalRetail");
-  const headerIcon = headerWrapper?.querySelector(".productType-icon");
-
-  if (!form || !partContainer || !addBtn) return;
-
-  const totalCostSpan = form.querySelector(".totalCost-input");
-  const totalRetailSpan = form.querySelector(".totalRetail-input");
-
-  const resetForm = () => {
-    [prodNameInput, productTypeInput, descInput].forEach(el => el && (el.value = ""));
-    if (productTypeLegend) productTypeLegend.textContent = "";
-    if (prodDateSpan) prodDateSpan.textContent = formatDateForUser(new Date()) || "—";
-    partContainer.innerHTML = "";
-
-    // Add initial blank part row
-    addPartRow(partContainer, "", 0, 0, 0, true);
-
-    // Reset totals in body
-    if (totalCostSpan) totalCostSpan.textContent = formatCurrency(0);
-    if (totalRetailSpan) totalRetailSpan.textContent = formatCurrency(0);
-
-    // Update header
-    if (headerProdName) headerProdName.textContent = "➕ Add New Product";
-    if (headerTotalRetail) headerTotalRetail.textContent = formatCurrency(0);
-    if (headerIcon) headerIcon.innerHTML = '<i class="fa-solid fa-box-open"></i>';
-  };
-
-  // Sync header totals
-  const updateHeaderTotal = () => {
-    if (headerTotalRetail && totalRetailSpan) {
-      headerTotalRetail.textContent = totalRetailSpan.textContent;
-    }
-  };
-
-  // Update header live
-  if (prodNameInput && headerProdName) {
-    prodNameInput.addEventListener("input", () => {
-      headerProdName.textContent = prodNameInput.value || "➕ Add New Product";
-    });
-  }
-
-  if (productTypeInput) {
-    productTypeInput.addEventListener("input", () => {
-      if (productTypeLegend) productTypeLegend.textContent = productTypeInput.value || "";
-      if (headerIcon) {
-        headerIcon.innerHTML =
-          productTypeInput.value === "Product" ? '<i class="fa-solid fa-tag text-success"></i>' :
-          productTypeInput.value === "Rental" ? '<i class="fa-solid fa-key text-primary"></i>' :
-          '<i class="fa-solid fa-box-open"></i>';
-      }
-    });
-  }
-
-  if (prodNameInput) attachAutogrow(prodNameInput);
-  if (descInput) attachAutogrow(descInput);
-
-  // Add part row
-  addBtn.addEventListener("click", () => {
-    if (partContainer.querySelectorAll(".part-row").length >= maxParts) {
-      return showToast("⚠️ Max parts reached", "warning");
-    }
-    addPartRow(partContainer, "", 0, 0, 0, true);
-    recalculateTotals(partContainer);
-    updateHeaderTotal();
-  });
-
-  // Recalculate totals on any input
-  partContainer.addEventListener("input", () => {
-    recalculateTotals(partContainer);
-    updateHeaderTotal();
-  });
-
-  // Cancel button
-  const cancelBtn = document.getElementById("addProductCancel");
-  if (cancelBtn) cancelBtn.addEventListener("click", resetForm);
-
-  // Submit handler
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    recalculateTotals(partContainer); // make sure totals are current
-    updateHeaderTotal();
-
-  const parts = Array.from(partContainer.querySelectorAll(".part-row")).map(r => {
-    const nameEl = r.querySelector(".part-input, .part-name-span");
-    const qtyEl  = r.querySelector(".qty-input, .part-qty-span");
-
-    const matName = nameEl
-      ? (nameEl.value?.trim?.() ?? nameEl.textContent?.trim?.() ?? "")
-      : "";
-    const qtyVal = qtyEl
-      ? (qtyEl.value ?? qtyEl.textContent ?? "0")
-      : "0";
-    const qty = parseFloat(qtyVal.toString().replace(/[^0-9.-]/g, "")) || 0;
-
-    // Use qty as string to match other systems (e.g. "3")
-    return { matName, qty: String(qty) };
-  }).filter(p => p.matName && p.qty > 0);
-
-    if (!parts.length) return showToast("⚠️ At least one part and quantity must be provided.", "error");
-
-    // Use numeric totals (strip currency formatting) when sending to backend
-    const totalCostNumeric = parseFloat((totalCostSpan?.textContent || '').replace(/[^0-9.-]+/g, '')) || 0;
-    const totalRetailNumeric = parseFloat((totalRetailSpan?.textContent || '').replace(/[^0-9.-]+/g, '')) || 0;
-
-    // Backend expects an object with named fields (see addProduct in Apps Script)
-    const productInfo = {
-      productName: prodNameInput.value.trim(),
-      productType: productTypeInput.value.trim(),
-      parts: parts, 
-      partsJSON: parts,
-      description: descInput.value.trim(),
-      cost: totalCostNumeric,
-      retail: totalRetailNumeric
-    };
-
-    try {
-      toggleLoader(true);
-      const res = await fetch(scriptURL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ system: "products", action: "add", productInfo })
-      });
-
-      const result = await res.json();
-      if (result.success) {
-        showToast("✅ Product added!");
-        resetForm();
-        await loadProducts();
-        renderResults();
-      } else {
-        showToast(result.message || "❌ Error adding product", "error");
-      }
-    } catch (err) {
-      console.error("Add error:", err);
-      showToast("❌ Error adding product", "error");
-    } finally {
-      toggleLoader(false);
-    }
-  });
-
-  resetForm();
-}
-
-/**
- * Attach autogrow behaviour to a textarea.
- * - Respects initial rows in HTML
- * - Grows vertically only (uses scrollHeight + small buffer)
- * - Works immediately for prefilled content and after element becomes visible
- * @param {HTMLTextAreaElement} textarea
- */
-function attachAutogrow(textarea) {
-  if (!textarea || textarea.tagName !== 'TEXTAREA') return;
-
-  const BUFFER_PX = 3; // small buffer to avoid clipped last line
-  const initialRows = parseInt(textarea.getAttribute('rows'), 10) || 1;
-
-  const autoGrow = () => {
-    // Reset so scrollHeight recalculates correctly
-    textarea.style.height = 'auto';
-    // Set to scrollHeight + buffer
-    textarea.style.height = (textarea.scrollHeight + BUFFER_PX) + 'px';
-  };
-
-  // Ensure it grows when the user types
-  textarea.addEventListener('input', autoGrow);
-  // Also when focused (helps if become visible on focus)
-  textarea.addEventListener('focus', autoGrow);
-
-  // If element is hidden (display:none / .d-none), wait until it becomes visible
-  const ensureVisibleAndGrow = () => {
-    const visible = textarea.offsetParent !== null && getComputedStyle(textarea).display !== 'none';
-    if (visible) {
-      autoGrow();
-      return;
-    }
-    // Observe attribute changes (class/style) on the element — most toggles use classList
-    const mo = new MutationObserver(() => {
-      if (textarea.offsetParent !== null && getComputedStyle(textarea).display !== 'none') {
-        autoGrow();
-        mo.disconnect();
-      }
-    });
-    mo.observe(textarea, { attributes: true, attributeFilter: ['class', 'style'] });
-
-    // fallback check in case visibility changes via other means
-    const fallbackId = setInterval(() => {
-      if (textarea.offsetParent !== null && getComputedStyle(textarea).display !== 'none') {
-        autoGrow();
-        clearInterval(fallbackId);
-        mo.disconnect();
-      }
-    }, 50);
-    // stop fallback after a short time
-    setTimeout(() => clearInterval(fallbackId), 3000);
-  };
-
-  // Run after paint so clones or inserted elements measure correctly
-  requestAnimationFrame(ensureVisibleAndGrow);
-
-  // Integrate with form.reset if present — restore initial rows then autoGrow
-  const form = textarea.closest('form');
-  if (form) {
-    const origReset = form.reset.bind(form);
-    form.reset = function () {
-      origReset();
-      // restore initial rows as baseline (keeps consistent start height)
-      textarea.rows = initialRows;
-      textarea.style.height = '';
-      // allow DOM to update, then recalc
-      setTimeout(() => autoGrow(), 0);
-    };
-  }
-
-  // Return the autoGrow for optional direct use
-  return autoGrow;
-}
-
-/**
- * Calculate maximum number of products that can be made from current stock.
- * @param {Object} product - Product object containing parts array [{ matName, qty }]
- * @returns {number} Maximum number of products in stock
- */
 function calculateInStock(product) {
   if (!product?.parts?.length) return 0;
 
-  let minStock = Infinity;
+  // Step 1: sum up quantities per material
+  const totalsByMaterial = {};
 
   product.parts.forEach(part => {
-    const material = materialByName[part.matName]; // look up by material name
-    // Coerce qty to number (parts may store qty as string)
+    const matName = part.matName;
     const qty = parseFloat(part.qty) || 0;
-    if (!material || qty <= 0) {
+    if (!totalsByMaterial[matName]) totalsByMaterial[matName] = 0;
+    totalsByMaterial[matName] += qty;
+  });
+
+  // Step 2: find max number of products we can make
+  let minStock = Infinity;
+
+  for (const [matName, totalQty] of Object.entries(totalsByMaterial)) {
+    const material = materialByName[matName]; // look up by material name
+    if (!material || totalQty <= 0) {
       minStock = 0; // missing material → cannot make product
-      return;
+      break;
     }
 
-    const maxByPart = Math.floor((material.onHand || 0) / qty);
+    const maxByPart = Math.floor((material.onHand || 0) / totalQty);
     if (maxByPart < minStock) minStock = maxByPart;
-  });
+  }
 
   return minStock === Infinity ? 0 : minStock;
 }
 
-function renderInStockModal(product) {
-  if (!product || !Array.isArray(product.parts)) return;
+function refreshSearchResults(focusProdID = null) {
+  const searchInput = document.getElementById(SELECTORS.searchInput);
+  const resultsContainer = document.getElementById(SELECTORS.resultsContainer);
+  if (!searchInput || !resultsContainer) return;
 
-  const tbody = document.getElementById("inStockTableBody");
-  const totalUnitsEl = document.getElementById("inStockTotalUnits");
+  const query = (searchInput.value || "").toLowerCase().trim();
+  const words = query.split(/\s+/).filter(Boolean);
 
-  tbody.innerHTML = ""; // clear previous content
-  let minUnits = Infinity;
+  resultsContainer.innerHTML = "";
+  renderProductCard(null); // always render Add card first
 
-  const partsData = product.parts.map(part => {
-    const material = materialByName[part.matName];
-    const needed = parseFloat(part.qty) || 0; // coerce qty
-    const onHand = material?.onHand || 0;
-    const supplierUrl = material?.supplierUrl || null;
+  const filtered = query
+    ? productData.filter(prod =>
+        words.every(w =>
+          Object.values(prod).some(val => (val?.toString() || "").toLowerCase().includes(w))
+        )
+      )
+    : productData.slice();
 
-    // Bottleneck calculation
-    const maxUnits = needed > 0 ? Math.floor(onHand / needed) : 0;
-    if (maxUnits < minUnits) minUnits = maxUnits;
+  filtered.forEach(p => renderProductCard(p));
 
-    // Order Requirement per part
-    const orderRequirement = Math.max(0, needed - onHand);
+  const totalCounter = document.getElementById("totalCounter");
+  const searchCounter = document.getElementById("searchCounter");
+  if (totalCounter) totalCounter.textContent = String(productData.length);
+  if (searchCounter) searchCounter.textContent = String(filtered.length);
 
-    return { ...part, onHand, needed, orderRequirement, supplierUrl };
-  });
-
-  // Sort: deficient parts first
-  partsData.sort((a, b) => b.orderRequirement - a.orderRequirement);
-
-  // Render rows
-  partsData.forEach(part => {
-    const row = document.createElement("tr");
-
-    // Determine row text color and store it
-    const textColor = part.orderRequirement > 0 ? "text-danger" : "text-success";
-
-    // Clickable row if supplier URL exists
-    if (part.supplierUrl) {
-      row.style.cursor = "pointer";
-      row.addEventListener("click", () => window.open(part.supplierUrl, "_blank"));
-    }
-
-    // Create cells and apply text color to each cell individually
-    ["matName", "needed", "onHand", "orderRequirement"].forEach(key => {
-      const cell = document.createElement("td");
-      cell.textContent = part[key];
-      cell.classList.add(textColor);       // ensures BS doesn’t override
-      cell.style.backgroundColor = "#000"; // black background
-      row.appendChild(cell);
-    });
-
-    // Hover effect: change background color of all cells
-    row.addEventListener("mouseenter", () => {
-      row.querySelectorAll("td").forEach(td => {
-        td.style.backgroundColor = part.orderRequirement > 0 ? "#330000" : "#003300";
-      });
-    });
-    row.addEventListener("mouseleave", () => {
-      row.querySelectorAll("td").forEach(td => {
-        td.style.backgroundColor = "#000";
-      });
-    });
-
-    tbody.appendChild(row);
-  });
-
-  // Update total units possible at the top
-  totalUnitsEl.textContent = minUnits === Infinity ? 0 : minUnits;
-
-  // Show the modal
-  const modalEl = document.getElementById("inStockModal");
-  let bsModal = bootstrap.Modal.getInstance(modalEl);
-  if (!bsModal) {
-    bsModal = new bootstrap.Modal(modalEl);
+  // Scroll the focused product into view
+  if (focusProdID) {
+    const el = resultsContainer.querySelector(`.accordion-item[data-prod-id="${focusProdID}"]`);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
   }
-  bsModal.show();
 }
 
+function convertGoogleDriveLink(url) {
+  if (!url) return url;
+
+  // If it's already a direct image URL, don't touch it
+  if (url.match(/\.(jpg|jpeg|png|gif|webp|avif)(\?.*)?$/i)) {
+    return url;
+  }
+
+  // Try to match Google Drive "file/d/FILE_ID" or "open?id=FILE_ID"
+  const driveMatch = url.match(/(?:\/d\/|id=)([a-zA-Z0-9_-]{20,})/);
+  if (driveMatch) {
+    const fileId = driveMatch[1];
+    return `https://drive.google.com/thumbnail?id=${fileId}`;
+  }
+
+  // Return unchanged if not recognized
+  return url;
+}

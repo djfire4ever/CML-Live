@@ -518,6 +518,85 @@ if (typeInput && iconElem && typeDatalist) {
   container.appendChild(clone);
 }
 
+// ====== Enable/Disable Edit Mode ======
+function enableEditToggle(wrapper, isEditing, isAddCard = false) {
+  const editBtn         = wrapper.querySelector(".edit-button");
+  const saveBtn         = wrapper.querySelector(".save-button");
+  const cancelBtn       = wrapper.querySelector(".cancel-button");
+  const addPartBtn      = wrapper.querySelector(".addPartBtn");
+  const beforeDeleteBtn = wrapper.querySelector(".before-delete-button");
+  const deleteBtn       = wrapper.querySelector(".delete-button");
+
+  // --- Top buttons ---
+  if (editBtn) editBtn.classList.toggle("d-none", isEditing || isAddCard);
+  if (saveBtn) saveBtn.classList.toggle("d-none", !isEditing);
+  if (saveBtn) saveBtn.disabled = true; // always start disabled
+  if (cancelBtn) cancelBtn.classList.toggle("d-none", !isEditing || isAddCard);
+
+  if (addPartBtn) addPartBtn.style.display = isEditing ? "inline-block" : "none";
+  if (beforeDeleteBtn) beforeDeleteBtn.style.display = isAddCard ? "none" : "inline-block";
+  if (deleteBtn) deleteBtn.classList.toggle("d-none", true); // Always hidden until delete confirmation
+
+  // --- Main fields ---
+  [
+    [".productName-body", ".productName-input"],
+    [".description-body", ".description-input"],
+    [".productType-body", ".productType-input"]
+  ].forEach(([bodySel, inputSel]) => {
+    const body = wrapper.querySelector(bodySel);
+    const input = wrapper.querySelector(inputSel);
+    if (body && input) {
+      body.classList.toggle("d-none", isEditing);
+      input.classList.toggle("d-none", !isEditing);
+    }
+  });
+
+  // --- Parts ---
+  const partsContainer = wrapper.querySelector(".part-rows");
+  if (partsContainer) {
+    partsContainer.querySelectorAll(".part-row").forEach(row => {
+      const nameInput = row.querySelector(".part-input");
+      const qtyInput  = row.querySelector(".qty-input");
+      const nameSpan  = row.querySelector(".part-name-span");
+      const qtySpan   = row.querySelector(".part-qty-span");
+      const removeBtn = row.querySelector(".remove-part");
+
+      // Toggle name/qty visibility
+      if (nameInput && nameSpan) {
+        nameInput.classList.toggle("d-none", !isEditing);
+        nameSpan.classList.toggle("d-none", isEditing);
+      }
+      if (qtyInput && qtySpan) {
+        qtyInput.classList.toggle("d-none", !isEditing);
+        qtySpan.classList.toggle("d-none", isEditing);
+      }
+
+      // Remove button only visible for existing products in edit mode
+      if (removeBtn) removeBtn.style.display = (isEditing && !isAddCard) ? "inline-block" : "none";
+
+      // Cost/retail always visible
+      row.querySelectorAll(".part-cost-span, .part-retail-span")
+         .forEach(span => span.classList.remove("d-none"));
+    });
+  }
+
+  // --- Enable Save Button When Any Field Changes ---
+  if (isEditing && saveBtn) {
+    const editableFields = wrapper.querySelectorAll(
+      ".productName-input, .description-input, .productType-input, .part-input, .qty-input"
+    );
+    editableFields.forEach(input => {
+      // Avoid attaching multiple listeners
+      if (!input.dataset.listenerAttached) {
+        input.addEventListener("input", () => {
+          saveBtn.disabled = false;
+        });
+        input.dataset.listenerAttached = "1";
+      }
+    });
+  }
+}
+
 // ===== Add Part Row =====
 function addPartRow(partsContainer, name = "", qty = 0, cost = 0, retail = 0, wrapperIsEditing = true) {
   const template = document.getElementById("partRowTemplate");
@@ -597,85 +676,6 @@ function addPartRow(partsContainer, name = "", qty = 0, cost = 0, retail = 0, wr
 
   partsContainer.appendChild(row);
   recalculateTotals(partsContainer);
-}
-
-// ====== Enable/Disable Edit Mode ======
-function enableEditToggle(wrapper, isEditing, isAddCard = false) {
-  const editBtn         = wrapper.querySelector(".edit-button");
-  const saveBtn         = wrapper.querySelector(".save-button");
-  const cancelBtn       = wrapper.querySelector(".cancel-button");
-  const addPartBtn      = wrapper.querySelector(".addPartBtn");
-  const beforeDeleteBtn = wrapper.querySelector(".before-delete-button");
-  const deleteBtn       = wrapper.querySelector(".delete-button");
-
-  // --- Top buttons ---
-  if (editBtn) editBtn.classList.toggle("d-none", isEditing || isAddCard);
-  if (saveBtn) saveBtn.classList.toggle("d-none", !isEditing);
-  if (saveBtn) saveBtn.disabled = true; // always start disabled
-  if (cancelBtn) cancelBtn.classList.toggle("d-none", !isEditing || isAddCard);
-
-  if (addPartBtn) addPartBtn.style.display = isEditing ? "inline-block" : "none";
-  if (beforeDeleteBtn) beforeDeleteBtn.style.display = isAddCard ? "none" : "inline-block";
-  if (deleteBtn) deleteBtn.classList.toggle("d-none", true); // Always hidden until delete confirmation
-
-  // --- Main fields ---
-  [
-    [".productName-body", ".productName-input"],
-    [".description-body", ".description-input"],
-    [".productType-body", ".productType-input"]
-  ].forEach(([bodySel, inputSel]) => {
-    const body = wrapper.querySelector(bodySel);
-    const input = wrapper.querySelector(inputSel);
-    if (body && input) {
-      body.classList.toggle("d-none", isEditing);
-      input.classList.toggle("d-none", !isEditing);
-    }
-  });
-
-  // --- Parts ---
-  const partsContainer = wrapper.querySelector(".part-rows");
-  if (partsContainer) {
-    partsContainer.querySelectorAll(".part-row").forEach(row => {
-      const nameInput = row.querySelector(".part-input");
-      const qtyInput  = row.querySelector(".qty-input");
-      const nameSpan  = row.querySelector(".part-name-span");
-      const qtySpan   = row.querySelector(".part-qty-span");
-      const removeBtn = row.querySelector(".remove-part");
-
-      // Toggle name/qty visibility
-      if (nameInput && nameSpan) {
-        nameInput.classList.toggle("d-none", !isEditing);
-        nameSpan.classList.toggle("d-none", isEditing);
-      }
-      if (qtyInput && qtySpan) {
-        qtyInput.classList.toggle("d-none", !isEditing);
-        qtySpan.classList.toggle("d-none", isEditing);
-      }
-
-      // Remove button only visible for existing products in edit mode
-      if (removeBtn) removeBtn.style.display = (isEditing && !isAddCard) ? "inline-block" : "none";
-
-      // Cost/retail always visible
-      row.querySelectorAll(".part-cost-span, .part-retail-span")
-         .forEach(span => span.classList.remove("d-none"));
-    });
-  }
-
-  // --- Enable Save Button When Any Field Changes ---
-  if (isEditing && saveBtn) {
-    const editableFields = wrapper.querySelectorAll(
-      ".productName-input, .description-input, .productType-input, .part-input, .qty-input"
-    );
-    editableFields.forEach(input => {
-      // Avoid attaching multiple listeners
-      if (!input.dataset.listenerAttached) {
-        input.addEventListener("input", () => {
-          saveBtn.disabled = false;
-        });
-        input.dataset.listenerAttached = "1";
-      }
-    });
-  }
 }
 
 // ----- Recalculate Totals (updated: also updates header total retail and in-stock) -----

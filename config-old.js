@@ -114,7 +114,7 @@ function loadStylesheets() {
   // Font Awesome
   const fontAwesome = document.createElement('link');
   fontAwesome.rel = 'stylesheet';
-  fontAwesome.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css';
+  fontAwesome.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.1.0/css/all.min.css';
   head.appendChild(fontAwesome);
   window.pageMeta.hasFontAwesome = true;
 
@@ -346,10 +346,10 @@ function parseSafeNumber(raw) {
   return parseFloat(s) || 0;
 }
 
-function formatPhoneNumber(number) {
-  const digits = number.replace(/\D/g, "");
-  if (digits.length !== 10) return number;
-  return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
+function formatPhoneNumber(raw) {
+  const digits = (raw || "").replace(/\D/g, "");
+  if (digits.length === 10) return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
+  return raw; // fallback
 }
 
 // ✅ Global version/debug check
@@ -729,5 +729,4 @@ function convertGoogleDriveLink(url) {
   // Return unchanged if not recognized
   return url;
 }
-
 

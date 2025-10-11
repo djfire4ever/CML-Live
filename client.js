@@ -42,7 +42,7 @@ window.showToast = (message, type = "success", forLeadForm = true) => {
   if (!toastContainer) return;
   let bgColor, headerText;
   if (forLeadForm) {
-    if (type === "success") { bgColor = "bg-primary"; headerText = "Thank You!"; message = message || "We will contact you shortly."; }
+    if (type === "success") { bgColor = "bg-info"; headerText = "Thank You!"; message = message || "We will contact you shortly."; }
     else if (type === "warning") { bgColor = "bg-warning"; headerText = "Attention!"; }
     else { bgColor = "bg-danger"; headerText = "❌ Error!"; }
   } else {

@@ -5,18 +5,34 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Product Manager</title>
-<style>
-/* Hide number input arrows (spinners) */
-.part-rows input.qty-input::-webkit-inner-spin-button,
-.part-rows input.qty-input::-webkit-outer-spin-button,
-#part-rows input.qty-input::-webkit-inner-spin-button,
-#part-rows input.qty-input::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-</style>
+  <title>New Product Manager</title>
 </head>
+
+<style>
+.part-rows input.qty-input::-webkit-inner-spin-button, .part-rows input.qty-input::-webkit-outer-spin-button, #part-rows input.qty-input::-webkit-inner-spin-button, #part-rows input.qty-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.accordion-body, .part-rows, .product-card { overflow: visible !important; position: relative; }
+#inStockModalContent table td, #inStockModalContent table th { border-left: none !important; border-right: none !important; }
+.accordion-button { padding-top: 0.25rem !important; padding-bottom: 0.25rem !important; min-height: 2.5rem !important; transition: background-color 0.3s ease, color 0.3s ease; }
+.accordion-button::after { margin-top: 0.25rem !important; }
+.product-accordion:hover .accordion-button { background-color: var(--bs-info) !important; color: var(--bs-black) !important; }
+.gallery-grid { display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(2, 1fr); gap: 1rem; }
+.gallery-slot { position: relative; height: 250px; width: 100%; background: var(--bs-black); border: 3px solid rgba(13, 202, 240, 0.85); border-radius: 0.5rem; overflow: hidden; display: flex; justify-content: center; align-items: center; transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease, transform 0.25s ease; box-shadow: 0 0 20px rgba(13, 202, 240, 0.85); cursor: grab; }
+.gallery-slot:active { cursor: grabbing; transform: scale(0.98); }
+.gallery-slot.empty { display: flex; justify-content: center; align-items: center; color: var(--bs-info); font-weight: bold; font-size: 1.2rem; text-align: center; cursor: pointer; }
+.gallery-slot:hover { transform: scale(1.05); background-color: var(--bs-info); border-color: rgba(13, 202, 240, 0.95); box-shadow: 0 0 25px rgba(13, 202, 240, 0.95); }
+.slot-image-container { width: 100%; height: 100%; border-radius: 0.5rem; overflow: hidden; position: relative; display: flex; justify-content: center; align-items: center; }
+.slot-image-container img { width: 100%; height: 100%; object-fit: cover; position: relative; z-index: 10; user-select: none; pointer-events: none; }
+.slot-buttons { position: absolute; top: 0.25rem; right: 0.25rem; display: flex; flex-direction: column; gap: 0.25rem; background: rgba(0, 0, 0, 0.6); padding: 0.25rem; border-radius: 0.25rem; z-index: 20; }
+.slot-caption { position: absolute; bottom: 0.5rem; left: 0.5rem; right: 0.5rem; z-index: 20; background: rgba(33, 37, 41, 0.85); border-radius: 0.3rem; padding: 0.4rem 0.6rem; text-align: center; font-weight: 600; font-size: 0.9rem; color: #f8f9fa; box-shadow: 0 2px 6px rgba(0,0,0,0.4); transition: background 0.2s ease, transform 0.2s ease; }
+.slot-caption input { width: 100%; border: none; background: transparent; color: #f8f9fa; font-size: 0.85rem; outline: none; text-align: center; }
+.gallery-slot:hover .slot-caption { background: rgba(33, 37, 41, 0.95); transform: translateY(-2px); }
+.gallery-slot[data-index="0"] { border: 4px solid #0dcaf0; box-shadow: 0 0 15px rgba(13, 202, 240, 0.7); }
+.gallery-slot[data-index="0"] .slot-caption { background: rgba(13, 202, 240, 0.85); color: #fff; font-size: 1rem; font-weight: 700; box-shadow: 0 0 8px rgba(13, 202, 240, 0.8); }
+.slot-badge { position: absolute; top: 0.25rem; left: 0.25rem; z-index: 30; background: rgba(13, 202, 240, 0.85); color: #fff; padding: 0.2rem 0.4rem; border-radius: 0.25rem; font-weight: 600; font-size: 0.85rem; pointer-events: none; box-shadow: 0 2px 6px rgba(0,0,0,0.4); }
+.gallery-slot.dragging { opacity: 0.45; border: 2px dashed #0dcaf0; transform: scale(1.05) rotate(2deg); box-shadow: 0 0 35px rgba(13, 202, 240, 0.95); z-index: 50; }
+.gallery-slot.placeholder { background: #eaf7ff; border: 2px dashed #0dcaf0; opacity: 0.7; transform: scale(1.02); transition: all 0.15s ease; }
+</style>
+
 <body class="page-body" style="min-height:100vh;" data-element="page-bg">
 <!-- 💧 Watermark -->
 <div class="watermark"></div>
@@ -33,7 +49,7 @@
 
 <!-- Product Management Section -->
 <div class="container">
-  <h2 class="text-center mb-4">Product Management</h2>
+  <h2 class="text-center mb-4">New Product Manager</h2>
 
   <!-- 🔍 Search + Counters -->
   <div class="d-flex justify-content-between align-items-center mb-3">
@@ -46,115 +62,166 @@
     </div>
   </div>
 
-  <!-- Shared Part Options Datalist -->
+  <!-- Shared Datalists -->
   <datalist id="row-parts-selector"></datalist>
+  <datalist id="product-type-selector"></datalist>
 
-  <!-- ➕ Add New Product Accordion -->
-  <div class="accordion mb-3" id="addProductAccordion">
-    <div class="accordion-item border-info">
-      <h2 class="accordion-header" id="heading-addProduct">
-        <button class="accordion-button collapsed" type="button"
-                data-bs-toggle="collapse"
-                data-bs-target="#collapse-addProduct"
-                aria-expanded="false"
-                aria-controls="collapse-addProduct">
-          ➕ Add New Product
+  <!-- 🔍 Search Results Accordion -->
+  <div class="accordion" id="productSearchResults"></div>
+
+  <!-- Template for dynamic product rows -->
+  <template id="rowTemplate">
+    <div class="accordion-item product-accordion border-info">
+      <h2 class="accordion-header">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse">
+          <div class="row w-100 text-truncate align-items-center gx-2">
+            <!-- In Stock Value header -->
+            <div class="col-1 text-center">
+              <span class="inStockValue-header badge rounded-pill bg-info text-black"
+                    style="min-width: 2rem; display: inline-block; text-align: center;">
+              </span>
+            </div>
+            <div class="col-1 text-center productType-icon"></div>
+            <div class="col-8 text-truncate fw-bold productName-header"></div>
+            <div class="col-2 totalRetail-header"></div>
+          </div>
         </button>
       </h2>
-      <div id="collapse-addProduct" class="accordion-collapse collapse"
-          aria-labelledby="heading-addProduct"
-          data-bs-parent="#addProductAccordion">
+
+      <div class="accordion-collapse collapse">
         <div class="accordion-body">
-          <form id="addProductForm">
-            <!-- ===== Product Info Section ===== -->
-            <fieldset class="mb-2 p-2 border rounded border-info">
-              <legend class="small fw-bold mb-0">
-                <div class="row w-100 gx-2">
-                  <div class="col-2 text-truncate"><span class="text-info">Product Details</span></div>
-                  <div class="col-2 text-truncate">ID # TBD</div>
-                <div class="col-6 text-truncate">
-                  <span class="text-info">Type:</span> 
-                  <span class="productType-legend text-warning"></span>
-                  <input type="text" class="form-control form-control-sm productType-input" list="product-type-options" placeholder="Select Type">
-                  <datalist id="product-type-options"></datalist>
-                </div>
-                  <!-- 👇 Hardcoded static date -->
-                  <div class="col-2 text-truncate"><span class="text-info">Updated:</span> <span class="prodDate text-warning">2025-09-19</span></div>
-                </div>
-              </legend>
 
-              <div class="row gx-3 gy-1 align-items-center mt-2">
-                <div class="col-md-4">
-                  <label class="form-label text-info">Product Name</label>
-                  <input type="text" class="form-control form-control-sm productName-input" id="productName">
+          <fieldset id="productInfoFieldset" class="mb-2 p-2 border rounded border-info">
+            <div class="d-flex flex-wrap justify-content-start align-items-start gap-3">
+
+              <!-- Left Column: Control Panel + Thumbnail + Gallery -->
+              <div id="productThumbnailColumn" class="d-flex" style="width:250px; height:250px;">
+                <div id="thumbnailControlPanel" class="d-flex flex-column justify-content-center align-items-center me-2" style="width:50px;">
+                  <button class="btn btn-sm btn-outline-info mb-1" title="Upload"><i class="bi bi-upload"></i></button>
+                  <button class="btn btn-sm btn-outline-warning mb-1" title="Edit"><i class="bi bi-pencil"></i></button>
+                  <button class="btn btn-sm btn-outline-danger mb-1" title="Delete"><i class="bi bi-trash"></i></button>
                 </div>
-              <div class="col-4">
-                <label class="form-label">Description</label>
-                <span class="description text-warning"></span>
-                <textarea class="form-control form-control-sm description-input" rows="1" style="overflow:hidden; resize:none;"></textarea>
-              </div>
-               <div class="col-md-2">
-                  <label class="form-label text-info">Total Cost</label>
-                  <input type="text" class="form-control form-control-sm text-warning totalCost-input" style="border: none;" id="totalCost" readonly>
-                </div>
-                <div class="col-md-2">
-                  <label class="form-label text-info">Total Retail</label>
-                  <input type="text" class="form-control form-control-sm text-warning totalRetail-input" style="border: none;" id="totalRetail" readonly>
+
+                <div class="d-flex flex-column align-items-center">
+                  <img src="" class="img-thumbnail mb-2 productThumbnail"
+                      alt="Product Thumbnail" style="width:200px; height:200px;">
+                  <button class="btn btn-sm btn-outline-info openGalleryBtn">Gallery Manager</button>
                 </div>
               </div>
-            </fieldset>
 
-            <!-- ===== Parts Section Accordion ===== -->
-            <div class="accordion mt-2 mb-2" id="addProductPartsAccordion">
-              <div class="accordion-item border-info">
-                <h2 class="accordion-header" id="heading-addProductParts">
-                  <button class="accordion-button collapsed" type="button"
-                          data-bs-toggle="collapse"
-                          data-bs-target="#collapse-addProductParts"
-                          aria-expanded="false"
-                          aria-controls="collapse-addProductParts">
-                    <span><i class="fa-solid fa-tag me-2"></i></span>
-                    <span class="fs-6 ms-2" id="partrow-header-display">Parts</span>
-                  </button>
-                </h2>
-                <div id="collapse-addProductParts" class="accordion-collapse collapse"
-                    data-bs-parent="#addProductPartsAccordion">
-                  <div class="accordion-body">
-                    <div class="container-fluid px-0">
-                      <div class="row mb-0 part-row-headers">
-                        <div class="col-md-6">Part</div>
-                        <div class="col-md-1">Qty</div>
-                        <div class="col-md-2">Cost $</div>
-                        <div class="col-md-2">Retail $</div>
-                        <div class="col-md-1"></div>
-                      </div>
-                      <div id="part-rows" class="part-rows"></div>
-                      <div class="row g-3 mt-1 mb-1">
-                        <div class="col-sm-6">
-                          <button type="button" class="btn" id="add-partRow">➕ Part</button>
-                        </div>
+              <!-- Center Column: Body Inputs -->
+              <div id="productDescriptionColumn" class="d-flex flex-column" style="width:520px; min-height:250px;">
+
+                <!-- Product Name -->
+                <div class="d-flex align-items-start mb-2">
+                  <label for="productName" class="form-label text-info me-2">Product Name:</label>
+                  <div class="flex-grow-1">
+                    <textarea id="productName" class="form-control form-control-sm productName-input"
+                              rows="1" style="resize:none; overflow:hidden;" wrap="soft"
+                              placeholder="Enter Product Name"></textarea>
+                    <span class="productName-body d-none text-warning"></span>
+                  </div>
+                </div>
+
+                <!-- Product Type -->
+                <div class="d-flex align-items-center mb-2">
+                  <label for="productTypeInput" class="form-label text-info mb-0 me-2">Product Type:</label>
+                  <span class="productType-body text-warning me-2"></span>
+                  <input type="text" id="productTypeInput"
+                        class="form-control form-control-sm productType-input"
+                        list="product-type-selector"
+                        placeholder="Select Category"
+                        style="max-width: 70%;">
+                </div>
+
+                <!-- Last Updated -->
+                <div class="d-flex align-items-center mb-1">
+                  <label class="form-label text-info mb-0 me-2">Updated:</label>
+                  <span class="lastUpdated prodDate text-warning"></span>
+                </div>
+
+                <!-- Description -->
+                <div class="mb-2">
+                  <label for="productDescriptionInput" class="form-label text-info mb-1">Description:</label>
+                  <textarea id="productDescriptionInput" class="form-control form-control-sm description-input"
+                            rows="3" style="resize:none; overflow:hidden;" wrap="soft"
+                            placeholder="Enter product description"></textarea>
+                  <span class="description-body d-none text-warning"></span>
+                </div>
+
+              </div>
+
+              <!-- Totals Column -->
+              <div id="productTotalsColumn" class="d-flex flex-column align-items-center ps-3 rounded border-start border-2 border-info shadow" style="width:100px; min-height:250px;">
+                <div class="d-flex flex-column align-items-center mb-3 w-100">
+                  <label class="form-label text-info mb-1">Total Cost</label>
+                  <span class="totalCost-body text-warning fw-bold"></span>
+                </div>
+                <div class="d-flex flex-column align-items-center mb-3 w-100">
+                  <label class="form-label text-info mb-1">Total Retail</label>
+                  <span class="totalRetail-body text-warning fw-bold"></span>
+                </div>
+                <div class="d-flex flex-column align-items-center mt-3 w-100" style="cursor:pointer;">
+                  <label class="form-label text-info mb-1" data-bs-toggle="modal" data-bs-target="#inStockModal">In Stock</label>
+                  <span class="inStockValue-body text-warning fw-bold" data-bs-toggle="modal" data-bs-target="#inStockModal">0</span>
+                </div>
+              </div>
+
+            </div>
+          </fieldset>
+
+          <!-- Parts Section Accordion -->
+          <div class="accordion mt-2 mb-2 parts-accordion">
+            <div class="accordion-item border-info">
+              <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse">
+                  <span><i class="fa-solid fa-boxes-stacked me-2"></i></span>
+                  <span class="fs-6 ms-2 partrow-header-display">Parts</span>
+                </button>
+              </h2>
+              <div class="accordion-collapse collapse">
+                <div class="accordion-body">
+                  <div class="container-fluid px-0">
+                    <div class="row mb-0 part-row-headers">
+                      <div class="col-md-6">Part</div>
+                      <div class="col-md-1">Qty</div>
+                      <div class="col-md-2">Cost $</div>
+                      <div class="col-md-2">Retail $</div>
+                      <div class="col-md-1"></div>
+                    </div>
+                    <div class="part-rows"></div>
+                    <div class="row g-3 mt-1 mb-1">
+                      <div class="col-sm-6">
+                        <button type="button" class="btn btn-sm btn-outline-primary addPartBtn">➕ Part</button>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
+          </div>
 
-            <!-- Save Button -->
-            <div class="row g-3 mt-2 mb-2">
-              <div class="col-sm-12 d-flex gap-2">
-                <button type="submit" class="btn btn-success btn-sm rounded-pill">💾 Save</button>
-                <button type="button" class="btn btn-secondary btn-sm rounded-pill" id="addProductCancel">❌ Cancel</button>
-              </div>
+          <!-- Buttons -->
+          <div class="d-flex gap-1 mt-2">
+            <button type="button" class="btn btn-warning btn-sm rounded-pill edit-button">
+              <i class="bi bi-pencil me-1"></i> Edit
+            </button>
+            <button type="button" class="btn btn-success btn-sm rounded-pill save-button d-none" disabled>
+              <i class="bi bi-check me-1"></i> Save
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm rounded-pill cancel-button d-none">
+              <i class="bi bi-x me-1"></i> Cancel
+            </button>
+            <div class="d-flex gap-1">
+              <button type="button" class="btn btn-outline-danger btn-sm rounded-pill before-delete-button">Delete</button>
+              <button type="button" class="btn btn-danger btn-sm rounded-pill delete-button d-none">Confirm</button>
             </div>
-          </form>
+          </div>
+
         </div>
       </div>
     </div>
-  </div>
-
-  <!-- 🔍 Search Results Accordion -->
-  <div class="accordion" id="productSearchResults"></div>
+  </template>
 
   <!-- Template for a single part row (not displayed) -->
   <template id="partRowTemplate">
@@ -192,193 +259,164 @@
     </div>
   </template>
 
-  <!-- Template for dynamic product rows -->
-  <template id="rowTemplate">
-    <div class="accordion-item product-accordion border-info">
-      <h2 class="accordion-header">
-        <button class="accordion-button collapsed" type="button"
-                data-bs-toggle="collapse">
-          <div class="row w-100 text-truncate align-items-center gx-2">
-            <div class="col-1 text-center productType-icon"></div>
-            <div class="col-9 text-truncate fw-bold productName"></div>
-            <div class="col-2 totalRetail"></div>
-          </div>
-        </button>
-      </h2>
-
-      <div class="accordion-collapse collapse">
-        <div class="accordion-body">
-<!-- ===== Product Info Section ===== -->
-<fieldset id="productInfoFieldset" class="mb-2 p-2 border rounded border-info">
-
-  <!-- Main Content Row -->
-  <div class="d-flex flex-wrap justify-content-start align-items-start gap-3">
-
-    <!-- Left Column: Control Panel + Product Name + Thumbnail -->
-    <div id="productThumbnailColumn" class="d-flex" style="width:250px; height:250px;">
-
-      <!-- Control Panel -->
-      <div id="thumbnailControlPanel" 
-           class="d-flex flex-column justify-content-center align-items-center me-2"
-           style="width:50px;">
-        <button class="btn btn-sm btn-outline-info mb-1" title="Upload"><i class="bi bi-upload"></i></button>
-        <button class="btn btn-sm btn-outline-warning mb-1" title="Edit"><i class="bi bi-pencil"></i></button>
-        <button class="btn btn-sm btn-outline-danger mb-1" title="Delete"><i class="bi bi-trash"></i></button>
-      </div>
-
-      <!-- Thumbnail + Manage Gallery Button -->
-      <div class="d-flex flex-column align-items-center">
-        <input type="text" class="form-control form-control-sm productName-input mb-1 text-center" 
-               id="productName" placeholder="Product Name">
-        <img src="/images/placeholder.png" 
-             class="img-thumbnail mb-2"
-             alt="Product Thumbnail"
-             style="width:200px; height:200px;">
-
-        <!-- Manage Gallery Button -->
-        <button class="btn btn-sm btn-outline-info" 
-                data-bs-toggle="modal" 
-                data-bs-target="#imageManagerModal">
-          <i class="bi bi-images me-1"></i> Gallery Manager
-        </button>
-      </div>
-    </div>
-
-    <!-- Middle Column: Type + Updated + Description -->
-    <div id="productDescriptionColumn" class="d-flex flex-column" style="width:400px; height:200px;">
-
-      <!-- Product Type (inline label + input) -->
-      <div class="d-flex align-items-center mb-4">
-        <label for="productTypeInput" class="form-label text-info mb-0 me-2">Product Type:</label>
-        <input type="text" 
-               id="productTypeInput"
-               class="form-control form-control-sm productType-input"
-               list="product-type-options" 
-               placeholder="Select Type" 
-               style="max-width: 70%;">
-        <datalist id="product-type-options"></datalist>
-      </div>
-
-      <!-- Last Updated -->
-      <div class="mb-4">
-        <small class="text-info fw-bold">Updated:</small> 
-        <span id="productUpdated" class="prodDate text-warning">09-19-2025</span>
-      </div>
-
-      <!-- Description (single-line look) -->
-      <label for="productDescriptionInput" class="form-label mb-1">Description</label>
-      <textarea id="productDescriptionInput" 
-                class="form-control form-control-sm description-input"
-                rows="1"
-                style="resize:none; overflow:hidden;"
-                placeholder="Enter product description"></textarea>
-    </div>
-
-    <!-- Right Column: Totals -->
-    <!-- <div id="productTotalsColumn" 
-         class="d-flex flex-column align-items-center ps-3 border-start border-2 rounded bg-black shadow-sm"
-         style="width:150px; height:200px;">
-      <label for="totalCost" class="form-label text-info mb-1">Total Cost</label>
-      <input id="totalCost" type="text" 
-             class="form-control form-control-sm text-warning mb-2 totalCost-input" 
-             readonly>
-      <label for="totalRetail" class="form-label text-info mb-1">Total Retail</label>
-      <input id="totalRetail" type="text" 
-             class="form-control form-control-sm text-warning totalRetail-input" 
-             readonly>
-    </div> -->
-
-  </div>
-</fieldset>
-
-          <!-- Parts Section Accordion -->
-          <div class="accordion mt-2 mb-2 parts-accordion">
-            <div class="accordion-item border-info">
-              <h2 class="accordion-header">
-                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse">
-                  <span><i class="fa-solid fa-boxes-stacked me-2"></i></span>
-                  <span class="fs-6 ms-2 partrow-header-display">Parts</span>
-                </button>
-              </h2>
-              <div class="accordion-collapse collapse">
-                <div class="accordion-body">
-                  <div class="container-fluid px-0">
-
-                    <!-- Headers -->
-                    <div class="row mb-0 part-row-headers">
-                      <div class="col-md-6">Part</div>
-                      <div class="col-md-1">Qty</div>
-                      <div class="col-md-2">Cost $</div>
-                      <div class="col-md-2">Retail $</div>
-                      <div class="col-md-1"></div>
-                    </div>
-
-                    <!-- Container for cloned part rows -->
-                    <div class="part-rows"></div>
-
-                    <!-- Add Part Button -->
-                    <div class="row g-3 mt-1 mb-1">
-                      <div class="col-sm-6">
-                        <button type="button" class="btn btn-sm btn-outline-primary addPartBtn">➕ Part</button>
-                      </div>
-                    </div>
-
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Buttons -->
-          <div class="d-flex gap-1 mt-2">
-            <button type="button" class="btn btn-warning btn-sm rounded-pill edit-button">
-              <i class="bi bi-pencil me-1"></i> Edit
-            </button>
-            <button type="button" class="btn btn-success btn-sm rounded-pill save-button d-none" disabled>
-              <i class="bi bi-check me-1"></i> Save
-            </button>
-            <button type="button" class="btn btn-secondary btn-sm rounded-pill cancel-button d-none">
-              <i class="bi bi-x me-1"></i> Cancel
-            </button>
-            <div class="d-flex gap-1">
-              <button type="button" class="btn btn-outline-danger btn-sm rounded-pill before-delete-button">Delete</button>
-              <button type="button" class="btn btn-danger btn-sm rounded-pill delete-button d-none">Confirm</button>
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </div>
-  </template>
-
 </div>
 
-<script src="config.js" defer></script> <!-- this has all my glogal functions, variables and constants including scripturl -->
-<script src="test7.js" defer></script>
+<!-- Gallery Manager Modal -->
+<div class="modal fade" id="galleryManagerModal" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content">
+
+      <!-- Header -->
+      <div class="modal-header">
+        <h5 class="modal-title">
+          Gallery Manager • <span id="galleryProductName" class="text-info">Test Product</span>
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Gallery grid will be populated dynamically -->
+        <div class="gallery-grid" id="galleryGrid"></div>
+      </div>
+
+      <!-- Footer -->
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="saveGalleryChanges">Save Changes</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- In Stock Modal -->
+<div class="modal fade" id="inStockModal" tabindex="-1" aria-labelledby="inStockModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content bg-dark text-light">
+      <div class="modal-header border-info">
+        <h5 class="modal-title text-info" id="inStockModalLabel">Product Stock Details</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Total units possible summary -->
+        <div class="mb-3">
+          <strong class="text-info">Total Units Possible: </strong>
+          <span id="inStockTotalUnits" class="fw-bold text-warning">0</span>
+        </div>
+
+        <!-- Dynamic stock table -->
+        <div id="inStockModalContent" class="table-responsive">
+          <table class="table table-black table-bordered table-hover mb-0">
+            <thead>
+              <tr>
+                <th>Part Name</th>
+                <th>Needed</th>
+                <th>On Hand</th>
+                <th>Order Requirement</th>
+              </tr>
+            </thead>
+            <tbody id="inStockTableBody">
+              <tr>
+                <td colspan="4" class="text-center text-secondary">Loading stock details...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="modal-footer border-info">
+        <button type="button" class="btn btn-outline-info" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="global.js"></script>
+<!-- <script type="module" src="client.js"></script> -->
+<script type="module" src="admin.js"></script>
+<script src="productmanager.js" defer></script>
+<script src="gallerymanager.js"></script>
 
 <script>
+function renderInStockModal(product) {
+  if (!product || !Array.isArray(product.parts)) return;
 
-function setupDynamicNavigation() {
-  function activateTabFromHash() {
-    var hash = window.location.hash;
-    if (!hash) return;
+  const tbody = document.getElementById("inStockTableBody");
+  const totalUnitsEl = document.getElementById("inStockTotalUnits");
 
-    var targetTabButton = document.querySelector('[data-bs-target="' + hash + '"]');
-    if (targetTabButton) {
-      var tab = new bootstrap.Tab(targetTabButton);
-      tab.show();
+  tbody.innerHTML = ""; // clear previous content
+  let minUnits = Infinity;
+
+  // Step 1: unify like parts
+  const combinedParts = {};
+  product.parts.forEach(part => {
+    const name = part.matName;
+    const qty  = parseFloat(part.qty) || 0;
+    if (!combinedParts[name]) combinedParts[name] = { ...part, qty: 0 };
+    combinedParts[name].qty += qty; // sum quantities
+  });
+
+  const partsData = Object.values(combinedParts).map(part => {
+    const material = materialByName[part.matName];
+    const needed = part.qty;
+    const onHand = material?.onHand || 0;
+    const supplierUrl = material?.supplierUrl || null;
+
+    // Bottleneck calculation
+    const maxUnits = needed > 0 ? Math.floor(onHand / needed) : 0;
+    if (maxUnits < minUnits) minUnits = maxUnits;
+
+    // Order Requirement per part
+    const orderRequirement = Math.max(0, needed - onHand);
+
+    return { ...part, onHand, needed, orderRequirement, supplierUrl };
+  });
+
+  // Sort: deficient parts first
+  partsData.sort((a, b) => b.orderRequirement - a.orderRequirement);
+
+  // Render rows
+  partsData.forEach(part => {
+    const row = document.createElement("tr");
+    const textColor = part.orderRequirement > 0 ? "text-danger" : "text-success";
+
+    if (part.supplierUrl) {
+      row.style.cursor = "pointer";
+      row.addEventListener("click", () => window.open(part.supplierUrl, "_blank"));
     }
-  }
 
-  // Use window.onload for full page load
-  window.onload = function() {
-    activateTabFromHash();  // Ensures tab switch happens after everything is loaded
-  };
+    ["matName", "needed", "onHand", "orderRequirement"].forEach(key => {
+      const cell = document.createElement("td");
+      cell.textContent = part[key];
+      cell.classList.add(textColor);
+      cell.style.backgroundColor = "#000";
+      row.appendChild(cell);
+    });
 
-  window.addEventListener('hashchange', activateTabFromHash);
+    row.addEventListener("mouseenter", () => {
+      row.querySelectorAll("td").forEach(td => {
+        td.style.backgroundColor = part.orderRequirement > 0 ? "#330000" : "#003300";
+      });
+    });
+    row.addEventListener("mouseleave", () => {
+      row.querySelectorAll("td").forEach(td => {
+        td.style.backgroundColor = "#000";
+      });
+    });
+
+    tbody.appendChild(row);
+  });
+
+  // Update total units possible at the top
+  totalUnitsEl.textContent = minUnits === Infinity ? 0 : minUnits;
+
+  // Show the modal
+  const modalEl = document.getElementById("inStockModal");
+  let bsModal = bootstrap.Modal.getInstance(modalEl);
+  if (!bsModal) bsModal = new bootstrap.Modal(modalEl);
+  bsModal.show();
 }
-
-setupDynamicNavigation();
 
 window.addEventListener('DOMContentLoaded', () => {
   const theme = localStorage.getItem('selectedTheme');
@@ -388,8 +426,6 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 </script>
-
-<!-- </script> -->
 
 </body>
 </html>

@@ -262,3 +262,15 @@ function convertGoogleDriveLink(url) {
   if (driveMatch) return `https://drive.google.com/thumbnail?id=${driveMatch[1]}`;
   return url;
 }
+
+function formatPhoneNumber(raw) {
+  const digits = (raw || "").replace(/\D/g, "");
+  if (digits.length === 10) return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
+  return raw; // fallback
+}
+
+function formatDateForUser(date) {
+  if (!date) return "";
+  return new Date(date).toLocaleDateString("en-US");
+}
+

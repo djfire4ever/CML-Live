@@ -3,7 +3,7 @@
 ================================== */
 .watermark {
   position: fixed;                                           /* 📌 Fixed in place */
-  left: 25%;                                               /* ⬅️ Center horizontally */
+  left: 25%;                                                 /* ⬅️ Center horizontally */
   width: 50%;                                                /* 📏 Width across middle */
   height: 100%;                                              /* 📐 Full height */
   background-image: url('/images/CML-Letterhead-Blue.png');  /* 🖼 Image path */
