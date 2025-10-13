@@ -12,12 +12,14 @@ const TIERS = {
   New:      { label: "New",      color: "black",     textColor: "info",     icon: "🆕", iconBgColor: "success" },
   Silver:   { label: "Silver",   color: "secondary", textColor: "black",    icon: "🥈", iconBgColor: "secondary" },
   Gold:     { label: "Gold",     color: "warning",   textColor: "black",    icon: "🥇", iconBgColor: "warning" },
-  Platinum: { label: "Platinum", color: "primary",   textColor: "black",    icon: "💎", iconBgColor: "info" }
+  Platinum: { label: "Platinum", color: "primary",   textColor: "black",    icon: "💎", iconBgColor: "primary" } // 🏆 🎖️ 
 };
 const getTierData = tier => TIERS[tier] || TIERS.New;
 
 // ----- Email Templates Allowed -----
 const EMAIL_TEMPLATES_ALLOWED_KEYS = ["lead", "thankyou", "promo", "uploadlink", "tierupgrade"];
+
+const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
 // ====== Load Clients ======
 async function loadClients() {
@@ -40,6 +42,7 @@ async function loadClients() {
       zip: r.zip || "",
       tier: r.tier || "New",
       memberSince: r.memberSince || "",
+      birthday: r.birthday || "", 
       raw: r // optional, keep raw for debugging
     }));
   } catch (err) {
@@ -233,7 +236,8 @@ function renderClientCard(client = null) {
     state: [wrapper.querySelector(".state"), wrapper.querySelector(".state-input")],
     zip: [wrapper.querySelector(".zip"), wrapper.querySelector(".zip-input")],
     tier: [wrapper.querySelector(".tier"), wrapper.querySelector(".tier-input")],
-    memberSince: [wrapper.querySelector(".memberSince")], // span only, no input
+    memberSince: [wrapper.querySelector(".memberSince")],
+    birthday: [wrapper.querySelector(".birthday"), wrapper.querySelector(".birthday-month-input"), wrapper.querySelector(".birthday-day-input")],
     clientID: [wrapper.querySelector(".clientID"), wrapper.querySelector(".clientID-input")]
   };
 
@@ -265,13 +269,31 @@ function renderClientCard(client = null) {
 
     // --- Populate fields ---
     Object.entries(fields).forEach(([key, arr]) => {
-      const span = arr[0];
-      const input = arr[1];
-      let val = client[key] || "";
-      if (key === "clientID") val = formatPhoneNumber(val);
-      if (key === "memberSince") val = formatDateForUser(val);
-      if (span) span.textContent = val;
-      if (input) input.value = val;
+      if (key === "birthday") {
+        const span = arr[0];
+        const monthInput = arr[1];
+        const dayInput = arr[2];
+        let val = client[key] || "";
+        if (val && val.includes("-")) {
+          const [mm, dd] = val.split("-");
+          const monthIndex = parseInt(mm, 10) - 1;
+          span.textContent = `${MONTH_NAMES[monthIndex]} ${dd}`;
+          monthInput.innerHTML = `<option value="" disabled hidden>Month</option>` + MONTH_NAMES.map((m,i)=>`<option value="${String(i+1).padStart(2,'0')}" ${i===monthIndex?'selected':''}>${m}</option>`).join("");
+          dayInput.innerHTML = `<option value="" disabled hidden>Day</option>` + Array.from({length:31},(_,i)=>`<option value="${String(i+1).padStart(2,'0')}" ${String(i+1).padStart(2,'0')===dd?'selected':''}>${String(i+1).padStart(2,'0')}</option>`).join("");
+        } else {
+          span.textContent = "";
+          monthInput.innerHTML = `<option value="" disabled selected hidden>Month</option>` + MONTH_NAMES.map((m,i)=>`<option value="${String(i+1).padStart(2,'0')}">${m}</option>`).join("");
+          dayInput.innerHTML = `<option value="" disabled selected hidden>Day</option>` + Array.from({length:31},(_,i)=>`<option value="${String(i+1).padStart(2,'0')}">${String(i+1).padStart(2,'0')}</option>`).join("");
+        }
+      } else {
+        const span = arr[0];
+        const input = arr[1];
+        let val = client[key] || "";
+        if (key === "clientID") val = formatPhoneNumber(val);
+        if (key === "memberSince") val = formatDateForUser(val);
+        if (span) span.textContent = val;
+        if (input) input.value = val;
+      }
     });
 
     // --- Email dropdown ---
@@ -308,11 +330,19 @@ function renderClientCard(client = null) {
 
     // Clear fields
     Object.entries(fields).forEach(([key, arr]) => {
-      const span = arr[0];
-      const input = arr[1];
       if (key === "memberSince") {
+        const span = arr[0];
         if (span) span.textContent = formatDateForUser(new Date());
+      } else if (key === "birthday") {
+        const span = arr[0];
+        const monthInput = arr[1];
+        const dayInput = arr[2];
+        if (span) span.textContent = "";
+        monthInput.innerHTML = `<option value="" disabled selected hidden>Month</option>` + MONTH_NAMES.map((m,i)=>`<option value="${String(i+1).padStart(2,'0')}">${m}</option>`).join("");
+        dayInput.innerHTML = `<option value="" disabled selected hidden>Day</option>` + Array.from({length:31},(_,i)=>`<option value="${String(i+1).padStart(2,'0')}">${String(i+1).padStart(2,'0')}</option>`).join("");
       } else {
+        const span = arr[0];
+        const input = arr[1];
         if (span) span.textContent = "";
         if (input) input.value = "";
       }
@@ -328,7 +358,7 @@ function renderClientCard(client = null) {
   container.appendChild(clone);
 }
 
-// ====== Enable/Disable Edit Mode (with live tier updates) ======
+// ====== Enable/Disable Edit Mode (with live tier + birthday updates) ======
 function enableEditToggle(wrapper, isEditing, isAddCard = false) {
   const editBtn = wrapper.querySelector(".edit-button");
   const saveBtn = wrapper.querySelector(".save-button");
@@ -336,17 +366,12 @@ function enableEditToggle(wrapper, isEditing, isAddCard = false) {
   const beforeDeleteBtn = wrapper.querySelector(".before-delete-button");
   const deleteBtn = wrapper.querySelector(".delete-button");
 
-  // --- Top Buttons ---
   if (editBtn) editBtn.classList.toggle("d-none", isEditing || isAddCard);
-  if (saveBtn) {
-    saveBtn.classList.toggle("d-none", !isEditing);
-    saveBtn.disabled = true;
-  }
+  if (saveBtn) { saveBtn.classList.toggle("d-none", !isEditing); saveBtn.disabled = true; }
   if (cancelBtn) cancelBtn.classList.toggle("d-none", !isEditing || isAddCard);
   if (beforeDeleteBtn) beforeDeleteBtn.style.display = isAddCard ? "none" : "inline-block";
   if (deleteBtn) deleteBtn.classList.add("d-none");
 
-  // --- Common Elements ---
   const clientIDInput = wrapper.querySelector(".clientID-input");
   const clientIDSpan = wrapper.querySelector(".clientID");
   const clientIDHeader = wrapper.querySelector(".clientID-header");
@@ -354,7 +379,6 @@ function enableEditToggle(wrapper, isEditing, isAddCard = false) {
   const headerBtn = wrapper.querySelector(".accordion-button");
   const tierHeader = wrapper.querySelector(".tier-header");
 
-  // --- Toggle base visibility ---
   if (clientIDInput) clientIDInput.classList.toggle("d-none", !isEditing && !isAddCard);
   if (clientIDSpan) clientIDSpan.classList.toggle("d-none", isEditing || isAddCard);
 
@@ -368,62 +392,73 @@ function enableEditToggle(wrapper, isEditing, isAddCard = false) {
     ["state", ".state-input", ".state"],
     ["zip", ".zip-input", ".zip"],
     ["tier", ".tier-input", ".tier"],
-    // memberSince is display-only, no input listener
+    ["birthday", ".birthday-month-input,.birthday-day-input", ".birthday"],
     ["clientID", ".clientID-input", ".clientID"]
   ];
 
   fields.forEach(([key, inputSel, spanSel]) => {
-    const input = wrapper.querySelector(inputSel);
-    const span = wrapper.querySelector(spanSel);
+    if (key === "birthday") {
+      const monthInput = wrapper.querySelector(".birthday-month-input");
+      const dayInput = wrapper.querySelector(".birthday-day-input");
+      const span = wrapper.querySelector(".birthday");
 
-    if (input) input.classList.toggle("d-none", !isEditing);
-    if (span) span.classList.toggle("d-none", isEditing);
-
-    if (input && span && !input.dataset.listenerAttached) {
-      input.addEventListener("input", () => {
-        const val = input.value;
-
-        // --- Update name header ---
-        if (key === "firstName" || key === "lastName") {
-          const first = wrapper.querySelector(".firstName-input")?.value || "";
-          const last = wrapper.querySelector(".lastName-input")?.value || "";
-          const nameHeader = wrapper.querySelector(".clientName-header");
-          if (nameHeader) nameHeader.textContent = `${first} ${last}`;
+      [monthInput, dayInput].forEach(input => {
+        if (!input.dataset.listenerAttached) {
+          input.addEventListener("change", () => {
+            const mm = monthInput.value;
+            const dd = dayInput.value;
+            if (mm && dd) {
+              span.textContent = `${MONTH_NAMES[parseInt(mm,10)-1]} ${dd}`;
+              if (saveBtn) saveBtn.disabled = false;
+            } else {
+              span.textContent = "";
+            }
+          });
+          input.dataset.listenerAttached = "1";
         }
-
-        if (key === "clientID") {
-          const clientIDHeader = wrapper.querySelector(".clientID-header");
-          if (clientIDHeader) clientIDHeader.innerHTML = val ? `📞 ${formatPhoneNumber(val)}` : `<span class="text-muted">📞</span>`;
-        }
-
-        // --- Update tier visuals ---
-        if (key === "tier") {
-          const tierData = getTierData(val);
-          if (headerBtn) {
-            Object.values(TIERS).forEach(t =>
-              headerBtn.classList.remove(`bg-${t.color}`, `text-${t.textColor}`)
-            );
-            headerBtn.classList.add(`bg-${tierData.color}`, `text-${tierData.textColor}`);
-          }
-          if (iconBg) {
-            Object.values(TIERS).forEach(t =>
-              iconBg.classList.remove(`text-${t.iconBgColor || t.color}`)
-            );
-            iconBg.classList.add(`text-${tierData.iconBgColor || tierData.color}`);
-          }
-          if (tierHeader) tierHeader.textContent = tierData.icon;
-        }
-
-        // --- Sync text + save state ---
-        if (span) span.textContent = val;
-        if (saveBtn) saveBtn.disabled = false;
       });
+      monthInput.classList.toggle("d-none", !isEditing);
+      dayInput.classList.toggle("d-none", !isEditing);
+      span.classList.toggle("d-none", isEditing);
+    } else {
+      const input = wrapper.querySelector(inputSel);
+      const span = wrapper.querySelector(spanSel);
+      if (input) input.classList.toggle("d-none", !isEditing);
+      if (span) span.classList.toggle("d-none", isEditing);
 
-      input.dataset.listenerAttached = "1";
+      if (input && span && !input.dataset.listenerAttached) {
+        input.addEventListener("input", () => {
+          const val = input.value;
+          if (key === "firstName" || key === "lastName") {
+            const first = wrapper.querySelector(".firstName-input")?.value || "";
+            const last = wrapper.querySelector(".lastName-input")?.value || "";
+            const nameHeader = wrapper.querySelector(".clientName-header");
+            if (nameHeader) nameHeader.textContent = `${first} ${last}`;
+          }
+          if (key === "clientID") {
+            const clientIDHeader = wrapper.querySelector(".clientID-header");
+            if (clientIDHeader) clientIDHeader.innerHTML = val ? `📞 ${formatPhoneNumber(val)}` : `<span class="text-muted">📞</span>`;
+          }
+          if (key === "tier") {
+            const tierData = getTierData(val);
+            if (headerBtn) {
+              Object.values(TIERS).forEach(t=>headerBtn.classList.remove(`bg-${t.color}`, `text-${t.textColor}`));
+              headerBtn.classList.add(`bg-${tierData.color}`, `text-${tierData.textColor}`);
+            }
+            if (iconBg) {
+              Object.values(TIERS).forEach(t=>iconBg.classList.remove(`text-${t.iconBgColor || t.color}`));
+              iconBg.classList.add(`text-${tierData.iconBgColor || tierData.color}`);
+            }
+            if (tierHeader) tierHeader.textContent = tierData.icon;
+          }
+          if (span) span.textContent = val;
+          if (saveBtn) saveBtn.disabled = false;
+        });
+        input.dataset.listenerAttached = "1";
+      }
     }
   });
 
-  // --- Apply initial icon color when adding a new client ---
   if (isAddCard && iconBg) {
     const tierInput = wrapper.querySelector(".tier-input");
     const tierVal = tierInput?.value || "New";

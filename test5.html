@@ -167,11 +167,32 @@ textarea::placeholder {
                     <input type="text" class="form-control form-control-sm zip-input d-none" placeholder="12345" value="ZIP" title="Zip code required">
                   </div>
 
+                <div class="row gx-3 gy-2 mt-2">
                   <!-- Member Since -->
-                  <div class="col-md-4">
+                  <div class="col-md-6">
                     <label class="form-label text-info mb-0">Member Since</label>
                     <span class="memberSince d-block">Member Since</span>
-                    <input type="text" class="form-control form-control-sm memberSince-input d-none readonly" placeholder="Member Since" value="MEMBERSINCE" title="Member Since">
+                    <!-- Display only; frontend never edits or sends -->
+                    <input type="text"
+                          class="form-control form-control-sm memberSince-input d-none readonly"
+                          placeholder="Member Since"
+                          value="MEMBERSINCE"
+                          title="Member Since"
+                          readonly>
+                  </div>
+
+                  <!-- Birthday -->
+                  <div class="col-md-4">
+                    <label class="form-label text-info mb-0">Birthday</label>
+                    <span class="birthday d-block"></span>
+                    <div class="d-flex gap-1">
+                      <select class="form-select form-select-sm birthday-month-input d-none">
+                        <option value="" disabled selected hidden>Month</option>
+                      </select>
+                      <select class="form-select form-select-sm birthday-day-input d-none">
+                        <option value="" disabled selected hidden>Day</option>
+                      </select>
+                    </div>
                   </div>
 
                 </div>

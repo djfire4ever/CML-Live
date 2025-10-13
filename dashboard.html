@@ -290,11 +290,6 @@ body.bg-black .stat-button:active {
                 </button>
               </div>
               <div class="col-12">
-                <button class="btn btn-outline-secondary w-100 d-flex justify-content-between align-items-center tier-btn" data-tier="Bronze">
-                  <span class="text-bronze">🥉 Bronze •</span><span id="tierBronze" class="fw-bold text-bronze">--</span>
-                </button>
-              </div>
-              <div class="col-12">
                 <button class="btn btn-outline-info w-100 d-flex justify-content-between align-items-center tier-btn" data-tier="Silver">
                   <span class="text-info">🥈 Silver •</span><span id="tierSilver" class="fw-bold text-info">--</span>
                 </button>
@@ -316,7 +311,27 @@ body.bg-black .stat-button:active {
     </div>
   </div>
 
-  <!-- Upload Details Modal -->
+  <!-- Anniversaries & Birthdays Accordion -->
+  <div class="col-md-4 col-lg-4 my-1">
+    <div class="accordion fade-in-card" id="anniversariesAccordion">
+      <div class="accordion-item border-info">
+        <h2 class="accordion-header" id="headingAnniversaries">
+          <button class="accordion-button bg-black text-info" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAnniversaries" aria-expanded="true" aria-controls="collapseAnniversaries">
+            🎉 Anniversaries & Birthdays
+            <span id="anniversaryCountBadge" class="badge bg-info text-black rounded-pill ms-auto">0</span>
+          </button>
+        </h2>
+        <div id="collapseAnniversaries" class="accordion-collapse collapse" aria-labelledby="headingAnniversaries">
+          <div class="accordion-body bg-black text-light border-info">
+            <ul id="anniversariesList" class="list-group list-group-flush"></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Upload Details Modal -->
   <div class="modal fade" id="uploadDetailsModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
       <div class="modal-content bg-black text-info">
@@ -335,16 +350,18 @@ body.bg-black .stat-button:active {
 
 </div>
 </div>
-</div>
 
 <script type="module" src="global.js"></script>
 <!-- <script type="module" src="client.js"></script> -->
 <script type="module" src="admin.js"></script>
 
 <script>
-  
+
+// ===== Dashboard Fetch with Configurable Upcoming Window =====
+const UPCOMING_WINDOW_DAYS = 45; // 👈 change this to adjust range for anniversaries/birthdays
+
 // ==============================
-// 1️⃣ Fetch Dashboard Stats
+// Fetch Dashboard Stats
 // ==============================
 async function fetchDashboardStats() {
   try {
@@ -363,90 +380,58 @@ async function fetchDashboardStats() {
     // ---- Tier Counts ----
     if (data.tiers) {
       document.getElementById("tierNew").textContent = data.tiers.New || 0;
-      document.getElementById("tierBronze").textContent = data.tiers.Bronze || 0;
       document.getElementById("tierSilver").textContent = data.tiers.Silver || 0;
       document.getElementById("tierGold").textContent = data.tiers.Gold || 0;
       document.getElementById("tierPlatinum").textContent = data.tiers.Platinum || 0;
     }
-    // ---- Low stock (badge + list) ----
+
+    // ---- Low Stock ----
     const lowStockList = document.getElementById("lowStockList");
     lowStockList.innerHTML = "";
-
-    let lowStockData = Array.isArray(data.lowStock) ? data.lowStock : [];
-
-    // Set badge
+    const lowStockData = Array.isArray(data.lowStock) ? data.lowStock : [];
     document.getElementById("lowStockCount").textContent = lowStockData.length || 0;
 
-    // Populate the accordion list
     if (lowStockData.length > 0) {
       lowStockData.forEach(item => {
         const li = document.createElement("li");
         li.className = "list-group-item list-group-item-action d-flex justify-content-between align-items-center text-info bg-black low-stock-row";
         li.style.cursor = "pointer";
-
-        li.innerHTML = `
-          <div class="w-75 text-start">${item.matName}</div>
-          <div class="w-25 text-end">${item.onHand}</div>
-        `;
-
-        // Dynamic tooltip
+        li.innerHTML = `<div class="w-75 text-start">${item.matName}</div><div class="w-25 text-end">${item.onHand}</div>`;
         li.setAttribute("data-bs-toggle", "tooltip");
-        li.setAttribute("data-bs-html", "true"); // allow HTML inside tooltip
+        li.setAttribute("data-bs-html", "true");
         li.setAttribute("title", item.supplierUrl
-          ? `Click to order from <span class="tooltip-supplier">${item.supplier || "supplier"}</span>`
-          : `<span class="tooltip-no-supplier">No supplier listed</span>`);
-
-        li.addEventListener("click", () => {
-          if (item.supplierUrl) window.open(item.supplierUrl, "_blank");
-        });
-
+          ? `Click to order from <span class='tooltip-supplier'>${item.supplier || "supplier"}</span>`
+          : `<span class='tooltip-no-supplier'>No supplier listed</span>`);
+        li.addEventListener("click", () => { if (item.supplierUrl) window.open(item.supplierUrl, "_blank"); });
         lowStockList.appendChild(li);
       });
-
-      // Initialize all tooltips inside the list
-      const tooltipTriggerList = lowStockList.querySelectorAll('[data-bs-toggle="tooltip"]');
-      tooltipTriggerList.forEach(t => new bootstrap.Tooltip(t));
-
+      lowStockList.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(t => new bootstrap.Tooltip(t));
     } else {
       lowStockList.innerHTML = `<li class="list-group-item bg-black text-info">✅ All stock levels healthy.</li>`;
     }
 
-    // ---- Recent uploads (unchanged) ----
+    // ---- Recent Uploads ----
     if (Array.isArray(data.clientUploads)) {
       const uploadsList = document.getElementById("recentUploadsList");
-
       const filteredUploads = data.clientUploads
         .filter(u => !["DeletedByUser", "Expired"].includes(u.fileStatus))
-        .sort((a, b) => (new Date(b.uploadDate || 0)) - (new Date(a.uploadDate || 0)));
-
+        .sort((a, b) => new Date(b.uploadDate || 0) - new Date(a.uploadDate || 0));
       window._recentUploads = filteredUploads;
 
-      const html = filteredUploads.length
+      uploadsList.innerHTML = filteredUploads.length
         ? filteredUploads.map((u, i) => {
             const uploadDateStr = u.uploadDate ? new Date(u.uploadDate).toLocaleDateString() : "No date";
-            const fileExtMatch = u.fileName ? u.fileName.match(/\.(\w+)$/) : null;
+            const fileExtMatch = u.fileName?.match(/\.(\w+)$/);
             const fileExt = fileExtMatch ? fileExtMatch[1].toLowerCase() : "unknown";
-
-            let typeLabel = "File";
-            if (u.fileType?.startsWith("image/")) typeLabel = "Image";
-            else if (u.fileType?.startsWith("text/")) typeLabel = "Document";
-            else if (u.fileType === "application/pdf") typeLabel = "PDF";
-
-            let statusIcon;
-            switch ((u.fileStatus || "").toLowerCase()) {
-              case "viewed":
-                statusIcon = `<span class="upload-status text-success ms-2" title="Viewed">👁️</span>`;
-                break;
-              case "active":
-              case "new":
-              default:
-                statusIcon = `<span class="upload-status text-warning ms-2" title="New">🆕</span>`;
-                break;
-            }
-
+            const typeLabel = u.fileType?.startsWith("image/") ? "Image"
+                              : u.fileType?.startsWith("text/") ? "Document"
+                              : u.fileType === "application/pdf" ? "PDF"
+                              : "File";
+            const statusIcon = ["viewed"].includes((u.fileStatus || "").toLowerCase())
+                              ? `<span class='upload-status text-success ms-2' title='Viewed'>👁️</span>`
+                              : `<span class='upload-status text-warning ms-2' title='New'>🆕</span>`;
             return `
-              <li class="list-group-item bg-black text-info upload-row"
-                  data-index="${i}" data-id="${u.uploadID}" style="cursor:pointer;">
+              <li class="list-group-item bg-black text-info upload-row" data-index="${i}" data-id="${u.uploadID}" style="cursor:pointer;">
                 <div class="d-flex justify-content-between">
                   <strong>${u.firstName || ""} ${u.lastName || ""}</strong>
                   <small class="text-info">${uploadDateStr}</small>
@@ -455,15 +440,69 @@ async function fetchDashboardStats() {
                   <small>${typeLabel} • ${fileExt}</small>
                   ${statusIcon}
                 </div>
-              </li>
-            `;
+              </li>`;
           }).join("")
-        : `<li class="list-group-item bg-black text-info">No uploads available.</li>`;
-
-      uploadsList.innerHTML = html;
+        : `<li class="list-group-item bg-black text-info">No recent uploads.</li>`;
       document.getElementById("recentUploadCountBadge").textContent = filteredUploads.length;
-
       attachUploadRowEvents();
+    }
+
+    // ---- Anniversaries & Birthdays ----
+    if (data.anniversaries) {
+      const anniversariesList = document.getElementById("anniversariesList");
+      const anniversaryCountBadge = document.getElementById("anniversaryCountBadge");
+      anniversariesList.innerHTML = "";
+      const events = [];
+      const today = new Date();
+
+      // MemberSince anniversaries
+      (data.anniversaries.memberSince || []).forEach(a => {
+        const date = new Date(a.date);
+        if (isNaN(date)) return;
+        const daysUntil = Math.ceil((date - today) / (1000 * 60 * 60 * 24));
+        if (daysUntil < 0 || daysUntil > UPCOMING_WINDOW_DAYS) return;
+        let years = a.years;
+        if (years === 0) years = 1; // upcoming first anniversary shows as 1 year
+        events.push({ type: "Anniversary", name: `${a.firstName} ${a.lastName}`, date, years, daysUntil });
+      });
+
+      // Birthdays
+      (data.anniversaries.birthdays || []).forEach(b => {
+        const date = new Date(b.date);
+        if (isNaN(date)) return;
+        const daysUntil = Math.ceil((date - today) / (1000 * 60 * 60 * 24));
+        if (daysUntil < 0 || daysUntil > UPCOMING_WINDOW_DAYS) return;
+        events.push({ type: "Birthday", name: `${b.firstName} ${b.lastName}`, date, daysUntil });
+      });
+
+      // Update badge count
+      anniversaryCountBadge.textContent = events.length || 0;
+
+      // Sort by soonest date
+      events.sort((a, b) => a.date - b.date);
+
+      if (events.length > 0) {
+        events.forEach(e => {
+          const li = document.createElement("li");
+          li.className = "list-group-item bg-black text-info d-flex justify-content-between align-items-center";
+          let tooltip = "";
+          if (e.type === "Birthday") {
+            const mm = String(e.date.getMonth() + 1).padStart(2, "0");
+            const dd = String(e.date.getDate()).padStart(2, "0");
+            tooltip = ` title="Birthday: ${mm}-${dd}" data-bs-toggle="tooltip"`;
+          }
+          li.innerHTML = `
+            <span${tooltip}>
+              ${e.type === "Anniversary" ? `🎉 ${e.name} • ${e.years} year${e.years > 1 ? "s" : ""}` : `🎂 ${e.name}`} 
+            </span>
+            <small>${e.daysUntil === 0 ? "Today!" : `in ${e.daysUntil} day${e.daysUntil > 1 ? "s" : ""}`}</small>
+          `;
+          anniversariesList.appendChild(li);
+        });
+        anniversariesList.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(t => new bootstrap.Tooltip(t));
+      } else {
+        anniversariesList.innerHTML = `<li class="list-group-item bg-black text-info">No upcoming anniversaries or birthdays in the next ${UPCOMING_WINDOW_DAYS} days.</li>`;
+      }
     }
 
   } catch (err) {
