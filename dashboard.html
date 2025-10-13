@@ -352,32 +352,32 @@ body.bg-black .stat-button:active {
 </div>
 
 <script type="module" src="global.js"></script>
-<!-- <script type="module" src="client.js"></script> -->
 <script type="module" src="admin.js"></script>
 
 <script>
 
 // ===== Dashboard Fetch with Configurable Upcoming Window =====
-const UPCOMING_WINDOW_DAYS = 45; // 👈 change this to adjust range for anniversaries/birthdays
+const UPCOMING_WINDOW_DAYS = 45 ; // 👈 change this to adjust range for anniversaries/birthdays
 
 // ==============================
 // Fetch Dashboard Stats
 // ==============================
 async function fetchDashboardStats() {
   try {
-    const url = `${scriptURL}?action=getDashboardStats`;
-    const response = await fetch(url);
+    const response = await fetch(`${scriptURL}?action=getDashboardStats`);
     if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
     const data = await response.json();
 
-    // ---- Counts ----
+    const today = new Date();
+
+    // ---- Top-level counts ----
     document.getElementById("totalClients").textContent = data.clients || 0;
     document.getElementById("totalProducts").textContent = data.products || 0;
     document.getElementById("totalMaterials").textContent = data.materials || 0;
     document.getElementById("unpaidInvoiceCount").textContent = data.unpaidInvoices || 0;
     document.getElementById("totalQuotes").textContent = data.quotes || 0;
 
-    // ---- Tier Counts ----
+    // ---- Tier counts ----
     if (data.tiers) {
       document.getElementById("tierNew").textContent = data.tiers.New || 0;
       document.getElementById("tierSilver").textContent = data.tiers.Silver || 0;
@@ -385,24 +385,31 @@ async function fetchDashboardStats() {
       document.getElementById("tierPlatinum").textContent = data.tiers.Platinum || 0;
     }
 
-    // ---- Low Stock ----
+    // ---- Low stock ----
     const lowStockList = document.getElementById("lowStockList");
     lowStockList.innerHTML = "";
     const lowStockData = Array.isArray(data.lowStock) ? data.lowStock : [];
     document.getElementById("lowStockCount").textContent = lowStockData.length || 0;
 
-    if (lowStockData.length > 0) {
+    if (lowStockData.length) {
       lowStockData.forEach(item => {
         const li = document.createElement("li");
         li.className = "list-group-item list-group-item-action d-flex justify-content-between align-items-center text-info bg-black low-stock-row";
         li.style.cursor = "pointer";
-        li.innerHTML = `<div class="w-75 text-start">${item.matName}</div><div class="w-25 text-end">${item.onHand}</div>`;
+        li.innerHTML = `
+          <div class="w-75 text-start">${item.matName}</div>
+          <div class="w-25 text-end">${item.onHand}</div>
+        `;
         li.setAttribute("data-bs-toggle", "tooltip");
         li.setAttribute("data-bs-html", "true");
         li.setAttribute("title", item.supplierUrl
-          ? `Click to order from <span class='tooltip-supplier'>${item.supplier || "supplier"}</span>`
-          : `<span class='tooltip-no-supplier'>No supplier listed</span>`);
-        li.addEventListener("click", () => { if (item.supplierUrl) window.open(item.supplierUrl, "_blank"); });
+          ? `Click to order from <span class="tooltip-supplier">${item.supplier || "supplier"}</span>`
+          : `<span class="tooltip-no-supplier">No supplier listed</span>`);
+
+        li.addEventListener("click", () => {
+          if (item.supplierUrl) window.open(item.supplierUrl, "_blank");
+        });
+
         lowStockList.appendChild(li);
       });
       lowStockList.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(t => new bootstrap.Tooltip(t));
@@ -410,28 +417,106 @@ async function fetchDashboardStats() {
       lowStockList.innerHTML = `<li class="list-group-item bg-black text-info">✅ All stock levels healthy.</li>`;
     }
 
-    // ---- Recent Uploads ----
+    // ---- Upcoming anniversaries & birthdays ----
+    const anniversariesList = document.getElementById("anniversariesList");
+    const anniversaryCountBadge = document.getElementById("anniversaryCountBadge");
+    anniversariesList.innerHTML = "";
+
+    const events = [];
+
+    // --- MemberSince anniversaries ---
+    (data.anniversaries?.memberSince || []).forEach(a => {
+      const d = new Date(a.date);
+      if (isNaN(d)) return;
+      const daysUntil = Math.ceil((d - today) / (1000 * 60 * 60 * 24));
+      if (daysUntil >= 0 && daysUntil <= UPCOMING_WINDOW_DAYS) {
+        events.push({
+          type: "Anniversary",
+          name: a.firstName,
+          date: d,
+          years: a.years,
+          daysUntil
+        });
+      }
+    });
+
+    // --- Birthdays ---
+    (data.anniversaries?.birthdays || []).forEach(b => {
+      const d = new Date(b.date);
+      if (isNaN(d)) return;
+      const daysUntil = Math.ceil((d - today) / (1000 * 60 * 60 * 24));
+      if (daysUntil >= 0 && daysUntil <= UPCOMING_WINDOW_DAYS) {
+        events.push({
+          type: "Birthday",
+          name: b.firstName,
+          date: d,
+          daysUntil
+        });
+      }
+    });
+
+    // Sort by nearest date
+    events.sort((a, b) => a.date - b.date);
+    anniversaryCountBadge.textContent = events.length;
+
+    if (events.length === 0) {
+      anniversariesList.innerHTML = `<li class="list-group-item bg-black text-info">No upcoming events in the next ${UPCOMING_WINDOW_DAYS} days.</li>`;
+    } else {
+      events.forEach(e => {
+        const li = document.createElement("li");
+        li.className = "list-group-item bg-black text-info d-flex justify-content-between align-items-center";
+
+        let label = "";
+        if (e.type === "Anniversary") {
+          label = `🎉 ${e.name} • ${e.years} year${e.years > 1 ? "s" : ""}`;
+        } else if (e.type === "Birthday") {
+          label = `🎂 ${e.name} • B-Day`;
+        }
+
+        li.innerHTML = `
+          <span>${label}</span>
+          <small>${e.daysUntil === 0 ? "Today!" : `in ${e.daysUntil} day${e.daysUntil > 1 ? "s" : ""}`}</small>
+        `;
+
+        anniversariesList.appendChild(li);
+      });
+    }
+
+    // ---- Recent uploads (unchanged) ----
     if (Array.isArray(data.clientUploads)) {
       const uploadsList = document.getElementById("recentUploadsList");
+
       const filteredUploads = data.clientUploads
-        .filter(u => !["DeletedByUser", "Expired"].includes(u.fileStatus))
-        .sort((a, b) => new Date(b.uploadDate || 0) - new Date(a.uploadDate || 0));
+        .filter(u => !["DeletedByUser","Expired"].includes(u.fileStatus))
+        .sort((a,b) => new Date(b.uploadDate || 0) - new Date(a.uploadDate || 0));
+
       window._recentUploads = filteredUploads;
 
-      uploadsList.innerHTML = filteredUploads.length
-        ? filteredUploads.map((u, i) => {
+      const html = filteredUploads.length
+        ? filteredUploads.map((u,i) => {
             const uploadDateStr = u.uploadDate ? new Date(u.uploadDate).toLocaleDateString() : "No date";
-            const fileExtMatch = u.fileName?.match(/\.(\w+)$/);
+            const fileExtMatch = u.fileName ? u.fileName.match(/\.(\w+)$/) : null;
             const fileExt = fileExtMatch ? fileExtMatch[1].toLowerCase() : "unknown";
-            const typeLabel = u.fileType?.startsWith("image/") ? "Image"
-                              : u.fileType?.startsWith("text/") ? "Document"
-                              : u.fileType === "application/pdf" ? "PDF"
-                              : "File";
-            const statusIcon = ["viewed"].includes((u.fileStatus || "").toLowerCase())
-                              ? `<span class='upload-status text-success ms-2' title='Viewed'>👁️</span>`
-                              : `<span class='upload-status text-warning ms-2' title='New'>🆕</span>`;
+
+            let typeLabel = "File";
+            if (u.fileType?.startsWith("image/")) typeLabel = "Image";
+            else if (u.fileType?.startsWith("text/")) typeLabel = "Document";
+            else if (u.fileType === "application/pdf") typeLabel = "PDF";
+
+            let statusIcon;
+            switch ((u.fileStatus || "").toLowerCase()) {
+              case "viewed":
+                statusIcon = `<span class="upload-status text-success ms-2" title="Viewed">👁️</span>`;
+                break;
+              case "active":
+              case "new":
+              default:
+                statusIcon = `<span class="upload-status text-warning ms-2" title="New">🆕</span>`;
+            }
+
             return `
-              <li class="list-group-item bg-black text-info upload-row" data-index="${i}" data-id="${u.uploadID}" style="cursor:pointer;">
+              <li class="list-group-item bg-black text-info upload-row"
+                  data-index="${i}" data-id="${u.uploadID}" style="cursor:pointer;">
                 <div class="d-flex justify-content-between">
                   <strong>${u.firstName || ""} ${u.lastName || ""}</strong>
                   <small class="text-info">${uploadDateStr}</small>
@@ -440,69 +525,15 @@ async function fetchDashboardStats() {
                   <small>${typeLabel} • ${fileExt}</small>
                   ${statusIcon}
                 </div>
-              </li>`;
+              </li>
+            `;
           }).join("")
-        : `<li class="list-group-item bg-black text-info">No recent uploads.</li>`;
+        : `<li class="list-group-item bg-black text-info">No uploads available.</li>`;
+
+      uploadsList.innerHTML = html;
       document.getElementById("recentUploadCountBadge").textContent = filteredUploads.length;
+
       attachUploadRowEvents();
-    }
-
-    // ---- Anniversaries & Birthdays ----
-    if (data.anniversaries) {
-      const anniversariesList = document.getElementById("anniversariesList");
-      const anniversaryCountBadge = document.getElementById("anniversaryCountBadge");
-      anniversariesList.innerHTML = "";
-      const events = [];
-      const today = new Date();
-
-      // MemberSince anniversaries
-      (data.anniversaries.memberSince || []).forEach(a => {
-        const date = new Date(a.date);
-        if (isNaN(date)) return;
-        const daysUntil = Math.ceil((date - today) / (1000 * 60 * 60 * 24));
-        if (daysUntil < 0 || daysUntil > UPCOMING_WINDOW_DAYS) return;
-        let years = a.years;
-        if (years === 0) years = 1; // upcoming first anniversary shows as 1 year
-        events.push({ type: "Anniversary", name: `${a.firstName} ${a.lastName}`, date, years, daysUntil });
-      });
-
-      // Birthdays
-      (data.anniversaries.birthdays || []).forEach(b => {
-        const date = new Date(b.date);
-        if (isNaN(date)) return;
-        const daysUntil = Math.ceil((date - today) / (1000 * 60 * 60 * 24));
-        if (daysUntil < 0 || daysUntil > UPCOMING_WINDOW_DAYS) return;
-        events.push({ type: "Birthday", name: `${b.firstName} ${b.lastName}`, date, daysUntil });
-      });
-
-      // Update badge count
-      anniversaryCountBadge.textContent = events.length || 0;
-
-      // Sort by soonest date
-      events.sort((a, b) => a.date - b.date);
-
-      if (events.length > 0) {
-        events.forEach(e => {
-          const li = document.createElement("li");
-          li.className = "list-group-item bg-black text-info d-flex justify-content-between align-items-center";
-          let tooltip = "";
-          if (e.type === "Birthday") {
-            const mm = String(e.date.getMonth() + 1).padStart(2, "0");
-            const dd = String(e.date.getDate()).padStart(2, "0");
-            tooltip = ` title="Birthday: ${mm}-${dd}" data-bs-toggle="tooltip"`;
-          }
-          li.innerHTML = `
-            <span${tooltip}>
-              ${e.type === "Anniversary" ? `🎉 ${e.name} • ${e.years} year${e.years > 1 ? "s" : ""}` : `🎂 ${e.name}`} 
-            </span>
-            <small>${e.daysUntil === 0 ? "Today!" : `in ${e.daysUntil} day${e.daysUntil > 1 ? "s" : ""}`}</small>
-          `;
-          anniversariesList.appendChild(li);
-        });
-        anniversariesList.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(t => new bootstrap.Tooltip(t));
-      } else {
-        anniversariesList.innerHTML = `<li class="list-group-item bg-black text-info">No upcoming anniversaries or birthdays in the next ${UPCOMING_WINDOW_DAYS} days.</li>`;
-      }
     }
 
   } catch (err) {

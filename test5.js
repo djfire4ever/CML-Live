@@ -194,7 +194,7 @@ document.addEventListener("click", async (e) => {
 });
 });
 
-// ====== Render Client Card ======
+// ====== Render Client Card (Full Rewrite) ======
 function renderClientCard(client = null) {
   const container = document.getElementById(SELECTORS.resultsContainer);
   if (!container) return;
@@ -273,17 +273,18 @@ function renderClientCard(client = null) {
         const span = arr[0];
         const monthInput = arr[1];
         const dayInput = arr[2];
-        let val = client[key] || "";
-        if (val && val.includes("-")) {
-          const [mm, dd] = val.split("-");
-          const monthIndex = parseInt(mm, 10) - 1;
-          span.textContent = `${MONTH_NAMES[monthIndex]} ${dd}`;
-          monthInput.innerHTML = `<option value="" disabled hidden>Month</option>` + MONTH_NAMES.map((m,i)=>`<option value="${String(i+1).padStart(2,'0')}" ${i===monthIndex?'selected':''}>${m}</option>`).join("");
-          dayInput.innerHTML = `<option value="" disabled hidden>Day</option>` + Array.from({length:31},(_,i)=>`<option value="${String(i+1).padStart(2,'0')}" ${String(i+1).padStart(2,'0')===dd?'selected':''}>${String(i+1).padStart(2,'0')}</option>`).join("");
+        const val = client[key] instanceof Date ? client[key] : client[key] ? new Date(client[key]) : null;
+
+        if (val instanceof Date && !isNaN(val)) {
+          const mm = val.getMonth();
+          const dd = val.getDate();
+          span.textContent = `${MONTH_NAMES[mm]} ${dd}`;
+          monthInput.innerHTML = `<option value="" disabled hidden>Month</option>` + MONTH_NAMES.map((m,i)=>`<option value="${String(i+1).padStart(2,'0')}" ${i===mm?'selected':''}>${m}</option>`).join("");
+          dayInput.innerHTML = `<option value="" disabled hidden>Day</option>` + Array.from({length:31},(_,i)=>`<option value="${String(i+1).padStart(2,'0')}" ${i===dd-1?'selected':''}>${i+1}</option>`).join("");
         } else {
           span.textContent = "";
           monthInput.innerHTML = `<option value="" disabled selected hidden>Month</option>` + MONTH_NAMES.map((m,i)=>`<option value="${String(i+1).padStart(2,'0')}">${m}</option>`).join("");
-          dayInput.innerHTML = `<option value="" disabled selected hidden>Day</option>` + Array.from({length:31},(_,i)=>`<option value="${String(i+1).padStart(2,'0')}">${String(i+1).padStart(2,'0')}</option>`).join("");
+          dayInput.innerHTML = `<option value="" disabled selected hidden>Day</option>` + Array.from({length:31},(_,i)=>`<option value="${String(i+1).padStart(2,'0')}">${i+1}</option>`).join("");
         }
       } else {
         const span = arr[0];
@@ -339,7 +340,7 @@ function renderClientCard(client = null) {
         const dayInput = arr[2];
         if (span) span.textContent = "";
         monthInput.innerHTML = `<option value="" disabled selected hidden>Month</option>` + MONTH_NAMES.map((m,i)=>`<option value="${String(i+1).padStart(2,'0')}">${m}</option>`).join("");
-        dayInput.innerHTML = `<option value="" disabled selected hidden>Day</option>` + Array.from({length:31},(_,i)=>`<option value="${String(i+1).padStart(2,'0')}">${String(i+1).padStart(2,'0')}</option>`).join("");
+        dayInput.innerHTML = `<option value="" disabled selected hidden>Day</option>` + Array.from({length:31},(_,i)=>`<option value="${String(i+1).padStart(2,'0')}">${i+1}</option>`).join("");
       } else {
         const span = arr[0];
         const input = arr[1];
@@ -348,7 +349,6 @@ function renderClientCard(client = null) {
       }
     });
 
-    // Hide email button and dropdown
     if (emailBtn) emailBtn.classList.add("d-none");
     if (dropdown) dropdown.innerHTML = "";
 
@@ -358,7 +358,7 @@ function renderClientCard(client = null) {
   container.appendChild(clone);
 }
 
-// ====== Enable/Disable Edit Mode (with live tier + birthday updates) ======
+// ====== Enable/Disable Edit Mode (Full Rewrite) ======
 function enableEditToggle(wrapper, isEditing, isAddCard = false) {
   const editBtn = wrapper.querySelector(".edit-button");
   const saveBtn = wrapper.querySelector(".save-button");
@@ -372,75 +372,68 @@ function enableEditToggle(wrapper, isEditing, isAddCard = false) {
   if (beforeDeleteBtn) beforeDeleteBtn.style.display = isAddCard ? "none" : "inline-block";
   if (deleteBtn) deleteBtn.classList.add("d-none");
 
-  const clientIDInput = wrapper.querySelector(".clientID-input");
-  const clientIDSpan = wrapper.querySelector(".clientID");
-  const clientIDHeader = wrapper.querySelector(".clientID-header");
-  const iconBg = wrapper.querySelector(".tier-icon-bg");
-  const headerBtn = wrapper.querySelector(".accordion-button");
-  const tierHeader = wrapper.querySelector(".tier-header");
+  // --- Birthday inputs ---
+  const monthInput = wrapper.querySelector(".birthday-month-input");
+  const dayInput = wrapper.querySelector(".birthday-day-input");
+  const span = wrapper.querySelector(".birthday");
 
-  if (clientIDInput) clientIDInput.classList.toggle("d-none", !isEditing && !isAddCard);
-  if (clientIDSpan) clientIDSpan.classList.toggle("d-none", isEditing || isAddCard);
+  if (monthInput && dayInput && span) {
+    [monthInput, dayInput].forEach(input => {
+      if (!input.dataset.listenerAttached) {
+        input.addEventListener("change", () => {
+          const mm = monthInput.value;
+          const dd = dayInput.value;
+          if (mm && dd) {
+            span.textContent = `${MONTH_NAMES[parseInt(mm,10)-1]} ${dd}`;
+            if (saveBtn) saveBtn.disabled = false;
+          } else {
+            span.textContent = "";
+          }
+        });
+        input.dataset.listenerAttached = "1";
+      }
+    });
+    monthInput.classList.toggle("d-none", !isEditing);
+    dayInput.classList.toggle("d-none", !isEditing);
+    span.classList.toggle("d-none", isEditing);
+  }
 
-  const fields = [
-    ["firstName", ".firstName-input", ".firstName"],
-    ["lastName", ".lastName-input", ".lastName"],
-    ["nickName", ".nickName-input", ".nickName"],
-    ["email", ".email-input", ".email"],
-    ["street", ".street-input", ".street"],
-    ["city", ".city-input", ".city"],
-    ["state", ".state-input", ".state"],
-    ["zip", ".zip-input", ".zip"],
-    ["tier", ".tier-input", ".tier"],
-    ["birthday", ".birthday-month-input,.birthday-day-input", ".birthday"],
-    ["clientID", ".clientID-input", ".clientID"]
+  // --- Other fields ---
+  const fieldMap = [
+    [".firstName-input",".firstName"],
+    [".lastName-input",".lastName"],
+    [".nickName-input",".nickName"],
+    [".email-input",".email"],
+    [".street-input",".street"],
+    [".city-input",".city"],
+    [".state-input",".state"],
+    [".zip-input",".zip"],
+    [".tier-input",".tier"],
+    [".clientID-input",".clientID"]
   ];
 
-  fields.forEach(([key, inputSel, spanSel]) => {
-    if (key === "birthday") {
-      const monthInput = wrapper.querySelector(".birthday-month-input");
-      const dayInput = wrapper.querySelector(".birthday-day-input");
-      const span = wrapper.querySelector(".birthday");
+  fieldMap.forEach(([inputSel, spanSel]) => {
+    const input = wrapper.querySelector(inputSel);
+    const spanField = wrapper.querySelector(spanSel);
+    if (input && spanField) {
+      input.classList.toggle("d-none", !isEditing);
+      spanField.classList.toggle("d-none", isEditing);
 
-      [monthInput, dayInput].forEach(input => {
-        if (!input.dataset.listenerAttached) {
-          input.addEventListener("change", () => {
-            const mm = monthInput.value;
-            const dd = dayInput.value;
-            if (mm && dd) {
-              span.textContent = `${MONTH_NAMES[parseInt(mm,10)-1]} ${dd}`;
-              if (saveBtn) saveBtn.disabled = false;
-            } else {
-              span.textContent = "";
-            }
-          });
-          input.dataset.listenerAttached = "1";
-        }
-      });
-      monthInput.classList.toggle("d-none", !isEditing);
-      dayInput.classList.toggle("d-none", !isEditing);
-      span.classList.toggle("d-none", isEditing);
-    } else {
-      const input = wrapper.querySelector(inputSel);
-      const span = wrapper.querySelector(spanSel);
-      if (input) input.classList.toggle("d-none", !isEditing);
-      if (span) span.classList.toggle("d-none", isEditing);
-
-      if (input && span && !input.dataset.listenerAttached) {
+      if (!input.dataset.listenerAttached) {
         input.addEventListener("input", () => {
-          const val = input.value;
-          if (key === "firstName" || key === "lastName") {
-            const first = wrapper.querySelector(".firstName-input")?.value || "";
-            const last = wrapper.querySelector(".lastName-input")?.value || "";
-            const nameHeader = wrapper.querySelector(".clientName-header");
-            if (nameHeader) nameHeader.textContent = `${first} ${last}`;
-          }
-          if (key === "clientID") {
-            const clientIDHeader = wrapper.querySelector(".clientID-header");
-            if (clientIDHeader) clientIDHeader.innerHTML = val ? `📞 ${formatPhoneNumber(val)}` : `<span class="text-muted">📞</span>`;
-          }
-          if (key === "tier") {
+          let val = input.value;
+          if (spanField) spanField.textContent = val;
+
+          // --- Special handling ---
+          if (inputSel === ".clientID-input") {
+            const header = wrapper.querySelector(".clientID-header");
+            if (header) header.innerHTML = val ? `📞 ${formatPhoneNumber(val)}` : `<span class="text-muted">📞</span>`;
+          } else if (inputSel === ".tier-input") {
             const tierData = getTierData(val);
+            const headerBtn = wrapper.querySelector(".accordion-button");
+            const iconBg = wrapper.querySelector(".tier-icon-bg");
+            const tierHeader = wrapper.querySelector(".tier-header");
+
             if (headerBtn) {
               Object.values(TIERS).forEach(t=>headerBtn.classList.remove(`bg-${t.color}`, `text-${t.textColor}`));
               headerBtn.classList.add(`bg-${tierData.color}`, `text-${tierData.textColor}`);
@@ -451,7 +444,7 @@ function enableEditToggle(wrapper, isEditing, isAddCard = false) {
             }
             if (tierHeader) tierHeader.textContent = tierData.icon;
           }
-          if (span) span.textContent = val;
+
           if (saveBtn) saveBtn.disabled = false;
         });
         input.dataset.listenerAttached = "1";
@@ -459,11 +452,12 @@ function enableEditToggle(wrapper, isEditing, isAddCard = false) {
     }
   });
 
-  if (isAddCard && iconBg) {
+  if (isAddCard) {
+    const iconBg = wrapper.querySelector(".tier-icon-bg");
     const tierInput = wrapper.querySelector(".tier-input");
     const tierVal = tierInput?.value || "New";
     const tierData = getTierData(tierVal);
-    iconBg.classList.add(`text-${tierData.iconBgColor || tierData.color}`);
+    if (iconBg) iconBg.classList.add(`text-${tierData.iconBgColor || tierData.color}`);
   }
 }
 
