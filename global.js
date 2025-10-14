@@ -19,7 +19,7 @@ window.addEventListener("error", (e) => {
 // --- environment / script URL ---
 window.isLocal = location.hostname === "localhost" || location.hostname === "127.0.0.1";
 window.scriptURL = window.isLocal
-  ? "https://script.google.com/macros/s/AKfycbzd_0wJUUB8AyjmBd_Z5ZMjkch3RTWR66qbBFen_0li0KwcoVZVGBgRQWKzwePFRDjZ/exec"
+  ? "https://script.google.com/macros/s/AKfycbz0n1Br3EO0z7Dukhqo0bZ_QKCZ-3hLjjsLdZye6kBPdu7Wdl7ag9dTBbgiJ5ArrCQ/exec"
   : "/.netlify/functions/leadProxy";
 
 // ---------------------------

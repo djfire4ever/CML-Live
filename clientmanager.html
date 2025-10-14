@@ -16,6 +16,16 @@
   transform: translateY(-2px);       /* slight lift */
   box-shadow: 0 4px 8px rgba(0,0,0,0.15); /* subtle shadow */
 }
+.tier-icon-bg {
+  pointer-events: none; /* allows clicks to pass through */
+}
+/* Use Bootstrap’s info color for placeholders */
+input::placeholder,
+textarea::placeholder {
+  color: var(--bs-info);
+  opacity: 1; /* ensures full brightness */
+}
+#clientsSearchResults .form-control::placeholder { color: var(--bs-info); opacity: .5; }
 </style>
 
 <body class="page-body" style="min-height:100vh;" data-element="page-bg">
@@ -48,234 +58,170 @@
     <button id="clearTierFilterBtn" class="btn btn-sm btn-outline-light ms-2">Show All</button>
   </div>
 
-  <!-- 🔍 Accordion for Clients -->
-  <div class="accordion" id="clientsAccordion">
-
-    <!-- ➕ Add New Client Accordion Card -->
-    <div class="accordion-item border-info">
-      <h2 class="accordion-header" id="heading-addClient">
-        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-addClient" aria-expanded="false" aria-controls="collapse-addClient">
-          ➕ Add New Client
-        </button>
-      </h2>
-      <div id="collapse-addClient" class="accordion-collapse collapse" aria-labelledby="heading-addClient" data-bs-parent="#clientsAccordion">
-        <div class="accordion-body">
-          <form id="addClientFormAccordion">
-
-            <!-- ===== Clients Name Section ===== -->
-            <fieldset class="mb-1 p-2 border rounded border-info">
-              <legend class="small fw-bold">Clients Name</legend>
-              <div class="row gx-3 gy-1 align-items-center mt-2">
-                <div class="col-md-6">
-                  <label for="firstName">First Name</label>
-                  <input type="text" class="form-control form-control-sm" id="firstName">
-                </div>
-                <div class="col-md-6">
-                  <label for="lastName">Last Name</label>
-                  <input type="text" class="form-control form-control-sm" id="lastName">
-                </div>
-              </div>
-              <div class="row gx-3 gy-1 align-items-center mt-1">
-                <div class="col-md-6">
-                  <label for="nickName">Nick Name</label>
-                  <input type="text" class="form-control form-control-sm" id="nickName">
-                </div>
-              </div>
-            </fieldset>
-
-            <!-- ===== Contact Information Section ===== -->
-            <fieldset class="mb-1 p-2 border rounded border-info">
-              <legend class="small fw-bold">Contact Info</legend>
-              <div class="row gx-3 gy-1 align-items-center mt-2">
-                <div class="col-md-6">
-                  <label for="clientID">Phone</label>
-                  <input type="text" class="form-control form-control-sm" id="clientID">
-                </div>
-                <div class="col-md-6">
-                  <label for="email">Email</label>
-                  <input type="email" class="form-control form-control-sm" id="email">
-                </div>
-              </div>
-            </fieldset>
-
-            <!-- ===== Physical Address Section ===== -->
-            <fieldset class="mb-1 p-2 border rounded border-info">
-              <legend class="small fw-bold">Physical Address</legend>
-              <div class="row gx-3 gy-1 align-items-center mt-2">
-                <div class="col-md-12">
-                  <label for="street">Street</label>
-                  <input type="text" class="form-control form-control-sm" id="street">
-                </div>
-              </div>
-              <div class="row gx-3 gy-1 align-items-center mt-1">
-                <div class="col-md-6">
-                  <label for="city">City</label>
-                  <input type="text" class="form-control form-control-sm" id="city">
-                </div>
-                <div class="col-md-2">
-                  <label for="state">State</label>
-                  <input type="text" class="form-control form-control-sm" id="state">
-                </div>
-                <div class="col-md-4">
-                  <label for="zip">Zip</label>
-                  <input type="number" class="form-control form-control-sm" id="zip">
-                </div>
-              </div>
-            </fieldset>
-
-            <!-- ===== Buttons ===== -->
-            <div class="d-flex gap-1 mt-2">
-              <button type="submit" class="btn btn-success btn-sm rounded-pill">
-                <i class="bi bi-check me-1"></i> Save
-              </button>
-              <button type="button" class="btn btn-secondary btn-sm rounded-pill" id="addCancelBtn">
-                <i class="bi bi-x me-1"></i> Cancel
-              </button>
-            </div>
-
-          </form>
-        </div>
-      </div>
-    </div>
-
-  </div> <!-- End clientsAccordion -->
-
-  
   <!-- 🔍 Search Results Accordion -->
   <div class="accordion mt-3" id="clientsSearchResults"></div>
 
-  <!-- Template for dynamic client rows -->
+  <!-- Template for dynamic client rows (refactored to ProductManager style) -->
   <template id="rowTemplate">
     <div class="accordion-item client-row border-info">
-      <h2 class="accordion-header" id="heading-CLIENTID">
-        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-CLIENTID" aria-expanded="false" aria-controls="collapse-CLIENTID">
-          <span class="client-name">CLIENTNAME</span>
+      <!-- Accordion Header (multi-column like ProductManager) -->
+      <h2 class="accordion-header">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse">
+          <div class="row w-100 text-truncate align-items-center gx-2">
+            <div class="col-3 clientID-header"></div>
+            <div class="col-8 text-truncate fw-bold clientName-header"></div>
+            <div class="col-1 text-center tier-header"></div>
+          </div>
         </button>
       </h2>
-      <div id="collapse-CLIENTID" class="accordion-collapse collapse" aria-labelledby="heading-CLIENTID" data-bs-parent="#clientsSearchResults">
+
+      <!-- Accordion Body -->
+      <div class="accordion-collapse collapse">
         <div class="accordion-body">
-          <div class="container">
 
-            <!-- ===== Clients Name Section ===== -->
-            <fieldset class="mb-1 p-2 border rounded border-info bg-info text-black">
-              <div class="d-flex justify-content-between align-items-center">
-                <!-- Legend / client name -->
-                <legend class="small fw-bold mb-0">Clients Name</legend>
+          <!-- ===== Unified Client Information Fieldset ===== -->
+          <fieldset id="clientInfoFieldset" class="mb-2 p-2 border rounded border-info">
+            <div class="d-flex flex-wrap justify-content-start align-items-start gap-3">
 
-                <!-- Tier read-only badge -->
-                <span class="tier badge bg-secondary" data-tier-id="TIERID">TIERSHOW</span>
+            <!-- Left Column: Icon Background + Names + Tier Dropdown -->
+            <div id="clientIconColumn"
+                class="position-relative d-flex flex-column justify-content-center align-items-center ps-1 pe-3 rounded border-end border-2 border-info shadow"
+                style="width:250px; min-height:250px; overflow:hidden; background:rgba(255,255,255,0.02);">
 
-                <!-- Tier selector dropdown (hidden initially) -->
-                <select class="form-select form-select-sm tier-input d-none" title="Select tier" style="width: auto;">
+              <!-- Icon Background -->
+              <i class="bi bi-award tier-icon-bg position-absolute"
+                style="font-size:14rem; opacity:0.45; z-index:0;"></i>
+
+              <!-- Foreground: Client Name Fields -->
+              <div class="position-relative z-1 w-100 mt-2 d-flex flex-column justify-content-center align-items-center text-warning">
+                <!-- First Name -->
+                <div class="mb-1 text-center w-100">
+                  <span class="firstName d-block mb-2 fw-bold fs-5">FIRSTNAME</span>
+                  <input type="text" class="form-control form-control-sm firstName-input d-none" placeholder="First name" value="FIRSTNAME" title="Enter first name">
+                </div>
+                <!-- Nick Name -->
+                <div class="mb-1 text-center w-100">
+                  <span class="nickName d-block mb-2 fw-bold fs-5">NICKNAME</span>
+                  <input type="text" class="form-control form-control-sm nickName-input d-none" placeholder="Nickname (optional)" value="NICKNAME" title="Optional nickname">
+                </div>
+                <!-- Last Name -->
+                <div class="mb-1 text-center w-100">
+                  <span class="lastName d-block fw-bold fs-5">LASTNAME</span>
+                  <input type="text" class="form-control form-control-sm lastName-input d-none" placeholder="Last name" value="LASTNAME" title="Enter last name">
+                </div>
+              </div>
+
+              <!-- Tier Dropdown -->
+              <div class="mt-auto w-100 px-1 mb-2 text-center text-warning">
+                <span class="tier d-none" data-tier-id="0">New</span>
+                <select class="form-select form-select-sm tier-input d-none" title="Select tier" style="width:100%;">
+                  <option value="" disabled selected hidden>Select tier...</option>
                   <option value="New">New</option>
-                  <option value="Bronze">Bronze</option>
                   <option value="Silver">Silver</option>
                   <option value="Gold">Gold</option>
                   <option value="Platinum">Platinum</option>
                 </select>
               </div>
 
-              <!-- Name fields below -->
-              <div class="row gx-3 gy-1 align-items-center mt-2">
-                <div class="col-md-6">
-                  <span class="firstName">FIRSTNAME</span>
-                  <input type="text" class="form-control form-control-sm firstName-input d-none"
-                    placeholder="First name" value="FIRSTNAME" title="Enter first name">
-                </div>
-                <div class="col-md-6">
-                  <span class="lastName">LASTNAME</span>
-                  <input type="text" class="form-control form-control-sm lastName-input d-none"
-                    placeholder="Last name" value="LASTNAME" title="Enter last name">
-                </div>
-              </div>
-
-              <div class="row gx-3 gy-1 align-items-center mt-1">
-                <div class="col-md-6">
-                  <span class="nickName">NICKNAME</span>
-                  <input type="text" class="form-control form-control-sm nickName-input d-none"
-                    placeholder="Nickname (optional)" value="NICKNAME" title="Optional nickname">
-                </div>
-              </div>
-            </fieldset>
-
-            <!-- ===== Contact Information Section ===== -->
-            <fieldset class="mb-1 p-2 border rounded border-info">
-              <legend class="small fw-bold">Contact Info</legend>
-              <div class="row gx-3 gy-1 align-items-center mt-2">
-                <div class="col-md-6">
-                  <span class="clientID">PHONE</span>
-                  <input type="text" class="form-control form-control-sm clientID-input d-none"
-                    placeholder="digits only" value="PHONE" title="Phone number required">
-                </div>
-                <div class="col-md-6">
-                  <span class="email">EMAIL</span>
-                  <input type="email" class="form-control form-control-sm email-input d-none"
-                    placeholder="email@example.com" value="EMAIL" title="Valid email required">
-                </div>
-              </div>
-            </fieldset>
-
-            <!-- ===== Physical Address Section ===== -->
-            <fieldset class="mb-1 p-2 border rounded border-info">
-              <legend class="small fw-bold">Physical Address</legend>
-              <div class="row gx-3 gy-1 align-items-center mt-2">
-                <div class="col-md-12">
-                  <span class="street">STREET</span>
-                  <input type="text" class="form-control form-control-sm street-input d-none"
-                    placeholder="123 Main St" value="STREET" title="Street address required">
-                </div>
-              </div>
-              <div class="row gx-3 gy-1 align-items-center mt-1">
-                <div class="col-md-6">
-                  <span class="city">CITY</span>
-                  <input type="text" class="form-control form-control-sm city-input d-none"
-                    placeholder="City" value="CITY" title="City required">
-                </div>
-                <div class="col-md-2">
-                  <span class="state">STATE</span>
-                  <input type="text" class="form-control form-control-sm state-input d-none"
-                    placeholder="ST" value="STATE" title="State required">
-                </div>
-                <div class="col-md-4">
-                  <span class="zip">ZIP</span>
-                  <input type="text" class="form-control form-control-sm zip-input d-none"
-                    placeholder="12345" value="ZIP" title="Zip code required">
-                </div>
-              </div>
-            </fieldset>
-
-            <!-- ===== Buttons ===== -->
-            <div class="d-flex gap-1 mt-2">
-              <!-- Edit button -->
-              <button type="button" class="btn btn-warning btn-sm rounded-pill edit-button" data-bs-toggle="tooltip" title="Edit">
-                <i class="bi bi-pencil me-1"></i> Edit
-              </button>
-              <!-- Save button (hidden initially) -->
-              <button type="button" class="btn btn-success btn-sm rounded-pill save-button d-none" data-bs-toggle="tooltip" title="Save">
-                <i class="bi bi-check me-1"></i> Save
-              </button>
-              <!-- Cancel button (hidden initially) -->
-              <button type="button" class="btn btn-secondary btn-sm rounded-pill cancel-button d-none" data-bs-toggle="tooltip" title="Cancel">
-                <i class="bi bi-x me-1"></i> Cancel
-              </button>
-              <!-- Confirm Delete button (hidden initially) -->
-              <button type="button" class="btn btn-danger btn-sm rounded-pill delete-button d-none" data-bs-toggle="tooltip" title="Confirm Delete">
-                <i class="bi bi-trash me-1"></i> Confirm
-              </button>
-              <!-- Initial Delete button -->
-              <button type="button" class="btn btn-outline-danger btn-sm rounded-pill before-delete-button" data-button-state="delete" data-bs-toggle="tooltip" title="Delete">
-                <i class="bi bi-trash me-1"></i> Delete
-              </button>
-            <!-- Email Dropdown -->
-              <button type="button" class="btn btn-info btn-sm rounded-pill dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="bi bi-envelope"></i> Email
-              </button>
-              <ul class="dropdown-menu email-template-dropdown">
-                <!-- Populated dynamically by JS -->
-              </ul>
             </div>
 
+              <!-- Right Column: Contact & Address Fields -->
+              <div id="clientDetailsColumn" class="d-flex flex-column flex-grow-1 ps-3" style="width:220px;">
+                <div class="row gx-3 gy-3 text-warning">
+
+                  <!-- Phone -->
+                  <div class="col-md-6">
+                    <label class="form-label text-info mb-0">Phone</label>
+                    <span class="clientID d-block">PHONE</span>
+                    <input type="text" class="form-control form-control-sm clientID-input d-none" placeholder="digits only" value="PHONE" title="Phone number required">
+                  </div>
+
+                  <!-- Email -->
+                  <div class="col-md-6">
+                    <label class="form-label text-info mb-0">Email</label>
+                    <span class="email d-block">EMAIL</span>
+                    <input type="email" class="form-control form-control-sm email-input d-none" placeholder="email@example.com" value="EMAIL" title="Valid email required">
+                  </div>
+
+                  <!-- Street -->
+                  <div class="col-md-12">
+                    <label class="form-label text-info mb-0">Street</label>
+                    <span class="street d-block">STREET</span>
+                    <input type="text" class="form-control form-control-sm street-input d-none" placeholder="123 Main St" value="STREET" title="Street address required">
+                  </div>
+
+                  <!-- City / State / Zip -->
+                  <div class="col-md-6">
+                    <label class="form-label text-info mb-0">City</label>
+                    <span class="city d-block">CITY</span>
+                    <input type="text" class="form-control form-control-sm city-input d-none" placeholder="City" value="CITY" title="City required">
+                  </div>
+                  <div class="col-md-2">
+                    <label class="form-label text-info mb-0">State</label>
+                    <span class="state d-block">STATE</span>
+                    <input type="text" class="form-control form-control-sm state-input d-none" placeholder="ST" value="STATE" title="State required">
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label text-info mb-0">Zip</label>
+                    <span class="zip d-block">ZIP</span>
+                    <input type="text" class="form-control form-control-sm zip-input d-none" placeholder="12345" value="ZIP" title="Zip code required">
+                  </div>
+
+                <div class="row gx-3 gy-2 mt-2">
+                  <!-- Member Since -->
+                  <div class="col-md-6">
+                    <label class="form-label text-info mb-0">Member Since</label>
+                    <span class="memberSince d-block">Member Since</span>
+                    <!-- Display only; frontend never edits or sends -->
+                    <input type="text"
+                          class="form-control form-control-sm memberSince-input d-none readonly"
+                          placeholder="Member Since"
+                          value="MEMBERSINCE"
+                          title="Member Since"
+                          readonly>
+                  </div>
+
+                  <!-- Birthday -->
+                  <div class="col-md-4">
+                    <label class="form-label text-info mb-0">Birthday</label>
+                    <span class="birthday d-block"></span>
+                    <div class="d-flex gap-1">
+                      <select class="form-select form-select-sm birthday-month-input d-none">
+                        <option value="" disabled selected hidden>Month</option>
+                      </select>
+                      <select class="form-select form-select-sm birthday-day-input d-none">
+                        <option value="" disabled selected hidden>Day</option>
+                      </select>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
+            </div>
+          </fieldset>
+
+          <!-- ===== Buttons ===== -->
+          <div class="d-flex gap-1 mt-2">
+            <button type="button" class="btn btn-warning btn-sm rounded-pill edit-button">
+              <i class="bi bi-pencil me-1"></i> Edit
+            </button>
+            <button type="button" class="btn btn-success btn-sm rounded-pill save-button d-none" disabled>
+              <i class="bi bi-check me-1"></i> Save
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm rounded-pill cancel-button d-none">
+              <i class="bi bi-x me-1"></i> Cancel
+            </button>
+            <div class="d-flex gap-1">
+              <button type="button" class="btn btn-outline-danger btn-sm rounded-pill before-delete-button">Delete</button>
+              <button type="button" class="btn btn-danger btn-sm rounded-pill delete-button d-none">Confirm</button>
+            </div>
+            <button type="button" class="btn btn-info btn-sm rounded-pill dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="bi bi-envelope"></i> Email
+            </button>
+            <ul class="dropdown-menu email-template-dropdown"></ul>
           </div>
+
         </div>
       </div>
     </div>
