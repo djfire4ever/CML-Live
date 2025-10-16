@@ -17,7 +17,7 @@ const TIERS = {
 const getTierData = tier => TIERS[tier] || TIERS.New;
 
 // ----- Email Templates Allowed -----
-const EMAIL_TEMPLATES_ALLOWED_KEYS = ["lead", "thankyou", "promo", "uploadlink", "tierupgrade"];
+const EMAIL_TEMPLATES_ALLOWED_KEYS = ["lead", "thankyou", "promo", "uploadlink", "tierupgrade", "anniversary", "birthday"];
 
 const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
@@ -192,6 +192,37 @@ document.addEventListener("click", async (e) => {
     }
   }
 });
+
+  // ===== Automatic Focus / Filtering =====
+  const params = new URLSearchParams(window.location.search);
+  const focusClientID = params.get("focusClientID");
+  const emailType = params.get("emailType");
+  const focusTier = params.get("tier"); // e.g., "Silver", "Gold"
+
+  if (focusClientID) {
+    // --- Filter by clientID ---
+    searchInput.value = focusClientID;
+    searchInput.dispatchEvent(new Event("input"));
+
+    setTimeout(() => {
+      const clientCard = document.querySelector(`.accordion-item.client-row[data-client-id="${focusClientID}"]`);
+      if (clientCard) {
+        const collapseEl = clientCard.querySelector(".accordion-collapse");
+        if (collapseEl) new bootstrap.Collapse(collapseEl, { toggle: true });
+
+        // Trigger email modal if requested
+        if (emailType) {
+          const dropdownItem = Array.from(clientCard.querySelectorAll(".dropdown-item"))
+            .find(a => a.textContent.toLowerCase() === emailType.toLowerCase());
+          if (dropdownItem) dropdownItem.click();
+        }
+      }
+    }, 0);
+  } else if (focusTier) {
+    // --- Filter by tier (no single card expansion) ---
+    searchInput.value = focusTier;
+    searchInput.dispatchEvent(new Event("input"));
+  }
 });
 
 // ====== Render Client Card (Full Rewrite) ======

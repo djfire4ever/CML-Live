@@ -1,31 +1,123 @@
 // global.js
-// Shared/global utilities, loaders, and diagnostics
+// Shared/global utilities, loaders, and formatters
 
-// --- pageMeta and debug tags ---
+// ---------------------------
+// Page meta setup
+// ---------------------------
 window.pageMeta = window.pageMeta || {};
-window.pageMeta.loadedFrom = "global.js";
-window.pageMeta.pageType = "global";
+window.pageMeta.loadedFrom = window.pageMeta.loadedFrom || "global.js";
+window.pageMeta.pageType = window.pageMeta.pageType || "global";
 window.pageMeta.ready = false;
-console.log("✅ global.js loaded");
 
-// --- global error logging ---
-window._errorLog = window._errorLog || [];
+// Detect if running inside an iframe
+window.pageMeta.context = window !== window.parent ? "iframe" : "parent";
+
+// ---------------------------
+// Console logger with context
+// ---------------------------
+const logWithContext = (...args) => {
+  const color = window.pageMeta.context === "iframe" ? "color: orange; font-weight:bold;" : "color: green; font-weight:bold;";
+  console.log(`%c[${window.pageMeta.context}]`, color, ...args);
+};
+
+// ---------------------------
+// Global initialization logs
+// ---------------------------
+logWithContext("✅ global.js loaded");
+
+// ---------------------------
+// Global error logging (lightweight)
+// ---------------------------
+window._errorLog = [];
 window.addEventListener("error", (e) => {
-  const msg = `[${new Date().toLocaleTimeString()}] ${e.message} at ${e.filename}:${e.lineno}`;
+  const msg = `[${new Date().toLocaleTimeString()}] ${e.message} @ ${e.filename}:${e.lineno}`;
   window._errorLog.push(msg);
   if (window._errorLog.length > 10) window._errorLog.shift();
 });
 
-// --- environment / script URL ---
-window.isLocal = location.hostname === "localhost" || location.hostname === "127.0.0.1";
+// ---------------------------
+// Environment / script URL
+// ---------------------------
+window.isLocal = ["localhost", "127.0.0.1"].includes(location.hostname);
 window.scriptURL = window.isLocal
   ? "https://script.google.com/macros/s/AKfycbz0n1Br3EO0z7Dukhqo0bZ_QKCZ-3hLjjsLdZye6kBPdu7Wdl7ag9dTBbgiJ5ArrCQ/exec"
   : "/.netlify/functions/leadProxy";
 
+logWithContext(`🌍 Environment: ${window.isLocal ? "Local" : "Live"}`);
+
+// ---------------------------
+// Library versions
+// ---------------------------
+window.LIB_VERSIONS = {
+  bootstrap: "5.3.8",
+  bootstrapIcons: "1.13.1",
+  fontAwesome: "7.0.1",
+  fullCalendarCore: "6.1.17",
+  fullCalendarPlugins: "6.1.17"
+};
+
+// ---------------------------
+// Shared CSS & JS loaders
+// ---------------------------
+window.loadSharedStyles = () => {
+  const stylesheets = [
+    `https://cdn.jsdelivr.net/npm/bootstrap@${window.LIB_VERSIONS.bootstrap}/dist/css/bootstrap.min.css`,
+    `https://cdn.jsdelivr.net/npm/bootstrap-icons@${window.LIB_VERSIONS.bootstrapIcons}/font/bootstrap-icons.min.css`,
+    `https://cdnjs.cloudflare.com/ajax/libs/font-awesome/${window.LIB_VERSIONS.fontAwesome}/css/all.min.css`,
+    'style.css'
+  ];
+
+  stylesheets.forEach(href => {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = href;
+    document.head.appendChild(link);
+  });
+
+  Object.assign(window.pageMeta, {
+    hasBootstrapCSS: true,
+    hasBootstrapIcons: true,
+    hasFontAwesome: true,
+    hasCustomCSS: true
+  });
+  logWithContext("✅ Shared styles loaded");
+};
+
+window.loadGlobalScripts = () => {
+  if (window.scriptsAlreadyLoaded) return;
+  window.scriptsAlreadyLoaded = true;
+
+  // Bootstrap JS
+  const bootstrapScript = document.createElement('script');
+  bootstrapScript.src = `https://cdn.jsdelivr.net/npm/bootstrap@${window.LIB_VERSIONS.bootstrap}/dist/js/bootstrap.bundle.min.js`;
+  bootstrapScript.defer = true;
+  bootstrapScript.onload = () => {
+    logWithContext('✅ Bootstrap JS loaded');
+    window.pageMeta.hasBootstrap = true;
+  };
+  document.body.appendChild(bootstrapScript);
+
+  // Theme detection
+  const theme = [...document.body.classList].find(c => c.startsWith('theme-')) || 'no-theme';
+  window.pageMeta.theme = theme;
+  window.pageMeta.ready = true;
+};
+
+// ---------------------------
+// DOM ready
+// ---------------------------
+document.addEventListener('DOMContentLoaded', () => {
+  logWithContext('✅ DOM Ready: Scripts/Styles Loaded');
+  window.loadSharedStyles();
+  window.loadGlobalScripts();
+  window.pageMeta.ready = true;
+});
+
 // ---------------------------
 // Shared formatters / helpers
 // ---------------------------
-window.formatDateForUser = (date) => (!date ? "" : new Date(date).toLocaleDateString("en-US"));
+window.formatDateForUser = (date) =>
+  date ? new Date(date).toLocaleDateString("en-US") : "";
 
 window.formatCurrency = (amount) => {
   const num = parseFloat(amount);
@@ -34,7 +126,7 @@ window.formatCurrency = (amount) => {
 };
 
 window.parseSafeNumber = (raw) => {
-  if (raw === undefined || raw === null) return 0;
+  if (raw == null) return 0;
   const s = String(raw).replace(/[^0-9.-]+/g, "");
   return parseFloat(s) || 0;
 };
@@ -46,171 +138,62 @@ window.formatPhoneNumber = (number) => {
   return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
 };
 
-// ---------------------------
-// Shared CSS & JS loaders
-// ---------------------------
-window.loadSharedStyles = () => {
-  const head = document.head;
-  const stylesheets = [
-    'https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css',
-    'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css',
-    'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css',
-    'style.css'
-  ];
-  stylesheets.forEach(href => {
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = href;
-    head.appendChild(link);
-  });
-  window.pageMeta.hasBootstrapCSS = true;
-  window.pageMeta.hasBootstrapIcons = true;
-  window.pageMeta.hasFontAwesome = true;
-  window.pageMeta.hasCustomCSS = true;
-};
+// Show Toast Notification with different styles for Lead Form and Admin
+window.showToast = (message, type = "success", forLeadForm = false) => {
+  const toastContainer = document.getElementById("toastContainer");
+  if (!toastContainer) return;
 
-window.loadSharedScripts = () => {
-  if (window.scriptsAlreadyLoaded) return;
-  window.scriptsAlreadyLoaded = true;
-
-  const bootstrapScript = document.createElement('script');
-  bootstrapScript.src = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js';
-  bootstrapScript.defer = true;
-  bootstrapScript.onload = () => {
-    console.log('✅ Bootstrap JS loaded');
-    window.pageMeta.hasBootstrap = true;
-  };
-  document.body.appendChild(bootstrapScript);
-};
-
-// ---------------------------
-// Resource / debug helpers
-// ---------------------------
-window.getResourceStatus = () => [
-  { name: "Bootstrap CSS", loaded: !!document.querySelector('link[href*="bootstrap.min.css"]') },
-  { name: "Bootstrap Icons", loaded: !!document.querySelector('link[href*="bootstrap-icons.min.css"]') },
-  { name: "Font Awesome", loaded: !!document.querySelector('link[href*="font-awesome"],link[href*="fontawesome"]') },
-  { name: "Custom CSS", loaded: !!document.querySelector('link[href*="style.css"]') },
-  { name: "Bootstrap JS", loaded: typeof bootstrap !== "undefined" },
-  { name: "FullCalendar", loaded: typeof window.FullCalendar !== "undefined" }
-];
-
-window.checkParentResources = () => {
-  const pm = window.pageMeta || {};
-  const checks = [
-    { name: 'Global.js included', found: pm.loadedFrom === 'global.js' },
-    { name: 'Bootstrap CSS', found: !!pm.hasBootstrapCSS },
-    { name: 'Bootstrap Icons', found: !!pm.hasBootstrapIcons },
-    { name: 'Font Awesome', found: !!pm.hasFontAwesome },
-    { name: 'Custom CSS', found: !!pm.hasCustomCSS },
-    { name: 'Bootstrap JS', found: !!pm.hasBootstrap },
-    { name: 'FullCalendar', found: !!pm.hasFullCalendar },
-    { name: 'Page Type', found: pm.pageType || 'Unknown' }
-  ];
-  return { checks, theme: pm.theme || 'Unknown' };
-};
-
-window.checkIframeResources = async () => {
-  const frame = document.querySelector('#content-frame');
-  if (!frame) return { error: '❌ No iframe found' };
-  const win = frame.contentWindow;
-  const pm = win.pageMeta || {};
-  const checks = [
-    { name: 'Global.js included', found: pm.loadedFrom === 'global.js' },
-    { name: 'Bootstrap CSS', found: !!pm.hasBootstrapCSS },
-    { name: 'Bootstrap Icons', found: !!pm.hasBootstrapIcons },
-    { name: 'Font Awesome', found: !!pm.hasFontAwesome },
-    { name: 'Custom CSS', found: !!pm.hasCustomCSS },
-    { name: 'Bootstrap JS', found: !!pm.hasBootstrap },
-    { name: 'FullCalendar', found: !!pm.hasFullCalendar },
-    { name: 'Page Type', found: pm.pageType || 'Unknown' }
-  ];
-  return { checks, theme: pm.theme || 'Unknown' };
-};
-
-// quick console helper
-window.showLoadedModules = () => {
-  console.table({
-    "Loaded From": window.pageMeta.loadedFrom,
-    "Page Type": window.pageMeta.pageType,
-    "Bootstrap CSS": !!window.pageMeta.hasBootstrapCSS,
-    "Bootstrap JS": !!window.pageMeta.hasBootstrap,
-    "FullCalendar": !!window.pageMeta.hasFullCalendar
-  });
-};
-
-// ---------------------------
-// Conditional FullCalendar + theme detection moved into shared loadScripts
-// (keeps original behavior: FullCalendar only loads on /calendar.html)
-// ---------------------------
-window.loadGlobalScriptsWithConditionals = () => {
-  if (window.scriptsAlreadyLoaded) return;
-  window.scriptsAlreadyLoaded = true;
-
-  // Bootstrap
-  const bootstrapScript = document.createElement('script');
-  bootstrapScript.src = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js';
-  bootstrapScript.defer = true;
-  bootstrapScript.onload = () => {
-    console.log('✅ Bootstrap loaded');
-    window.pageMeta.hasBootstrap = true;
-  };
-  document.body.appendChild(bootstrapScript);
-
-  // FullCalendar only on /calendar.html
-  if (["/calendar.html"].includes(window.location.pathname)) {
-    const fullCalendarCore = document.createElement('script');
-    fullCalendarCore.src = 'https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.17/index.global.min.js';
-    fullCalendarCore.onload = () => {
-      console.log('✅ FullCalendar core loaded');
-      const pluginScripts = [
-        'https://cdn.jsdelivr.net/npm/@fullcalendar/daygrid@6.1.17/index.global.min.js',
-        'https://cdn.jsdelivr.net/npm/@fullcalendar/timegrid@6.1.17/index.global.min.js',
-        'https://cdn.jsdelivr.net/npm/@fullcalendar/interaction@6.1.17/index.global.min.js',
-        'https://cdn.jsdelivr.net/npm/@fullcalendar/list@6.1.17/index.global.min.js',
-        'https://cdn.jsdelivr.net/npm/@fullcalendar/google-calendar@6.1.17/index.global.min.js'
-      ];
-      let loadedCount = 0;
-      pluginScripts.forEach((src) => {
-        const script = document.createElement('script');
-        script.src = src;
-        script.defer = true;
-        script.onload = () => {
-          loadedCount++;
-          if (loadedCount === pluginScripts.length) {
-            console.log('✅ FullCalendar plugins loaded');
-            window.pageMeta.hasFullCalendar = true;
-            window.dispatchEvent(new Event('FullCalendarLoaded'));
-          }
-        };
-        document.body.appendChild(script);
-      });
-    };
-    document.body.appendChild(fullCalendarCore);
+  let bgColor;
+  let headerText;
+    
+  if (forLeadForm) {
+    if (type === "success") {
+      bgColor = "bg-primary";
+      headerText = "Thank You!";
+      message = "We will contact you shortly.";
+    } else if (type === "warning") {
+      bgColor = "bg-warning";
+      headerText = "Attention!";
+    } else if (type === "error") {
+      bgColor = "bg-danger";
+      headerText = "❌ Error!";
+    }
+  } else {
+    bgColor = type === "success" ? "bg-black" : "bg-danger";
+    headerText = type === "success" ? "✅ Success" : "❌ Error";
   }
 
-  // detect theme class on body
-  const themeClass = [...document.body.classList].find(cls => cls.startsWith('theme-')) || 'no-theme';
-  window.pageMeta.theme = themeClass;
-  window.pageMeta.ready = true;
+  const toast = document.createElement("div");
+  toast.classList.add("toast", "show", bgColor, "text-info", "fade");
+  toast.setAttribute("role", "alert");
+  
+  toast.innerHTML = `
+    <div class="toast-header bg-info text-black">
+        <strong class="me-auto">${headerText}</strong>
+        <button type="button" class="btn-close btn-close-info" data-bs-dismiss="toast"></button>
+    </div>
+    <div class="toast-body">${message}</div>
+  `;
+    
+  toastContainer.appendChild(toast);
+
+  setTimeout(() => {
+    toast.classList.remove("show");
+    setTimeout(() => toast.remove(), 5000);
+  }, 5000);
 };
 
-// ---------------------------
-// DOM ready wiring (keeps original behavior)
-// ---------------------------
-document.addEventListener('DOMContentLoaded', () => {
-  console.log('✅ DOM Ready: global loading styles and scripts...');
-  window.loadSharedStyles();
-  window.loadGlobalScriptsWithConditionals();
-  window.pageMeta.ready = true;
-});
+// Loader overlay toggle
+window.toggleLoader = () => {
+  const loader = document.getElementById("loadingOverlay");
+  if (!loader) return;
 
-function convertGoogleDriveLink(url) {
-  if (!url) return url;
-  if (url.match(/\.(jpg|jpeg|png|gif|webp|avif)(\?.*)?$/i)) return url;
-  const driveMatch = url.match(/(?:\/d\/|id=)([a-zA-Z0-9_-]{20,})/);
-  return driveMatch ? `https://drive.google.com/thumbnail?id=${driveMatch[1]}` : url;
-}
+  loader.classList.toggle("show");
 
-// 👇 Add this line to make it visible to all scripts
-window.convertGoogleDriveLink = convertGoogleDriveLink;
+  if (loader.classList.contains("show")) {
+    loader.classList.remove("d-none");
+  } else {
+    loader.classList.add("d-none");
+  }
+};
+

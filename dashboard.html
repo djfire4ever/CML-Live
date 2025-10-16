@@ -80,10 +80,11 @@ body.bg-black .stat-button:active {
 <div class="container">
   <h2 class="text-center text-info">Welcome to Your Dashboard Sunshine</h2>
     <h5 class="text-center text-info">
-      <a href="test5.html" class="text-info text-decoration-none">
-        Click here to see what's new.
+      <!-- <a href="test5.html" class="text-info text-decoration-none"> -->
+        We might want to start adding some dates for the Anniversaries & Birthdays section soon.
       </a>
     </h5>
+
 <!-- Row 1 -->
 <!-- Quick Links Accordion -->
 <div class="row g-2 my-1">
@@ -187,18 +188,19 @@ body.bg-black .stat-button:active {
 
 <!-- Row 2 -->
 <div class="row g-2 my-1">
-  <!-- Low-Stock Accordion -->
+  <!-- Anniversaries & Birthdays Accordion -->
   <div class="col-md-4 col-lg-4 my-1">
-    <div class="accordion fade-in-card" id="lowStockAccordion">
+    <div class="accordion fade-in-card" id="anniversariesAccordion">
       <div class="accordion-item border-info">
-        <h2 class="accordion-header" id="headingLowStock">
-          <button class="accordion-button bg-black text-info" type="button" data-bs-toggle="collapse" data-bs-target="#collapseLowStock" aria-expanded="true" aria-controls="collapseLowStock">
-            <i class="fa-solid fa-boxes-stacked me-2"></i>Low Stock-Order<span id="lowStockCount" class="badge bg-info text-black rounded-pill ms-auto">0</span>
+        <h2 class="accordion-header" id="headingAnniversaries">
+          <button class="accordion-button bg-black text-info" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAnniversaries" aria-expanded="true" aria-controls="collapseAnniversaries">
+            🎉 Anniversaries & Birthdays
+            <span id="anniversaryCountBadge" class="badge bg-info text-black rounded-pill ms-auto">0</span>
           </button>
         </h2>
-        <div id="collapseLowStock" class="accordion-collapse collapse" aria-labelledby="headingLowStock" data-bs-parent="#lowStockAccordion">
-          <div class="accordion-body bg-black text-light p-0" style="max-height: 300px; overflow-y: auto;">
-            <ul class="list-group list-group-flush" id="lowStockList"></ul>
+        <div id="collapseAnniversaries" class="accordion-collapse show" aria-labelledby="headingAnniversaries">
+          <div class="accordion-body bg-black text-light border-info">
+            <ul id="anniversariesList" class="list-group list-group-flush"></ul>
           </div>
         </div>
       </div>
@@ -217,7 +219,7 @@ body.bg-black .stat-button:active {
             <span id="todayEventCount" class="badge bg-info text-black rounded-pill ms-auto">0</span>
           </button>
         </h2>
-        <div id="collapseToday" class="accordion-collapse collapse" aria-labelledby="headingToday"
+        <div id="collapseToday" class="accordion-collapse show" aria-labelledby="headingToday"
             data-bs-parent="#calendarTodayAccordion">
           <div class="accordion-body bg-black text-info p-2" style="max-height: 300px; overflow-y: auto;">
             <ul class="list-group list-group-flush" id="todayEventList"></ul>
@@ -239,7 +241,7 @@ body.bg-black .stat-button:active {
             <span id="weekEventCount" class="badge bg-info text-black rounded-pill ms-auto">0</span>
           </button>
         </h2>
-        <div id="collapseWeekEvents" class="accordion-collapse collapse" aria-labelledby="headingWeekEvents">
+        <div id="collapseWeekEvents" class="accordion-collapse show" aria-labelledby="headingWeekEvents">
           <div class="accordion-body bg-black text-info p-2" style="max-height: 300px; overflow-y: auto;">
             <div id="weekEventsGroup"></div>
           </div>
@@ -247,10 +249,29 @@ body.bg-black .stat-button:active {
       </div>
     </div>
   </div>
+
 </div>
 
 <!-- Row 3 -->
 <div class="row g-2 my-1">
+  <!-- Low-Stock Accordion -->
+  <div class="col-md-4 col-lg-4 my-1">
+    <div class="accordion fade-in-card" id="lowStockAccordion">
+      <div class="accordion-item border-info">
+        <h2 class="accordion-header" id="headingLowStock">
+          <button class="accordion-button bg-black text-info" type="button" data-bs-toggle="collapse" data-bs-target="#collapseLowStock" aria-expanded="true" aria-controls="collapseLowStock">
+            <i class="fa-solid fa-boxes-stacked me-2"></i>Low Stock-Order<span id="lowStockCount" class="badge bg-info text-black rounded-pill ms-auto">0</span>
+          </button>
+        </h2>
+        <div id="collapseLowStock" class="accordion-collapse collapse" aria-labelledby="headingLowStock" data-bs-parent="#lowStockAccordion">
+          <div class="accordion-body bg-black text-light p-0" style="max-height: 300px; overflow-y: auto;">
+            <ul class="list-group list-group-flush" id="lowStockList"></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Recent Uploads Accordion -->
   <div class="col-md-4 col-lg-4 my-1">
     <div class="accordion fade-in-card" id="recentUploadsAccordion">
@@ -285,13 +306,13 @@ body.bg-black .stat-button:active {
           <div class="accordion-body bg-black text-light border-info">
             <div class="row g-2">
               <div class="col-12">
-                <button class="btn btn-outline-secondary w-100 d-flex justify-content-between align-items-center tier-btn" data-tier="New">
+                <button class="btn btn-outline-info w-100 d-flex justify-content-between align-items-center tier-btn" data-tier="New">
                   <span class="text-info">🆕 New •</span><span id="tierNew" class="fw-bold text-info">--</span>
                 </button>
               </div>
               <div class="col-12">
-                <button class="btn btn-outline-info w-100 d-flex justify-content-between align-items-center tier-btn" data-tier="Silver">
-                  <span class="text-info">🥈 Silver •</span><span id="tierSilver" class="fw-bold text-info">--</span>
+                <button class="btn btn-outline-secondary w-100 d-flex justify-content-between align-items-center tier-btn" data-tier="Silver">
+                  <span class="text-secondary">🥈 Silver •</span><span id="tierSilver" class="fw-bold text-info">--</span>
                 </button>
               </div>
               <div class="col-12">
@@ -311,24 +332,6 @@ body.bg-black .stat-button:active {
     </div>
   </div>
 
-  <!-- Anniversaries & Birthdays Accordion -->
-  <div class="col-md-4 col-lg-4 my-1">
-    <div class="accordion fade-in-card" id="anniversariesAccordion">
-      <div class="accordion-item border-info">
-        <h2 class="accordion-header" id="headingAnniversaries">
-          <button class="accordion-button bg-black text-info" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAnniversaries" aria-expanded="true" aria-controls="collapseAnniversaries">
-            🎉 Anniversaries & Birthdays
-            <span id="anniversaryCountBadge" class="badge bg-info text-black rounded-pill ms-auto">0</span>
-          </button>
-        </h2>
-        <div id="collapseAnniversaries" class="accordion-collapse collapse" aria-labelledby="headingAnniversaries">
-          <div class="accordion-body bg-black text-light border-info">
-            <ul id="anniversariesList" class="list-group list-group-flush"></ul>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
 </div>
 
 <!-- Upload Details Modal -->
@@ -433,6 +436,7 @@ async function fetchDashboardStats() {
         events.push({
           type: "Anniversary",
           name: a.firstName,
+          clientID: a.clientID, // make sure backend provides this
           date: d,
           years: a.years,
           daysUntil
@@ -449,6 +453,7 @@ async function fetchDashboardStats() {
         events.push({
           type: "Birthday",
           name: b.firstName,
+          clientID: b.clientID, // make sure backend provides this
           date: d,
           daysUntil
         });
@@ -465,6 +470,7 @@ async function fetchDashboardStats() {
       events.forEach(e => {
         const li = document.createElement("li");
         li.className = "list-group-item bg-black text-info d-flex justify-content-between align-items-center";
+        li.style.cursor = "pointer";
 
         let label = "";
         if (e.type === "Anniversary") {
@@ -477,6 +483,13 @@ async function fetchDashboardStats() {
           <span>${label}</span>
           <small>${e.daysUntil === 0 ? "Today!" : `in ${e.daysUntil} day${e.daysUntil > 1 ? "s" : ""}`}</small>
         `;
+
+        // --- Click navigates parent iframe to clientmanager ---
+        li.onclick = () => {
+          const iframe = window.parent.document.getElementById("content-frame");
+          if (!iframe) return console.error("❌ iframe not found in parent");
+          iframe.src = `clientmanager.html?focusClientID=${e.clientID}&emailType=${e.type.toLowerCase()}`;
+        };
 
         anniversariesList.appendChild(li);
       });
@@ -790,11 +803,23 @@ function loadCalendarSummaries() {
   loadCalendarSummaries();
 });
 
-// ---- Attach click to iframe (adjust your iframe ID) ----
-document.querySelectorAll(".tier-btn").forEach(btn => {
-  btn.addEventListener("click", () => {
-    const tier = btn.dataset.tier;
-    window.location.href = `clientmanager.html#tier=${tier}`;
+document.addEventListener("DOMContentLoaded", () => {
+  const tierButtons = document.querySelectorAll(".tier-btn");
+
+  tierButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      const tier = btn.dataset.tier; // "New", "Silver", "Gold", "Platinum"
+
+      // --- Get the dashboard iframe ---
+      const iframe = window.parent?.document?.getElementById("content-frame");
+      if (!iframe) {
+        console.error("❌ iframe not found in parent");
+        return;
+      }
+
+      // --- Load clientmanager page with tier filter ---
+      iframe.src = `clientmanager.html?tier=${encodeURIComponent(tier)}`;
+    });
   });
 });
 

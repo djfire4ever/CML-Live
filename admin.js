@@ -1,177 +1,105 @@
 // admin.js
 import './global.js';
 
+// ---------------------------
+// pageMeta setup
+// ---------------------------
 window.pageMeta = window.pageMeta || {};
 window.pageMeta.loadedFrom = window.pageMeta.loadedFrom || "global.js";
 window.pageMeta.pageType = "admin";
-console.log("✅ admin.js loaded");
+window.pageMeta.ready = window.pageMeta.ready || false;
 
-// Admin font (Courgette)
-(function loadAdminFont() {
+// Detect if running inside an iframe
+window.pageMeta.context = window !== window.parent ? "iframe" : "parent";
+
+// ---------------------------
+// Console logger with context
+// ---------------------------
+const logWithContext = (...args) => {
+  const color = window.pageMeta.context === "iframe"
+    ? "color: orange; font-weight:bold;"
+    : "color: green; font-weight:bold;";
+  console.log(`%c[${window.pageMeta.context}]`, color, ...args);
+};
+
+// ---------------------------
+// Global initialization log
+// ---------------------------
+logWithContext("✅ admin.js loaded");
+
+// ---------------------------
+// Admin font loader (Courgette)
+// ---------------------------
+function loadAdminFont() {
   const link = document.createElement('link');
   link.href = 'https://fonts.googleapis.com/css2?family=Courgette&display=swap';
   link.rel = 'stylesheet';
   document.head.appendChild(link);
-})();
-
-// Admin toggleLoader (uses classes)
-window.toggleLoader = (show) => {
-  const loader = document.getElementById("loadingOverlay");
-  if (!loader) return;
-  if (typeof show === 'undefined') {
-    loader.classList.toggle('show');
-    if (loader.classList.contains('show')) loader.classList.remove('d-none'); else loader.classList.add('d-none');
-    return;
-  }
-  if (show) { loader.classList.add('show'); loader.classList.remove('d-none'); }
-  else { loader.classList.remove('show'); loader.classList.add('d-none'); }
-};
-
-// Admin showToast (admin look)
-window.showToast = (message, type = "success") => {
-  const toastContainer = document.getElementById("toastContainer");
-  if (!toastContainer) return;
-  const bgColor = type === "success" ? "bg-black" : "bg-danger";
-  const headerText = type === "success" ? "✅ Success" : "❌ Error";
-  const toast = document.createElement("div");
-  toast.classList.add("toast","show",bgColor,"text-info","fade");
-  toast.setAttribute("role","alert");
-  toast.innerHTML = `
-    <div class="toast-header bg-info text-black">
-      <strong class="me-auto">${headerText}</strong>
-      <button type="button" class="btn-close btn-close-info" data-bs-dismiss="toast"></button>
-    </div>
-    <div class="toast-body">${message}</div>
-  `;
-  toastContainer.appendChild(toast);
-  setTimeout(()=>{ toast.classList.remove('show'); setTimeout(()=>toast.remove(),5000); }, 5000);
-};
-
-// ---------------------------
-// Backend version check (original behavior)
-async function checkBackendVersion() {
-  const versionCheckURL = `${window.scriptURL}?action=versionCheck`;
-  const updateBadge = (statusEmoji, statusText, bgClass) => {
-    const badgeBtn = document.querySelector("#debugBadge button");
-    if (badgeBtn) {
-      badgeBtn.innerHTML = `${statusEmoji} ${statusText}`;
-      badgeBtn.classList.remove("btn-outline-secondary", "btn-outline-success", "btn-outline-danger");
-      badgeBtn.classList.add(bgClass);
-    }
-  };
-
-  updateBadge("⏳", "Connecting", "btn-outline-secondary");
-
-  try {
-    const res = await fetch(versionCheckURL);
-    const data = await res.json();
-
-    const resources = window.getResourceStatus ? window.getResourceStatus() : [];
-
-    window.backendMeta = {
-      status: "✅ Connected",
-      scriptURL: window.scriptURL,
-      isLocal: window.isLocal,
-      deployedVersion: data.deployedVersion || "N/A",
-      timestamp: new Date().toISOString(),
-      resources
-    };
-
-    console.log("✅ Debug System Operational");
-    updateBadge("✅", "Connected", "btn-outline-black");
-  } catch (err) {
-    window.backendMeta = {
-      status: "❌ Connection failed",
-      scriptURL: window.scriptURL,
-      isLocal: window.isLocal,
-      error: err.message,
-      timestamp: new Date().toISOString(),
-      resources: window.getResourceStatus ? window.getResourceStatus() : []
-    };
-    console.error("❌ Backend version check failed:", err);
-    updateBadge("❌", "Disconnected", "btn-outline-danger");
-  }
 }
-document.addEventListener("DOMContentLoaded", () => setTimeout(checkBackendVersion, 3000));
+loadAdminFont();
 
 // ---------------------------
-// Debug modal (keeps original showDebugInfo behavior)
-async function showDebugInfo() {
-  const modalEl = document.getElementById("debugModal");
-  if (!modalEl) return console.warn("No debugModal element");
-  const modal = new bootstrap.Modal(modalEl);
+// DOM ready
+// ---------------------------
+document.addEventListener('DOMContentLoaded', () => {
+  logWithContext("✅ DOM Ready: admin.js");
+});
 
-  modal.show();
-  toggleLoader(true);
-  await new Promise(res => setTimeout(res, 50));
+// ---------------------------
+// FullCalendar (admin-only)
+// ---------------------------
+window.loadFullCalendarAdmin = () => {
+  if (window.fullCalendarLoaded) return;
+  window.fullCalendarLoaded = true;
 
-  const debugOutput = {
-    status: "⏳ Gathering info...",
-    scriptURL: window.scriptURL || "⚠️ Not set",
-    deployedVersion: "Loading...",
-    timestamp: new Date().toISOString(),
-    currentPage: window.location.href,
-    iframeSrc: document.querySelector("iframe")?.src || "N/A",
-    parentTheme: "Unknown",
-    iframeTheme: "Unknown",
-    recentErrors: window._errorLog?.slice(-5) || [],
-    ...window.backendMeta
+  const core = document.createElement('script');
+  core.src = `https://cdn.jsdelivr.net/npm/@fullcalendar/core@${window.LIB_VERSIONS.fullCalendarCore}/index.global.min.js`;
+  core.defer = true;
+  core.onload = () => {
+    console.log('✅ FullCalendar core loaded');
+
+    const plugins = [
+      '@fullcalendar/daygrid',
+      '@fullcalendar/timegrid',
+      '@fullcalendar/interaction',
+      '@fullcalendar/list',
+      '@fullcalendar/google-calendar'
+    ].map(p => `https://cdn.jsdelivr.net/npm/${p}@${window.LIB_VERSIONS.fullCalendarPlugins}/index.global.min.js`);
+
+    let loadedCount = 0;
+    plugins.forEach(src => {
+      const s = document.createElement('script');
+      s.src = src;
+      s.defer = true;
+      s.onload = () => {
+        if (++loadedCount === plugins.length) {
+          console.log('✅ FullCalendar plugins loaded');
+          window.pageMeta.hasFullCalendar = true;
+          window.dispatchEvent(new Event('FullCalendarLoaded'));
+        }
+      };
+      document.body.appendChild(s);
+    });
   };
+  document.body.appendChild(core);
+};
 
-  try {
-    const iframeCheck = await window.checkIframeResources();
-    debugOutput.iframeChecks = iframeCheck.checks || [];
-    debugOutput.iframeTheme = iframeCheck.theme || debugOutput.iframeTheme;
-  } catch (err) {
-    console.warn("❌ Iframe resource check failed:", err);
-  }
-
-  const parentCheck = window.checkParentResources();
-  debugOutput.parentChecks = parentCheck.checks || [];
-  debugOutput.parentTheme = parentCheck.theme || debugOutput.parentTheme;
-
-  try {
-    const res = await fetch(`${window.scriptURL}?action=versionCheck`);
-    const data = await res.json();
-    debugOutput.status = "✅ Connected";
-    debugOutput.deployedVersion = data.deployedVersion;
-    debugOutput.scriptURL = data.scriptURL || debugOutput.scriptURL;
-    debugOutput.timestamp = data.timestamp;
-    debugOutput.environment = data.environment;
-  } catch (err) {
-    debugOutput.status = "❌ Failed to connect";
-    debugOutput.error = err.message;
-  }
-
-  const statusBadge = debugOutput.status.includes("✅")
-    ? `<span class="badge bg-success">${debugOutput.status}</span>`
-    : `<span class="badge bg-danger">${debugOutput.status}</span>`;
-
-  const combinedResources = debugOutput.parentChecks.map((parentCheck, idx) => {
-    const iframeCheck = debugOutput.iframeChecks?.[idx];
-    return `
-      <tr>
-        <td>${parentCheck.name}</td>
-        <td class="text-center">${parentCheck.found ? "✅" : "❌"}</td>
-        <td class="text-center">${iframeCheck?.found ? "✅" : "❌"}</td>
-      </tr>
-    `;
-  }).join("");
-
-  const recentErrors = debugOutput.recentErrors.length
-    ? debugOutput.recentErrors.map(e => `<li class="list-group-item py-1">${e}</li>`).join("")
-    : `<li class="list-group-item py-1 text-muted">None</li>`;
-
-  const contentHTML = `
-    ... (same HTML structure you provided) ...
-  `;
-  const container = document.getElementById("debugData");
-  if (container) container.innerHTML = contentHTML;
-  toggleLoader(false);
+// Automatically load FullCalendar if admin page is calendar.html
+if (location.pathname === "/calendar.html") {
+  document.addEventListener('DOMContentLoaded', window.loadFullCalendarAdmin);
 }
 
 // ---------------------------
-// Email template helpers (keeps original behavior)
+// Admin-specific helpers
+// ---------------------------
+function convertGoogleDriveLink(url) {
+  if (!url) return url;
+  if (url.match(/\.(jpg|jpeg|png|gif|webp|avif)(\?.*)?$/i)) return url;
+  const driveMatch = url.match(/(?:\/d\/|id=)([a-zA-Z0-9_-]{20,})/);
+  if (driveMatch) return `https://drive.google.com/thumbnail?id=${driveMatch[1]}`;
+  return url;
+}
+
 async function getEmailTemplateByType(type) {
   try {
     const res = await fetch(`${window.scriptURL}?action=getEmailTemplates`);
@@ -194,31 +122,23 @@ async function getEmailTemplateByType(type) {
 }
 
 async function showEmailModal({ type, mode }) {
-  toggleLoader(true);
+  window.toggleLoader(true);
   await new Promise(requestAnimationFrame);
 
   try {
     const prefix = mode === "add" ? "add" : "edit";
-    const firstName = document.getElementById(`${prefix}-firstName`)?.value || "";
-    const lastName = document.getElementById(`${prefix}-lastName`)?.value || "";
-    const emailTo = document.getElementById(`${prefix}-email`)?.value || "";
-    const invoiceUrl = document.getElementById(`${prefix}-invoiceUrl`)?.value || "";
-    const eventDate = document.getElementById(`${prefix}-eventDate`)?.value || "";
-    const eventTheme = document.getElementById(`${prefix}-eventTheme`)?.value || "";
-    const grandTotal = document.getElementById(`${prefix}-grandTotal`)?.value || "";
-    const quoteID = document.getElementById(`${prefix}-qtID`)?.value || "";
-
     const placeholders = {
-      firstName,
-      lastName,
-      fullName: `${firstName} ${lastName}`.trim(),
-      name: `${firstName} ${lastName}`.trim(),
-      url: invoiceUrl,
-      quoteID,
-      eventDate,
-      eventTheme,
-      grandTotal
+      firstName: document.getElementById(`${prefix}-firstName`)?.value || "",
+      lastName: document.getElementById(`${prefix}-lastName`)?.value || "",
+      fullName: "",
+      name: "",
+      url: document.getElementById(`${prefix}-invoiceUrl`)?.value || "",
+      quoteID: document.getElementById(`${prefix}-qtID`)?.value || "",
+      eventDate: document.getElementById(`${prefix}-eventDate`)?.value || "",
+      eventTheme: document.getElementById(`${prefix}-eventTheme`)?.value || "",
+      grandTotal: document.getElementById(`${prefix}-grandTotal`)?.value || ""
     };
+    placeholders.fullName = placeholders.name = `${placeholders.firstName} ${placeholders.lastName}`.trim();
 
     const template = await getEmailTemplateByType(type);
     if (!template) {
@@ -232,7 +152,7 @@ async function showEmailModal({ type, mode }) {
     const toInput = document.getElementById("invoice-email-to");
     const subjInput = document.getElementById("invoice-email-subject");
     const bodyEl = document.getElementById("invoice-email-body");
-    if (toInput) toInput.value = emailTo;
+    if (toInput) toInput.value = document.getElementById(`${prefix}-email`)?.value || "";
     if (subjInput) subjInput.value = emailSubject;
     if (bodyEl) bodyEl.innerHTML = emailBody;
 
@@ -245,32 +165,25 @@ async function showEmailModal({ type, mode }) {
     console.error("❌ Failed to show email modal:", err);
     window.showToast?.("❌ Error preparing email", "error");
   } finally {
-    toggleLoader(false);
+    window.toggleLoader(false);
   }
 }
 
-// ---------------------------
-// Template renderer & drive helper
+// Template renderer
 function renderTemplate(template, data) {
   return template.replace(/{{\s*([\w.]+)\s*}}/g, (match, key) => (key in data ? data[key] : match));
 }
 
-function convertGoogleDriveLink(url) {
-  if (!url) return url;
-  if (url.match(/\.(jpg|jpeg|png|gif|webp|avif)(\?.*)?$/i)) return url;
-  const driveMatch = url.match(/(?:\/d\/|id=)([a-zA-Z0-9_-]{20,})/);
-  if (driveMatch) return `https://drive.google.com/thumbnail?id=${driveMatch[1]}`;
-  return url;
-}
+document.addEventListener("keydown", function (e) {
+  const isEnter = e.key === "Enter";
+  const target = e.target;
 
-function formatPhoneNumber(raw) {
-  const digits = (raw || "").replace(/\D/g, "");
-  if (digits.length === 10) return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
-  return raw; // fallback
-}
+  const isTextInput = ["INPUT", "SELECT"].includes(target.tagName);
+  const isTextArea = target.tagName === "TEXTAREA";
+  const isSubmitTrigger = isEnter && isTextInput && !isTextArea;
 
-function formatDateForUser(date) {
-  if (!date) return "";
-  return new Date(date).toLocaleDateString("en-US");
-}
+  if (isSubmitTrigger) {
+    e.preventDefault();
+  }
+});
 
