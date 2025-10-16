@@ -17,7 +17,7 @@ const TIERS = {
 const getTierData = tier => TIERS[tier] || TIERS.New;
 
 // ----- Email Templates Allowed -----
-const EMAIL_TEMPLATES_ALLOWED_KEYS = ["lead", "thankyou", "promo", "uploadlink", "tierupgrade", "anniversary", "birthday"];
+const EMAIL_TEMPLATES_ALLOWED_KEYS = ["lead","thankyou","promo","uploadlink","tierupgrade","anniversary","birthday"];
 
 const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
