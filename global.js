@@ -5,19 +5,22 @@
 // Page meta setup
 // ---------------------------
 window.pageMeta = window.pageMeta || {};
-window.pageMeta.loadedFrom = window.pageMeta.loadedFrom || "global.js";
-window.pageMeta.pageType = window.pageMeta.pageType || "global";
+window.pageMeta.loadedFrom = "global.js";
+window.pageMeta.pageType = "global";
+window.pageMeta.context = window !== window.parent ? "iframe" : "parent";
 window.pageMeta.ready = false;
 
-// Detect if running inside an iframe
-window.pageMeta.context = window !== window.parent ? "iframe" : "parent";
+// ---------------------------
+// Deferred console logging system
+// ---------------------------
+window._deferredLogs = window._deferredLogs || { parent: [], iframe: [] };
 
-// ---------------------------
-// Console logger with context
-// ---------------------------
 const logWithContext = (...args) => {
-  const color = window.pageMeta.context === "iframe" ? "color: orange; font-weight:bold;" : "color: green; font-weight:bold;";
-  console.log(`%c[${window.pageMeta.context}]`, color, ...args);
+  const context = window.pageMeta.context;
+  const color = context === "iframe"
+    ? "color: orange; font-weight:bold;"
+    : "color: green; font-weight:bold;";
+  window._deferredLogs[context].push({ args, color });
 };
 
 // ---------------------------
@@ -42,7 +45,6 @@ window.isLocal = ["localhost", "127.0.0.1"].includes(location.hostname);
 window.scriptURL = window.isLocal
   ? "https://script.google.com/macros/s/AKfycbz0n1Br3EO0z7Dukhqo0bZ_QKCZ-3hLjjsLdZye6kBPdu7Wdl7ag9dTBbgiJ5ArrCQ/exec"
   : "/.netlify/functions/leadProxy";
-
 logWithContext(`🌍 Environment: ${window.isLocal ? "Local" : "Live"}`);
 
 // ---------------------------
@@ -66,19 +68,11 @@ window.loadSharedStyles = () => {
     `https://cdnjs.cloudflare.com/ajax/libs/font-awesome/${window.LIB_VERSIONS.fontAwesome}/css/all.min.css`,
     'style.css'
   ];
-
   stylesheets.forEach(href => {
     const link = document.createElement('link');
     link.rel = 'stylesheet';
     link.href = href;
     document.head.appendChild(link);
-  });
-
-  Object.assign(window.pageMeta, {
-    hasBootstrapCSS: true,
-    hasBootstrapIcons: true,
-    hasFontAwesome: true,
-    hasCustomCSS: true
   });
   logWithContext("✅ Shared styles loaded");
 };
@@ -87,20 +81,13 @@ window.loadGlobalScripts = () => {
   if (window.scriptsAlreadyLoaded) return;
   window.scriptsAlreadyLoaded = true;
 
-  // Bootstrap JS
   const bootstrapScript = document.createElement('script');
   bootstrapScript.src = `https://cdn.jsdelivr.net/npm/bootstrap@${window.LIB_VERSIONS.bootstrap}/dist/js/bootstrap.bundle.min.js`;
   bootstrapScript.defer = true;
   bootstrapScript.onload = () => {
     logWithContext('✅ Bootstrap JS loaded');
-    window.pageMeta.hasBootstrap = true;
   };
   document.body.appendChild(bootstrapScript);
-
-  // Theme detection
-  const theme = [...document.body.classList].find(c => c.startsWith('theme-')) || 'no-theme';
-  window.pageMeta.theme = theme;
-  window.pageMeta.ready = true;
 };
 
 // ---------------------------
@@ -111,6 +98,12 @@ document.addEventListener('DOMContentLoaded', () => {
   window.loadSharedStyles();
   window.loadGlobalScripts();
   window.pageMeta.ready = true;
+
+  // Print logs for this context once
+  const context = window.pageMeta.context;
+  console.groupCollapsed(`%c[${context}] Page Load Summary`, context === "iframe" ? "color: orange;" : "color: green;");
+  window._deferredLogs[context].forEach(log => console.log(`%c[${context}]`, log.color, ...log.args));
+  console.groupEnd();
 });
 
 // ---------------------------

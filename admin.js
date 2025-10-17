@@ -5,41 +5,37 @@ import './global.js';
 // pageMeta setup
 // ---------------------------
 window.pageMeta = window.pageMeta || {};
-window.pageMeta.loadedFrom = window.pageMeta.loadedFrom || "global.js";
 window.pageMeta.pageType = "admin";
+window.pageMeta.context = window !== window.parent ? "iframe" : "parent";
 window.pageMeta.ready = window.pageMeta.ready || false;
 
-// Detect if running inside an iframe
-window.pageMeta.context = window !== window.parent ? "iframe" : "parent";
-
 // ---------------------------
-// Console logger with context
+// Use same deferred logging as global.js
 // ---------------------------
 const logWithContext = (...args) => {
-  const color = window.pageMeta.context === "iframe"
+  const context = window.pageMeta.context;
+  const color = context === "iframe"
     ? "color: orange; font-weight:bold;"
     : "color: green; font-weight:bold;";
-  console.log(`%c[${window.pageMeta.context}]`, color, ...args);
+  window._deferredLogs[context].push({ args, color });
 };
 
 // ---------------------------
-// Global initialization log
+// Initialization
 // ---------------------------
 logWithContext("✅ admin.js loaded");
 
-// ---------------------------
-// Admin font loader (Courgette)
-// ---------------------------
-function loadAdminFont() {
+// Load admin-only font
+const loadAdminFont = () => {
   const link = document.createElement('link');
   link.href = 'https://fonts.googleapis.com/css2?family=Courgette&display=swap';
   link.rel = 'stylesheet';
   document.head.appendChild(link);
-}
+};
 loadAdminFont();
 
 // ---------------------------
-// DOM ready
+// DOM Ready
 // ---------------------------
 document.addEventListener('DOMContentLoaded', () => {
   logWithContext("✅ DOM Ready: admin.js");
@@ -56,7 +52,7 @@ window.loadFullCalendarAdmin = () => {
   core.src = `https://cdn.jsdelivr.net/npm/@fullcalendar/core@${window.LIB_VERSIONS.fullCalendarCore}/index.global.min.js`;
   core.defer = true;
   core.onload = () => {
-    console.log('✅ FullCalendar core loaded');
+    logWithContext("✅ FullCalendar core loaded");
 
     const plugins = [
       '@fullcalendar/daygrid',
@@ -73,7 +69,7 @@ window.loadFullCalendarAdmin = () => {
       s.defer = true;
       s.onload = () => {
         if (++loadedCount === plugins.length) {
-          console.log('✅ FullCalendar plugins loaded');
+          logWithContext("✅ FullCalendar plugins loaded");
           window.pageMeta.hasFullCalendar = true;
           window.dispatchEvent(new Event('FullCalendarLoaded'));
         }
@@ -84,7 +80,6 @@ window.loadFullCalendarAdmin = () => {
   document.body.appendChild(core);
 };
 
-// Automatically load FullCalendar if admin page is calendar.html
 if (location.pathname === "/calendar.html") {
   document.addEventListener('DOMContentLoaded', window.loadFullCalendarAdmin);
 }

@@ -197,7 +197,8 @@ document.addEventListener("click", async (e) => {
   const params = new URLSearchParams(window.location.search);
   const focusClientID = params.get("focusClientID");
   const emailType = params.get("emailType");
-  const focusTier = params.get("tier"); // e.g., "Silver", "Gold"
+  const tenure = params.get("tenure");
+  const focusTier = params.get("tier");
 
   if (focusClientID) {
     // --- Filter by clientID ---
@@ -492,53 +493,6 @@ function enableEditToggle(wrapper, isEditing, isAddCard = false) {
   }
 }
 
-// ----- Load email templates -----
-async function loadEmailTemplates() {
-  toggleLoader(true);
-  try {
-    const tplData = await (await fetch(scriptURL + "?action=getEmailTemplates")).json();
-    if (!Array.isArray(tplData)) return;
-    templates = Object.fromEntries(tplData.map(t => [t.type, { subject: t.subject, body: t.body }]));
-  } catch (err) {
-    console.error("Error in loadEmailTemplates:", err);
-    showToast("⚠️ Failed to load email templates", "error");
-  }
-  finally { toggleLoader(false); }
-}
-
-// ----- Open email modal -----
-function openEmailModal(client,template){
-  const modalEl=document.getElementById("emailModal"), modal=new bootstrap.Modal(modalEl);
-  const replacePlaceholders=str=>Object.entries(client).reduce((s,[k,v])=>s.replaceAll(`{{${k}}}`,v||""),str);
-  let subject=replacePlaceholders(template.subject), body=replacePlaceholders(template.body);
-
-  if(body.includes("{{uploadLink}}")){
-    const link=`https://cml-live-test.netlify.app/clientuploadform.html?clientID=${encodeURIComponent(client.clientID)}&firstName=${encodeURIComponent(client.firstName)}&lastName=${encodeURIComponent(client.lastName)}&email=${encodeURIComponent(client.email)}`;
-    body = body.replace(/{{uploadLink}}/g, link);
-  }
-
-  document.getElementById("emailTo").value = client.email;
-  document.getElementById("emailSubject").value = subject;
-  document.getElementById("emailBody").value = body;
-  modal.show();
-
-  document.getElementById("sendEmailBtn").onclick = () => sendEmail(client.email,subject,body,modal);
-}
-
-// ----- Send email -----
-async function sendEmail(to,subject,body,modal){
-  toggleLoader(true);
-  try{
-    const result = await (await fetch(scriptURL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({system:"clients",action:"sendEmail",to,subject,body})})).json();
-    showToast(result.success?"📧 Email sent!":"❌ Email failed",result.success?"success":"error");
-    if(result.success) modal?.hide();
-  } catch (err) {
-    console.error("Error in sendEmail:", err);
-    showToast("⚠️ Failed to send email", "error");
-  }
-  finally { toggleLoader(false); }
-}
-
 function refreshSearchResults(focusClientID = null) {
   const searchInput = document.getElementById(SELECTORS.searchInput);
   const resultsContainer = document.getElementById(SELECTORS.resultsContainer);
@@ -569,5 +523,66 @@ function refreshSearchResults(focusClientID = null) {
     const el = resultsContainer.querySelector(`.accordion-item[data-client-id="${focusClientID}"]`);
     if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
   }
+}
+
+// ----- Load email templates -----
+async function loadEmailTemplates() {
+  toggleLoader(true);
+  try {
+    const tplData = await (await fetch(scriptURL + "?action=getEmailTemplates")).json();
+    if (!Array.isArray(tplData)) return;
+    templates = Object.fromEntries(tplData.map(t => [t.type, { subject: t.subject, body: t.body }]));
+  } catch (err) {
+    console.error("Error in loadEmailTemplates:", err);
+    showToast("⚠️ Failed to load email templates", "error");
+  }
+  finally { toggleLoader(false); }
+}
+
+function openEmailModal(client, template) {
+  // Allow tenure from URL to be used in placeholders
+  const urlParams = new URLSearchParams(window.location.search);
+  const tenure = urlParams.get("tenure");
+  if (tenure) {
+    const t = Number(tenure);
+    client.tenure = t; // number
+    client.tenureText = t === 1 ? "1 Year" : `${t} Years`; // for body
+    client.anniversaryPhrase = t === 1 ? "1-Year Anniversary" : `${t}-Year Anniversary`; // for subject
+  }
+
+  const modalEl = document.getElementById("emailModal"),
+        modal = new bootstrap.Modal(modalEl);
+
+  const replacePlaceholders = str =>
+    Object.entries(client).reduce((s, [k, v]) => s.replaceAll(`{{${k}}}`, v || ""), str);
+
+  let subject = replacePlaceholders(template.subject),
+      body = replacePlaceholders(template.body);
+
+  if (body.includes("{{uploadLink}}")) {
+    const link = `https://cml-live-test.netlify.app/clientuploadform.html?clientID=${encodeURIComponent(client.clientID)}&firstName=${encodeURIComponent(client.firstName)}&lastName=${encodeURIComponent(client.lastName)}&email=${encodeURIComponent(client.email)}`;
+    body = body.replace(/{{uploadLink}}/g, link);
+  }
+
+  document.getElementById("emailTo").value = client.email;
+  document.getElementById("emailSubject").value = subject;
+  document.getElementById("emailBody").value = body;
+  modal.show();
+
+  document.getElementById("sendEmailBtn").onclick = () => sendEmail(client.email, subject, body, modal);
+}
+
+// ----- Send email -----
+async function sendEmail(to,subject,body,modal){
+  toggleLoader(true);
+  try{
+    const result = await (await fetch(scriptURL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({system:"clients",action:"sendEmail",to,subject,body})})).json();
+    showToast(result.success?"📧 Email sent!":"❌ Email failed",result.success?"success":"error");
+    if(result.success) modal?.hide();
+  } catch (err) {
+    console.error("Error in sendEmail:", err);
+    showToast("⚠️ Failed to send email", "error");
+  }
+  finally { toggleLoader(false); }
 }
 

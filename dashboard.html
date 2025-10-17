@@ -13,24 +13,36 @@ body.bg-black .btn-outline-danger  { color: #dc3545; border-color: #dc3545; }
 body.bg-black .btn-outline-warning { color: #ffc107; border-color: #ffc107; }
 body.bg-black .btn-outline-success { color: #198754; border-color: #198754; }
 
-body.bg-black .stat-button {
-  all: revert;
+/* General button effect for stats, tiers, quick links, anniversaries, birthdays */
+body.bg-black .btn {
   transition: all 0.3s ease;
-  border-width: 2px;
   font-weight: bold;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
-body.bg-black .stat-button:hover {
+
+/* Hover and active states for all outline buttons */
+body.bg-black .btn-outline-primary:hover,
+body.bg-black .btn-outline-info:hover,
+body.bg-black .btn-outline-danger:hover,
+body.bg-black .btn-outline-warning:hover,
+body.bg-black .btn-outline-success:hover {
   transform: translateY(-2px);
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 10px currentColor; /* glow using button color */
+  z-index: 1;
 }
-body.bg-black .stat-button:active {
+
+body.bg-black .btn-outline-primary:active,
+body.bg-black .btn-outline-info:active,
+body.bg-black .btn-outline-danger:active,
+body.bg-black .btn-outline-warning:active,
+body.bg-black .btn-outline-success:active {
   transform: scale(0.98);
   box-shadow: none;
 }
 
+/* Optional: low-stock specific style if still needed */
 .low-stock-row {
   transition: all 0.3s ease;
   border: none;
@@ -44,25 +56,26 @@ body.bg-black .stat-button:active {
   transform: scale(0.98);
   box-shadow: none;
 }
+
+/* Upload row selected style */
 .upload-row.selected {
   background-color: var(--bs-info) !important;
   color: var(--bs-black) !important;
   font-weight: bold;
   border-left: 4px solid var(--bs-black);
 }
+
+/* Tooltip styling */
 .tooltip-inner {
-  font-size: 1.1rem; /* slightly bigger font */
+  font-size: 1.1rem; 
   font-weight: bold;
-  background-color: var(--bs-black) !important; /* black bg for all tooltips */
+  background-color: var(--bs-black) !important;
 }
 .tooltip-supplier {
   color: var(--bs-info); 
 }
 .tooltip-no-supplier {
   color: var(--bs-danger); 
-}
-.text-bronze {
-  color: #cd7f32 !important; /* classic bronze color */
 }
 
 </style>
@@ -199,8 +212,10 @@ body.bg-black .stat-button:active {
           </button>
         </h2>
         <div id="collapseAnniversaries" class="accordion-collapse show" aria-labelledby="headingAnniversaries">
-          <div class="accordion-body bg-black text-light border-info">
-            <ul id="anniversariesList" class="list-group list-group-flush"></ul>
+          <div class="accordion-body bg-black text-info border-info">
+            <ul id="anniversariesList" class="list-group list-group">
+              <!-- JS will populate <li><button>…</button></li> rows here dynamically -->
+            </ul>
           </div>
         </div>
       </div>
@@ -420,80 +435,80 @@ async function fetchDashboardStats() {
       lowStockList.innerHTML = `<li class="list-group-item bg-black text-info">✅ All stock levels healthy.</li>`;
     }
 
-    // ---- Upcoming anniversaries & birthdays ----
-    const anniversariesList = document.getElementById("anniversariesList");
-    const anniversaryCountBadge = document.getElementById("anniversaryCountBadge");
-    anniversariesList.innerHTML = "";
+// ---- Upcoming anniversaries & birthdays ----
+const anniversariesList = document.getElementById("anniversariesList");
+const anniversaryCountBadge = document.getElementById("anniversaryCountBadge");
+anniversariesList.innerHTML = "";
 
-    const events = [];
+const events = [];
 
-    // --- MemberSince anniversaries ---
-    (data.anniversaries?.memberSince || []).forEach(a => {
-      const d = new Date(a.date);
-      if (isNaN(d)) return;
-      const daysUntil = Math.ceil((d - today) / (1000 * 60 * 60 * 24));
-      if (daysUntil >= 0 && daysUntil <= UPCOMING_WINDOW_DAYS) {
-        events.push({
-          type: "Anniversary",
-          name: a.firstName,
-          clientID: a.clientID, // make sure backend provides this
-          date: d,
-          years: a.years,
-          daysUntil
-        });
-      }
+// --- MemberSince anniversaries ---
+(data.anniversaries?.memberSince || []).forEach(a => {
+  const d = new Date(a.date);
+  if (isNaN(d)) return;
+  const daysUntil = Math.ceil((d - today) / (1000 * 60 * 60 * 24));
+  if (daysUntil >= 0 && daysUntil <= UPCOMING_WINDOW_DAYS) {
+    events.push({
+      type: "Anniversary",
+      name: a.firstName,
+      clientID: a.clientID,
+      date: d,
+      years: a.years,
+      daysUntil
     });
+  }
+});
 
-    // --- Birthdays ---
-    (data.anniversaries?.birthdays || []).forEach(b => {
-      const d = new Date(b.date);
-      if (isNaN(d)) return;
-      const daysUntil = Math.ceil((d - today) / (1000 * 60 * 60 * 24));
-      if (daysUntil >= 0 && daysUntil <= UPCOMING_WINDOW_DAYS) {
-        events.push({
-          type: "Birthday",
-          name: b.firstName,
-          clientID: b.clientID, // make sure backend provides this
-          date: d,
-          daysUntil
-        });
-      }
+// --- Birthdays ---
+(data.anniversaries?.birthdays || []).forEach(b => {
+  const d = new Date(b.date);
+  if (isNaN(d)) return;
+  const daysUntil = Math.ceil((d - today) / (1000 * 60 * 60 * 24));
+  if (daysUntil >= 0 && daysUntil <= UPCOMING_WINDOW_DAYS) {
+    events.push({
+      type: "Birthday",
+      name: b.firstName,
+      clientID: b.clientID,
+      date: d,
+      daysUntil
     });
+  }
+});
 
-    // Sort by nearest date
-    events.sort((a, b) => a.date - b.date);
-    anniversaryCountBadge.textContent = events.length;
+// Sort by nearest date
+events.sort((a, b) => a.date - b.date);
+anniversaryCountBadge.textContent = events.length;
 
-    if (events.length === 0) {
-      anniversariesList.innerHTML = `<li class="list-group-item bg-black text-info">No upcoming events in the next ${UPCOMING_WINDOW_DAYS} days.</li>`;
-    } else {
-      events.forEach(e => {
-        const li = document.createElement("li");
-        li.className = "list-group-item bg-black text-info d-flex justify-content-between align-items-center";
-        li.style.cursor = "pointer";
+if (events.length === 0) {
+  anniversariesList.innerHTML = `
+    <li class="list-group-item bg-black text-info">
+      No upcoming events in the next ${UPCOMING_WINDOW_DAYS} days.
+    </li>
+  `;
+} else {
+  events.forEach(e => {
+    const li = document.createElement("li");
+    li.className = "list-group-item bg-black p-0 border-0"; // remove inner padding
 
-        let label = "";
-        if (e.type === "Anniversary") {
-          label = `🎉 ${e.name} • ${e.years} year${e.years > 1 ? "s" : ""}`;
-        } else if (e.type === "Birthday") {
-          label = `🎂 ${e.name} • B-Day`;
-        }
+    const btnClass = e.type === "Anniversary" ? "btn-outline-info" : "btn-outline-warning";
 
-        li.innerHTML = `
-          <span>${label}</span>
-          <small>${e.daysUntil === 0 ? "Today!" : `in ${e.daysUntil} day${e.daysUntil > 1 ? "s" : ""}`}</small>
-        `;
+    // Single-line, full-width, tight layout
+    li.innerHTML = `
+      <button class="btn ${btnClass} w-100 d-flex justify-content-between align-items-center text-start px-2 py-2" style="border-width:3px; width:100%;">
+        <span class="flex-grow-1 text-truncate">${e.type === "Anniversary" ? `🎉 ${e.name} • ${e.years} year${e.years > 1 ? "s" : ""}` : `🎂 ${e.name} • B-Day`}</span>
+        <small class="ms-auto">${e.daysUntil === 0 ? "Today!" : `in ${e.daysUntil} day${e.daysUntil > 1 ? "s" : ""}`}</small>
+      </button>
+    `;
 
-        // --- Click navigates parent iframe to clientmanager ---
-        li.onclick = () => {
-          const iframe = window.parent.document.getElementById("content-frame");
-          if (!iframe) return console.error("❌ iframe not found in parent");
-          iframe.src = `clientmanager.html?focusClientID=${e.clientID}&emailType=${e.type.toLowerCase()}`;
-        };
+    li.querySelector("button").onclick = () => {
+      const iframe = window.parent.document.getElementById("content-frame");
+      if (!iframe) return console.error("❌ iframe not found in parent");
+      iframe.src = `clientmanager.html?focusClientID=${e.clientID}&emailType=${e.type}&tenure=${e.years || ""}`;
+    };
 
-        anniversariesList.appendChild(li);
-      });
-    }
+    anniversariesList.appendChild(li);
+  });
+}
 
     // ---- Recent uploads (unchanged) ----
     if (Array.isArray(data.clientUploads)) {
@@ -820,6 +835,18 @@ document.addEventListener("DOMContentLoaded", () => {
       // --- Load clientmanager page with tier filter ---
       iframe.src = `clientmanager.html?tier=${encodeURIComponent(tier)}`;
     });
+  });
+});
+
+document.querySelectorAll('.accordion-button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    // Use a short delay to allow the collapse animation to start
+    setTimeout(() => {
+      btn.closest('.accordion-item')?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center' // or 'start' if you prefer it pinned to the top
+      });
+    }, 300); // 300ms matches Bootstrap’s default collapse animation speed
   });
 });
 
