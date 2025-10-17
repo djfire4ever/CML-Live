@@ -5,7 +5,7 @@ import './global.js';
 window.pageMeta = window.pageMeta || {};
 window.pageMeta.loadedFrom = window.pageMeta.loadedFrom || "global.js";
 window.pageMeta.pageType = "client";
-console.log("✅ client.js loaded");
+// console.log("✅ client.js loaded");
 
 // Client font (Roboto)
 (function loadClientFont() {
@@ -62,6 +62,14 @@ window.showToast = (message, type = "success", forLeadForm = true) => {
   `;
   toastContainer.appendChild(toast);
   setTimeout(()=>{ toast.classList.remove('show'); setTimeout(()=>toast.remove(),5000); }, 5000);
+};
+
+window.convertGoogleDriveLink = (url) => {
+  if (!url) return url;
+  if (url.match(/\.(jpg|jpeg|png|gif|webp|avif)(\?.*)?$/i)) return url;
+  const driveMatch = url.match(/(?:\/d\/|id=)([a-zA-Z0-9_-]{20,})/);
+  if (driveMatch) return `https://drive.google.com/thumbnail?id=${driveMatch[1]}`;
+  return url;
 };
 
 // Client dropdown loader - auto-run if selects exist (keeps your original behavior)
@@ -140,3 +148,4 @@ document.addEventListener("keydown", function (e) {
   const isSubmitTrigger = isEnter && isTextInput && !isTextArea;
   if (isSubmitTrigger) e.preventDefault();
 });
+

@@ -1,18 +1,13 @@
 // global.js
-// Shared/global utilities, loaders, and formatters
 
-// ---------------------------
 // Page meta setup
-// ---------------------------
 window.pageMeta = window.pageMeta || {};
 window.pageMeta.loadedFrom = "global.js";
 window.pageMeta.pageType = "global";
 window.pageMeta.context = window !== window.parent ? "iframe" : "parent";
 window.pageMeta.ready = false;
 
-// ---------------------------
 // Deferred console logging system
-// ---------------------------
 window._deferredLogs = window._deferredLogs || { parent: [], iframe: [] };
 
 const logWithContext = (...args) => {
@@ -23,14 +18,10 @@ const logWithContext = (...args) => {
   window._deferredLogs[context].push({ args, color });
 };
 
-// ---------------------------
 // Global initialization logs
-// ---------------------------
 logWithContext("✅ global.js loaded");
 
-// ---------------------------
 // Global error logging (lightweight)
-// ---------------------------
 window._errorLog = [];
 window.addEventListener("error", (e) => {
   const msg = `[${new Date().toLocaleTimeString()}] ${e.message} @ ${e.filename}:${e.lineno}`;
@@ -38,18 +29,14 @@ window.addEventListener("error", (e) => {
   if (window._errorLog.length > 10) window._errorLog.shift();
 });
 
-// ---------------------------
 // Environment / script URL
-// ---------------------------
 window.isLocal = ["localhost", "127.0.0.1"].includes(location.hostname);
 window.scriptURL = window.isLocal
   ? "https://script.google.com/macros/s/AKfycbz0n1Br3EO0z7Dukhqo0bZ_QKCZ-3hLjjsLdZye6kBPdu7Wdl7ag9dTBbgiJ5ArrCQ/exec"
   : "/.netlify/functions/leadProxy";
 logWithContext(`🌍 Environment: ${window.isLocal ? "Local" : "Live"}`);
 
-// ---------------------------
 // Library versions
-// ---------------------------
 window.LIB_VERSIONS = {
   bootstrap: "5.3.8",
   bootstrapIcons: "1.13.1",
@@ -58,23 +45,30 @@ window.LIB_VERSIONS = {
   fullCalendarPlugins: "6.1.17"
 };
 
-// ---------------------------
 // Shared CSS & JS loaders
-// ---------------------------
-window.loadSharedStyles = () => {
+window.loadSharedStyles = (options = {}) => {
+  const { stylesheet } = options;
   const stylesheets = [
     `https://cdn.jsdelivr.net/npm/bootstrap@${window.LIB_VERSIONS.bootstrap}/dist/css/bootstrap.min.css`,
     `https://cdn.jsdelivr.net/npm/bootstrap-icons@${window.LIB_VERSIONS.bootstrapIcons}/font/bootstrap-icons.min.css`,
-    `https://cdnjs.cloudflare.com/ajax/libs/font-awesome/${window.LIB_VERSIONS.fontAwesome}/css/all.min.css`,
-    'style.css'
+    `https://cdnjs.cloudflare.com/ajax/libs/font-awesome/${window.LIB_VERSIONS.fontAwesome}/css/all.min.css`
   ];
+
+  // Always include style.css if nothing is specified
+  stylesheets.push(stylesheet || 'style.css');
+
+  // Append everything (duplication allowed)
   stylesheets.forEach(href => {
     const link = document.createElement('link');
     link.rel = 'stylesheet';
     link.href = href;
     document.head.appendChild(link);
   });
-  logWithContext("✅ Shared styles loaded");
+
+  // Log summary
+  logWithContext(
+    `✅ Shared styles loaded${stylesheet ? ` (with ${stylesheet})` : ''}`
+  );
 };
 
 window.loadGlobalScripts = () => {
@@ -90,9 +84,7 @@ window.loadGlobalScripts = () => {
   document.body.appendChild(bootstrapScript);
 };
 
-// ---------------------------
 // DOM ready
-// ---------------------------
 document.addEventListener('DOMContentLoaded', () => {
   logWithContext('✅ DOM Ready: Scripts/Styles Loaded');
   window.loadSharedStyles();
@@ -106,9 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
   console.groupEnd();
 });
 
-// ---------------------------
 // Shared formatters / helpers
-// ---------------------------
 window.formatDateForUser = (date) =>
   date ? new Date(date).toLocaleDateString("en-US") : "";
 
