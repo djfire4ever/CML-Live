@@ -107,10 +107,18 @@ document.addEventListener("click", async (e) => {
 
   // --- Save (Add / Edit unified) ---
   if (btn.classList.contains("save-button")) {
-    const clientID = card.dataset.clientId || card.querySelector(".clientID-input").value.trim();
+    var clientID = card.dataset.clientId || card.querySelector(".clientID-input").value.trim();
     if (!clientID) return showToast("⚠️ Client ID is required", "error");
 
-    const clientInfo = {
+    // Birthday: get month/day selects
+    var monthSelect = card.querySelector(".birthday-month-input");
+    var daySelect = card.querySelector(".birthday-day-input");
+    var birthday;
+    if (monthSelect.value && daySelect.value) {
+      birthday = new Date(2000, parseInt(monthSelect.value, 10) - 1, parseInt(daySelect.value, 10));
+    }
+
+    var clientInfo = {
       firstName: card.querySelector(".firstName-input").value.trim(),
       lastName: card.querySelector(".lastName-input").value.trim(),
       nickName: card.querySelector(".nickName-input").value.trim(),
@@ -120,9 +128,11 @@ document.addEventListener("click", async (e) => {
       state: card.querySelector(".state-input").value.trim(),
       zip: card.querySelector(".zip-input").value.trim(),
       tier: card.querySelector(".tier-input").value,
-      memberSince: card.querySelector(".memberSince-input").value
+      memberSince: card.dataset.clientId ? undefined : new Date(), // Only set on new clients
+      birthday: birthday // undefined if not selected
     };
 
+    // send to backend as before
     try {
       toggleLoader(true);
       const res = await fetch(scriptURL, {
@@ -143,7 +153,7 @@ document.addEventListener("click", async (e) => {
         enableEditToggle(card, false, !card.dataset.clientId);
 
         await loadClients();
-        refreshSearchResults(clientID); // scroll to saved client
+        refreshSearchResults(clientID);
       } else {
         showToast(result.message || "❌ Error saving client", "error");
       }

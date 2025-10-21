@@ -43,40 +43,26 @@ body.bg-black .btn-outline-success:active {
 }
 
 /* Optional: low-stock specific style if still needed */
-.low-stock-row {
-  transition: all 0.3s ease;
-  border: none;
-}
-.low-stock-row:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 0 10px rgba(255, 193, 7, 0.3); /* Soft amber/yellow glow */
-  z-index: 1;
-}
-.low-stock-row:active {
-  transform: scale(0.98);
-  box-shadow: none;
-}
+.low-stock-row {  transition: all 0.3s ease;  border: none;}
+.low-stock-row:hover {  transform: translateY(-2px);  box-shadow: 0 0 10px rgba(255, 193, 7, 0.3); /* Soft amber/yellow glow */  z-index: 1;}
+.low-stock-row:active {  transform: scale(0.98);  box-shadow: none;}
 
 /* Upload row selected style */
-.upload-row.selected {
-  background-color: var(--bs-info) !important;
-  color: var(--bs-black) !important;
-  font-weight: bold;
-  border-left: 4px solid var(--bs-black);
-}
+.upload-row.selected {  background-color: var(--bs-info) !important;  color: var(--bs-black) !important;  font-weight: bold;  border-left: 4px solid var(--bs-black);}
 
 /* Tooltip styling */
-.tooltip-inner {
-  font-size: 1.1rem; 
-  font-weight: bold;
-  background-color: var(--bs-black) !important;
-}
-.tooltip-supplier {
-  color: var(--bs-info); 
-}
-.tooltip-no-supplier {
-  color: var(--bs-danger); 
-}
+.tooltip-inner {  font-size: 1.1rem;   font-weight: bold;  background-color: var(--bs-black) !important;}
+.tooltip-supplier {  color: var(--bs-info); }
+.tooltip-no-supplier {  color: var(--bs-danger); }
+
+/* --- Dashboard Live/Cached Status Dot --- */
+.status-dot {  display: inline-block;  width: 10px;  height: 10px;  border-radius: 50%;  margin-left: 6px;  background-color: orange; transition: transform 0.3s ease, opacity 0.3s ease;}
+/* Optional: subtle bounce/fade animation when status changes */
+.status-dot.update-live {  animation: dot-pop 0.4s ease forwards;}
+@keyframes dot-pop {  0% { transform: scale(0.5); opacity: 0.5; }  50% { transform: scale(1.2); opacity: 1; }  100% { transform: scale(1); opacity: 1; }}
+/* Tooltip styling (optional if using Bootstrap, otherwise custom) */
+.status-dot[title] {  position: relative;}
+.status-dot[title]:hover::after { content: attr(title);  position: absolute;  top: -25px;  left: 50%;  transform: translateX(-50%);  background: #000;  color: #fff;  font-size: 0.75rem;  padding: 2px 6px;  border-radius: 4px;  white-space: nowrap;  z-index: 1000;}
 
 </style>
 
@@ -97,6 +83,23 @@ body.bg-black .btn-outline-success:active {
         We might want to start adding some dates for the Anniversaries & Birthdays section soon.
       </a>
     </h5>
+
+<button type="button" class="btn btn-sm btn-outline-info btn-end" data-bs-toggle="modal" data-bs-target="#cacheStatusModal">View Cache Status</button>
+
+<!-- Modal -->
+  <div class="modal fade" id="cacheStatusModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Dashboard Cache Status</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body" id="cacheStatusBody">
+          <!-- Status will be populated here -->
+        </div>
+      </div>
+    </div>
+  </div>
 
 <!-- Row 1 -->
 <!-- Quick Links Accordion -->
@@ -161,11 +164,51 @@ body.bg-black .btn-outline-success:active {
         <div id="collapseStats" class="accordion-collapse show" aria-labelledby="headingStats">
           <div class="accordion-body bg-black text-light border-info">
             <div class="row g-2">
-              <div class="col-12"><button class="btn btn-outline-primary w-100 d-flex justify-content-between align-items-center" data-link="clientmanager.html#tab-search"><span>Total Clients:</span><span id="totalClients" class="fw-bold">--</span></button></div>
-              <div class="col-12"><button class="btn btn-outline-info w-100 d-flex justify-content-between align-items-center" data-link="materialmanager.html#search-material"><span>Total Materials:</span><span id="totalMaterials" class="fw-bold">--</span></button></div>
-              <div class="col-12"><button class="btn btn-outline-danger w-100 d-flex justify-content-between align-items-center" data-link="productmanager.html#search-product"><span>Total Products:</span><span id="totalProducts" class="fw-bold">--</span></button></div>
-              <div class="col-12"><button class="btn btn-outline-warning w-100 d-flex justify-content-between align-items-center" data-link="quotemanager.html#search-quote"><span>Total Quotes:</span><span id="totalQuotes" class="fw-bold">--</span></button></div>
-              <div class="col-12"><button class="btn btn-outline-success w-100 d-flex justify-content-between align-items-center" data-link="invoicemanager.html#search-invoice"><span>Total Unpaid Invoices:</span><span id="unpaidInvoiceCount" class="fw-bold">--</span></button></div>
+              <div class="col-12">
+                <button class="btn btn-outline-primary w-100 d-flex justify-content-between align-items-center" data-link="clientmanager.html#tab-search">
+                  <span>Total Clients:</span>
+                  <span>
+                    <span id="totalClients" class="fw-bold">--</span>
+                    <span id="status-totalClients" class="status-dot"></span>
+                  </span>
+                </button>
+              </div>
+              <div class="col-12">
+                <button class="btn btn-outline-info w-100 d-flex justify-content-between align-items-center" data-link="materialmanager.html#search-material">
+                  <span>Total Materials:</span>
+                  <span>
+                    <span id="totalMaterials" class="fw-bold">--</span>
+                    <span id="status-totalMaterials" class="status-dot"></span>
+                  </span>
+                </button>
+              </div>
+              <div class="col-12">
+                <button class="btn btn-outline-danger w-100 d-flex justify-content-between align-items-center" data-link="productmanager.html#search-product">
+                  <span>Total Products:</span>
+                  <span>
+                    <span id="totalProducts" class="fw-bold">--</span>
+                    <span id="status-totalProducts" class="status-dot"></span>
+                  </span>
+                </button>
+              </div>
+              <div class="col-12">
+                <button class="btn btn-outline-warning w-100 d-flex justify-content-between align-items-center" data-link="quotemanager.html#search-quote">
+                  <span>Total Quotes:</span>
+                  <span>
+                    <span id="totalQuotes" class="fw-bold">--</span>
+                    <span id="status-totalQuotes" class="status-dot"></span>
+                  </span>
+                </button>
+              </div>
+              <div class="col-12">
+                <button class="btn btn-outline-success w-100 d-flex justify-content-between align-items-center" data-link="invoicemanager.html#search-invoice">
+                  <span>Total Unpaid Invoices:</span>
+                  <span>
+                    <span id="unpaidInvoiceCount" class="fw-bold">--</span>
+                    <span id="status-unpaidInvoiceCount" class="status-dot"></span>
+                  </span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -174,7 +217,7 @@ body.bg-black .btn-outline-success:active {
   </div>
 
   <!-- Leads Accordion -->
-  <div class="col-md-4 col-lg-4 mt-1"> <!-- Leave mt-1 for proper spacing on mobile -->
+  <div class="col-md-4 col-lg-4 mt-1">
     <div class="accordion fade-in-card" id="leadsAccordion">
       <div class="accordion-item border-info">
         <h2 class="accordion-header" id="headingLeads">
@@ -185,9 +228,33 @@ body.bg-black .btn-outline-success:active {
         <div id="collapseLeads" class="accordion-collapse show" aria-labelledby="headingLeads">
           <div class="accordion-body bg-black text-light border-info">
             <div class="row g-2">
-              <div class="col-12"><button class="btn btn-outline-primary w-100 d-flex justify-content-between align-items-center"><span>New Leads:</span><span id="newLeads" class="fw-bold">0</span></button></div>
-              <div class="col-12"><button class="btn btn-outline-info w-100 d-flex justify-content-between align-items-center"><span>Follow-Up Leads:</span><span id="followupLeads" class="fw-bold">0</span></button></div>
-              <div class="col-12"><button class="btn btn-outline-danger w-100 d-flex justify-content-between align-items-center"><span>Pending Leads:</span><span id="pendingLeads" class="fw-bold">0</span></button></div>
+              <div class="col-12">
+                <button class="btn btn-outline-primary w-100 d-flex justify-content-between align-items-center">
+                  <span>New Leads:</span>
+                  <span>
+                    <span id="newLeads" class="fw-bold">0</span>
+                    <span id="status-newLeads" class="status-dot"></span>
+                  </span>
+                </button>
+              </div>
+              <div class="col-12">
+                <button class="btn btn-outline-info w-100 d-flex justify-content-between align-items-center">
+                  <span>Follow-Up Leads:</span>
+                  <span>
+                    <span id="followupLeads" class="fw-bold">0</span>
+                    <span id="status-followupLeads" class="status-dot"></span>
+                  </span>
+                </button>
+              </div>
+              <div class="col-12">
+                <button class="btn btn-outline-danger w-100 d-flex justify-content-between align-items-center">
+                  <span>Pending Leads:</span>
+                  <span>
+                    <span id="pendingLeads" class="fw-bold">0</span>
+                    <span id="status-pendingLeads" class="status-dot"></span>
+                  </span>
+                </button>
+              </div>
             </div>
             <div class="d-grid mt-3">
               <button class="btn btn-outline-warning" data-link="leads.html">View Leads</button>
@@ -373,195 +440,248 @@ body.bg-black .btn-outline-success:active {
 <script type="module" src="admin.js"></script>
 
 <script>
+function populateCacheStatusModal(data) {
+  const modalBody = document.getElementById("cacheStatusBody");
+  if (!modalBody || !data.dashboardStatus || !data.cacheTimestamps) return;
+
+  modalBody.innerHTML = ""; // clear previous content
+  const list = document.createElement("ul");
+  list.className = "list-group list-group-flush";
+
+  Object.keys(data.dashboardStatus).forEach(section => {
+    const li = document.createElement("li");
+    li.className = "list-group-item bg-dark text-info d-flex justify-content-between align-items-center";
+    li.innerHTML = `
+      <span>${section}</span>
+      <span>[${data.dashboardStatus[section]}] • ${new Date(data.cacheTimestamps[section]).toLocaleString()}</span>
+    `;
+    list.appendChild(li);
+  });
+
+  modalBody.appendChild(list);
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const modalEl = document.getElementById("cacheStatusModal");
+  if (!modalEl) return;
+
+  modalEl.addEventListener("show.bs.modal", () => {
+    const body = document.getElementById("cacheStatusBody");
+    if (!body) return;
+
+    const dashboardData = window._dashboardData || {}; // whatever your dashboard fetch sets
+    const status = dashboardData.dashboardStatus || {};
+    const timestamps = dashboardData.cacheTimestamps || {};
+
+    body.innerHTML = Object.keys(status).map(key => {
+      const stat = status[key];
+      const ts = timestamps[key] ? new Date(timestamps[key]).toLocaleString() : "-";
+      return `<div><strong>${key}</strong>: [${stat}] • ${ts}</div>`;
+    }).join("");
+  });
+});
 
 // ===== Dashboard Fetch with Configurable Upcoming Window =====
-const UPCOMING_WINDOW_DAYS = 30 ; // 👈 change this to adjust range for anniversaries/birthdays
+// const UPCOMING_WINDOW_DAYS = 30 ; // 👈 change this to adjust range for anniversaries/birthdays
 
 // ==============================
 // Fetch Dashboard Stats
 // ==============================
 async function fetchDashboardStats() {
   try {
-    const response = await fetch(`${scriptURL}?action=getDashboardStats`);
+    const response = await fetch(`${scriptURL}?action=getDashboardData`);
     if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+
     const data = await response.json();
+    window._dashboardData = data;
+    const now = new Date();
 
-    const today = new Date();
-
-    // ---- Top-level counts ----
-    document.getElementById("totalClients").textContent = data.clients || 0;
-    document.getElementById("totalProducts").textContent = data.products || 0;
-    document.getElementById("totalMaterials").textContent = data.materials || 0;
-    document.getElementById("unpaidInvoiceCount").textContent = data.unpaidInvoices || 0;
-    document.getElementById("totalQuotes").textContent = data.quotes || 0;
-
-    // ---- Tier counts ----
-    if (data.tiers) {
-      document.getElementById("tierNew").textContent = data.tiers.New || 0;
-      document.getElementById("tierSilver").textContent = data.tiers.Silver || 0;
-      document.getElementById("tierGold").textContent = data.tiers.Gold || 0;
-      document.getElementById("tierPlatinum").textContent = data.tiers.Platinum || 0;
-    }
-
-    // ---- Low stock ----
-    const lowStockList = document.getElementById("lowStockList");
-    lowStockList.innerHTML = "";
-    const lowStockData = Array.isArray(data.lowStock) ? data.lowStock : [];
-    document.getElementById("lowStockCount").textContent = lowStockData.length || 0;
-
-    if (lowStockData.length) {
-      lowStockData.forEach(item => {
-        const li = document.createElement("li");
-        li.className = "list-group-item list-group-item-action d-flex justify-content-between align-items-center text-info bg-black low-stock-row";
-        li.style.cursor = "pointer";
-        li.innerHTML = `
-          <div class="w-75 text-start">${item.matName}</div>
-          <div class="w-25 text-end">${item.onHand}</div>
+    // --- ✅ Populate modal with cache/live status ---
+    const cacheStatusBody = document.getElementById("cacheStatusBody");
+    if (cacheStatusBody && data.dashboardStatus && data.cacheTimestamps) {
+      cacheStatusBody.innerHTML = ""; // clear old content
+      Object.keys(data.dashboardStatus).forEach(section => {
+        const div = document.createElement("div");
+        div.className = "d-flex justify-content-between align-items-center mb-1 p-1 bg-dark text-info rounded";
+        div.innerHTML = `
+          <span>${section}</span>
+          <span>[${data.dashboardStatus[section]}] • ${new Date(data.cacheTimestamps[section]).toLocaleString()}</span>
         `;
-        li.setAttribute("data-bs-toggle", "tooltip");
-        li.setAttribute("data-bs-html", "true");
-        li.setAttribute("title", item.supplierUrl
-          ? `Click to order from <span class="tooltip-supplier">${item.supplier || "supplier"}</span>`
-          : `<span class="tooltip-no-supplier">No supplier listed</span>`);
-
-        li.addEventListener("click", () => {
-          if (item.supplierUrl) window.open(item.supplierUrl, "_blank");
-        });
-
-        lowStockList.appendChild(li);
+        cacheStatusBody.appendChild(div);
       });
-      lowStockList.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(t => new bootstrap.Tooltip(t));
-    } else {
-      lowStockList.innerHTML = `<li class="list-group-item bg-black text-info">✅ All stock levels healthy.</li>`;
     }
 
-// ---- Upcoming anniversaries & birthdays ----
-const anniversariesList = document.getElementById("anniversariesList");
-const anniversaryCountBadge = document.getElementById("anniversaryCountBadge");
-anniversariesList.innerHTML = "";
+    // --- ✅ Update top-level counts ---
+    document.getElementById("totalClients").textContent = data.clients?.data ?? data.clients ?? 0;
+    document.getElementById("totalProducts").textContent = data.products ?? 0;
+    document.getElementById("totalMaterials").textContent = data.materials ?? 0;
+    document.getElementById("unpaidInvoiceCount").textContent = data.unpaidInvoices ?? 0;
+    document.getElementById("totalQuotes").textContent = data.quotes ?? 0;
 
-const events = [];
+    // --- ✅ Tier counts ---
+    const tiers = data.tiers?.data || data.tiers;
+    if (tiers) {
+      document.getElementById("tierNew").textContent = tiers.New ?? 0;
+      document.getElementById("tierSilver").textContent = tiers.Silver ?? 0;
+      document.getElementById("tierGold").textContent = tiers.Gold ?? 0;
+      document.getElementById("tierPlatinum").textContent = tiers.Platinum ?? 0;
+    }
 
-// --- MemberSince anniversaries ---
-(data.anniversaries?.memberSince || []).forEach(a => {
-  const d = new Date(a.date);
-  if (isNaN(d)) return;
-  const daysUntil = Math.ceil((d - today) / (1000 * 60 * 60 * 24));
-  if (daysUntil >= 0 && daysUntil <= UPCOMING_WINDOW_DAYS) {
-    events.push({
-      type: "Anniversary",
-      name: a.firstName,
-      clientID: a.clientID,
-      date: d,
-      years: a.years,
-      daysUntil
-    });
-  }
-});
+    // --- ✅ Leads Overview ---
+    const leads = data.leads?.data || data.leads;
+    if (leads) {
+      const elNew = document.getElementById("newLeads");
+      const elFollow = document.getElementById("followupLeads");
+      const elPending = document.getElementById("pendingLeads");
+      if (elNew) elNew.textContent = leads.new ?? 0;
+      if (elFollow) elFollow.textContent = leads.followUp ?? 0;
+      if (elPending) elPending.textContent = leads.pending ?? 0;
 
-// --- Birthdays ---
-(data.anniversaries?.birthdays || []).forEach(b => {
-  const d = new Date(b.date);
-  if (isNaN(d)) return;
-  const daysUntil = Math.ceil((d - today) / (1000 * 60 * 60 * 24));
-  if (daysUntil >= 0 && daysUntil <= UPCOMING_WINDOW_DAYS) {
-    events.push({
-      type: "Birthday",
-      name: b.firstName,
-      clientID: b.clientID,
-      date: d,
-      daysUntil
-    });
-  }
-});
+      // 🔔 Update lead notification badge (if iframe parent exists)
+      const parentDoc = window.parent?.document;
+      if (parentDoc) {
+        const badge = parentDoc.getElementById("leadNotifBadge");
+        const bell = parentDoc.getElementById("leadNotifBtn");
+        const bellIcon = bell?.querySelector("i");
+        if (badge && bell) {
+          const totalLeads = (leads.new || 0) + (leads.followUp || 0) + (leads.pending || 0);
+          if (totalLeads > 0) {
+            badge.textContent = totalLeads;
+            badge.classList.remove("d-none");
+            bell.setAttribute("title", `${totalLeads} lead${totalLeads === 1 ? "" : "s"} need attention`);
+            bellIcon?.classList.add("ringing");
+          } else {
+            badge.textContent = "";
+            badge.classList.add("d-none");
+            bell.setAttribute("title", "No new leads");
+            bellIcon?.classList.remove("ringing");
+          }
+        }
+      }
+    }
 
-// Sort by nearest date
-events.sort((a, b) => a.date - b.date);
-anniversaryCountBadge.textContent = events.length;
+    // --- ✅ Low stock ---
+    const lowStockList = document.getElementById("lowStockList");
+    if (lowStockList) {
+      lowStockList.innerHTML = "";
+      const lowStockData = Array.isArray(data.lowStock?.data) ? data.lowStock.data : (Array.isArray(data.lowStock) ? data.lowStock : []);
+      document.getElementById("lowStockCount").textContent = lowStockData.length ?? 0;
 
-if (events.length === 0) {
-  anniversariesList.innerHTML = `
-    <li class="list-group-item bg-black text-info">
-      No upcoming events in the next ${UPCOMING_WINDOW_DAYS} days.
-    </li>
-  `;
-} else {
-  events.forEach(e => {
-    const li = document.createElement("li");
-    li.className = "list-group-item bg-black p-0 border-0"; // remove inner padding
+      if (lowStockData.length) {
+        lowStockData.forEach(item => {
+          const li = document.createElement("li");
+          li.className = "list-group-item list-group-item-action d-flex justify-content-between align-items-center text-info bg-black low-stock-row";
+          li.style.cursor = "pointer";
+          li.innerHTML = `
+            <div class="w-75 text-start">${item.matName}</div>
+            <div class="w-25 text-end">${item.onHand}</div>
+          `;
+          li.setAttribute("data-bs-toggle", "tooltip");
+          li.setAttribute("data-bs-html", "true");
+          li.setAttribute("title", item.supplierUrl
+            ? `Click to order from <span class="tooltip-supplier">${item.supplier || "supplier"}</span>`
+            : `<span class="tooltip-no-supplier">No supplier listed</span>`);
+          li.addEventListener("click", () => { if (item.supplierUrl) window.open(item.supplierUrl, "_blank"); });
+          lowStockList.appendChild(li);
+        });
+        lowStockList.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(t => new bootstrap.Tooltip(t));
+      } else {
+        lowStockList.innerHTML = `<li class="list-group-item bg-black text-info">✅ All stock levels healthy.</li>`;
+      }
+    }
 
-    const btnClass = e.type === "Anniversary" ? "btn-outline-info" : "btn-outline-warning";
+    // --- ✅ Upcoming anniversaries & birthdays ---
+    const anniversariesList = document.getElementById("anniversariesList");
+    const anniversaryCountBadge = document.getElementById("anniversaryCountBadge");
+    if (anniversariesList && anniversaryCountBadge) {
+      anniversariesList.innerHTML = "";
+      const eventsData = (data.events && data.events.data) || data.events || { anniversaries: [], birthdays: [] };
+      const events = [];
 
-    // Single-line, full-width, tight layout
-    li.innerHTML = `
-      <button class="btn ${btnClass} w-100 d-flex justify-content-between align-items-center text-start px-2 py-2" style="border-width:3px; width:100%;">
-        <span class="flex-grow-1 text-truncate">${e.type === "Anniversary" ? `🎉 ${e.name} • ${e.years} year${e.years > 1 ? "s" : ""}` : `🎂 ${e.name} • B-Day`}</span>
-        <small class="ms-auto">${e.daysUntil === 0 ? "Today!" : `in ${e.daysUntil} day${e.daysUntil > 1 ? "s" : ""}`}</small>
-      </button>
-    `;
+      eventsData.anniversaries.forEach(a => {
+        const d = new Date(a.date);
+        if (!isNaN(d)) events.push({ type: "Anniversary", name: a.firstName, clientID: a.clientID, date: d, years: a.years, daysUntil: a.daysUntil });
+      });
+      eventsData.birthdays.forEach(b => {
+        const d = new Date(b.date);
+        if (!isNaN(d)) events.push({ type: "Birthday", name: b.firstName, clientID: b.clientID, date: d, daysUntil: b.daysUntil });
+      });
 
-    li.querySelector("button").onclick = () => {
-      const iframe = window.parent.document.getElementById("content-frame");
-      if (!iframe) return console.error("❌ iframe not found in parent");
-      iframe.src = `clientmanager.html?focusClientID=${e.clientID}&emailType=${e.type}&tenure=${e.years || ""}`;
-    };
+      events.sort((a,b) => a.date - b.date);
+      anniversaryCountBadge.textContent = events.length;
 
-    anniversariesList.appendChild(li);
-  });
-}
+      if (!events.length) {
+        anniversariesList.innerHTML = `<li class="list-group-item bg-black text-info">No upcoming events.</li>`;
+      } else {
+        events.forEach(e => {
+          const li = document.createElement("li");
+          li.className = "list-group-item bg-black p-0 border-0";
+          const btnClass = e.type === "Anniversary" ? "btn-outline-info" : "btn-outline-warning";
+          li.innerHTML = `
+            <button class="btn ${btnClass} w-100 d-flex justify-content-between align-items-center text-start px-2 py-2">
+              <span class="flex-grow-1 text-truncate">
+                ${e.type === "Anniversary" ? `🎉 ${e.name} • ${e.years} year${e.years > 1 ? "s" : ""}` : `🎂 ${e.name} • B-Day`}
+              </span>
+              <small class="ms-auto">
+                ${e.daysUntil === 0 ? "Today!" : `in ${e.daysUntil} day${e.daysUntil > 1 ? "s" : ""}`}
+              </small>
+            </button>
+          `;
+          li.querySelector("button").onclick = () => {
+            const iframe = window.parent.document.getElementById("content-frame");
+            if (!iframe) return console.error("❌ iframe not found in parent");
+            iframe.src = `clientmanager.html?focusClientID=${e.clientID}&emailType=${e.type}&tenure=${e.years || ""}`;
+          };
+          anniversariesList.appendChild(li);
+        });
+      }
+    }
 
-    // ---- Recent uploads (unchanged) ----
-    if (Array.isArray(data.clientUploads)) {
+    // --- ✅ Recent uploads ---
+    if (Array.isArray(data.clientUploads?.data)) {
       const uploadsList = document.getElementById("recentUploadsList");
+      if (uploadsList) {
+        const filteredUploads = data.clientUploads.data
+          .filter(u => !["DeletedByUser","Expired"].includes(u.fileStatus))
+          .sort((a,b) => new Date(b.uploadDate || 0) - new Date(a.uploadDate || 0));
 
-      const filteredUploads = data.clientUploads
-        .filter(u => !["DeletedByUser","Expired"].includes(u.fileStatus))
-        .sort((a,b) => new Date(b.uploadDate || 0) - new Date(a.uploadDate || 0));
+        window._recentUploads = filteredUploads;
+        document.getElementById("recentUploadCountBadge").textContent = filteredUploads.length;
 
-      window._recentUploads = filteredUploads;
+        const html = filteredUploads.length
+          ? filteredUploads.map((u,i) => {
+              const uploadDateStr = u.uploadDate ? new Date(u.uploadDate).toLocaleDateString() : "No date";
+              const fileExtMatch = u.fileName?.match(/\.(\w+)$/);
+              const fileExt = fileExtMatch ? fileExtMatch[1].toLowerCase() : "unknown";
+              let typeLabel = "File";
+              if (u.fileType?.startsWith("image/")) typeLabel = "Image";
+              else if (u.fileType?.startsWith("text/")) typeLabel = "Document";
+              else if (u.fileType === "application/pdf") typeLabel = "PDF";
+              let statusIcon;
+              switch ((u.fileStatus || "").toLowerCase()) {
+                case "viewed": statusIcon = `<span class="upload-status text-success ms-2" title="Viewed">👁️</span>`; break;
+                case "active":
+                case "new":
+                default: statusIcon = `<span class="upload-status text-warning ms-2" title="New">🆕</span>`;
+              }
+              return `
+                <li class="list-group-item bg-black text-info upload-row" data-index="${i}" data-id="${u.uploadID}" style="cursor:pointer;">
+                  <div class="d-flex justify-content-between">
+                    <strong>${u.firstName || ""} ${u.lastName || ""}</strong>
+                    <small class="text-info">${uploadDateStr}</small>
+                  </div>
+                  <div class="d-flex justify-content-between align-items-center">
+                    <small>${typeLabel} • ${fileExt}</small>
+                    ${statusIcon}
+                  </div>
+                </li>`;
+            }).join("")
+          : `<li class="list-group-item bg-black text-info">No uploads available.</li>`;
 
-      const html = filteredUploads.length
-        ? filteredUploads.map((u,i) => {
-            const uploadDateStr = u.uploadDate ? new Date(u.uploadDate).toLocaleDateString() : "No date";
-            const fileExtMatch = u.fileName ? u.fileName.match(/\.(\w+)$/) : null;
-            const fileExt = fileExtMatch ? fileExtMatch[1].toLowerCase() : "unknown";
-
-            let typeLabel = "File";
-            if (u.fileType?.startsWith("image/")) typeLabel = "Image";
-            else if (u.fileType?.startsWith("text/")) typeLabel = "Document";
-            else if (u.fileType === "application/pdf") typeLabel = "PDF";
-
-            let statusIcon;
-            switch ((u.fileStatus || "").toLowerCase()) {
-              case "viewed":
-                statusIcon = `<span class="upload-status text-success ms-2" title="Viewed">👁️</span>`;
-                break;
-              case "active":
-              case "new":
-              default:
-                statusIcon = `<span class="upload-status text-warning ms-2" title="New">🆕</span>`;
-            }
-
-            return `
-              <li class="list-group-item bg-black text-info upload-row"
-                  data-index="${i}" data-id="${u.uploadID}" style="cursor:pointer;">
-                <div class="d-flex justify-content-between">
-                  <strong>${u.firstName || ""} ${u.lastName || ""}</strong>
-                  <small class="text-info">${uploadDateStr}</small>
-                </div>
-                <div class="d-flex justify-content-between align-items-center">
-                  <small>${typeLabel} • ${fileExt}</small>
-                  ${statusIcon}
-                </div>
-              </li>
-            `;
-          }).join("")
-        : `<li class="list-group-item bg-black text-info">No uploads available.</li>`;
-
-      uploadsList.innerHTML = html;
-      document.getElementById("recentUploadCountBadge").textContent = filteredUploads.length;
-
-      attachUploadRowEvents();
+        uploadsList.innerHTML = html;
+        attachUploadRowEvents?.();
+        populateCacheStatusModal(data);
+      }
     }
 
   } catch (err) {
@@ -849,6 +969,36 @@ document.querySelectorAll('.accordion-button').forEach(btn => {
     }, 300); // 300ms matches Bootstrap’s default collapse animation speed
   });
 });
+
+// --- Attach lead type filters to dashboard buttons ---
+function attachDashboardLeadFilters() {
+  const leadButtons = [
+    { id: "newLeads", filter: "new" },
+    { id: "followupLeads", filter: "follow-up" },
+    { id: "pendingLeads", filter: "pending" }
+  ];
+
+  leadButtons.forEach(({ id, filter }) => {
+    const btn = document.getElementById(id)?.closest("button");
+    if (!btn) return;
+
+    btn.onclick = () => {
+      // Navigate to leads.html with filter query param
+      window.location.href = `leads.html?filter=${filter}`;
+    };
+  });
+
+  // Optional: the "View Leads" button goes to full unfiltered page
+  const viewAllBtn = document.querySelector('.accordion-body [data-link="leads.html"]');
+  if (viewAllBtn) {
+    viewAllBtn.onclick = () => {
+      window.location.href = "leads.html";
+    };
+  }
+}
+
+// Call this after dashboard HTML is rendered
+attachDashboardLeadFilters();
 
 </script>
 </body>

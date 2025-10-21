@@ -165,7 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupNavbarHover();
 
     // ✅ Bell JS must start AFTER header loads!
-    checkNewLeads();
+    // checkNewLeads();
     // setInterval(checkNewLeads, 60000);
   });
 
@@ -258,46 +258,46 @@ function loadPage(page, element) {
 
 let lastCount = 0;
 
-async function checkNewLeads() {
-  try {
-    const response = await fetch(`${scriptURL}?system=leads&action=getLeads`);
-    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+// async function checkNewLeads() {
+//   try {
+//     const response = await fetch(`${scriptURL}?system=leads&action=getLeads`);
+//     if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
 
-    const leads = await response.json();
-    if (!Array.isArray(leads)) return console.warn("⚠️ Leads data not an array");
+//     const leads = await response.json();
+//     if (!Array.isArray(leads)) return console.warn("⚠️ Leads data not an array");
 
-    const newLeads = leads.filter(
-      lead => (lead.Status || lead.status || "").trim().toLowerCase() === "new"
-    );
-    const count = newLeads.length;
+//     const newLeads = leads.filter(
+//       lead => (lead.Status || lead.status || "").trim().toLowerCase() === "new"
+//     );
+//     const count = newLeads.length;
 
-    const bell = document.getElementById("leadNotifBtn");
-    const badge = document.getElementById("leadNotifBadge");
-    const bellIcon = bell.querySelector("i");
+//     const bell = document.getElementById("leadNotifBtn");
+//     const badge = document.getElementById("leadNotifBadge");
+//     const bellIcon = bell.querySelector("i");
 
-    if (count > 0) {
-      badge.textContent = count;
-      badge.classList.remove("d-none");
+//     if (count > 0) {
+//       badge.textContent = count;
+//       badge.classList.remove("d-none");
 
-      // Now this will find the span wrapping the icon and add the class
-      document.querySelector("#leadNotifBtn i").classList.add("ringing");
+//       // Now this will find the span wrapping the icon and add the class
+//       document.querySelector("#leadNotifBtn i").classList.add("ringing");
 
-      bell.setAttribute("title", `${count} new lead${count === 1 ? "" : "s"}`);
-    } else {
-      badge.textContent = "";
-      badge.classList.add("d-none");
+//       bell.setAttribute("title", `${count} new lead${count === 1 ? "" : "s"}`);
+//     } else {
+//       badge.textContent = "";
+//       badge.classList.add("d-none");
 
-      document.querySelector("#leadNotifBtn i").classList.remove("ringing");
+//       document.querySelector("#leadNotifBtn i").classList.remove("ringing");
 
-      bell.setAttribute("title", "No new leads");
-    }
+//       bell.setAttribute("title", "No new leads");
+//     }
 
-    lastCount = count;
+//     lastCount = count;
 
-  } catch (error) {
-    console.error("❌ Error checking new leads:", error);
-  }
-}
+//   } catch (error) {
+//     console.error("❌ Error checking new leads:", error);
+//   }
+// }
 
 function openLeadsPage() {
   const iframe = document.querySelector("iframe");

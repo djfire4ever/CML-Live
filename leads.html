@@ -108,7 +108,8 @@
   </div>
 </div>
 
-<script src="config.js"></script>
+<script type="module" src="global.js"></script>
+<script type="module" src="admin.js"></script>
 
 <script>
 
@@ -118,6 +119,20 @@ window.addEventListener("message", function(event) {
   if (event.data && event.data.action === "refreshLeads") {
     console.log("🔄 Refreshing leads list...");
     loadLeads();
+  }
+});
+
+// On leads.html
+document.addEventListener("DOMContentLoaded", () => {
+  const params = new URLSearchParams(window.location.search);
+  const filterType = params.get("filter"); // "new", "follow-up", "pending"
+
+  if (filterType) {
+    const statusDropdown = document.getElementById("statusFilter");
+    if (statusDropdown) {
+      statusDropdown.value = filterType;
+      filterLeads(); // this function is already in backleads.js
+    }
   }
 });
 
