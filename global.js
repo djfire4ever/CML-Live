@@ -31,9 +31,7 @@ window.addEventListener("error", (e) => {
 
 // Environment / script URL
 window.isLocal = ["localhost", "127.0.0.1"].includes(location.hostname);
-window.scriptURL = window.isLocal
-  ? "https://script.google.com/macros/s/AKfycbz0n1Br3EO0z7Dukhqo0bZ_QKCZ-3hLjjsLdZye6kBPdu7Wdl7ag9dTBbgiJ5ArrCQ/exec"
-  : "/.netlify/functions/leadProxy";
+window.scriptURL = "https://script.google.com/macros/s/AKfycbz0n1Br3EO0z7Dukhqo0bZ_QKCZ-3hLjjsLdZye6kBPdu7Wdl7ag9dTBbgiJ5ArrCQ/exec";
 logWithContext(`🌍 Environment: ${window.isLocal ? "Local" : "Live"}`);
 
 // Library versions
