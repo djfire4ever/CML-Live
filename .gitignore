@@ -1,11 +1,54 @@
-# Local Netlify folder 
+# ----------------------------
+# Local Netlify / Build folders
+# ----------------------------
 .netlify
+dist/
+build/
 
+# ----------------------------
 # Windows system files
+# ----------------------------
 desktop.ini
 **/desktop.ini
 Thumbs.db
 **/Thumbs.db
-
-# Optional: Recycle Bin or other hidden files
 $RECYCLE.BIN/
+
+# Temporary files from Office, Google Drive, editors
+*.tmp.driveupload
+~$*
+*.swp
+*.swo
+*.bak
+*.tmp
+
+# ----------------------------
+# IDE / Editor specific
+# ----------------------------
+.vscode/
+.idea/
+*.code-workspace
+
+# ----------------------------
+# macOS system files (if applicable)
+# ----------------------------
+.DS_Store
+
+# ----------------------------
+# Node / JS / package artifacts (optional if using Node)
+# ----------------------------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnp.*
+.pnp.js
+package-lock.json
+
+# ----------------------------
+# Optional: logs and temp folders
+# ----------------------------
+logs/
+*.log
+temp/
+tmp/
