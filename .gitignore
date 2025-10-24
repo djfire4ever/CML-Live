@@ -1,4 +1,11 @@
-# Local Netlify folder
+# Local Netlify folder 
 .netlify
+
+# Windows system files
 desktop.ini
 **/desktop.ini
+Thumbs.db
+**/Thumbs.db
+
+# Optional: Recycle Bin or other hidden files
+$RECYCLE.BIN/
