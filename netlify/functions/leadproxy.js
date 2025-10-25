@@ -13,7 +13,7 @@ export async function handler(event) {
         ...(isPost && { body: event.body })
       };
   
-      const query = event.rawUrl.split("/.netlify/functions/leadProxy")[1] || "";
+      const query = event.rawUrl.split("/.netlify/functions/leadproxy")[1] || "";
       const fullURL = isGet ? `${url}${query}` : url;
   
       const res = await fetch(fullURL, options);
