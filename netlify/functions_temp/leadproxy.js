@@ -1,5 +1,5 @@
 export async function handler(event) {
-    const url = "https://script.google.com/macros/s/AKfycbz0n1Br3EO0z7Dukhqo0bZ_QKCZ-3hLjjsLdZye6kBPdu7Wdl7ag9dTBbgiJ5ArrCQx/exec";
+    const url = "https://script.google.com/macros/s/AKfycbz0n1Br3EO0z7Dukhqo0bZ_QKCZ-3hLjjsLdZye6kBPdu7Wdl7ag9dTBbgiJ5ArrCQ/exec";
   
     try {
       const isGet = event.httpMethod === "GET";
@@ -13,7 +13,7 @@ export async function handler(event) {
         ...(isPost && { body: event.body })
       };
   
-      const query = event.rawUrl.split("/netlify/functions/leadProxy")[1] || "";
+      const query = event.rawUrl.split("/.netlify/functions/leadProxy")[1] || "";
       const fullURL = isGet ? `${url}${query}` : url;
   
       const res = await fetch(fullURL, options);
