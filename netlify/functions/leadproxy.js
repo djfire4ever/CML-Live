@@ -1,5 +1,5 @@
 export async function handler(event) {
-    const url = "https://script.google.com/macros/s/AKfycbz0n1Br3EO0z7Dukhqo0bZ_QKCZ-3hLjjsLdZye6kBPdu7Wdl7ag9dTBbgiJ5ArrCQx/exec";
+    const url = "https://script.google.com/macros/s/AKfycbzd_0wJUUB8AyjmBd_Z5ZMjkch3RTWR66qbBFen_0li0KwcoVZVGBgRQWKzwePFRDjZ/exec";
   
     try {
       const isGet = event.httpMethod === "GET";
@@ -13,7 +13,7 @@ export async function handler(event) {
         ...(isPost && { body: event.body })
       };
   
-      const query = event.rawUrl.split("/netlify/functions/leadProxy")[1] || "";
+      const query = event.rawUrl.split("/.netlify/functions/leadProxy")[1] || "";
       const fullURL = isGet ? `${url}${query}` : url;
   
       const res = await fetch(fullURL, options);
@@ -34,7 +34,3 @@ export async function handler(event) {
     }
   }
   
-
-// force redeploy 10/24/2025 15:50:55
-
-// redeploy fix timestamp: 2025-10-24 16:14

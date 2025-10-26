@@ -444,42 +444,18 @@ function populateCacheStatusModal(data) {
   const modalBody = document.getElementById("cacheStatusBody");
   if (!modalBody || !data.dashboardStatus || !data.cacheTimestamps) return;
 
-  modalBody.innerHTML = ""; // clear previous content
-  const list = document.createElement("ul");
-  list.className = "list-group list-group-flush";
+  modalBody.innerHTML = ""; // Clear previous content
 
   Object.keys(data.dashboardStatus).forEach(section => {
-    const li = document.createElement("li");
-    li.className = "list-group-item bg-dark text-info d-flex justify-content-between align-items-center";
-    li.innerHTML = `
+    const div = document.createElement("div");
+    div.className = "d-flex justify-content-between align-items-center mb-1 p-1 bg-dark text-info rounded";
+    div.innerHTML = `
       <span>${section}</span>
       <span>[${data.dashboardStatus[section]}] • ${new Date(data.cacheTimestamps[section]).toLocaleString()}</span>
     `;
-    list.appendChild(li);
+    modalBody.appendChild(div);
   });
-
-  modalBody.appendChild(list);
 }
-
-document.addEventListener("DOMContentLoaded", () => {
-  const modalEl = document.getElementById("cacheStatusModal");
-  if (!modalEl) return;
-
-  modalEl.addEventListener("show.bs.modal", () => {
-    const body = document.getElementById("cacheStatusBody");
-    if (!body) return;
-
-    const dashboardData = window._dashboardData || {}; // whatever your dashboard fetch sets
-    const status = dashboardData.dashboardStatus || {};
-    const timestamps = dashboardData.cacheTimestamps || {};
-
-    body.innerHTML = Object.keys(status).map(key => {
-      const stat = status[key];
-      const ts = timestamps[key] ? new Date(timestamps[key]).toLocaleString() : "-";
-      return `<div><strong>${key}</strong>: [${stat}] • ${ts}</div>`;
-    }).join("");
-  });
-});
 
 // ===== Dashboard Fetch with Configurable Upcoming Window =====
 // const UPCOMING_WINDOW_DAYS = 30 ; // 👈 change this to adjust range for anniversaries/birthdays
@@ -513,8 +489,8 @@ async function fetchDashboardStats() {
 
     // --- ✅ Update top-level counts ---
     document.getElementById("totalClients").textContent = data.clients?.data ?? data.clients ?? 0;
-    document.getElementById("totalProducts").textContent = data.products ?? 0;
-    document.getElementById("totalMaterials").textContent = data.materials ?? 0;
+    document.getElementById("totalMaterials").textContent = data.materials?.data ?? data.materials ?? 0;
+    document.getElementById("totalProducts").textContent = data.products.data ?? data.products ?? 0;
     document.getElementById("unpaidInvoiceCount").textContent = data.unpaidInvoices ?? 0;
     document.getElementById("totalQuotes").textContent = data.quotes ?? 0;
 
