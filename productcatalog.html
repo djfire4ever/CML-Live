@@ -191,9 +191,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       const res = await fetch(`${scriptURL}?action=getAllProducts`);
       const data = await res.json();
-      if (!data?.success) return [];
+      if (!data || !data.data) return [];
 
-      const products = data.products.map(p => ({
+      const products = (data.data || []).map(p => ({
         ...p,
         category: p.category || "" // ensure category exists
       }));
@@ -256,29 +256,32 @@ async function renderProducts() {
   const categoryCheckboxes = document.querySelectorAll('.categoryFilter');
   const cartCounter = document.getElementById('cartCounter');
 
-  // 1️⃣ Clear grid and show skeletons immediately
-// Show skeletons
-grid.innerHTML = '';
-for (let i = 0; i < 4; i++) {
-  const sk = document.createElement('div');
-  sk.className = 'card skeleton-card';
-  sk.innerHTML = `
-    <div class="skeleton skeleton-img"></div>
-    <div class="skeleton skeleton-title"></div>
-    <div class="skeleton skeleton-price"></div>
-    <div class="skeleton skeleton-desc"></div>
-  `;
-  grid.appendChild(sk);
-}
+  // 1️⃣ Clear grid
+  grid.innerHTML = '';
 
-// Force at least 100ms so skeletons render visibly
-await new Promise(resolve => setTimeout(resolve, 100));
+  // 2️⃣ Show skeletons **only if allProducts is empty**
+  if (!allProducts.length) {
+    for (let i = 0; i < 4; i++) {
+      const sk = document.createElement('div');
+      sk.className = 'card skeleton-card';
+      sk.innerHTML = `
+        <div class="skeleton skeleton-img"></div>
+        <div class="skeleton skeleton-title"></div>
+        <div class="skeleton skeleton-price"></div>
+        <div class="skeleton skeleton-desc"></div>
+      `;
+      grid.appendChild(sk);
+    }
 
-// Then fetch products
-const products = allProducts.length ? allProducts : await fetchProducts();
+    // Force at least 100ms so skeletons render visibly
+    await new Promise(resolve => setTimeout(resolve, 100));
+  }
 
-// Clear skeletons and render actual products
-grid.innerHTML = '';
+  // Then fetch products
+  const products = allProducts.length ? allProducts : await fetchProducts();
+
+  // Clear skeletons and render actual products
+  grid.innerHTML = '';
 
   // 5️⃣ Handle empty product list
   if (!products || products.length === 0) {
@@ -380,9 +383,8 @@ grid.innerHTML = '';
 }
 
   // --- INITIALIZE ---
-  await fetchProducts();
-  renderCategoryFilters();
-  renderProducts();
+await renderProducts();
+renderCategoryFilters();
 
 // ✅ Attach filter event listeners (outside renderProducts)
 searchInput.addEventListener('input', renderProducts);
