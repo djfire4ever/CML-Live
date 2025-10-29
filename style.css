@@ -6,11 +6,18 @@
   --footer-height: 22px;
 }
 
+/* -------------------------------
+   Layout / Iframe
+--------------------------------- */
 body {
   display: flex;
   flex-direction: column;
   height: 100vh;
   margin: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #f7f7f7;
+  color: #333;
+  overflow-x: hidden; /* prevent horizontal scrollbar */
 }
 
 #header-placeholder {
@@ -30,3 +37,246 @@ body {
   border: none;
   background-color: transparent;
 }
+
+/* -------------------------------
+   Typography & counters
+--------------------------------- */
+h2 {
+  margin-bottom: 20px;
+  font-weight: 600;
+  display: inline-block;
+}
+
+#cartCounter {
+  margin-left: 20px;
+  font-weight: bold;
+  color: #007BFF;
+}
+
+/* -------------------------------
+   Product Grid & Cards
+--------------------------------- */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+  justify-items: center;
+}
+
+.card {
+  width: 100%;
+  max-width: 280px;
+  background: var(--bs-black, #000);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  display: flex;
+  flex-direction: column;
+  color: #fff;
+}
+
+.card:hover {
+  transform: scale(1.03);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+}
+
+.card-image {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  width: 100%;
+  background: var(--bs-black, #000);
+}
+
+.card-image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.card-content {
+  flex: 1;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--bs-black, #000);
+  text-align: center;
+}
+
+.card-content h3 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+  color: #17a2b8;
+}
+
+.card-content p.price {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 500;
+  color: #007BFF;
+}
+
+.card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: auto;
+  width: 100%;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+  pointer-events: none;
+}
+
+.card:hover .card-actions {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.qty-input {
+  width: 50px;
+  text-align: center;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 3px 5px;
+}
+
+.add-cart-btn {
+  flex: 1;
+  background: #007BFF;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 10px;
+  cursor: pointer;
+  transition: background 0.25s ease;
+}
+
+.add-cart-btn:hover {
+  background: #0056b3;
+}
+
+/* -------------------------------
+   Product Modal
+--------------------------------- */
+#productModal.modal {
+  display: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.6);
+  justify-content: center;
+  align-items: center;
+}
+
+#productModal .modal-content {
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  max-width: 700px;
+  width: 90%;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#productModal #modalName,
+#productModal #modalPrice,
+#productModal #modalDesc {
+  text-align: center;
+  margin: 4px 0;
+}
+
+#productModal #addToCartBtn {
+  margin-top: 10px;
+  background: #007BFF;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+
+#productModal .close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  cursor: pointer;
+  font-size: 24px;
+}
+
+#productModal .thumbnails {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 10px;
+  flex-wrap: nowrap;
+}
+
+#productModal .thumbnails img {
+  flex: 0 0 auto;
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 5px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: transform 0.2s, border-color 0.2s;
+}
+
+#productModal .thumbnails img:hover {
+  transform: scale(1.1);
+  border-color: #007BFF;
+}
+
+#productModal .thumbnails img.active {
+  border-color: #007BFF;
+}
+
+/* -------------------------------
+   Skeleton Cards
+--------------------------------- */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.card.skeleton-card {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 280px;
+  height: 200px;
+  margin: 0;
+  margin-bottom: 8px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #ccc;
+}
+
+.card.skeleton-card .skeleton-img,
+.card.skeleton-card .skeleton-title,
+.card.skeleton-card .skeleton-price,
+.card.skeleton-card .skeleton-desc {
+  display: block;
+  border-radius: 4px;
+  margin-bottom: 6px;
+  background: linear-gradient(90deg, #bbb 25%, #999 50%, #bbb 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.card.skeleton-card .skeleton-img { height: 120px; width: 100%; border-radius: 8px; }
+.card.skeleton-card .skeleton-title { height: 14px; width: 60%; }
+.card.skeleton-card .skeleton-price { height: 12px; width: 40%; }
+.card.skeleton-card .skeleton-desc { height: 12px; width: 80%; }
