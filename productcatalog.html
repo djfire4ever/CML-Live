@@ -148,7 +148,6 @@ h2 { margin-bottom:20px; font-weight:600; display:inline-block; }
 
   </div>
 
-<script type="module" src="global.js"></script>
 <script type="module" src="client.js"></script>
 
 <script>
@@ -187,24 +186,24 @@ document.addEventListener('DOMContentLoaded', async () => {
   };
 
   // --- Fetch products ---
-  async function fetchProducts() {
-    try {
-      const res = await fetch(`${scriptURL}?action=getAllProducts`);
-      const data = await res.json();
-      if (!data || !data.data) return [];
+async function fetchProducts() {
+  try {
+    const res = await fetch(`${scriptURL}?action=getAllProducts`);
+    const data = await res.json();
+    if (!data || !data.data) return []; // <-- use data.data now
 
-      const products = (data.data || []).map(p => ({
-        ...p,
-        category: p.category || "" // ensure category exists
-      }));
+    const products = data.data.map(p => ({
+      ...p,
+      category: p.category || ""
+    }));
 
-      allProducts = products.slice();
-      return allProducts;
-    } catch (err) {
-      console.error(err);
-      return [];
-    }
+    allProducts = products.slice();
+    return allProducts;
+  } catch (err) {
+    console.error("Fetch products failed:", err);
+    return [];
   }
+}
 
   // --- Render dynamic category filters ---
 function renderCategoryFilters() {
@@ -235,7 +234,7 @@ function renderCategoryFilters() {
 }
 
   // --- Fetch gallery ---
-  async function fetchGallery(prodID) {
+async function fetchGallery(prodID) {
     if (allGalleries[prodID]) return allGalleries[prodID];
     try {
       const res = await fetch(`${scriptURL}?action=getGalleryByProdId&prodID=${prodID}`);

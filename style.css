@@ -1,0 +1,32 @@
+/* ===============================
+   🎨 CLIENT SIDE DEFAULT VARIABLES
+================================== */
+:root {
+  --header-height: 56px;
+  --footer-height: 22px;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  margin: 0;
+}
+
+#header-placeholder {
+  height: var(--header-height);
+  flex-shrink: 0;
+}
+
+#footer-placeholder {
+  height: var(--footer-height);
+  flex-shrink: 0;
+}
+
+#client-content-frame {
+  display: block;
+  width: 100%;
+  height: calc(100vh - var(--header-height) - var(--footer-height));
+  border: none;
+  background-color: transparent;
+}
