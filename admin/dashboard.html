@@ -436,8 +436,8 @@ body.bg-black .btn-outline-success:active {
 </div>
 </div>
 
-<script type="module" src="global.js"></script>
-<script type="module" src="admin.js"></script>
+<script type="module" src="../global.js"></script>
+<script type="module" src="./admin.js"></script>
 
 <script>
 function populateCacheStatusModal(data) {
@@ -475,7 +475,7 @@ async function fetchDashboardStats() {
     // --- ✅ Populate modal with cache/live status ---
     const cacheStatusBody = document.getElementById("cacheStatusBody");
     if (cacheStatusBody && data.dashboardStatus && data.cacheTimestamps) {
-      cacheStatusBody.innerHTML = ""; // clear old content
+      cacheStatusBody.innerHTML = "";
       Object.keys(data.dashboardStatus).forEach(section => {
         const div = document.createElement("div");
         div.className = "d-flex justify-content-between align-items-center mb-1 p-1 bg-dark text-info rounded";
@@ -490,9 +490,9 @@ async function fetchDashboardStats() {
     // --- ✅ Update top-level counts ---
     document.getElementById("totalClients").textContent = data.clients?.data ?? data.clients ?? 0;
     document.getElementById("totalMaterials").textContent = data.materials?.data ?? data.materials ?? 0;
-    document.getElementById("totalProducts").textContent = data.products.data ?? data.products ?? 0;
-    document.getElementById("unpaidInvoiceCount").textContent = data.unpaidInvoices ?? 0;
-    document.getElementById("totalQuotes").textContent = data.quotes ?? 0;
+    document.getElementById("totalProducts").textContent = data.products?.data ?? data.products ?? 0;
+    document.getElementById("totalQuotes").textContent = data.quotes?.data ?? data.quotes ?? 0;
+    document.getElementById("unpaidInvoiceCount").textContent = data.unpaidInvoices?.data ?? data.unpaidInvoices ?? 0;
 
     // --- ✅ Tier counts ---
     const tiers = data.tiers?.data || data.tiers;
@@ -513,7 +513,6 @@ async function fetchDashboardStats() {
       if (elFollow) elFollow.textContent = leads.followUp ?? 0;
       if (elPending) elPending.textContent = leads.pending ?? 0;
 
-      // 🔔 Update lead notification badge (if iframe parent exists)
       const parentDoc = window.parent?.document;
       if (parentDoc) {
         const badge = parentDoc.getElementById("leadNotifBadge");
@@ -657,6 +656,51 @@ async function fetchDashboardStats() {
         uploadsList.innerHTML = html;
         attachUploadRowEvents?.();
         populateCacheStatusModal(data);
+      }
+    }
+
+    // --- ✅ Calendar summary (from backend) ---
+    const todayBadge = document.getElementById("todayEventCount");
+    const weekBadge = document.getElementById("weekEventCount");
+    const todayList = document.getElementById("todayEventList");
+    const weekGroup = document.getElementById("weekEventsGroup");
+
+    if (data.calendarSummary) {
+      if (todayBadge) todayBadge.textContent = data.calendarSummary.todayCount ?? 0;
+      if (weekBadge) weekBadge.textContent = data.calendarSummary.weekCount ?? 0;
+
+      if (todayList && weekGroup) {
+        todayList.innerHTML = "";
+        weekGroup.innerHTML = "";
+
+        // Events today
+        (data.calendarSummary.eventsToday || []).forEach(ev => {
+          const li = document.createElement("li");
+          li.className = "list-group-item bg-black text-light d-flex justify-content-between align-items-center";
+          li.innerHTML = `<span>${ev[1]}</span><span class="text-info">${new Date(ev[2]).toLocaleTimeString()}</span>`;
+          todayList.appendChild(li);
+        });
+
+        // Events this week grouped by date
+        const grouped = {};
+        (data.calendarSummary.eventsWeek || []).forEach(ev => {
+          const evDate = new Date(ev[2]).toLocaleDateString();
+          grouped[evDate] = grouped[evDate] || [];
+          grouped[evDate].push(ev);
+        });
+
+        for (const [date, evs] of Object.entries(grouped)) {
+          const dateGroup = document.createElement("div");
+          dateGroup.className = "mb-2";
+          dateGroup.innerHTML = `<div class="fw-bold text-info mb-1">${date}</div>`;
+          evs.forEach(ev => {
+            const eventLine = document.createElement("div");
+            eventLine.className = "text-info small border-bottom border-info pb-1 mb-1";
+            eventLine.innerHTML = `<span class="text-warning">${new Date(ev[2]).toLocaleTimeString()}</span> - ${ev[1]}`;
+            dateGroup.appendChild(eventLine);
+          });
+          weekGroup.appendChild(dateGroup);
+        }
       }
     }
 
@@ -826,92 +870,92 @@ function formatTime(isoString) {
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
-function loadCalendarSummaries() {
-  const now = new Date();
-  const startOfToday = new Date(now.setHours(0, 0, 0, 0)).toISOString();
-  const endOfToday = new Date(now.setHours(23, 59, 59, 999)).toISOString();
+// function loadCalendarSummaries() {
+//   const now = new Date();
+//   const startOfToday = new Date(now.setHours(0, 0, 0, 0)).toISOString();
+//   const endOfToday = new Date(now.setHours(23, 59, 59, 999)).toISOString();
 
-  const startOfWeek = new Date();
-  startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
-  startOfWeek.setHours(0, 0, 0, 0);
+//   const startOfWeek = new Date();
+//   startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+//   startOfWeek.setHours(0, 0, 0, 0);
 
-  const endOfWeek = new Date(startOfWeek);
-  endOfWeek.setDate(endOfWeek.getDate() + 6);
-  endOfWeek.setHours(23, 59, 59, 999);
+//   const endOfWeek = new Date(startOfWeek);
+//   endOfWeek.setDate(endOfWeek.getDate() + 6);
+//   endOfWeek.setHours(23, 59, 59, 999);
 
-  fetch(scriptURL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      system: 'calendar',
-      action: 'getEvents',
-      start: startOfWeek.toISOString(),
-      end: endOfWeek.toISOString()
-    })
-  })
-  .then(res => res.json())
-  .then(data => {
-    const events = Array.isArray(data?.data) ? data.data : [];
+//   fetch(scriptURL, {
+//     method: 'POST',
+//     headers: { 'Content-Type': 'application/json' },
+//     body: JSON.stringify({
+//       system: 'calendar',
+//       action: 'getEvents',
+//       start: startOfWeek.toISOString(),
+//       end: endOfWeek.toISOString()
+//     })
+//   })
+//   .then(res => res.json())
+//   .then(data => {
+//     const events = Array.isArray(data?.data) ? data.data : [];
 
-    const todayList = document.getElementById("todayEventList");
-    const weekGroup = document.getElementById("weekEventsGroup");
-    const todayBadge = document.getElementById("todayEventCount");
-    const weekBadge = document.getElementById("weekEventCount");
+//     const todayList = document.getElementById("todayEventList");
+//     const weekGroup = document.getElementById("weekEventsGroup");
+//     const todayBadge = document.getElementById("todayEventCount");
+//     const weekBadge = document.getElementById("weekEventCount");
 
-    if (!todayList || !weekGroup || !todayBadge || !weekBadge) {
-      console.error("❌ One or more calendar summary elements are missing from the HTML.");
-      return;
-    }
+//     if (!todayList || !weekGroup || !todayBadge || !weekBadge) {
+//       console.error("❌ One or more calendar summary elements are missing from the HTML.");
+//       return;
+//     }
 
-    todayList.innerHTML = '';
-    weekGroup.innerHTML = '';
-    todayBadge.textContent = '0';
-    weekBadge.textContent = '0';
+//     todayList.innerHTML = '';
+//     weekGroup.innerHTML = '';
+//     todayBadge.textContent = '0';
+//     weekBadge.textContent = '0';
 
-    const grouped = {};
-    let todayCount = 0;
-    let weekCount = 0;
+//     const grouped = {};
+//     let todayCount = 0;
+//     let weekCount = 0;
 
-    events.forEach(ev => {
-      const evDate = new Date(ev.start).toLocaleDateString();
-      grouped[evDate] = grouped[evDate] || [];
-      grouped[evDate].push(ev);
-      weekCount++;
+//     events.forEach(ev => {
+//       const evDate = new Date(ev.start).toLocaleDateString();
+//       grouped[evDate] = grouped[evDate] || [];
+//       grouped[evDate].push(ev);
+//       weekCount++;
 
-      // Today's events
-      if (new Date(ev.start).toDateString() === new Date().toDateString()) {
-        todayCount++;
-        const li = document.createElement("li");
-        li.className = "list-group-item bg-black text-light d-flex justify-content-between align-items-center";
-        li.innerHTML = `<span>${ev.title}</span><span class="text-info">${formatTime(ev.start)}</span>`;
-        todayList.appendChild(li);
-      }
-    });
+//       // Today's events
+//       if (new Date(ev.start).toDateString() === new Date().toDateString()) {
+//         todayCount++;
+//         const li = document.createElement("li");
+//         li.className = "list-group-item bg-black text-light d-flex justify-content-between align-items-center";
+//         li.innerHTML = `<span>${ev.title}</span><span class="text-info">${formatTime(ev.start)}</span>`;
+//         todayList.appendChild(li);
+//       }
+//     });
 
-    for (const [date, evs] of Object.entries(grouped)) {
-      const dateGroup = document.createElement("div");
-      dateGroup.className = "mb-2";
-      dateGroup.innerHTML = `<div class="fw-bold text-info mb-1">${date}</div>`;
+//     for (const [date, evs] of Object.entries(grouped)) {
+//       const dateGroup = document.createElement("div");
+//       dateGroup.className = "mb-2";
+//       dateGroup.innerHTML = `<div class="fw-bold text-info mb-1">${date}</div>`;
 
-      evs.forEach(ev => {
-        const eventLine = document.createElement("div");
-        eventLine.className = "text-info small border-bottom border-info pb-1 mb-1";
-        eventLine.innerHTML = `<span class="text-warning">${formatTime(ev.start)}</span> - ${ev.title}`;
-        dateGroup.appendChild(eventLine);
-      });
+//       evs.forEach(ev => {
+//         const eventLine = document.createElement("div");
+//         eventLine.className = "text-info small border-bottom border-info pb-1 mb-1";
+//         eventLine.innerHTML = `<span class="text-warning">${formatTime(ev.start)}</span> - ${ev.title}`;
+//         dateGroup.appendChild(eventLine);
+//       });
 
-      weekGroup.appendChild(dateGroup);
-    }
+//       weekGroup.appendChild(dateGroup);
+//     }
 
-    // Update badge counts
-    todayBadge.textContent = todayCount;
-    weekBadge.textContent = weekCount;
-  })
-  .catch(err => {
-    console.error("❌ Error loading calendar summary:", err);
-  });
-}
-  loadCalendarSummaries();
+//     // Update badge counts
+//     todayBadge.textContent = todayCount;
+//     weekBadge.textContent = weekCount;
+//   })
+//   .catch(err => {
+//     console.error("❌ Error loading calendar summary:", err);
+//   });
+// }
+//   loadCalendarSummaries();
 });
 
 document.addEventListener("DOMContentLoaded", () => {

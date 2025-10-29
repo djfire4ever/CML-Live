@@ -464,7 +464,7 @@ async function renderProductCard(product = null) {
   if (product?.thumbnailURL) {
     imgElem.src = convertGoogleDriveLink(product.thumbnailURL);
   } else {
-    imgElem.src = "/images/No_image_available.svg";
+    imgElem.src = "./images/No_image_available.svg";
   }
   imgElem.style.display = "block";
 

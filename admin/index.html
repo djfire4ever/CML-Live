@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Main Admin Page</title>
+  <title>CML Admin</title>
+</head>
   
 <style>
 
@@ -147,57 +148,28 @@
 
 </style>
 
-</head>
-
 <body class="d-flex flex-column" style="height: 100vh; overflow: hidden;">
 <div id="header-placeholder"></div>
-<iframe id="content-frame" src="dashboardglobaltest.html"></iframe>
+<iframe id="content-frame" src="dashboard.html"></iframe>
 <div id="footer-placeholder"></div>
 
-<!-- 🔍 Backend Debug Modal -->
-<div class="modal fade" id="debugModal" tabindex="-1" aria-labelledby="debugModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered">
-    <div class="modal-content border border-info shadow-sm rounded-3 position-relative">
-      <!-- Loader overlay INSIDE modal -->
-      <div id="loadingOverlay" class="d-none position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-75 d-flex flex-column justify-content-center align-items-center z-2">
-        <div class="spinner-border text-info" role="status"></div>
-        <p class="mt-3 text-info">Loading... Please wait...</p>
-      </div>
+<script type="module" src="../global.js"></script>
+<script type="module" src="./admin.js"></script>
 
-      <div class="modal-header py-2 bg-black text-info">
-        <h5 class="modal-title fs-6" id="debugModalLabel">🛠️ System Debug Info</h5>
-        <button type="button" class="btn-close btn-close-white btn-sm" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-
-      <div class="modal-body bg-light text-black small">
-        <div id="debugData"></div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- 🔗 Debug Badge -->
-<div id="debugBadge" class="position-fixed bottom-0 end-0 m-4">
-  <button class="btn btn-sm debug-btn btn-outline-black text-info" onclick="showDebugInfo()">🔍 Debug</button>
-</div>
-
-<script type="module" src="global.js"></script>
-<!-- <script type="module" src="client.js"></script> -->
-<script type="module" src="admin.js"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  loadInclude("header-placeholder", "headerglobaltest.html", () => {
+  loadInclude("header-placeholder", "header-admin.html", () => {
     attachDropdownHandlers();
     setupNavbarCollapseFix();
     setupNavbarHover();
 
     // ✅ Bell JS must start AFTER header loads!
-    checkNewLeads();
+    // checkNewLeads();
     // setInterval(checkNewLeads, 60000);
   });
 
-  loadInclude("footer-placeholder", "footerglobaltest.html");
+  loadInclude("footer-placeholder", "footer-admin.html");
 });
 
 function loadInclude(id, file, callback) {
@@ -286,46 +258,46 @@ function loadPage(page, element) {
 
 let lastCount = 0;
 
-async function checkNewLeads() {
-  try {
-    const response = await fetch(`${scriptURL}?system=leads&action=getLeads`);
-    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+// async function checkNewLeads() {
+//   try {
+//     const response = await fetch(`${scriptURL}?system=leads&action=getLeads`);
+//     if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
 
-    const leads = await response.json();
-    if (!Array.isArray(leads)) return console.warn("⚠️ Leads data not an array");
+//     const leads = await response.json();
+//     if (!Array.isArray(leads)) return console.warn("⚠️ Leads data not an array");
 
-    const newLeads = leads.filter(
-      lead => (lead.Status || lead.status || "").trim().toLowerCase() === "new"
-    );
-    const count = newLeads.length;
+//     const newLeads = leads.filter(
+//       lead => (lead.Status || lead.status || "").trim().toLowerCase() === "new"
+//     );
+//     const count = newLeads.length;
 
-    const bell = document.getElementById("leadNotifBtn");
-    const badge = document.getElementById("leadNotifBadge");
-    const bellIcon = bell.querySelector("i");
+//     const bell = document.getElementById("leadNotifBtn");
+//     const badge = document.getElementById("leadNotifBadge");
+//     const bellIcon = bell.querySelector("i");
 
-    if (count > 0) {
-      badge.textContent = count;
-      badge.classList.remove("d-none");
+//     if (count > 0) {
+//       badge.textContent = count;
+//       badge.classList.remove("d-none");
 
-      // Now this will find the span wrapping the icon and add the class
-      document.querySelector("#leadNotifBtn i").classList.add("ringing");
+//       // Now this will find the span wrapping the icon and add the class
+//       document.querySelector("#leadNotifBtn i").classList.add("ringing");
 
-      bell.setAttribute("title", `${count} new lead${count === 1 ? "" : "s"}`);
-    } else {
-      badge.textContent = "";
-      badge.classList.add("d-none");
+//       bell.setAttribute("title", `${count} new lead${count === 1 ? "" : "s"}`);
+//     } else {
+//       badge.textContent = "";
+//       badge.classList.add("d-none");
 
-      document.querySelector("#leadNotifBtn i").classList.remove("ringing");
+//       document.querySelector("#leadNotifBtn i").classList.remove("ringing");
 
-      bell.setAttribute("title", "No new leads");
-    }
+//       bell.setAttribute("title", "No new leads");
+//     }
 
-    lastCount = count;
+//     lastCount = count;
 
-  } catch (error) {
-    console.error("❌ Error checking new leads:", error);
-  }
-}
+//   } catch (error) {
+//     console.error("❌ Error checking new leads:", error);
+//   }
+// }
 
 function openLeadsPage() {
   const iframe = document.querySelector("iframe");

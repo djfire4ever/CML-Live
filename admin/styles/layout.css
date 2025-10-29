@@ -1,17 +1,6 @@
 /* ===============================
    🖼️ IFRAME WRAPPER
 ================================== */
-/* iframe {
-  position: absolute;
-  top: var(--header-height);
-  left: 0;
-  width: 100%;
-  height: calc(100vh - var(--header-height) - var(--footer-height) + 1px);
-  border: none;
-  background-color: transparent;
-  z-index: 0;
-} */
-
 /* Use flex layout for iframe to fill between */
 body {
   display: flex;

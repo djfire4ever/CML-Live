@@ -6,6 +6,7 @@ const SELECTORS = {
 };
 
 let clientData = [];
+let templates = {};
 
 // ----- Unified Tier System -----
 const TIERS = {
@@ -86,122 +87,124 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   // ===== Delegated Click Handling (unchanged) =====
-document.addEventListener("click", async (e) => {
-  const btn = e.target.closest("button");
-  if (!btn) return;
+  document.addEventListener("click", async (e) => {
+    const btn = e.target.closest("button");
+    if (!btn) return;
 
-  const card = btn.closest(".accordion-item.client-row");
-  if (!card) return;
+    const card = btn.closest(".accordion-item.client-row");
+    if (!card) return;
 
-  const saveBtn         = card.querySelector(".save-button");
-  const editBtn         = card.querySelector(".edit-button");
-  const cancelBtn       = card.querySelector(".cancel-button");
-  const beforeDeleteBtn = card.querySelector(".before-delete-button");
-  const deleteBtn       = card.querySelector(".delete-button");
+    const saveBtn         = card.querySelector(".save-button");
+    const editBtn         = card.querySelector(".edit-button");
+    const cancelBtn       = card.querySelector(".cancel-button");
+    const beforeDeleteBtn = card.querySelector(".before-delete-button");
+    const deleteBtn       = card.querySelector(".delete-button");
 
-  const isAddCard = !card.dataset.clientId;
+    const isAddCard = !card.dataset.clientId;
 
-  // --- Edit / Cancel ---
-  if (btn.classList.contains("edit-button")) enableEditToggle(card, true, isAddCard);
-  if (btn.classList.contains("cancel-button")) enableEditToggle(card, false, isAddCard);
+    // --- Edit / Cancel ---
+    if (btn.classList.contains("edit-button")) enableEditToggle(card, true, isAddCard);
+    if (btn.classList.contains("cancel-button")) enableEditToggle(card, false, isAddCard);
 
-  // --- Save (Add / Edit unified) ---
-  if (btn.classList.contains("save-button")) {
-    var clientID = card.dataset.clientId || card.querySelector(".clientID-input").value.trim();
-    if (!clientID) return showToast("⚠️ Client ID is required", "error");
+    // --- Save (Add / Edit unified) ---
+    if (btn.classList.contains("save-button")) {
+      var clientID = card.dataset.clientId || card.querySelector(".clientID-input").value.trim();
+      if (!clientID) return showToast("⚠️ Client ID is required", "error");
 
-    // Birthday: get month/day selects
-    var monthSelect = card.querySelector(".birthday-month-input");
-    var daySelect = card.querySelector(".birthday-day-input");
-    var birthday;
-    if (monthSelect.value && daySelect.value) {
-      birthday = new Date(2000, parseInt(monthSelect.value, 10) - 1, parseInt(daySelect.value, 10));
+      // Birthday: get month/day selects
+      var monthSelect = card.querySelector(".birthday-month-input");
+      var daySelect = card.querySelector(".birthday-day-input");
+      var birthday = (monthSelect.value && daySelect.value)
+        ? monthSelect.value.padStart(2, '0') + '-' + daySelect.value.padStart(2, '0')
+        : ""; // empty string if not selected
+
+      // Construct client info
+      var clientInfo = {
+        firstName: card.querySelector(".firstName-input").value.trim(),
+        lastName: card.querySelector(".lastName-input").value.trim(),
+        nickName: card.querySelector(".nickName-input").value.trim(),
+        email: card.querySelector(".email-input").value.trim(),
+        street: card.querySelector(".street-input").value.trim(),
+        city: card.querySelector(".city-input").value.trim(),
+        state: card.querySelector(".state-input").value.trim(),
+        zip: card.querySelector(".zip-input").value.trim(),
+        tier: card.querySelector(".tier-input").value,
+        memberSince: card.dataset.clientId ? undefined : new Date().toISOString(), // only for new clients
+        birthday: birthday
+      };
+
+      // Send to backend
+      try {
+        toggleLoader(true);
+        const res = await fetch(scriptURL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            system: "clients",
+            action: "edit",
+            clientID,
+            clientInfo
+          })
+        });
+
+        const result = await res.json();
+        if (result.success) {
+          showToast("✅ Client saved!", "success");
+          // Assign dataset client ID for new clients
+          if (!card.dataset.clientId) card.dataset.clientId = clientID;
+
+          enableEditToggle(card, false, !card.dataset.clientId);
+
+          await loadClients();
+          refreshSearchResults(clientID);
+        } else {
+          showToast(result.message || "❌ Error saving client", "error");
+        }
+      } catch (err) {
+        console.error(err);
+        showToast("❌ Network error saving client", "error");
+      } finally {
+        toggleLoader(false);
+      }
     }
 
-    var clientInfo = {
-      firstName: card.querySelector(".firstName-input").value.trim(),
-      lastName: card.querySelector(".lastName-input").value.trim(),
-      nickName: card.querySelector(".nickName-input").value.trim(),
-      email: card.querySelector(".email-input").value.trim(),
-      street: card.querySelector(".street-input").value.trim(),
-      city: card.querySelector(".city-input").value.trim(),
-      state: card.querySelector(".state-input").value.trim(),
-      zip: card.querySelector(".zip-input").value.trim(),
-      tier: card.querySelector(".tier-input").value,
-      memberSince: card.dataset.clientId ? undefined : new Date(), // Only set on new clients
-      birthday: birthday // undefined if not selected
-    };
+    // --- Delete Confirm ---
+    if (btn === beforeDeleteBtn) {
+      const isDelete = beforeDeleteBtn.dataset.buttonState === "delete";
+      beforeDeleteBtn.textContent = isDelete ? "Cancel" : "Delete";
+      beforeDeleteBtn.dataset.buttonState = isDelete ? "cancel" : "delete";
+      if (deleteBtn) deleteBtn.classList.toggle("d-none", !isDelete);
+    }
 
-    // send to backend as before
-    try {
+    // --- Delete Action ---
+    if (btn === deleteBtn) {
+      const clientID = card.dataset.clientId;
+      if (!clientID) return showToast("⚠️ Client ID missing", "error");
+
       toggleLoader(true);
-      const res = await fetch(scriptURL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          system: "clients",
-          action: "edit",
-          clientID,
-          clientInfo
-        })
-      });
-
-      const result = await res.json();
-      if (result.success) {
-        showToast("✅ Client saved!", "success");
-        card.dataset.clientId = clientID; // assign ID for new clients
-        enableEditToggle(card, false, !card.dataset.clientId);
-
-        await loadClients();
-        refreshSearchResults(clientID);
-      } else {
-        showToast(result.message || "❌ Error saving client", "error");
+      try {
+        const res = await fetch(scriptURL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ system: "clients", action: "delete", clientID })
+        });
+        const result = await res.json();
+        if (result.success) {
+          showToast("✅ Client deleted!", "success");
+          card.remove();
+          await loadClients();
+          refreshSearchResults();
+        } else {
+          showToast("⚠️ Could not delete client.", "error");
+        }
+      } catch (err) {
+        console.error(err);
+        showToast("⚠️ Error deleting client.", "error");
+      } finally {
+        toggleLoader(false);
       }
-    } catch (err) {
-      console.error(err);
-      showToast("❌ Network error saving client", "error");
-    } finally {
-      toggleLoader(false);
     }
-  }
-
-  // --- Delete Confirm ---
-  if (btn === beforeDeleteBtn) {
-    const isDelete = beforeDeleteBtn.dataset.buttonState === "delete";
-    beforeDeleteBtn.textContent = isDelete ? "Cancel" : "Delete";
-    beforeDeleteBtn.dataset.buttonState = isDelete ? "cancel" : "delete";
-    if (deleteBtn) deleteBtn.classList.toggle("d-none", !isDelete);
-  }
-
-  // --- Delete Action ---
-  if (btn === deleteBtn) {
-    const clientID = card.dataset.clientId;
-    if (!clientID) return showToast("⚠️ Client ID missing", "error");
-
-    toggleLoader(true);
-    try {
-      const res = await fetch(scriptURL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ system: "clients", action: "delete", clientID })
-      });
-      const result = await res.json();
-      if (result.success) {
-        showToast("✅ Client deleted!", "success");
-        card.remove();
-        await loadClients();
-        refreshSearchResults();
-      } else {
-        showToast("⚠️ Could not delete client.", "error");
-      }
-    } catch (err) {
-      console.error(err);
-      showToast("⚠️ Error deleting client.", "error");
-    } finally {
-      toggleLoader(false);
-    }
-  }
-});
+  });
 
   // ===== Automatic Focus / Filtering =====
   const params = new URLSearchParams(window.location.search);
@@ -540,13 +543,18 @@ async function loadEmailTemplates() {
   toggleLoader(true);
   try {
     const tplData = await (await fetch(scriptURL + "?action=getEmailTemplates")).json();
-    if (!Array.isArray(tplData)) return;
-    templates = Object.fromEntries(tplData.map(t => [t.type, { subject: t.subject, body: t.body }]));
+
+    if (!Array.isArray(tplData.data)) return; // <- check tplData.data
+    templates = Object.fromEntries(
+      tplData.data.map(t => [t.type, { subject: t.subject, body: t.body }])
+    );
+
   } catch (err) {
     console.error("Error in loadEmailTemplates:", err);
     showToast("⚠️ Failed to load email templates", "error");
+  } finally {
+    toggleLoader(false);
   }
-  finally { toggleLoader(false); }
 }
 
 function openEmailModal(client, template) {

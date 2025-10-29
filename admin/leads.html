@@ -4,14 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Leads Manager</title>
-  <script defer src="backleads.js"></script>
 </head>
 <body class="theme-dark">
-<!-- <body class="bg-black text-white"> -->
-
 <div class="watermark"></div>
-
-<!-- Toasts -->
 <div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1050;"></div>
 
 <div class="container py-4">
@@ -108,12 +103,12 @@
   </div>
 </div>
 
-<script type="module" src="global.js"></script>
 <script type="module" src="admin.js"></script>
+<script src="../backleads.js"></script>
 
 <script>
 
-  // ✅ Listen for refresh signal
+// ✅ Listen for refresh signal
 window.addEventListener("message", function(event) {
   if (event.origin !== window.location.origin) return; // Safety check (optional but good)
   if (event.data && event.data.action === "refreshLeads") {

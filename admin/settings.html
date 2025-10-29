@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Theme Settings Preview</title>
+</head>
 <style>
 /* Left side preview buttons container */
 #previewButtonsContainer {
@@ -20,23 +21,19 @@
   width: 120px;
 }
 </style>
-</head>
-
-<div class="watermark"></div>
 <body class="page-body" style="min-height: 100vh;" data-element="page-bg">
+<div class="watermark"></div>
 <div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3" data-element="toast-container"></div>
-
-<div class="container my-5" data-element="main-container">
-
-<div id="themePreviewLabel" class="text-center fw-bold py-2 rounded" data-element="page-header" style="font-size: 2rem;">Theme: System Default</div>
-
-<!-- ⏳ Loader -->
 <div id="loadingOverlay" class="d-none">
   <div class="text-center">
     <div class="spinner-border" role="status"></div>
     <p class="mt-4">Loading... Please wait...</p>
   </div>
 </div>
+
+<div class="container my-5" data-element="main-container">
+
+<div id="themePreviewLabel" class="text-center fw-bold py-2 rounded" data-element="page-header" style="font-size: 2rem;">Theme: System Default</div>
 
 <!-- 🧭 Navigation Tabs -->
 <ul class="nav nav-tabs mb-3" role="tablist">
@@ -174,8 +171,6 @@
   </select>
 </div>
 
-<script type="module" src="global.js"></script>
-<!-- <script type="module" src="client.js"></script> -->
 <script type="module" src="admin.js"></script>
 
 <script>

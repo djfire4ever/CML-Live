@@ -6,7 +6,7 @@
   left: 25%;                                                 /* ⬅️ Center horizontally */
   width: 50%;                                                /* 📏 Width across middle */
   height: 100%;                                              /* 📐 Full height */
-  background-image: url('/images/CML-Letterhead-Blue.png');  /* 🖼 Image path */
+  background-image: url('/admin/images/CML-Letterhead-Blue.png');  /* 🖼 Image path */
   background-size: 75%;                                      /* ✨ Scale image properly */
   background-position: bottom;                               /* 🔽 Stick to bottom */
   background-repeat: no-repeat;                              /* 🚫 No repeating */
