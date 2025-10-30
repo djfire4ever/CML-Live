@@ -22,7 +22,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 // ----- Load all materials -----
 async function loadMaterials() {
-  toggleLoader(true);
+  toggleLoader(true, { message: "Loading materials..." });
   try {
     const res = await fetch(`${scriptURL}?action=getMatDataForSearch`);
     const data = await res.json();
@@ -264,7 +264,7 @@ function renderResults() {
           if (input && f !== "matID") updated[f] = input.value.trim();
         });
 
-        toggleLoader(true);
+        toggleLoader(true, { message: "Saving material..." });
         try {
           const res = await fetch(scriptURL, {
             method: "POST",
@@ -296,7 +296,7 @@ function renderResults() {
     // Delete
     if (deleteBtn) {
       deleteBtn.addEventListener("click", async () => {
-        toggleLoader(true);
+        toggleLoader(true, { message: "Deleting material..." });
         try {
           const res = await fetch(scriptURL, {
             method: "POST",
@@ -351,7 +351,7 @@ async function addMaterial(e) {
   const yyyy = today.getFullYear();
   materialInfo.lastUpdated = `${mm}/${dd}/${yyyy}`;
 
-  toggleLoader(true);
+  toggleLoader(true, { message: "Adding material..." });
   try {
     const res = await fetch(`${scriptURL}?action=add`, {
       method: "POST",
@@ -445,7 +445,7 @@ function initializeReceiveDelivery(row, matID) {
       }]
     };
 
-    toggleLoader(true);
+    toggleLoader(true, { message: "Updating inventory..." });
     try {
       const res = await fetch(scriptURL, {
         method: "POST",

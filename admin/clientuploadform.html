@@ -314,7 +314,7 @@ uploadBtn.addEventListener("click", async () => {
     return;
   }
 
-  toggleLoader(true);
+  toggleLoader(true, { message: "Saving images..." });
   const clientID = params.get("clientID") || "";
   let anyFailed = false;
 

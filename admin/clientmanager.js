@@ -24,7 +24,7 @@ const MONTH_NAMES = ["January","February","March","April","May","June","July","A
 
 // ====== Load Clients ======
 async function loadClients() {
-  toggleLoader(true);
+  toggleLoader(true, { message: "Loading clients..." });
   try {
     const res = await fetch(`${scriptURL}?action=getDataForSearch`);
     const json = await res.json();
@@ -135,7 +135,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       // Send to backend
       try {
-        toggleLoader(true);
+        toggleLoader(true, { message: "Saving client..." });
         const res = await fetch(scriptURL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -181,7 +181,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const clientID = card.dataset.clientId;
       if (!clientID) return showToast("⚠️ Client ID missing", "error");
 
-      toggleLoader(true);
+      toggleLoader(true, { message: "Deleting client..." });
       try {
         const res = await fetch(scriptURL, {
           method: "POST",
@@ -538,16 +538,24 @@ function refreshSearchResults(focusClientID = null) {
   }
 }
 
-// ----- Load email templates -----
+// ----- Load email templates for clientmanager -----
 async function loadEmailTemplates() {
-  toggleLoader(true);
+  toggleLoader(true, { message: "Loading Email Templates..." });
   try {
-    const tplData = await (await fetch(scriptURL + "?action=getEmailTemplates")).json();
+    const res = await fetch(scriptURL + "?action=getEmailTemplates");
+    const tplData = await res.json();
 
-    if (!Array.isArray(tplData.data)) return; // <- check tplData.data
+    if (!Array.isArray(tplData)) {
+      showToast("⚠️ Failed to load email templates", "error");
+      return;
+    }
+
+    // Convert array into object mapping type → { subject, body }
     templates = Object.fromEntries(
-      tplData.data.map(t => [t.type, { subject: t.subject, body: t.body }])
+      tplData.map(t => [t.type, { subject: t.subject, body: t.body }])
     );
+
+    // Optional: log success
 
   } catch (err) {
     console.error("Error in loadEmailTemplates:", err);
@@ -592,7 +600,7 @@ function openEmailModal(client, template) {
 
 // ----- Send email -----
 async function sendEmail(to,subject,body,modal){
-  toggleLoader(true);
+  toggleLoader(true, { message: "Sending Email..." });
   try{
     const result = await (await fetch(scriptURL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({system:"clients",action:"sendEmail",to,subject,body})})).json();
     showToast(result.success?"📧 Email sent!":"❌ Email failed",result.success?"success":"error");

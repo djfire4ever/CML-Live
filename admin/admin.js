@@ -1,16 +1,13 @@
 // admin.js
 import '../global.js';
 
-// admin.js
-window.loadSharedStyles({ stylesheet: './style.css' });
-
-// pageMeta setup
+// --- Page Meta Setup ---
 window.pageMeta = window.pageMeta || {};
 window.pageMeta.pageType = "admin";
 window.pageMeta.context = window !== window.parent ? "iframe" : "parent";
 window.pageMeta.ready = window.pageMeta.ready || false;
 
-// Use same deferred logging as global.js
+// --- Deferred Logging (consistent with global.js) ---
 const logWithContext = (...args) => {
   const context = window.pageMeta.context;
   const color = context === "iframe"
@@ -19,21 +16,25 @@ const logWithContext = (...args) => {
   window._deferredLogs[context].push({ args, color });
 };
 
-// Initialization
 logWithContext("✅ admin.js loaded");
 
-// Load admin-only font
-const loadAdminFont = () => {
+// --- Load Admin Font ---
+(function loadAdminFont() {
   const link = document.createElement('link');
   link.href = 'https://fonts.googleapis.com/css2?family=Courgette&display=swap';
   link.rel = 'stylesheet';
   document.head.appendChild(link);
-};
-loadAdminFont();
+})();
 
-// DOM Ready
+// --- DOM Ready ---
 document.addEventListener('DOMContentLoaded', () => {
-  logWithContext("✅ DOM Ready: admin.js");
+  logWithContext("✅ DOM Ready: admin.js initialized");
+
+  // ✅ Let global.js handle shared + side-specific stylesheet logic
+  // Only call this manually if you need to override or load extra CSS
+  if (typeof window.loadSharedStyles === "function") {
+    window.loadSharedStyles({ stylesheet: '/admin/style.css' });
+  }
 });
 
 // FullCalendar (admin-only)
@@ -75,89 +76,6 @@ window.loadFullCalendarAdmin = () => {
 
 if (location.pathname === "/admin/calendar.html") {
   document.addEventListener('DOMContentLoaded', window.loadFullCalendarAdmin);
-}
-
-// Admin-specific helpers
-window.convertGoogleDriveLink = (url) => {
-  if (!url) return url;
-  if (url.match(/\.(jpg|jpeg|png|gif|webp|avif)(\?.*)?$/i)) return url;
-  const driveMatch = url.match(/(?:\/d\/|id=)([a-zA-Z0-9_-]{20,})/);
-  if (driveMatch) return `https://drive.google.com/thumbnail?id=${driveMatch[1]}`;
-  return url;
-};
-
-window.getEmailTemplateByType = async (type) => {
-  try {
-    const res = await fetch(`${window.scriptURL}?action=getEmailTemplates`);
-    const templates = await res.json();
-
-    if (!res.ok || !Array.isArray(templates)) {
-      const msg = !res.ok ? res.statusText : "Invalid templates format";
-      window.showToast?.(`❌ Failed to fetch templates: ${msg}`, "error");
-      throw new Error(msg);
-    }
-
-    const match = templates.find(t => t.type === type);
-    if (!match) window.showToast?.(`⚠️ No template found for type "${type}"`, "warning");
-    return match || null;
-  } catch (err) {
-    console.error(`❌ Error fetching template "${type}":`, err);
-    window.showToast?.(`❌ Error fetching template "${type}"`, "error");
-    return null;
-  }
-}
-
-window.showEmailModal = async ({ type, mode }) => {
-  window.toggleLoader(true);
-  await new Promise(requestAnimationFrame);
-
-  try {
-    const prefix = mode === "add" ? "add" : "edit";
-    const placeholders = {
-      firstName: document.getElementById(`${prefix}-firstName`)?.value || "",
-      lastName: document.getElementById(`${prefix}-lastName`)?.value || "",
-      fullName: "",
-      name: "",
-      url: document.getElementById(`${prefix}-invoiceUrl`)?.value || "",
-      quoteID: document.getElementById(`${prefix}-qtID`)?.value || "",
-      eventDate: document.getElementById(`${prefix}-eventDate`)?.value || "",
-      eventTheme: document.getElementById(`${prefix}-eventTheme`)?.value || "",
-      grandTotal: document.getElementById(`${prefix}-grandTotal`)?.value || ""
-    };
-    placeholders.fullName = placeholders.name = `${placeholders.firstName} ${placeholders.lastName}`.trim();
-
-    const template = await getEmailTemplateByType(type);
-    if (!template) {
-      window.showToast?.(`❌ Could not load "${type}" template`, "error");
-      return;
-    }
-
-    const emailSubject = renderTemplate(template.subject || "", placeholders);
-    const emailBody = renderTemplate(template.body || "", placeholders);
-
-    const toInput = document.getElementById("invoice-email-to");
-    const subjInput = document.getElementById("invoice-email-subject");
-    const bodyEl = document.getElementById("invoice-email-body");
-    if (toInput) toInput.value = document.getElementById(`${prefix}-email`)?.value || "";
-    if (subjInput) subjInput.value = emailSubject;
-    if (bodyEl) bodyEl.innerHTML = emailBody;
-
-    const modalEl = document.getElementById("finalInvoiceModal");
-    if (modalEl) {
-      const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
-      modal.show();
-    }
-  } catch (err) {
-    console.error("❌ Failed to show email modal:", err);
-    window.showToast?.("❌ Error preparing email", "error");
-  } finally {
-    window.toggleLoader(false);
-  }
-};
-
-// Template renderer
-window.renderTemplate = (template, data) => {
-  return template.replace(/{{\s*([\w.]+)\s*}}/g, (match, key) => (key in data ? data[key] : match));
 }
 
 document.addEventListener("keydown", function (e) {
@@ -220,4 +138,44 @@ window.loadDropdowns = () => {
       if (error.name !== "AbortError") console.warn("⚠️ Dropdown fetch skipped or failed silently:", error.message);
     });
 }
+
+window.parseSafeNumber = (raw) => {
+  if (raw == null) return 0;
+  const s = String(raw).replace(/[^0-9.-]+/g, "");
+  return parseFloat(s) || 0;
+};
+
+window.formatPhoneNumber = (number) => {
+  if (!number) return "";
+  const digits = String(number).replace(/\D/g, "");
+  if (digits.length !== 10) return number;
+  return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
+};
+
+// Admin-specific showToast (CRUD / management)
+window.showToast = (message, type = "success") => {
+  const toastContainer = document.getElementById("toastContainer");
+  if (!toastContainer) return;
+
+  const bgColor = type === "success" ? "bg-black" : "bg-danger";
+  const headerText = type === "success" ? "✅ Success" : "❌ Error";
+
+  const toast = document.createElement("div");
+  toast.classList.add("toast", "show", bgColor, "text-info", "fade");
+  toast.setAttribute("role", "alert");
+  toast.innerHTML = `
+    <div class="toast-header bg-info text-black">
+      <strong class="me-auto">${headerText}</strong>
+      <button type="button" class="btn-close btn-close-info" data-bs-dismiss="toast"></button>
+    </div>
+    <div class="toast-body">${message}</div>
+  `;
+
+  toastContainer.appendChild(toast);
+
+  setTimeout(() => {
+    toast.classList.remove("show");
+    setTimeout(() => toast.remove(), 500);
+  }, 5000);
+};
 

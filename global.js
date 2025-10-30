@@ -45,30 +45,28 @@ window.LIB_VERSIONS = {
   fullCalendarPlugins: "6.1.17"
 };
 
-// Shared CSS & JS loaders
-window.loadSharedStyles = (options = {}) => {
-  const { stylesheet } = options;
+// global.js
+window.loadSharedStyles = () => {
+  const isAdmin = location.pathname.includes('/admin/');
+  const stylesheet = isAdmin ? '/admin/style.css' : 'style.css';
+
   const stylesheets = [
     `https://cdn.jsdelivr.net/npm/bootstrap@${window.LIB_VERSIONS.bootstrap}/dist/css/bootstrap.min.css`,
     `https://cdn.jsdelivr.net/npm/bootstrap-icons@${window.LIB_VERSIONS.bootstrapIcons}/font/bootstrap-icons.min.css`,
-    `https://cdnjs.cloudflare.com/ajax/libs/font-awesome/${window.LIB_VERSIONS.fontAwesome}/css/all.min.css`
+    `https://cdnjs.cloudflare.com/ajax/libs/font-awesome/${window.LIB_VERSIONS.fontAwesome}/css/all.min.css`,
+    stylesheet
   ];
 
-  // Always include style.css if nothing is specified
-  stylesheets.push(stylesheet || 'style.css');
-
-  // Append everything (duplication allowed)
   stylesheets.forEach(href => {
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = href;
-    document.head.appendChild(link);
+    if (![...document.styleSheets].some(s => s.href && s.href.includes(href))) {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = href;
+      document.head.appendChild(link);
+    }
   });
 
-  // Log summary
-  logWithContext(
-    `✅ Shared styles loaded${stylesheet ? ` (with ${stylesheet})` : ''}`
-  );
+  logWithContext(`✅ Shared styles loaded (${isAdmin ? 'admin' : 'client'} mode)`);
 };
 
 window.loadGlobalScripts = () => {
@@ -108,75 +106,36 @@ window.formatCurrency = (amount) => {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(num);
 };
 
-window.parseSafeNumber = (raw) => {
-  if (raw == null) return 0;
-  const s = String(raw).replace(/[^0-9.-]+/g, "");
-  return parseFloat(s) || 0;
-};
-
-window.formatPhoneNumber = (number) => {
-  if (!number) return "";
-  const digits = String(number).replace(/\D/g, "");
-  if (digits.length !== 10) return number;
-  return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
-};
-
-// Show Toast Notification with different styles for Lead Form and Admin
-window.showToast = (message, type = "success", forLeadForm = false) => {
-  const toastContainer = document.getElementById("toastContainer");
-  if (!toastContainer) return;
-
-  let bgColor;
-  let headerText;
-    
-  if (forLeadForm) {
-    if (type === "success") {
-      bgColor = "bg-primary";
-      headerText = "Thank You!";
-      message = "We will contact you shortly.";
-    } else if (type === "warning") {
-      bgColor = "bg-warning";
-      headerText = "Attention!";
-    } else if (type === "error") {
-      bgColor = "bg-danger";
-      headerText = "❌ Error!";
-    }
-  } else {
-    bgColor = type === "success" ? "bg-black" : "bg-danger";
-    headerText = type === "success" ? "✅ Success" : "❌ Error";
-  }
-
-  const toast = document.createElement("div");
-  toast.classList.add("toast", "show", bgColor, "text-info", "fade");
-  toast.setAttribute("role", "alert");
-  
-  toast.innerHTML = `
-    <div class="toast-header bg-info text-black">
-        <strong class="me-auto">${headerText}</strong>
-        <button type="button" class="btn-close btn-close-info" data-bs-dismiss="toast"></button>
-    </div>
-    <div class="toast-body">${message}</div>
-  `;
-    
-  toastContainer.appendChild(toast);
-
-  setTimeout(() => {
-    toast.classList.remove("show");
-    setTimeout(() => toast.remove(), 5000);
-  }, 5000);
-};
-
 // Loader overlay toggle
-window.toggleLoader = () => {
+window.toggleLoader = (show, options = {}) => {
   const loader = document.getElementById("loadingOverlay");
   if (!loader) return;
 
-  loader.classList.toggle("show");
+  const { message } = options;
+  if (message) {
+    const msgEl = loader.querySelector(".loader-message");
+    if (msgEl) msgEl.textContent = message;
+  }
 
-  if (loader.classList.contains("show")) {
-    loader.classList.remove("d-none");
+  if (typeof show === 'undefined') {
+    loader.classList.toggle('show');
+    loader.classList.toggle('d-none', !loader.classList.contains('show'));
+    return;
+  }
+
+  if (show) {
+    loader.classList.add('show');
+    loader.classList.remove('d-none');
   } else {
-    loader.classList.add("d-none");
+    loader.classList.remove('show');
+    loader.classList.add('d-none');
   }
 };
 
+window.convertGoogleDriveLink = (url) => {
+  if (!url) return url;
+  if (url.match(/\.(jpg|jpeg|png|gif|webp|avif)(\?.*)?$/i)) return url;
+  const driveMatch = url.match(/(?:\/d\/|id=)([a-zA-Z0-9_-]{20,})/);
+  if (driveMatch) return `https://drive.google.com/thumbnail?id=${driveMatch[1]}`;
+  return url;
+};

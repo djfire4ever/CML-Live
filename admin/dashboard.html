@@ -845,7 +845,7 @@ async function markUploadViewed(uploadID) {
 
 // ✅ Run after DOM is ready
 document.addEventListener("DOMContentLoaded", () => {
-  toggleLoader(true);
+  toggleLoader(true, { message: "Gathering Dashboard Data..." });
   fetchDashboardStats().finally(() => toggleLoader(false));
 });
 
