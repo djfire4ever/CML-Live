@@ -14,7 +14,7 @@ This file contains concise, project-specific guidance for automated code edits a
 - HTML files (e.g., `productmanager.html`) — contain templates and IDs referenced by JS (accordion templates, datalists, form IDs). JS relies on exact IDs/classes.
 
 ## Important runtime conventions
-- scriptURL switching: `config.js` sets `scriptURL` depending on hostname. Do not change its shape (string path) unless you update all fetch usage. Note: production path is `/.netlify/functions/leadProxy`.
+- scriptURL switching: `global.js` sets `scriptURL` depending on hostname. Do not change its shape (string path) unless you update all fetch usage. Note: production path is `/.netlify/functions/leadProxy`.
 - Data from backend is often a 2D array of columns. `productmanager.js` parses rows like:
   - product row: index mapping used in `loadProducts()` — prodID = row[0], name=row[1], parts JSON in row[4], cost=row[6], retail=row[7], lastUpdated=row[8].
   - material row: `loadMaterialData()` expects row[0]=id, row[1]=name, row[6]=supplierUrl, row[7]=unitPrice, row[8]=onHand.

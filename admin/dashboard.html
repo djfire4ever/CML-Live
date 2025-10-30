@@ -113,36 +113,36 @@ body.bg-black .btn-outline-success:active {
           </button>
         </h2>
       <div id="collapseQuickLinks" class="accordion-collapse show" aria-labelledby="headingQuickLinks" data-bs-parent="#quickLinksAccordion">
-        <div class="accordion-body bg-black text-light border-info">
+        <div class="accordion-body bg-black text-info border-info">
           <div class="row g-2">
           <!-- Link 1 - Add Clients -->
-            <div class="col-12">
+            <div class="col-6">
               <button class="btn btn-outline-primary w-100 d-flex justify-content-between align-items-center" data-link="clientmanager.html#tab-add">
-                <span>Add Clients</span><i class="fa-solid fa-user-plus"></i>
+                <span>Clients</span><i class="fa-solid fa-user-plus"></i>
               </button>
             </div>
           <!-- Link 2 - Add Material -->
-            <div class="col-12">
+            <div class="col-6">
               <button class="btn btn-outline-info w-100 d-flex justify-content-between align-items-center" data-link="materialmanager.html#add-material">
-                <span>Add Material</span><i class="fa-solid fa-cubes"></i>
+                <span>Material</span><i class="fa-solid fa-cubes"></i>
               </button>
             </div>
           <!-- Link 3 - Add Product -->
-            <div class="col-12">
+            <div class="col-6">
               <button class="btn btn-outline-danger w-100 d-flex justify-content-between align-items-center" data-link="productmanager.html#add-product">
-                <span>Add Product</span><i class="fa-solid fa-tags"></i>
+                <span>Product</span><i class="fa-solid fa-tags"></i>
               </button>
             </div>
           <!-- Link 4 - Add Quote -->
-            <div class="col-12">
+            <div class="col-6">
               <button class="btn btn-outline-warning w-100 d-flex justify-content-between align-items-center" data-link="quotemanager.html#add-quote">
-                <span>Add Quote</span><i class="fa-solid fa-file-signature"></i>
+                <span>Quote</span><i class="fa-solid fa-file-signature"></i>
               </button>
             </div>
           <!-- Link 5 - Add Inventory Disabled -->
-            <div class="col-12">
+            <div class="col-6">
               <button class="btn btn-outline-success w-100 d-flex justify-content-between align-items-center" data-link="materialmanager.html#add-inventory">
-                <span>Add Inventory</span><i class="fa-solid fa-boxes-stacked"></i>
+                <span>Inventory</span><i class="fa-solid fa-boxes-stacked"></i>
               </button>
             </div>
           </div>
@@ -158,54 +158,49 @@ body.bg-black .btn-outline-success:active {
       <div class="accordion-item border-info">
         <h2 class="accordion-header" id="headingStats">
           <button class="accordion-button bg-black text-info " type="button" data-bs-toggle="collapse" data-bs-target="#collapseStats" aria-expanded="true" aria-controls="collapseStats">
-            <i class="fa-solid fa-chart-line me-2"></i>All Stats
+            <i class="fa-solid fa-chart-line me-2"></i>Totals
           </button>
         </h2>
         <div id="collapseStats" class="accordion-collapse show" aria-labelledby="headingStats">
           <div class="accordion-body bg-black text-light border-info">
             <div class="row g-2">
-              <div class="col-12">
+              <div class="col-6">
                 <button class="btn btn-outline-primary w-100 d-flex justify-content-between align-items-center" data-link="clientmanager.html#tab-search">
-                  <span>Total Clients:</span>
+                  <span>Clients:</span>
                   <span>
                     <span id="totalClients" class="fw-bold">--</span>
-                    <span id="status-totalClients" class="status-dot"></span>
                   </span>
                 </button>
               </div>
-              <div class="col-12">
+              <div class="col-6">
                 <button class="btn btn-outline-info w-100 d-flex justify-content-between align-items-center" data-link="materialmanager.html#search-material">
-                  <span>Total Materials:</span>
+                  <span>Materials:</span>
                   <span>
                     <span id="totalMaterials" class="fw-bold">--</span>
-                    <span id="status-totalMaterials" class="status-dot"></span>
                   </span>
                 </button>
               </div>
-              <div class="col-12">
+              <div class="col-6">
                 <button class="btn btn-outline-danger w-100 d-flex justify-content-between align-items-center" data-link="productmanager.html#search-product">
-                  <span>Total Products:</span>
+                  <span>Products:</span>
                   <span>
                     <span id="totalProducts" class="fw-bold">--</span>
-                    <span id="status-totalProducts" class="status-dot"></span>
                   </span>
                 </button>
               </div>
-              <div class="col-12">
+              <div class="col-6">
                 <button class="btn btn-outline-warning w-100 d-flex justify-content-between align-items-center" data-link="quotemanager.html#search-quote">
-                  <span>Total Quotes:</span>
+                  <span>Quotes:</span>
                   <span>
                     <span id="totalQuotes" class="fw-bold">--</span>
-                    <span id="status-totalQuotes" class="status-dot"></span>
                   </span>
                 </button>
               </div>
               <div class="col-12">
                 <button class="btn btn-outline-success w-100 d-flex justify-content-between align-items-center" data-link="invoicemanager.html#search-invoice">
-                  <span>Total Unpaid Invoices:</span>
+                  <span>Unpaid Invoices:</span>
                   <span>
                     <span id="unpaidInvoiceCount" class="fw-bold">--</span>
-                    <span id="status-unpaidInvoiceCount" class="status-dot"></span>
                   </span>
                 </button>
               </div>
@@ -228,36 +223,33 @@ body.bg-black .btn-outline-success:active {
         <div id="collapseLeads" class="accordion-collapse show" aria-labelledby="headingLeads">
           <div class="accordion-body bg-black text-light border-info">
             <div class="row g-2">
-              <div class="col-12">
+              <div class="col-6">
                 <button class="btn btn-outline-primary w-100 d-flex justify-content-between align-items-center">
-                  <span>New Leads:</span>
+                  <span>New</span>
                   <span>
                     <span id="newLeads" class="fw-bold">0</span>
-                    <span id="status-newLeads" class="status-dot"></span>
                   </span>
                 </button>
               </div>
-              <div class="col-12">
+              <div class="col-6">
                 <button class="btn btn-outline-info w-100 d-flex justify-content-between align-items-center">
-                  <span>Follow-Up Leads:</span>
+                  <span>Follow-Up</span>
                   <span>
                     <span id="followupLeads" class="fw-bold">0</span>
-                    <span id="status-followupLeads" class="status-dot"></span>
                   </span>
                 </button>
               </div>
-              <div class="col-12">
+              <div class="col-6">
                 <button class="btn btn-outline-danger w-100 d-flex justify-content-between align-items-center">
-                  <span>Pending Leads:</span>
+                  <span>Pending</span>
                   <span>
                     <span id="pendingLeads" class="fw-bold">0</span>
-                    <span id="status-pendingLeads" class="status-dot"></span>
                   </span>
                 </button>
               </div>
-            </div>
-            <div class="d-grid mt-3">
-              <button class="btn btn-outline-warning" data-link="leads.html">View Leads</button>
+              <div class="col-6">
+                <button class="btn btn-outline-warning" data-link="leads.html">All Leads</button>
+              </div>
             </div>
           </div>
         </div>
@@ -436,8 +428,7 @@ body.bg-black .btn-outline-success:active {
 </div>
 </div>
 
-<script type="module" src="../global.js"></script>
-<script type="module" src="./admin.js"></script>
+<script type="module" src="admin.js"></script>
 
 <script>
 function populateCacheStatusModal(data) {
