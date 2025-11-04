@@ -1,0 +1,19 @@
+/* // qm-modules/drawers.css */
+/* === Offcanvas (Drawers) === */
+.offcanvas {
+  transition: transform 0.4s ease;
+  box-shadow: -5px 0 20px rgba(var(--bs-info-rgb), 0.4);
+  border-left: 1px solid rgba(var(--bs-info-rgb), 0.2);
+  background-color: var(--bs-black);
+  color: var(--bs-info);
+}
+.offcanvas-header .btn-close {
+  filter: invert(1) brightness(200%);
+}
+.offcanvas-title {
+  font-weight: 600;
+  text-shadow: 0 0 10px rgba(var(--bs-info-rgb), 0.8);
+}
+.offcanvas-body hr {
+  border-color: rgba(var(--bs-info-rgb), 0.25);
+}

@@ -1,0 +1,77 @@
+/* =========================================
+   Unified Dropdown / Search Styling
+   Applies to Slide 1 search input and Slide 3 select
+   ========================================= */
+
+/* Slide 1 search input and Slide 3 select dropdown */
+.clientID-input,
+#productNameSelect {
+  background-color: var(--theme-bg) !important;
+  color: var(--theme-warning) !important;
+  border: 1px solid var(--theme-text);
+  border-radius: 0.25rem;
+  padding: 0.375rem 0.75rem;
+  width: 100%;
+  transition: box-shadow 0.3s, border-color 0.3s;
+  box-shadow: 0 0 10px var(--theme-text); /* permanent glow for both */
+}
+
+/* Placeholder text for Slide 1 input */
+.clientID-input::placeholder {
+  color: var(--theme-warning);
+  opacity: 0.5;
+}
+
+/* Hover/focus glow for both */
+.clientID-input:hover,
+.clientID-input:focus,
+#productNameSelect:hover,
+#productNameSelect:focus {
+  outline: none;
+  border-color: var(--theme-text);
+  box-shadow: 0 0 10px var(--theme-warning);
+}
+
+/* -------- Slide 1 floating suggestions list -------- */
+.client-suggestions {
+  max-height: 200px;
+  overflow-y: auto;
+  position: absolute;
+  width: 100%;
+  z-index: 1000;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  border-radius: 0.25rem;
+  border: 1px solid var(--theme-text);
+  background-color: rgba(0, 0, 0, 0.95); /* translucent black */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+  scrollbar-width: none;
+}
+
+.client-suggestions li.list-group-item {
+  background-color: var(--theme-bg) !important;
+  color: var(--theme-warning) !important;
+  padding: 0.4rem 0.6rem;
+  cursor: pointer;
+  border: none;
+}
+
+.client-suggestions li.list-group-item:hover {
+  background-color: var(--theme-warning) !important;
+  color: var(--theme-bg) !important;
+}
+
+.client-suggestions.list-group {
+  border: none !important;
+}
+
+/* -------- Slide 3 select dropdown pseudo-options styling -------- */
+#productNameSelect option {
+  background-color: var(--theme-bg);
+  color: var(--theme-warning);
+}
+#productNameSelect option:checked {
+  background-color: var(--theme-warning);
+  color: var(--theme-bg);
+}

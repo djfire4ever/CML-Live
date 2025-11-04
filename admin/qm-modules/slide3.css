@@ -1,0 +1,252 @@
+/* =========================================
+   Slide 3: Products
+   ========================================= */
+
+/* === Base Project Theme / Glow === */
+.project-theme {
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid var(--bs-info);
+  border-radius: 12px;
+  color: var(--bs-info);
+  box-shadow: 0 0 10px var(--bs-info);
+  transition: box-shadow 0.3s ease, transform 0.2s ease;
+}
+
+.project-theme:hover {
+  box-shadow: 0 0 25px var(--bs-info);
+  transform: translateY(-2px);
+}
+
+/* === Tile Inner Elements === */
+.tile-icon {
+  font-size: 1.25rem;
+  color: var(--bs-info);
+  flex-shrink: 0;
+}
+
+.tile-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--bs-info);
+  margin-bottom: 2px;
+}
+
+.tile-input {
+  background: var(--bs-black);
+  border: 1px solid var(--bs-info);
+  border-radius: 10px;
+  padding: 6px 8px;
+  color: var(--bs-info);
+  width: 100%;
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.tile-input:focus {
+  outline: none;
+  box-shadow: 0 0 8px var(--bs-info) inset;
+  border-color: var(--bs-info);
+}
+
+/* Notes textarea */
+#eventNotes {
+  min-height: 70px;
+  resize: vertical;
+}
+
+/* Layout for text sections inside tiles */
+.event-tile .flex-fill {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Pulse animation identical to button glow hover */
+@keyframes pulseGlow {
+  0%   { box-shadow: 0 0 20px var(--bs-info), inset 0 0 8px var(--bs-info); }
+  50%  { box-shadow: 0 0 28px var(--bs-info), inset 0 0 12px var(--bs-info); }
+  100% { box-shadow: 0 0 20px var(--bs-info), inset 0 0 8px var(--bs-info); }
+}
+
+/* === Product Grid === */
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  padding: 1rem 0;
+  justify-items: center;
+}
+
+/* === Smart Product Tile === */
+.product-tile {
+  width: 260px;
+  height: 61px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 0.4rem;
+  text-align: center;
+  font-weight: 600;
+  cursor: pointer;
+
+  /* Apply project theme */
+  composes: project-theme;
+}
+
+.product-tile .name {
+  font-size: 1rem;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.product-tile .bottom-row {
+  display: flex;
+  align-items: center;
+  padding: 2px 0;
+}
+
+.product-tile .price {
+  flex: 1;
+  font-size: 0.8rem;
+  color: var(--bs-warning);
+  text-align: center;
+}
+
+.product-tile .delete {
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: var(--bs-danger);
+  cursor: pointer;
+  background: var(--bs-black);
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  line-height: 18px;
+  text-align: center;
+  margin-left: 4px;
+}
+
+.product-tile .delete:hover {
+  background: rgba(255, 0, 0, 0.5);
+}
+
+/* === Add Product Tile === */
+.add-product-tile {
+  width: 260px;
+  height: 61px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.5rem;
+  cursor: pointer;
+  border: 1px dashed var(--bs-info);
+
+  /* Apply project theme */
+  composes: project-theme;
+}
+
+/* Slight hover tweak for add tile */
+.add-product-tile:hover {
+  background: rgba(0, 255, 255, 0.05);
+  transform: translateY(-2px);
+}
+
+/* === Overlay === */
+.product-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(6px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
+  z-index: 1050;
+}
+
+.product-overlay.d-none {
+  display: none;
+}
+
+.product-form-card {
+  width: 420px;
+  padding: 1.5rem;
+  border-radius: 16px;
+  box-shadow: 0 0 25px rgba(var(--bs-info-rgb), 0.3),
+              0 0 60px rgba(var(--bs-info-rgb), 0.15);
+  color: var(--bs-info);
+  transition: box-shadow 0.4s ease, border-color 0.4s ease;
+
+  /* Apply project theme */
+  composes: project-theme;
+}
+
+.product-form-card:hover {
+  box-shadow: 0 0 45px rgba(var(--bs-info-rgb), 0.5),
+              0 0 90px rgba(var(--bs-info-rgb), 0.3);
+}
+
+@keyframes overlayPopIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+    box-shadow: 0 0 5px rgba(var(--bs-info-rgb), 0.1);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.02);
+    box-shadow: 0 0 35px rgba(var(--bs-info-rgb), 0.3);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    box-shadow: 0 0 25px rgba(var(--bs-info-rgb), 0.3),
+                0 0 60px rgba(var(--bs-info-rgb), 0.15);
+  }
+}
+
+.product-overlay.show .product-form-card {
+  animation: overlayPopIn 1s ease forwards;
+}
+
+/* === Overlay Buttons (match drawer buttons) === */
+.overlay-btn-group .btn {
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 0 10px var(--bs-info);
+  transition: box-shadow 0.3s ease, transform 0.2s ease;
+}
+
+.overlay-btn-group .btn:hover {
+  box-shadow: 0 0 25px var(--bs-info);
+  transform: translateY(-1px);
+}
+
+/* === Slide 3 Header / Summary Card === */
+.slide3-header {
+  position: relative;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+}
+
+.product-summary-card {
+  position: absolute;
+  top: 0;
+  right: 0;
+  min-width: 180px;
+  background: rgba(0, 0, 0, 0.85);
+  border-radius: 12px;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: box-shadow 0.3s ease, transform 0.2s ease, background 0.2s ease;
+
+  /* Apply project theme */
+  composes: project-theme;
+}
+
+.product-summary-card:hover {
+  transform: scale(1.03);
+}

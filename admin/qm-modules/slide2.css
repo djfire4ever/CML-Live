@@ -1,0 +1,61 @@
+/* // qm-modules/slide2.css */
+/* === Slide 2: Event Tiles === */
+
+/* --- Event Tile Base --- */
+.event-tile {
+  background-color: var(--theme-bg);         /* same as project theme */
+  color: var(--theme-text);                  /* text color */
+  border: 1px solid var(--theme-text);      /* border matches text color */
+  border-radius: 12px;                       /* rounded corners */
+  padding: 10px 14px;                        /* internal spacing */
+  display: flex;                             /* flex layout */
+  align-items: center;                       /* center vertically */
+  gap: 8px;                                  /* spacing between children */
+  min-height: 80px;                          /* consistent tile height */
+  box-shadow: 0 0 10px var(--theme-text), inset 0 0 6px var(--theme-text); /* shadow/glow */
+  transition: transform 0.2s ease, box-shadow 0.4s ease, border-color 0.3s ease;
+}
+
+/* --- Hover Glow Effect --- */
+.event-tile:hover {
+  transform: translateY(-1px);
+  animation: pulseGlow 1.5s infinite ease-in-out;
+}
+
+/* --- Focused / Active Glow --- */
+.event-tile:focus-within {
+  box-shadow: 0 0 25px var(--theme-text), inset 0 0 12px var(--theme-text);
+  transform: translateY(-1px);
+  border-color: var(--theme-text);
+}
+
+/* --- Pulse Glow Keyframes --- */
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 10px var(--theme-text), inset 0 0 6px var(--theme-text);
+  }
+  50% {
+    box-shadow: 0 0 20px var(--theme-text), inset 0 0 12px var(--theme-text);
+  }
+}
+
+/* --- Optional: tile icons and inputs --- */
+.event-tile .tile-icon {
+  font-size: 1.5rem;
+  opacity: 0.7;
+}
+
+.event-tile .tile-input {
+  background-color: var(--theme-bg);
+  color: var(--theme-text);
+  border: none;
+  width: 100%;
+  outline: none;
+}
+
+/* --- Optional: labels --- */
+.event-tile .tile-label {
+  font-size: 0.85rem;
+  color: var(--theme-text);
+  margin-bottom: 2px;
+}

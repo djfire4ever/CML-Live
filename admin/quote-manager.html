@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="quote-manager.css">
+  <title>QuoteManager 2.0</title>
+</head>
+<style>
+
+</style>
+
+<body class="bg-black">
+<!-- ⏳ Loader -->
+<div id="loadingOverlay" class="d-none">
+  <div class="text-center">
+    <div class="spinner-border text-info" role="status"></div>
+    <p class="mt-4 loader-message text-info">Loading... Please wait...</p>
+  </div>
+</div>
+
+<div class="container py-4">
+  <div class="quote-container d-flex flex-column" style="height: 80vh;">
+
+    <!-- Navigation Buttons (fixed at bottom of container) -->
+    <div class="btn-group d-flex justify-content-between m-2 align-items-center">
+      <button class="btn btn-sm prevBtn" style="flex: 0 0 100px;">Back</button>
+
+      <!-- Step Indicators -->
+      <div class="step-nav mb-1 d-flex gap-2">
+        <div class="step active">
+          <div class="circle">Client</div>
+        </div>
+        <div class="step">
+          <div class="circle">Event</div>
+        </div>
+        <div class="step">
+          <div class="circle">Products</div>
+        </div>
+        <div class="step">
+          <div class="circle">Finalize</div>
+        </div>
+      </div>
+
+      <button class="btn btn-sm nextBtn" style="flex: 0 0 100px;">Next</button>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="progress project-theme border border-info">
+      <div class="progress-bar project-theme" id="progressBar" style="width: 0%;"></div>
+    </div>
+
+  <!-- Carousel -->
+    <div id="quoteCarousel" class="carousel slide flex-grow-1" data-bs-interval="false">
+      <div class="carousel-inner">
+
+      <!-- Step 1: Client Info -->
+      <div class="carousel-item active">
+        <div class="project-theme slide-inner p-3">
+          <h4 class="glow-info">Client Information</h4>
+
+          <!-- Client Info Fieldset -->
+          <fieldset id="clientInfoFieldset" class="mb-2 p-2">
+            <div class="d-flex flex-wrap justify-content-start align-items-start gap-3">
+
+              <!-- Left Column: Icon + Names + Tier -->
+              <div id="clientIconColumn"
+                  class="position-relative d-flex flex-column justify-content-center align-items-center ps-1 pe-3 rounded border-end border-2 border-info shadow"
+                  style="width:200px; min-height:220px; overflow:hidden; background:rgba(255,255,255,0.02);">
+                <i class="bi bi-award tier-icon-bg position-absolute"
+                  style="font-size:12rem; opacity:0.45; z-index:0;"></i>
+
+                <div class="position-relative z-1 w-100 mt-2 d-flex flex-column justify-content-center align-items-center text-warning">
+                  <div class="mb-1 text-center w-100">
+                    <span class="firstName d-block mb-1 fw-bold fs-6"></span>
+                  </div>
+                  <div class="mb-1 text-center w-100">
+                    <span class="nickName d-block mb-1 fw-bold fs-6"></span>
+                  </div>
+                  <div class="mb-1 text-center w-100">
+                    <span class="lastName d-block fw-bold fs-6"></span>
+                  </div>
+                </div>
+
+                <div class="mt-auto w-100 px-1 mb-1 text-center text-warning">
+                  <span class="tier" data-tier-id="0"></span>
+                </div>
+              </div>
+
+              <!-- Right Column: Contact & Address -->
+              <div id="clientDetailsColumn" class="d-flex flex-column flex-grow-1" style="width:220px;">
+                <div class="row gx-2 gy-2 text-warning">
+
+                  <!-- Phone (editable search input) -->
+                  <div class="col-md-6">
+                    <label class="form-label text-info mb-0">Phone</label>
+                    <div class="position-relative">
+                      <input type="search" class="clientID-input form-control form-control-sm" placeholder="Search phone or name">
+                      <ul class="client-suggestions list-group"></ul>
+                    </div>
+                  </div>
+
+                  <!-- Email -->
+                  <div class="col-md-6">
+                    <label class="form-label text-info mb-0">Email</label>
+                    <span class="email d-block"></span>
+                  </div>
+
+                  <!-- Street -->
+                  <div class="col-md-12">
+                    <label class="form-label text-info mb-0">Street</label>
+                    <span class="street d-block"></span>
+                  </div>
+
+                  <!-- City / State / Zip -->
+                  <div class="col-md-6">
+                    <label class="form-label text-info mb-0">City</label>
+                    <span class="city d-block"></span>
+                  </div>
+                  <div class="col-md-2">
+                    <label class="form-label text-info mb-0">State</label>
+                    <span class="state d-block"></span>
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label text-info mb-0">Zip</label>
+                    <span class="zip d-block"></span>
+                  </div>
+
+                  <!-- Member Since -->
+                  <div class="col-md-6">
+                    <label class="form-label text-info mb-0">Member Since</label>
+                    <span class="memberSince d-block"></span>
+                  </div>
+
+                  <!-- Birthday -->
+                  <div class="col-md-4">
+                    <label class="form-label text-info mb-0">Birthday</label>
+                    <span class="birthday d-block"></span>
+                  </div>
+
+                </div>
+              </div>
+
+            </div>
+          </fieldset>
+        </div>
+      </div>
+
+      <!-- Step 2: Event -->
+      <div class="carousel-item">
+        <h4 class="glow-info mb-3">Event Details</h4>
+
+        <!-- First Row: Event Date + Location -->
+        <div class="row mb-2 g-2">
+          <div class="col-3">
+            <div class="event-tile d-flex align-items-center gap-2 project-theme project-theme-tile">
+              <i class="bi bi-calendar-event tile-icon"></i>
+              <div class="flex-fill">
+                <label for="eventDate" class="tile-label">Event Date</label>
+                <input type="date" id="eventDate" class="tile-input">
+              </div>
+            </div>
+          </div>
+          <div class="col-9">
+            <div class="event-tile d-flex align-items-center gap-2 project-theme project-theme-tile">
+              <i class="bi bi-geo-alt tile-icon"></i>
+              <div class="flex-fill">
+                <label for="eventLocation" class="tile-label">Location</label>
+                <input type="text" id="eventLocation" class="tile-input" placeholder="Where is it happening?">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Second Row: Due Date + Theme -->
+        <div class="row mb-2 g-2">
+          <div class="col-3">
+            <div class="event-tile d-flex align-items-center gap-2 project-theme project-theme-tile">
+              <i class="bi bi-hourglass-split tile-icon"></i>
+              <div class="flex-fill">
+                <label for="dueDate" class="tile-label">Due Date</label>
+                <input type="date" id="dueDate" class="tile-input">
+              </div>
+            </div>
+          </div>
+          <div class="col-9">
+            <div class="event-tile d-flex align-items-center gap-2 project-theme project-theme-tile">
+              <i class="bi bi-palette tile-icon"></i>
+              <div class="flex-fill">
+                <label for="eventTheme" class="tile-label">Theme</label>
+                <input type="text" id="eventTheme" class="tile-input" placeholder="Optional theme">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Third Row: Notes -->
+        <div class="row g-2">
+          <div class="col-12">
+            <div class="event-tile d-flex align-items-start gap-2 project-theme project-theme-tile">
+              <i class="bi bi-pencil-square tile-icon mt-2"></i>
+              <div class="flex-fill">
+                <label for="eventNotes" class="tile-label">Notes</label>
+                <textarea id="eventNotes" class="tile-input" rows="2" placeholder="Add details here..."></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3: Products -->
+      <div class="carousel-item">
+        <div class="slide3-header">
+          <h4 class="glow-info mb-1">Products</h4>
+          <div id="productSummaryCard" class="product-summary-card" title="Click for details">
+            <div class="summary-line">
+              <span class="count">0 items</span>
+              <span class="total">$0.00</span>
+            </div>
+            <div class="summary-details d-none">
+              <ul class="summary-list"></ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Product Grid -->
+        <div class="product-grid"></div>
+
+        <!-- Overlay Form -->
+        <div id="product-overlay" class="product-overlay d-none">
+          <div class="product-form-card">
+            <h5 class="glow-info mb-3" id="overlay-title">Add Product</h5>
+
+            <!-- Product Name -->
+            <div class="mb-2">
+              <label class="form-label text-info">Product Name</label>
+              <select id="productNameSelect" class="form-control">
+                <option value="" disabled selected>Select a product</option>
+                <!-- Options injected dynamically -->
+              </select>
+            </div>
+
+            <!-- Cost / Retail Row -->
+            <div class="row g-2 align-items-end">
+              <div class="col-3 text-info">Cost $</div>
+              <div class="col-3 text-warning">
+                <span id="costPrice">0.00</span>
+              </div>
+              <div class="col-3 text-info">Retail $</div>
+              <div class="col-3 text-warning">
+                <span id="retailPrice">0.00</span>
+              </div>
+            </div>
+
+            <!-- Qty + Totals -->
+            <div class="mt-3 border-top border-info pt-2">
+              <div class="row g-2 align-items-center">
+                <div class="col-1">
+                  <label class="form-label text-info">Qty</label>
+                </div>
+                <div class="col-2">
+                  <input type="number" id="qty" class="form-control bg-black text-warning border-info" min="1" value="1">
+                </div>
+                <div class="col-8">
+                  <div class="d-flex justify-content-between text-warning">
+                    <span>Total Cost:</span>
+                    <span id="totalProductCost">$0.00</span>
+                  </div>
+                  <div class="d-flex justify-content-between text-warning">
+                    <span>Total Retail:</span>
+                    <span id="totalProductRetail">$0.00</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          <!-- Action Buttons -->
+          <div class="row g-2 mt-3 overlay-btn-group">
+            <div class="col">
+              <button id="deleteProduct" class="btn btn-outline-danger w-100">Delete</button>
+            </div>
+            <div class="col">
+              <button id="cancelProduct" class="btn btn-outline-secondary w-100">Cancel</button>
+            </div>
+            <div class="col">
+              <button id="saveProduct" class="btn btn-info w-100">Save</button>
+            </div>
+          </div>
+         </div>
+        </div>
+      </div>
+
+<!-- Step 4: Other -->
+<div class="carousel-item">
+  <h4 class="glow-info">Other</h4>
+
+  <!-- First Row: Add-On Fees + Balance Details -->
+  <div class="row mb-2 g-2">
+    <!-- Add-On Fees Tile -->
+    <div class="col-md-6">
+      <div class="d-flex flex-column gap-2 project-theme project-theme-tile p-2">
+        <h5 class="text-warning">Add-On Fees</h5>
+        <div class="row align-items-center">
+          <div class="col-6"><label for="deliveryFee">Delivery Fee</label></div>
+          <div class="col-6"><input type="text" class="form-control form-control-sm" id="deliveryFee"></div>
+        </div>
+        <div class="row align-items-center">
+          <div class="col-6"><label for="setupFee">Setup Fee</label></div>
+          <div class="col-6"><input type="text" class="form-control form-control-sm" id="setupFee"></div>
+        </div>
+        <div class="row align-items-center">
+          <div class="col-6"><label for="otherFee">Other Fee</label></div>
+          <div class="col-6"><input type="text" class="form-control form-control-sm" id="otherFee"></div>
+        </div>
+        <div class="row align-items-center">
+          <div class="col-6"><label for="addonsTotal">Add-ons Total</label></div>
+          <div class="col-6" id="addonsTotal"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Balance Details Tile -->
+    <div class="col-md-6">
+      <div class="d-flex flex-column gap-2 project-theme project-theme-tile p-2">
+        <h5 class="text-warning">Balance Details</h5>
+        <div class="row align-items-center">
+          <div class="col-6"><label for="deposit">Deposit Amount</label></div>
+          <div class="col-6"><input type="text" class="form-control form-control-sm" id="deposit"></div>
+        </div>
+        <div class="row align-items-center">
+          <div class="col-6"><label for="amountPaid">Amount Paid</label></div>
+          <div class="col-6"><input type="text" readonly class="form-control-plaintext form-control-sm" id="amountPaid"></div>
+        </div>
+        <div class="row align-items-center">
+          <div class="col-6"><label for="balanceDue">Balance Due</label></div>
+          <div class="col-6"><input type="text" readonly class="form-control-plaintext form-control-sm" id="balanceDue"></div>
+        </div>
+        <div class="row align-items-center">
+          <div class="col-6"><label for="depositDate">Deposit Date</label></div>
+          <div class="col-6"><input type="text" class="form-control form-control-sm" id="depositDate"></div>
+        </div>
+        <div class="row align-items-center">
+          <div class="col-6"><label for="paymentMethod">Payment Method</label></div>
+          <div class="col-6">
+            <input class="form-control" list="payment-method-options" id="paymentMethod" name="paymentMethod" placeholder="Select or type method">
+            <datalist id="payment-method-options"></datalist>
+          </div>
+        </div>
+        <div class="row align-items-center">
+          <div class="col-6"><label for="balanceDueDate">Balance Due Date</label></div>
+          <div class="col-6"><input type="text" class="form-control form-control-sm" id="balanceDueDate"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Second Row: Quote Notes (full width) -->
+  <div class="row">
+    <div class="col-12 project-theme project-theme-tile p-2">
+      <label for="quoteNotes">Quote Notes</label>
+      <input type="text" class="form-control" id="quoteNotes">
+    </div>
+  </div>
+</div>
+
+      <!-- Step 5: Finalize -->
+      <div class="carousel-item">
+        <h4 class="glow mb-3">Finalize Quote</h4>
+        <p>Coming soon...</p>
+      </div>
+
+    </div>
+  </div>
+
+    <!-- Drawer Buttons (visible on main pane) -->
+    <div class="btn-group mt-2 mt-auto m-2 pt-3 border-top border-info">
+      <button class="btn" style="flex: 0 0 150px;" id="openSummary">Quote Summary</button>
+      <button class="btn" style="flex: 0 0 150px;" id="openBalance">Running Balance</button>
+      <button class="btn" style="flex: 0 0 150px;" id="openBalanceDetails">Balance Details</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- === Offcanvas Drawers === -->
+<div class="offcanvas offcanvas-end bg-black text-info" tabindex="-1" id="summaryDrawer">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title">Quote Summary</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+  </div>
+
+  <div class="offcanvas-body">
+    <!-- 🟦 Client Section -->
+    <p><strong>Client:</strong> <span id="summaryClient">—</span></p>
+    <p><strong>Email:</strong> <span id="summaryEmail">—</span></p>
+
+    <hr class="border-info my-2">
+
+    <!-- 🟩 Event Section -->
+    <p><strong>Event Date:</strong> <span id="summaryEventDate">—</span></p>
+    <p><strong>Event Location:</strong> <span id="summaryEventLocation">—</span></p>
+
+    <hr class="border-info my-2">
+
+    <!-- 🟨 Product Summary -->
+    <p><strong>Products:</strong> <span id="summaryProductCount">—</span></p>
+    <p><strong>Total Retail:</strong> <span id="summaryProductTotal">—</span></p>
+
+    <!-- Optional product list for quick view -->
+    <ul id="summaryProductList" class="small mt-2 text-warning" style="list-style: none; padding-left: 0;">
+      <!-- dynamically filled -->
+    </ul>
+  </div>
+</div>
+
+<div class="offcanvas offcanvas-end bg-black text-info" tabindex="-1" id="balanceDrawer">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title">Running Balance</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+  </div>
+  <div class="offcanvas-body">
+    <p><strong>Total:</strong> $0.00</p>
+    <p><strong>Paid:</strong> $0.00</p>
+    <p><strong>Balance:</strong> $0.00</p>
+  </div>
+</div>
+
+<div class="offcanvas offcanvas-end bg-black text-info" tabindex="-1" id="balanceDetailsDrawer">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title">Balance Details</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+  </div>
+  <div class="offcanvas-body">
+    <p>Breakdown of charges, discounts, and taxes will appear here.</p>
+  </div>
+</div>
+
+<!-- === Scripts === -->
+<script type="module" src="admin.js"></script>
+<script type="module" src="quote-manager.js"></script>
+</body>
+</html>
