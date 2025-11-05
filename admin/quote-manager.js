@@ -3,8 +3,11 @@
 import { initSlide1Client } from "./qm-modules/slide1-client.js";
 import { initSlide2Event } from "./qm-modules/slide2-event.js";
 import { initSlide3Products } from './qm-modules/slide3-products.js';
+import { initSlide4Other } from "./qm-modules/slide4-other.js";
+// import { initSlide5Finalize } from "./qm-modules/slide5-finalize.js";
 import { drawerEvents, initDrawers } from "./qm-modules/drawers.js";
 import { collectQuotePayload } from "./qm-modules/quote-payload.js";
+
 
 // === Carousel Initialization ===
 function initCarousel() {
@@ -143,8 +146,9 @@ async function initSlides(scriptURL) {
   await initSlide1Client(scriptURL); 
   await initSlide2Event(scriptURL);
   await initSlide3Products(scriptURL);
+  await initSlide4Other(scriptURL);
   // Future slides can be added here, e.g.:
-  // await initSlide4DiscountsFees();
+  // await initSlide5Finalize(scriptURL);
 }
 
 // === Window Load Entry Point ===

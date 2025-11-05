@@ -1,0 +1,74 @@
+/* Slide 4 Overlay Styles */
+.slide4-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.slide4-overlay-backdrop {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  top: 0;
+  left: 0;
+}
+
+.slide4-overlay-content {
+  position: relative;
+  z-index: 1;
+  max-width: 500px;   /* limits overlay width */
+  width: 90%;         /* responsive for small screens */
+  box-sizing: border-box;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+/* Prevent jitter: remove hover/scale effects on overlay itself */
+.slide4-overlay-content:hover {
+  transform: none !important;
+}
+
+/* Overlay form styling */
+.overlay-form .overlay-title {
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+
+.overlay-form .row > .col {
+  padding-bottom: 0.5rem;
+}
+
+.overlay-form .btn {
+  min-width: 70px;
+}
+
+/* Optional: smooth appearance */
+.slide4-overlay:not(.d-none) .slide4-overlay-content {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.overlay-form .form-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* label left, input right */
+  margin-bottom: 0.5rem;
+}
+
+.overlay-form .form-row label {
+  flex: 0 0 35%; /* label takes ~35% of width */
+  text-align: right;
+  margin-right: 0.5rem;
+}
+
+.overlay-form .form-row input,
+.overlay-form .form-row span {
+  flex: 1 1 auto; /* input/span fills remaining space */
+}
+

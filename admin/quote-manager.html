@@ -38,6 +38,9 @@
           <div class="circle">Products</div>
         </div>
         <div class="step">
+          <div class="circle">Other</div>
+        </div>
+        <div class="step">
           <div class="circle">Finalize</div>
         </div>
       </div>
@@ -292,80 +295,159 @@
 
 <!-- Step 4: Other -->
 <div class="carousel-item">
-  <h4 class="glow-info">Other</h4>
+  <h4 class="glow-info mb-3">Other</h4>
 
-  <!-- First Row: Add-On Fees + Balance Details -->
-  <div class="row mb-2 g-2">
-    <!-- Add-On Fees Tile -->
-    <div class="col-md-6">
-      <div class="d-flex flex-column gap-2 project-theme project-theme-tile p-2">
-        <h5 class="text-warning">Add-On Fees</h5>
-        <div class="row align-items-center">
-          <div class="col-6"><label for="deliveryFee">Delivery Fee</label></div>
-          <div class="col-6"><input type="text" class="form-control form-control-sm" id="deliveryFee"></div>
-        </div>
-        <div class="row align-items-center">
-          <div class="col-6"><label for="setupFee">Setup Fee</label></div>
-          <div class="col-6"><input type="text" class="form-control form-control-sm" id="setupFee"></div>
-        </div>
-        <div class="row align-items-center">
-          <div class="col-6"><label for="otherFee">Other Fee</label></div>
-          <div class="col-6"><input type="text" class="form-control form-control-sm" id="otherFee"></div>
-        </div>
-        <div class="row align-items-center">
-          <div class="col-6"><label for="addonsTotal">Add-ons Total</label></div>
-          <div class="col-6" id="addonsTotal"></div>
+  <!-- Smart Tiles Container -->
+  <div class="project-theme p-3">
+    <div class="row g-3">
+
+      <!-- === Add-On Fees Tile === -->
+      <div class="col-md-4">
+        <div id="addOnFeesCard" class="slide4-summary-card project-theme-tile p-3 d-flex flex-column align-items-center justify-content-center text-center" title="Click for details">
+          <div class="title fw-bold mb-1">Add-On Fees</div>
+          <div class="total text-warning fw-bold" id="addonsTotalSummary">$0.00</div>
         </div>
       </div>
+
+      <!-- === Balance Details Tile === -->
+      <div class="col-md-4">
+        <div id="balanceDetailsCard" class="slide4-summary-card project-theme-tile p-3 d-flex flex-column align-items-center justify-content-center text-center" title="Click for details">
+          <div class="title fw-bold mb-1">Balance Details</div>
+          <div class="total text-warning fw-bold" id="balanceDueSummary">$0.00</div>
+        </div>
+      </div>
+
+      <!-- === Discount Tile === -->
+      <div class="col-md-4">
+        <div id="discountCard" class="slide4-summary-card project-theme-tile p-3 d-flex flex-column align-items-center justify-content-center text-center" title="Click for details">
+          <div class="title fw-bold mb-1">Discount</div>
+          <div class="total text-warning fw-bold" id="discountSummary">0%</div>
+        </div>
+      </div>
+
     </div>
 
-    <!-- Balance Details Tile -->
-    <div class="col-md-6">
-      <div class="d-flex flex-column gap-2 project-theme project-theme-tile p-2">
-        <h5 class="text-warning">Balance Details</h5>
-        <div class="row align-items-center">
-          <div class="col-6"><label for="deposit">Deposit Amount</label></div>
-          <div class="col-6"><input type="text" class="form-control form-control-sm" id="deposit"></div>
-        </div>
-        <div class="row align-items-center">
-          <div class="col-6"><label for="amountPaid">Amount Paid</label></div>
-          <div class="col-6"><input type="text" readonly class="form-control-plaintext form-control-sm" id="amountPaid"></div>
-        </div>
-        <div class="row align-items-center">
-          <div class="col-6"><label for="balanceDue">Balance Due</label></div>
-          <div class="col-6"><input type="text" readonly class="form-control-plaintext form-control-sm" id="balanceDue"></div>
-        </div>
-        <div class="row align-items-center">
-          <div class="col-6"><label for="depositDate">Deposit Date</label></div>
-          <div class="col-6"><input type="text" class="form-control form-control-sm" id="depositDate"></div>
-        </div>
-        <div class="row align-items-center">
-          <div class="col-6"><label for="paymentMethod">Payment Method</label></div>
-          <div class="col-6">
-            <input class="form-control" list="payment-method-options" id="paymentMethod" name="paymentMethod" placeholder="Select or type method">
-            <datalist id="payment-method-options"></datalist>
-          </div>
-        </div>
-        <div class="row align-items-center">
-          <div class="col-6"><label for="balanceDueDate">Balance Due Date</label></div>
-          <div class="col-6"><input type="text" class="form-control form-control-sm" id="balanceDueDate"></div>
+    <!-- Quote Notes -->
+    <div class="row g-2 mt-3">
+      <div class="col-12">
+        <div id="quoteNotesCard" class="project-theme project-theme-tile p-3">
+          <label for="quoteNotes" class="text-warning mb-1">Quote Notes</label>
+          <textarea class="form-control" id="quoteNotes" rows="3" placeholder="Add optional notes for this quote..."></textarea>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Second Row: Quote Notes (full width) -->
-  <div class="row">
-    <div class="col-12 project-theme project-theme-tile p-2">
-      <label for="quoteNotes">Quote Notes</label>
-      <input type="text" class="form-control" id="quoteNotes">
+  <!-- === Overlays === -->
+
+  <!-- Add-On Fees Overlay -->
+  <div id="addOnFeesOverlay" class="product-overlay d-none">
+    <div class="product-form-card mx-auto" style="max-width: 300px;">
+      <h5 class="glow-info mb-3">Add-On Fees</h5>
+
+      <div class="row g-2 align-items-center">
+        <div class="col-6"><label for="overlayDeliveryFee" class="mb-0">Delivery Fee</label></div>
+        <div class="col-6"><input type="number" class="form-control" id="overlayDeliveryFee" min="0" value="0"></div>
+      </div>
+
+      <div class="row g-2 align-items-center">
+        <div class="col-6"><label for="overlaySetupFee" class="mb-0">Setup Fee</label></div>
+        <div class="col-6"><input type="number" class="form-control" id="overlaySetupFee" min="0" value="0"></div>
+      </div>
+
+      <div class="row g-2 align-items-center">
+        <div class="col-6"><label for="overlayOtherFee" class="mb-0">Other Fee</label></div>
+        <div class="col-6"><input type="number" class="form-control" id="overlayOtherFee" min="0" value="0"></div>
+      </div>
+
+      <div class="row g-2 align-items-center mt-2">
+        <div class="col-6 fw-bold">Total Retail:</div>
+        <div class="col-6 text-warning fw-bold" id="totalProductRetail">$0.00</div>
+      </div>
+
+      <div class="row g-2 mt-3 overlay-btn-group">
+        <div class="col"><button id="cancelAddOnFees" class="btn btn-outline-info w-100">Cancel</button></div>
+        <div class="col"><button id="saveAddOnFees" class="btn btn-info w-100">Save</button></div>
+      </div>
+    </div>
+  </div>
+
+<!-- Balance Details Overlay -->
+<div id="balanceDetailsOverlay" class="product-overlay d-none">
+  <div class="product-form-card mx-auto" style="width: 90%; max-width: 600px;">
+    <h5 class="glow-info mb-3">Edit Balance Details</h5>
+
+    <div class="row g-4">
+      <!-- Left Section -->
+      <div class="col-md-6">
+        <div class="row g-2 align-items-center">
+          <div class="col-6"><label for="overlayDepositDate" class="mb-0">Deposit Date</label></div>
+          <div class="col-6"><input type="text" class="form-control" id="overlayDepositDate"></div>
+
+          <div class="col-6"><label for="overlayPaymentMethod" class="mb-0">Payment Method</label></div>
+          <div class="col-6">
+            <input type="text" class="form-control" id="overlayPaymentMethod" list="payment-method-options">
+            <datalist id="payment-method-options"></datalist>
+          </div>
+
+          <div class="col-6"><label for="overlayBalanceDueDate" class="mb-0">Project Due Date</label></div>
+          <div class="col-6"><input type="text" class="form-control" id="overlayBalanceDueDate"></div>
+        </div>
+      </div>
+
+      <!-- Right Section -->
+      <div class="col-md-6">
+        <div class="row g-2 align-items-center">
+          <div class="col-6"><label for="overlayDeposit" class="mb-0">Deposit Amount</label></div>
+          <div class="col-6"><input type="number" class="form-control" id="overlayDeposit" min="0" value="0"></div>
+
+          <div class="col-6"><label for="overlayPaid" class="mb-0">Amount Paid</label></div>
+          <div class="col-6"><input type="number" class="form-control" id="overlayPaid" min="0" value="0"></div>
+
+          <div class="col-6 fw-bold text-warning">Balance Due</div>
+          <div class="col-6 fw-bold text-info" id="overlayBalance">$0.00</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-2 mt-4 overlay-btn-group">
+      <div class="col"><button id="cancelBalanceDetails" class="btn btn-outline-info w-100">Cancel</button></div>
+      <div class="col"><button id="saveBalanceDetails" class="btn btn-info w-100">Save</button></div>
+    </div>
+  </div>
+</div>
+
+  <!-- Discount Overlay -->
+  <div id="discountOverlay" class="product-overlay d-none">
+    <div class="product-form-card mx-auto" style="max-width: 300px;">
+      <h5 class="glow-info mb-3">Discount</h5>
+      <div class="row g-2 align-items-center">
+        <div class="col-8"><label for="overlayDiscountValue" class="mb-0">Discount (%)</label></div>
+        <div class="col-4"><input type="number" class="form-control" id="overlayDiscountValue" min="0" max="100" value="0"></div>
+      </div>
+      <div class="row g-2 align-items-center mt-1">
+        <div class="col-8 fw-bold">Quote Subtotal</div>
+        <div class="col-4 text-warning fw-bold" id="subTotal2">$88880.00</div>
+      </div>
+      <div class="row g-2 align-items-center mt-1">
+        <div class="col-8 fw-bold">Discount Amount</div>
+        <div class="col-4 text-danger fw-bold" id="subTotal3">$0.00</div>
+      </div>
+      <div class="row g-2 align-items-center mt-1">
+        <div class="col-8 fw-bold">After Discount</div>
+        <div class="col-4 text-warning fw-bold" id="discountedTotal">$0.00</div>
+      </div>
+      <div class="row g-2 mt-3 overlay-btn-group">
+        <div class="col"><button id="cancelDiscount" class="btn btn-outline-info w-100">Cancel</button></div>
+        <div class="col"><button id="saveDiscount" class="btn btn-info w-100">Save</button></div>
+      </div>
     </div>
   </div>
 </div>
 
       <!-- Step 5: Finalize -->
       <div class="carousel-item">
-        <h4 class="glow mb-3">Finalize Quote</h4>
+        <h4 class="glow mb-3">Finalize</h4>
         <p>Coming soon...</p>
       </div>
 
@@ -375,8 +457,8 @@
     <!-- Drawer Buttons (visible on main pane) -->
     <div class="btn-group mt-2 mt-auto m-2 pt-3 border-top border-info">
       <button class="btn" style="flex: 0 0 150px;" id="openSummary">Quote Summary</button>
-      <button class="btn" style="flex: 0 0 150px;" id="openBalance">Running Balance</button>
       <button class="btn" style="flex: 0 0 150px;" id="openBalanceDetails">Balance Details</button>
+      <button class="btn" style="flex: 0 0 150px;" id="runningTotal">Running Total</button>
     </div>
 
   </div>
@@ -438,5 +520,6 @@
 <!-- === Scripts === -->
 <script type="module" src="admin.js"></script>
 <script type="module" src="quote-manager.js"></script>
+
 </body>
 </html>
