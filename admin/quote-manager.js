@@ -33,33 +33,46 @@ function initStepsAndProgress() {
 
   function isSlideFilled(slideEl) {
     const inputs = slideEl.querySelectorAll("input, select, textarea");
-    return Array.from(inputs).some(input => input.value.trim() !== "");
+
+    return Array.from(inputs).some(input => {
+      const value = input.value.trim();
+
+      // 🟡 Ignore default zeros and empty strings
+      if (input.type === "number") {
+        const num = parseFloat(value);
+        return !isNaN(num) && num > 0;
+      }
+
+      // 🟡 Ignore placeholder "0%" or "$0.00"
+      if (value === "0" || value === "0%" || value === "$0.00") return false;
+
+      return value !== "";
+    });
   }
 
-function updateProgress() {
-  slides.forEach((slide, idx) => {
-    if (idx === 2) {
-      // 🔹 Slide 3 uses product tiles instead of input fields
-      const grid = slide.querySelector(".product-grid");
-      const productTiles = grid ? grid.querySelectorAll(".product-tile") : [];
-      slideFilled[idx] = productTiles.length > 0;
-    } else {
-      // Default rule: mark as filled if any field has a value
-      slideFilled[idx] = isSlideFilled(slide);
-    }
-  });
+  function updateProgress() {
+    slides.forEach((slide, idx) => {
+      if (idx === 2) {
+        // Slide 3 uses product tiles instead of inputs
+        const grid = slide.querySelector(".product-grid");
+        const productTiles = grid ? grid.querySelectorAll(".product-tile") : [];
+        slideFilled[idx] = productTiles.length > 0;
+      } else {
+        slideFilled[idx] = isSlideFilled(slide);
+      }
+    });
 
-  // Update visual step indicators
-  steps.forEach((step, idx) => {
-    step.classList.toggle("active", idx === currentStep);
-    step.classList.toggle("filled", slideFilled[idx]);
-  });
+    // Update step indicators
+    steps.forEach((step, idx) => {
+      step.classList.toggle("active", idx === currentStep);
+      step.classList.toggle("filled", slideFilled[idx]);
+    });
 
-  // Update progress bar width
-  const filledCount = slideFilled.filter(Boolean).length;
-  const percent = (filledCount / totalSlides) * 80;
-  if (progressBar) progressBar.style.setProperty("width", `${percent}%`, "important");
-}
+    // Update progress bar width (0–80%)
+    const filledCount = slideFilled.filter(Boolean).length;
+    const percent = (filledCount / totalSlides) * 80;
+    if (progressBar) progressBar.style.setProperty("width", `${percent}%`, "important");
+  }
 
   // Input listeners for normal slides
   slides.forEach(slide => {
@@ -142,13 +155,29 @@ function initAppDrawers() {
 }
 
 // === Slide Initialization ===
-async function initSlides(scriptURL) {
-  await initSlide1Client(scriptURL); 
-  await initSlide2Event(scriptURL);
-  await initSlide3Products(scriptURL);
-  await initSlide4Other(scriptURL);
-  // Future slides can be added here, e.g.:
-  // await initSlide5Finalize(scriptURL);
+async function initSlides() {
+  const currentQuote = {}; // 🔹 shared mutable object
+
+  await initSlide1Client(currentQuote);
+  await initSlide2Event(currentQuote);
+  await initSlide3Products(currentQuote);
+  await initSlide4Other(currentQuote);
+
+  // If you add future slides:
+  // await initSlide5Finalize(currentQuote);
+
+  // Optional: expose for debugging
+  window.currentQuote = currentQuote;
+}
+
+window.showQuote = () => {
+  console.log("🧠 Current Quote Snapshot:", window.currentQuote);
+  return window.currentQuote;
+};
+
+const debugBtn = document.getElementById("debugQuoteBtn");
+if (debugBtn) {
+  debugBtn.addEventListener("click", window.showQuote);
 }
 
 // === Window Load Entry Point ===
@@ -166,5 +195,5 @@ window.addEventListener('load', async () => {
 
   // Slide modules
   const scriptURL = window.scriptURL; // Already defined globally in global.js
-  await initSlides(scriptURL);
+  await initSlides();
 });

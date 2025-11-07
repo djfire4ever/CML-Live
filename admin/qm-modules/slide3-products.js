@@ -1,13 +1,14 @@
 // qm-modules/slide3-products.js
 import { notifyDrawer } from "./drawers.js";
 
-let products = [];
-let productData = [];
+let products = [];       // currently selected products
+let productData = [];    // cached product info
 let editingIndex = null;
 
-const SKIP_PRODUCT_FETCH = true; // set to false to enable real fetch
+const SKIP_PRODUCT_FETCH = true; // toggle to false for real fetch
 
-export async function initSlide3Products(scriptURL) {
+export async function initSlide3Products(currentQuote, scriptURL) {
+  // -------------------- DOM References --------------------
   const grid = document.querySelector(".product-grid");
   const overlay = document.getElementById("product-overlay");
   const overlayTitle = document.getElementById("overlay-title");
@@ -24,13 +25,12 @@ export async function initSlide3Products(scriptURL) {
   const deleteBtn = document.getElementById("deleteProduct");
 
   // =========================================================
-  // 🔹 Load product data
+  // Load product data
   // =========================================================
   async function loadProductData() {
-    toggleLoader(true, { message: "Loading products..." });
+    toggleLoader?.(true, { message: "Loading products..." });
     try {
       let rawData;
-
       if (SKIP_PRODUCT_FETCH) {
         rawData = [
           [1, "Test Product A", "", "", "", "", 10.5, 20],
@@ -40,18 +40,18 @@ export async function initSlide3Products(scriptURL) {
           [5, "Test Product E", "", "", "", "", 12, 25]
         ];
       } else {
-        const response = await fetch(`${scriptURL}?action=getProdDataForSearch`);
-        if (!response.ok) throw new Error(`Status: ${response.status}`);
-        rawData = await response.json();
+        const res = await fetch(`${scriptURL}?action=getProdDataForSearch`);
+        if (!res.ok) throw new Error(`Status: ${res.status}`);
+        rawData = await res.json();
       }
 
       productData = rawData
-        .filter(row => row[0] && row[1])
-        .map(row => ({
-          prodID: String(row[0]).trim(),
-          productName: String(row[1]).trim(),
-          costPrice: parseFloat(row[6]) || 0,
-          retailPrice: parseFloat(row[7]) || 0
+        .filter(r => r[0] && r[1])
+        .map(r => ({
+          prodID: String(r[0]).trim(),
+          productName: String(r[1]).trim(),
+          costPrice: parseFloat(r[6]) || 0,
+          retailPrice: parseFloat(r[7]) || 0
         }));
 
       console.log("➡️ Product data loaded", productData);
@@ -59,12 +59,12 @@ export async function initSlide3Products(scriptURL) {
       console.error("❌ Failed to load product data:", err);
       showToast?.("❌ Failed to load product list", "error");
     } finally {
-      toggleLoader(false);
+      toggleLoader?.(false);
     }
   }
 
   // =========================================================
-  // 🔹 Populate dropdown
+  // Populate dropdown
   // =========================================================
   function populateDropdown() {
     nameSelect.innerHTML = `<option value="" disabled selected>Select a product</option>`;
@@ -77,9 +77,9 @@ export async function initSlide3Products(scriptURL) {
   }
 
   // =========================================================
-  // 🔹 Update totals
+  // Overlay totals (local only)
   // =========================================================
-  function updateTotals() {
+  function updateOverlayTotals() {
     const qty = parseInt(qtyInput.value, 10) || 0;
     const cost = parseFloat(costSpan.textContent) || 0;
     const retail = parseFloat(retailSpan.textContent) || 0;
@@ -88,23 +88,19 @@ export async function initSlide3Products(scriptURL) {
     totalRetailSpan.textContent = `$${(qty * retail).toFixed(2)}`;
   }
 
-  // =========================================================
-  // 🔹 Dropdown change listener
-  // =========================================================
   nameSelect.addEventListener("change", () => {
-    const selName = nameSelect.value;
-    const prod = productData.find(p => p.productName === selName);
-    if (prod) {
-      costSpan.textContent = prod.costPrice.toFixed(2);
-      retailSpan.textContent = prod.retailPrice.toFixed(2);
-      updateTotals();
-    }
+    const prod = productData.find(p => p.productName === nameSelect.value);
+    if (!prod) return;
+
+    costSpan.textContent = prod.costPrice.toFixed(2);
+    retailSpan.textContent = prod.retailPrice.toFixed(2);
+    updateOverlayTotals();
   });
 
-  qtyInput.addEventListener("input", updateTotals);
+  qtyInput.addEventListener("input", updateOverlayTotals);
 
   // =========================================================
-  // 🔹 Render grid + summary + notify drawer
+  // Render product grid
   // =========================================================
   function renderGrid() {
     grid.innerHTML = "";
@@ -113,13 +109,9 @@ export async function initSlide3Products(scriptURL) {
       const tile = document.createElement("div");
       tile.className = "product-tile project-theme-tile";
       tile.innerHTML = `
-        <div class="name" title="${prod.productName}">
-          ${prod.productName}
-        </div>
+        <div class="name" title="${prod.productName}">${prod.productName}</div>
         <div class="bottom-row text-warning">
-          <div class="price">
-            ${prod.qty} @ $${prod.retailPrice.toFixed(2)} = $${(prod.qty * prod.retailPrice).toFixed(2)}
-          </div>
+          <div class="price">${prod.qty} × $${prod.retailPrice.toFixed(2)} = $${(prod.qty * prod.retailPrice).toFixed(2)}</div>
           <span class="delete">&times;</span>
         </div>
       `;
@@ -138,39 +130,40 @@ export async function initSlide3Products(scriptURL) {
       grid.appendChild(tile);
     });
 
-    // Add tile
+    // Add product tile
     const addTile = document.createElement("div");
     addTile.className = "add-product-tile project-theme-tile";
     addTile.innerHTML = `<i class="bi bi-plus"></i> Product`;
     addTile.addEventListener("click", () => openOverlay());
     grid.appendChild(addTile);
 
-    updateProductSummary();
+    // Update totals and currentQuote
+    updateProductTotals();
     markSlideFilled();
   }
 
   // =========================================================
-  // 🔹 Product summary + drawer sync
+  // Update product totals in currentQuote & notify drawer
   // =========================================================
-  function updateProductSummary() {
-    const card = document.getElementById("productSummaryCard");
-    if (!card) return;
-
+  function updateProductTotals() {
     const count = products.length;
+    const totalCost = products.reduce((sum, p) => sum + p.qty * p.costPrice, 0);
     const totalRetail = products.reduce((sum, p) => sum + p.qty * p.retailPrice, 0);
 
-    card.querySelector(".count").textContent = `${count} ${count === 1 ? "item" : "items"}`;
-    card.querySelector(".total").textContent = `$${totalRetail.toFixed(2)}`;
+    currentQuote.products = products;
+    currentQuote.productsCount = count;
+    currentQuote.totalProductCost = totalCost;
+    currentQuote.totalProductRetail = totalRetail;
 
-    const list = card.querySelector(".summary-list");
-    list.innerHTML = products.map(p => `
-      <li>
-        <span class="product-name text-warning">${p.productName}</span>
-        <span class="product-info text-warning">${p.qty} @ $${p.retailPrice.toFixed(2)} = $${(p.qty * p.retailPrice).toFixed(2)}</span>
-      </li>
-    `).join("");
+    // Update simple summary line in DOM if exists
+    const countSpan = document.querySelector(".summary-line .count");
+    const totalSpan = document.querySelector(".summary-line .total");
+    if (countSpan && totalSpan) {
+      countSpan.textContent = `${count} ${count === 1 ? "item" : "items"}`;
+      totalSpan.textContent = `$${totalRetail.toFixed(2)}`;
+    }
 
-    // 🔸 Notify unified summary drawer
+    // Notify drawer
     notifyDrawer("summaryDrawer", {
       productCount: count,
       productTotal: `$${totalRetail.toFixed(2)}`,
@@ -184,7 +177,7 @@ export async function initSlide3Products(scriptURL) {
   }
 
   // =========================================================
-  // 🔹 Overlay controls
+  // Overlay controls
   // =========================================================
   function openOverlay(prod = null, idx = null) {
     editingIndex = idx;
@@ -197,7 +190,7 @@ export async function initSlide3Products(scriptURL) {
     costSpan.textContent = prod?.costPrice?.toFixed(2) || "0.00";
     retailSpan.textContent = prod?.retailPrice?.toFixed(2) || "0.00";
 
-    updateTotals();
+    updateOverlayTotals();
     deleteBtn.style.display = idx !== null ? "inline-block" : "none";
   }
 
@@ -240,22 +233,21 @@ export async function initSlide3Products(scriptURL) {
   });
 
   // =========================================================
-  // 🔹 Slide filled update
+  // Slide progress
   // =========================================================
   function markSlideFilled() {
     const stepsData = window.stepsData;
-    if (!stepsData || !stepsData.slides) return;
+    if (!stepsData?.slides) return;
 
     const slideEl = grid.closest(".carousel-item");
-    if (!slideEl) return;
-
     const idx = Array.from(stepsData.slides).indexOf(slideEl);
     if (idx >= 0) stepsData.slideFilled[idx] = products.length > 0;
-    if (typeof stepsData.updateProgress === "function") stepsData.updateProgress();
+
+    stepsData.updateProgress?.();
   }
 
   // =========================================================
-  // 🔹 Initialize
+  // Initialize
   // =========================================================
   await loadProductData();
   populateDropdown();

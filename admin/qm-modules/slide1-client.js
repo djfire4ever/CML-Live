@@ -1,3 +1,4 @@
+// qm-modules/slide1-client.js
 import { notifyDrawer } from "./drawers.js";
 
 let clientData = [];
@@ -85,8 +86,10 @@ async function loadClients(scriptURL) {
   }
 }
 
-// --- Initialize Slide 1 (client search & progress integration) ---
-export async function initSlide1Client(scriptURL) {
+// =========================================================
+// Slide 1: Client Search & Summary Integration
+// =========================================================
+export async function initSlide1Client(currentQuote, scriptURL) {
   await loadClients(scriptURL);
 
   const input = document.querySelector(".clientID-input");
@@ -129,7 +132,16 @@ export async function initSlide1Client(scriptURL) {
     populateClientFields(client);
     input.value = `${client.firstName} ${client.lastName}`;
 
-    // Update progress
+    // --- Update shared state ---
+    Object.assign(currentQuote, {
+      clientID: client.clientID,
+      firstName: client.firstName,
+      lastName: client.lastName,
+      email: client.email,
+      tier: client.tier
+    });
+
+    // --- Progress tracking ---
     const stepsData = window.stepsData;
     if (stepsData && stepsData.slides) {
       const slideEl = input.closest('.carousel-item');

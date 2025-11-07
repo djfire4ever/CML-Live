@@ -1,88 +1,155 @@
 // qm-modules/slide4-other.js
+import { notifyDrawer } from "./drawers.js";
 
-// =========================================================
-// Slide 4: Other - QM Module
-// =========================================================
-export function initSlide4Other() {
-
-  function openOverlay(overlay) {
+export async function initSlide4Other(currentQuote = {}) {
+  // ------------------------
+  // Overlay Controls
+  // ------------------------
+  function openOverlay(overlayId) {
+    const overlay = document.getElementById(overlayId);
+    if (!overlay) return;
     overlay.classList.remove("d-none");
     overlay.classList.add("show");
   }
 
-  function closeOverlay(overlay) {
+  function closeOverlay(overlayId) {
+    const overlay = document.getElementById(overlayId);
+    if (!overlay) return;
     overlay.classList.remove("show");
     overlay.classList.add("d-none");
   }
 
-  function updateTotalsAddOns() {
-    const delivery = parseFloat(document.getElementById("overlayDeliveryFee").value) || 0;
-    const setup = parseFloat(document.getElementById("overlaySetupFee").value) || 0;
-    const other = parseFloat(document.getElementById("overlayOtherFee").value) || 0;
-    const total = delivery + setup + other;
-    document.getElementById("overlayAddonsTotal").textContent = `$${total.toFixed(2)}`;
+  // ------------------------
+  // Core Calculation Chain
+  // ------------------------
+  function recalcTotals() {
+    const totalProductRetail = currentQuote.totalProductRetail || 0; // ✅ now reliable
+    const addonsTotal = currentQuote.addonsTotal || 0;
+    const discount = currentQuote.discount || 0;
+    const deposit = currentQuote.deposit || 0;
+    const amountPaid = currentQuote.amountPaid || 0;
+
+    const discountAmount = totalProductRetail * (discount / 100);
+    const discountedTotal = totalProductRetail - discountAmount;
+    const grandTotal = discountedTotal + addonsTotal;
+    const appliedPayment = amountPaid > 0 ? amountPaid : deposit;
+    const balanceDue = grandTotal - appliedPayment;
+
+    // Update quote object
+    Object.assign(currentQuote, {
+      discountedTotal,
+      grandTotal,
+      balanceDue
+    });
+
+    // Reflect in UI
+    document.getElementById("discountedTotal").textContent = `$${discountedTotal.toFixed(2)}`;
+    document.getElementById("balanceDue").textContent = `$${balanceDue.toFixed(2)}`;
+
+    // Notify drawers
+    notifyDrawer("summaryDrawer", { discountedTotal, grandTotal });
+    notifyDrawer("balanceDrawer", { total: grandTotal, paid: appliedPayment, balance: balanceDue });
   }
 
-  function updateTotalsBalance() {
-    const deposit = parseFloat(document.getElementById("overlayDeposit").value) || 0;
-    const paid = parseFloat(document.getElementById("overlayPaid").value) || 0;
-    const balance = deposit - paid;
-    document.getElementById("overlayBalance").textContent = `$${balance.toFixed(2)}`;
+  // ------------------------
+  // Overlay-Specific Updates
+  // ------------------------
+  function updateAddOns() {
+    const deliveryFee = parseFloat(document.getElementById("deliveryFee")?.value) || 0;
+    const setupFee = parseFloat(document.getElementById("setupFee")?.value) || 0;
+    const otherFee = parseFloat(document.getElementById("otherFee")?.value) || 0;
+    const addonsTotal = deliveryFee + setupFee + otherFee;
+
+    Object.assign(currentQuote, { deliveryFee, setupFee, otherFee, addonsTotal });
+
+    document.getElementById("addonsTotal").textContent = `$${addonsTotal.toFixed(2)}`;
+    document.getElementById("addonsTotalSummary").textContent = `$${addonsTotal.toFixed(2)}`;
+
+    notifyDrawer("summaryDrawer", { addonsTotal });
+    recalcTotals();
+    markSlideFilled();
   }
 
-  function updateTotalsDiscount() {
-    let val = parseFloat(document.getElementById("overlayDiscountValue").value) || 0;
-    if (val < 0) val = 0;
-    if (val > 100) val = 100;
+  function updateDiscount() {
+    let discount = parseFloat(document.getElementById("discount")?.value) || 0;
+    discount = Math.max(0, Math.min(discount, 100));
+    currentQuote.discount = discount;
+
+    document.getElementById("discount").value = discount;
+    document.getElementById("discountSummary").textContent = `${discount}%`;
+
+    recalcTotals();
+    markSlideFilled();
+  }
+
+  function updateBalance() {
+    const deposit = parseFloat(document.getElementById("deposit")?.value) || 0;
+    const amountPaid = parseFloat(document.getElementById("amountPaid")?.value) || 0;
+
+    Object.assign(currentQuote, { deposit, amountPaid });
+
+    recalcTotals();
+    markSlideFilled();
   }
 
   // ------------------------
-  // Add-On Fees
+  // Mark Slide Filled
   // ------------------------
-  const addOnOverlay = document.getElementById("addOnFeesOverlay");
-  document.getElementById("addOnFeesCard").addEventListener("click", () => openOverlay(addOnOverlay));
+  function markSlideFilled() {
+    const stepsData = window.stepsData;
+    if (!stepsData?.slides) return;
 
-  ["overlayDeliveryFee","overlaySetupFee","overlayOtherFee"].forEach(id => {
-    document.getElementById(id).addEventListener("input", updateTotalsAddOns);
-  });
+    const slideEl = document.getElementById("slide4OtherCarouselItem");
+    if (!slideEl) return;
 
-  document.getElementById("saveAddOnFees").addEventListener("click", () => {
-    updateTotalsAddOns();
-    document.getElementById("addonsTotalSummary").textContent = document.getElementById("overlayAddonsTotal").textContent;
-    closeOverlay(addOnOverlay);
-  });
-  document.getElementById("cancelAddOnFees").addEventListener("click", () => closeOverlay(addOnOverlay));
+    const idx = Array.from(stepsData.slides).indexOf(slideEl);
+    if (idx < 0) return;
 
-  // ------------------------
-  // Balance Details
-  // ------------------------
-  const balanceOverlay = document.getElementById("balanceDetailsOverlay");
-  document.getElementById("balanceDetailsCard").addEventListener("click", () => openOverlay(balanceOverlay));
+    const filled = [
+      currentQuote.deliveryFee,
+      currentQuote.setupFee,
+      currentQuote.otherFee,
+      currentQuote.deposit,
+      currentQuote.amountPaid,
+      currentQuote.discount
+    ].some(v => v > 0);
 
-  ["overlayDeposit","overlayPaid"].forEach(id => {
-    document.getElementById(id).addEventListener("input", updateTotalsBalance);
-  });
-
-  document.getElementById("saveBalanceDetails").addEventListener("click", () => {
-    updateTotalsBalance();
-    document.getElementById("balanceDueSummary").textContent = document.getElementById("overlayBalance").textContent;
-    closeOverlay(balanceOverlay);
-  });
-  document.getElementById("cancelBalanceDetails").addEventListener("click", () => closeOverlay(balanceOverlay));
+    stepsData.slideFilled[idx] = filled;
+    stepsData.updateProgress?.();
+  }
 
   // ------------------------
-  // Discount
+  // Event Listeners
   // ------------------------
-  const discountOverlay = document.getElementById("discountOverlay");
-  document.getElementById("discountCard").addEventListener("click", () => openOverlay(discountOverlay));
-
-  document.getElementById("overlayDiscountValue").addEventListener("input", updateTotalsDiscount);
-
-  document.getElementById("saveDiscount").addEventListener("click", () => {
-    updateTotalsDiscount();
-    const val = parseFloat(document.getElementById("overlayDiscountValue").value) || 0;
-    document.getElementById("discountSummary").textContent = `${val}%`;
-    closeOverlay(discountOverlay);
+  // Add-On Fees Overlay
+  document.getElementById("addOnFeesCard")?.addEventListener("click", () => openOverlay("addOnFeesOverlay"));
+  ["deliveryFee", "setupFee", "otherFee"].forEach(id =>
+    document.getElementById(id)?.addEventListener("input", updateAddOns)
+  );
+  document.getElementById("saveAddOnFees")?.addEventListener("click", () => {
+    updateAddOns();
+    closeOverlay("addOnFeesOverlay");
   });
-  document.getElementById("cancelDiscount").addEventListener("click", () => closeOverlay(discountOverlay));
+  document.getElementById("cancelAddOnFees")?.addEventListener("click", () => closeOverlay("addOnFeesOverlay"));
+
+  // Balance Overlay
+  document.getElementById("balanceDetailsCard")?.addEventListener("click", () => openOverlay("balanceDetailsOverlay"));
+  ["deposit", "amountPaid"].forEach(id =>
+    document.getElementById(id)?.addEventListener("input", updateBalance)
+  );
+  document.getElementById("saveBalanceDetails")?.addEventListener("click", () => {
+    updateBalance();
+    document.getElementById("balanceDueSummary").textContent = document.getElementById("balanceDue")?.textContent;
+    closeOverlay("balanceDetailsOverlay");
+  });
+  document.getElementById("cancelBalanceDetails")?.addEventListener("click", () => closeOverlay("balanceDetailsOverlay"));
+
+  // Discount Overlay
+  document.getElementById("discountCard")?.addEventListener("click", () => openOverlay("discountOverlay"));
+  document.getElementById("discount")?.addEventListener("input", updateDiscount);
+  document.getElementById("saveDiscount")?.addEventListener("click", () => {
+    updateDiscount();
+    closeOverlay("discountOverlay");
+  });
+  document.getElementById("cancelDiscount")?.addEventListener("click", () => closeOverlay("discountOverlay"));
 }

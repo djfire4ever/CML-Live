@@ -1,8 +1,15 @@
+// qm-modules/slide2-event.js
 import { notifyDrawer } from "./drawers.js";
 
-export function initSlide2Event() {
+// =========================================================
+// Slide 2: Event Details - QM Module
+// =========================================================
+export function initSlide2Event(currentQuote) {
   const eventDateInput = document.getElementById("eventDate");
   const eventLocationInput = document.getElementById("eventLocation");
+  const dueDateInput = document.getElementById("dueDate");
+  const eventNotesInput = document.getElementById("eventNotes");
+  const eventThemeInput = document.getElementById("eventTheme");
 
   if (!eventDateInput || !eventLocationInput) {
     console.warn("⚠️ Slide 2 event inputs not found");
@@ -12,22 +19,38 @@ export function initSlide2Event() {
   function updateSummary() {
     const eventDateValue = eventDateInput.value || "";
     const eventLocationValue = eventLocationInput.value || "";
+    const dueDateValue = dueDateInput?.value || "";
+    const eventNotesValue = eventNotesInput?.value || "";
+    const eventThemeValue = eventThemeInput?.value || "";
 
-    // Notify summary drawer using unified state
+    // --- Update shared quote state ---
+    Object.assign(currentQuote, {
+      eventDate: eventDateValue,
+      dueDate: dueDateValue,
+      eventLocation: eventLocationValue,
+      eventNotes: eventNotesValue,
+      eventTheme: eventThemeValue
+    });
+
+    // --- Notify summary drawer using unified state ---
     notifyDrawer("summaryDrawer", {
       eventDate: eventDateValue,
       eventLocation: eventLocationValue
     });
   }
 
-  // Listen for changes or blur events
-  eventDateInput.addEventListener("input", updateSummary);
-  eventLocationInput.addEventListener("input", updateSummary);
-  eventDateInput.addEventListener("blur", updateSummary);
-  eventLocationInput.addEventListener("blur", updateSummary);
+  // --- Event listeners (on input & blur) ---
+  [eventDateInput, eventLocationInput, dueDateInput, eventNotesInput, eventThemeInput].forEach(el => {
+    if (el) {
+      el.addEventListener("input", updateSummary);
+      el.addEventListener("blur", updateSummary);
+    }
+  });
 }
 
-// Optional: getter for payload aggregation
+// =========================================================
+// Optional Getter for Aggregation
+// =========================================================
 export function getEventDetails() {
   return {
     eventDate: formatDateForServer(document.getElementById("eventDate")?.value) || "",
