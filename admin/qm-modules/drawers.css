@@ -17,3 +17,64 @@
 .offcanvas-body hr {
   border-color: rgba(var(--bs-info-rgb), 0.25);
 }
+/* New receipt drawer styles */
+
+.receipt { 
+  font-family: "Courier New", monospace; 
+  font-size: 0.9rem; 
+  color: var(--bs-info); 
+}
+
+.receipt-header { text-align: center; margin-bottom: 0.5rem; }
+.receipt-products .product-row,
+.receipt-subtotals div,
+.receipt-addons div,
+.receipt-total div { 
+  display: flex; 
+  justify-content: space-between; 
+  margin-bottom: 0.2rem; 
+}
+
+.receipt-products .product-row { border-bottom: 1px dashed #555; padding: 0.2rem 0; }
+.receipt-subtotals, .receipt-addons { margin-top: 0.5rem; border-top: 1px dashed #555; padding-top: 0.3rem; }
+.receipt-total { font-weight: bold; border-top: 1px solid #fff; padding-top: 0.5rem; margin-top: 0.5rem; }
+.receipt-footer { text-align: center; font-size: 0.8rem; margin-top: 0.5rem; color: #ccc; }
+.no-products { font-style: italic; }
+
+.receipt-products .product-row {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px dashed #555;
+  padding: 0.2rem 0;
+  font-size: 0.85rem;
+}
+
+.receipt-products .product-row .name { flex: 2; }
+.receipt-products .product-row .qty,
+.receipt-products .product-row .unit,
+.receipt-products .product-row .price,
+.receipt-products .product-row .total { flex: 1; text-align: right; }
+
+.selected-products {
+  margin-bottom: 1rem;
+}
+
+.selected-products .product-list {
+  margin-left: 1.2rem; /* indent the list */
+  margin-top: 0.3rem;
+}
+
+.selected-products .product-row {
+  display: flex;
+  gap: 0.5rem; /* space between columns */
+  font-size: 0.85rem;
+}
+.receipt-products .product-row {
+  margin-bottom: 0; /* remove line spacing */
+}
+.product-subtotal {
+  margin-top: 0.25rem; /* small gap above subtotal */
+  font-weight: bold;
+  display: flex;
+  justify-content: space-between;
+}

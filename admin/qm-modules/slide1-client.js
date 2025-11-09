@@ -153,7 +153,7 @@ export async function initSlide1Client(currentQuote, scriptURL) {
     }
 
     // --- Notify summary drawer using unified state ---
-    notifyDrawer("summaryDrawer", {
+    notifyDrawer("quoteSummaryDrawer", {
       name: `${client.firstName} ${client.lastName}`,
       clientID: client.clientID,
       email: client.email

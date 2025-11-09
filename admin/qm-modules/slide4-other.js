@@ -23,36 +23,72 @@ export async function initSlide4Other(currentQuote = {}) {
   // Core Calculation Chain
   // ------------------------
   function recalcTotals() {
-    const totalProductRetail = currentQuote.totalProductRetail || 0; // ✅ now reliable
-    const addonsTotal = currentQuote.addonsTotal || 0;
-    const discount = currentQuote.discount || 0;
-    const deposit = currentQuote.deposit || 0;
-    const amountPaid = currentQuote.amountPaid || 0;
+    // --- Product totals ---
+    const totalProductRetail = currentQuote.products?.reduce(
+      (sum, p) => sum + (p.retailPrice * p.qty),
+      0
+    ) || 0;
 
-    const discountAmount = totalProductRetail * (discount / 100);
-    const discountedTotal = totalProductRetail - discountAmount;
-    const grandTotal = discountedTotal + addonsTotal;
-    const appliedPayment = amountPaid > 0 ? amountPaid : deposit;
-    const balanceDue = grandTotal - appliedPayment;
+    const totalProductCost = currentQuote.products?.reduce(
+      (sum, p) => sum + (p.costPrice * p.qty),
+      0
+    ) || 0;
 
-    // Update quote object
+    currentQuote.totalProductRetail = totalProductRetail;
+    currentQuote.totalProductCost = totalProductCost;
+
+    // --- Other inputs ---
+    const deliveryFee = parseFloat(document.getElementById("deliveryFee")?.value) || 0;
+    const setupFee = parseFloat(document.getElementById("setupFee")?.value) || 0;
+    const otherFee = parseFloat(document.getElementById("otherFee")?.value) || 0;
+    const addonsTotal = deliveryFee + setupFee + otherFee;
+
+    const discount = parseFloat(document.getElementById("discount")?.value) || 0;
+    const deposit = parseFloat(document.getElementById("deposit")?.value) || 0;
+    const amountPaid = parseFloat(document.getElementById("amountPaid")?.value) || 0;
+
     Object.assign(currentQuote, {
+      addonsTotal,
+      discount,
+      deposit,
+      amountPaid,
+      deliveryFee,
+      setupFee,
+      otherFee
+    });
+
+    // --- Calculations ---
+    const taxRate = 0.08875;
+    const subTotal1 = parseFloat((totalProductRetail * taxRate).toFixed(2));
+    const subTotal2 = parseFloat((totalProductRetail + subTotal1).toFixed(2));
+    const subTotal3 = parseFloat((totalProductRetail * (discount / 100)).toFixed(2));
+    const discountedTotal = parseFloat((subTotal2 - subTotal3).toFixed(2));
+    const grandTotal = parseFloat((discountedTotal + addonsTotal).toFixed(2));
+    const appliedPayment = amountPaid > 0 ? amountPaid : deposit;
+    const balanceDue = parseFloat((grandTotal - appliedPayment).toFixed(2));
+
+    Object.assign(currentQuote, {
+      subTotal1,
+      subTotal2,
+      subTotal3,
       discountedTotal,
       grandTotal,
       balanceDue
     });
 
-    // Reflect in UI
-    document.getElementById("discountedTotal").textContent = `$${discountedTotal.toFixed(2)}`;
-    document.getElementById("balanceDue").textContent = `$${balanceDue.toFixed(2)}`;
+    // --- Update UI ---
+    const fmt = val => `$${val.toFixed(2)}`;
+    document.getElementById("discountedTotal").textContent = fmt(discountedTotal);
+    document.getElementById("balanceDue").textContent = fmt(balanceDue);
 
-    // Notify drawers
+    // --- Notify drawers ---
     notifyDrawer("summaryDrawer", { discountedTotal, grandTotal });
     notifyDrawer("balanceDrawer", { total: grandTotal, paid: appliedPayment, balance: balanceDue });
+    notifyDrawer("runningTotalDrawer", { quote: currentQuote });
   }
 
   // ------------------------
-  // Overlay-Specific Updates
+  // Slide 4 input update handlers
   // ------------------------
   function updateAddOns() {
     const deliveryFee = parseFloat(document.getElementById("deliveryFee")?.value) || 0;
@@ -121,7 +157,6 @@ export async function initSlide4Other(currentQuote = {}) {
   // ------------------------
   // Event Listeners
   // ------------------------
-  // Add-On Fees Overlay
   document.getElementById("addOnFeesCard")?.addEventListener("click", () => openOverlay("addOnFeesOverlay"));
   ["deliveryFee", "setupFee", "otherFee"].forEach(id =>
     document.getElementById(id)?.addEventListener("input", updateAddOns)
@@ -132,7 +167,6 @@ export async function initSlide4Other(currentQuote = {}) {
   });
   document.getElementById("cancelAddOnFees")?.addEventListener("click", () => closeOverlay("addOnFeesOverlay"));
 
-  // Balance Overlay
   document.getElementById("balanceDetailsCard")?.addEventListener("click", () => openOverlay("balanceDetailsOverlay"));
   ["deposit", "amountPaid"].forEach(id =>
     document.getElementById(id)?.addEventListener("input", updateBalance)
@@ -144,12 +178,20 @@ export async function initSlide4Other(currentQuote = {}) {
   });
   document.getElementById("cancelBalanceDetails")?.addEventListener("click", () => closeOverlay("balanceDetailsOverlay"));
 
-  // Discount Overlay
   document.getElementById("discountCard")?.addEventListener("click", () => openOverlay("discountOverlay"));
   document.getElementById("discount")?.addEventListener("input", updateDiscount);
   document.getElementById("saveDiscount")?.addEventListener("click", () => {
     updateDiscount();
     closeOverlay("discountOverlay");
   });
-  document.getElementById("cancelDiscount")?.addEventListener("click", () => closeOverlay("discountOverlay"));
+
+  // ------------------------
+  // Listen for live updates from Slide 3
+  // ------------------------
+  document.addEventListener("quoteDataChanged", () => {
+    recalcTotals();
+  });
+
+  // Initial calculation to populate drawers
+  recalcTotals();
 }

@@ -24,26 +24,23 @@ export async function initSlide3Products(currentQuote, scriptURL) {
   const cancelBtn = document.getElementById("cancelProduct");
   const deleteBtn = document.getElementById("deleteProduct");
 
-  // =========================================================
-  // Load product data
-  // =========================================================
+  // -------------------- Load product data --------------------
   async function loadProductData() {
     toggleLoader?.(true, { message: "Loading products..." });
     try {
-      let rawData;
-      if (SKIP_PRODUCT_FETCH) {
-        rawData = [
-          [1, "Test Product A", "", "", "", "", 10.5, 20],
-          [2, "Test Product B", "", "", "", "", 5, 12.5],
-          [3, "Test Product C", "", "", "", "", 7.25, 15],
-          [4, "Test Product D", "", "", "", "", 2.5, 5],
-          [5, "Test Product E", "", "", "", "", 12, 25]
-        ];
-      } else {
-        const res = await fetch(`${scriptURL}?action=getProdDataForSearch`);
-        if (!res.ok) throw new Error(`Status: ${res.status}`);
-        rawData = await res.json();
-      }
+      let rawData = SKIP_PRODUCT_FETCH
+        ? [
+            [1, "Test Product A", "", "", "", "", 10.5, 20],
+            [2, "Test Product B", "", "", "", "", 5, 12.5],
+            [3, "Test Product C", "", "", "", "", 7.25, 15],
+            [4, "Test Product D", "", "", "", "", 2.5, 5],
+            [5, "Test Product E", "", "", "", "", 12, 25]
+          ]
+        : await (async () => {
+            const res = await fetch(`${scriptURL}?action=getProdDataForSearch`);
+            if (!res.ok) throw new Error(`Status: ${res.status}`);
+            return await res.json();
+          })();
 
       productData = rawData
         .filter(r => r[0] && r[1])
@@ -63,9 +60,7 @@ export async function initSlide3Products(currentQuote, scriptURL) {
     }
   }
 
-  // =========================================================
-  // Populate dropdown
-  // =========================================================
+  // -------------------- Populate dropdown --------------------
   function populateDropdown() {
     nameSelect.innerHTML = `<option value="" disabled selected>Select a product</option>`;
     productData.forEach(p => {
@@ -76,9 +71,7 @@ export async function initSlide3Products(currentQuote, scriptURL) {
     });
   }
 
-  // =========================================================
-  // Overlay totals (local only)
-  // =========================================================
+  // -------------------- Overlay totals --------------------
   function updateOverlayTotals() {
     const qty = parseInt(qtyInput.value, 10) || 0;
     const cost = parseFloat(costSpan.textContent) || 0;
@@ -99,9 +92,7 @@ export async function initSlide3Products(currentQuote, scriptURL) {
 
   qtyInput.addEventListener("input", updateOverlayTotals);
 
-  // =========================================================
-  // Render product grid
-  // =========================================================
+  // -------------------- Render grid --------------------
   function renderGrid() {
     grid.innerHTML = "";
 
@@ -130,21 +121,17 @@ export async function initSlide3Products(currentQuote, scriptURL) {
       grid.appendChild(tile);
     });
 
-    // Add product tile
     const addTile = document.createElement("div");
     addTile.className = "add-product-tile project-theme-tile";
     addTile.innerHTML = `<i class="bi bi-plus"></i> Product`;
     addTile.addEventListener("click", () => openOverlay());
     grid.appendChild(addTile);
 
-    // Update totals and currentQuote
     updateProductTotals();
     markSlideFilled();
   }
 
-  // =========================================================
-  // Update product totals in currentQuote & notify drawer
-  // =========================================================
+  // -------------------- Update totals & notify drawers --------------------
   function updateProductTotals() {
     const count = products.length;
     const totalCost = products.reduce((sum, p) => sum + p.qty * p.costPrice, 0);
@@ -155,7 +142,6 @@ export async function initSlide3Products(currentQuote, scriptURL) {
     currentQuote.totalProductCost = totalCost;
     currentQuote.totalProductRetail = totalRetail;
 
-    // Update simple summary line in DOM if exists
     const countSpan = document.querySelector(".summary-line .count");
     const totalSpan = document.querySelector(".summary-line .total");
     if (countSpan && totalSpan) {
@@ -163,8 +149,7 @@ export async function initSlide3Products(currentQuote, scriptURL) {
       totalSpan.textContent = `$${totalRetail.toFixed(2)}`;
     }
 
-    // Notify drawer
-    notifyDrawer("summaryDrawer", {
+    notifyDrawer("quoteSummaryDrawer", {
       productCount: count,
       productTotal: `$${totalRetail.toFixed(2)}`,
       productList: products.map(p => ({
@@ -174,11 +159,11 @@ export async function initSlide3Products(currentQuote, scriptURL) {
         total: (p.qty * p.retailPrice).toFixed(2)
       }))
     });
+
+    notifyDrawer("runningTotalDrawer", { quote: currentQuote });
   }
 
-  // =========================================================
-  // Overlay controls
-  // =========================================================
+  // -------------------- Overlay controls --------------------
   function openOverlay(prod = null, idx = null) {
     editingIndex = idx;
     overlay.classList.remove("d-none");
@@ -232,9 +217,7 @@ export async function initSlide3Products(currentQuote, scriptURL) {
     }
   });
 
-  // =========================================================
-  // Slide progress
-  // =========================================================
+  // -------------------- Slide progress --------------------
   function markSlideFilled() {
     const stepsData = window.stepsData;
     if (!stepsData?.slides) return;
@@ -246,9 +229,7 @@ export async function initSlide3Products(currentQuote, scriptURL) {
     stepsData.updateProgress?.();
   }
 
-  // =========================================================
-  // Initialize
-  // =========================================================
+  // -------------------- Initialize --------------------
   await loadProductData();
   populateDropdown();
   renderGrid();

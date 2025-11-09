@@ -33,7 +33,7 @@ export function initSlide2Event(currentQuote) {
     });
 
     // --- Notify summary drawer using unified state ---
-    notifyDrawer("summaryDrawer", {
+    notifyDrawer("quoteSummaryDrawer", {
       eventDate: eventDateValue,
       eventLocation: eventLocationValue
     });

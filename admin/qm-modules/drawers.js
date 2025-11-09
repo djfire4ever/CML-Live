@@ -1,11 +1,9 @@
-// qm-modules/drawers.js
-
 // --- Event dispatcher for slides to notify drawers ---
 export const drawerEvents = new EventTarget();
 
 // --- Central drawer state ---
 const drawerState = {
-  summaryDrawer: {
+  quoteSummaryDrawer: {
     name: null,
     clientID: null,
     email: null,
@@ -15,77 +13,67 @@ const drawerState = {
     productTotal: "$0.00",
     productList: []
   },
-  balanceDrawer: {
-    total: 0,
-    paid: 0,
-    balance: 0
-  },
   balanceDetailsDrawer: {
     items: []
+  },
+  runningTotalDrawer: {
+    html: ""
   }
 };
 
-// --- Drawer rendering ---
+// =========================================================
+// 🧩 Drawer Rendering
+// =========================================================
 function renderDrawer(drawerName) {
   switch (drawerName) {
-    // =========================================================
-    // 🔹 Summary Drawer
-    // =========================================================
-    case "summaryDrawer": {
-      const s = drawerState.summaryDrawer;
-      const sumClient = document.getElementById("summaryClient");
-      const sumEmail = document.getElementById("summaryEmail");
-      const sumEventDate = document.getElementById("summaryEventDate");
-      const sumEventLocation = document.getElementById("summaryEventLocation");
-      const sumProductCount = document.getElementById("summaryProductCount");
-      const sumProductTotal = document.getElementById("summaryProductTotal");
-      const sumProductList = document.getElementById("summaryProductList");
+    case "quoteSummaryDrawer": {
+      const s = drawerState.quoteSummaryDrawer;
 
-      if (sumClient) sumClient.textContent = s.name ? `${s.name} (${s.clientID})` : "---";
-      if (sumEmail) sumEmail.textContent = s.email || "---";
-      if (sumEventDate) sumEventDate.textContent = s.eventDate ? formatDateForUser(s.eventDate) : "—";
-      if (sumEventLocation) sumEventLocation.textContent = s.eventLocation || "—";
+      const summaryClientEl = document.getElementById("summaryClient");
+      if (summaryClientEl) summaryClientEl.textContent = s.name ? `${s.name} (${s.clientID})` : "—";
 
-      if (sumProductCount) sumProductCount.textContent = `${s.productCount ?? 0} items`;
-      if (sumProductTotal) sumProductTotal.textContent = s.productTotal || "$0.00";
+      const summaryEmailEl = document.getElementById("summaryEmail");
+      if (summaryEmailEl) summaryEmailEl.textContent = s.email || "—";
 
-      if (sumProductList) {
-        sumProductList.innerHTML = (s.productList?.length)
-          ? s.productList.map(p => `
-              <li class="text-warning">
-                ${p.name} — ${p.qty} × $${p.retail.toFixed(2)} = $${p.total}
-              </li>
-            `).join("")
+      const summaryEventDateEl = document.getElementById("summaryEventDate");
+      if (summaryEventDateEl) summaryEventDateEl.textContent = s.eventDate || "—";
+
+      const summaryEventLocationEl = document.getElementById("summaryEventLocation");
+      if (summaryEventLocationEl) summaryEventLocationEl.textContent = s.eventLocation || "—";
+
+      const summaryProductCountEl = document.getElementById("summaryProductCount");
+      if (summaryProductCountEl) summaryProductCountEl.textContent = `${s.productCount ?? 0} items`;
+
+      const summaryProductTotalEl = document.getElementById("summaryProductTotal");
+      if (summaryProductTotalEl) summaryProductTotalEl.textContent = s.productTotal || "$0.00";
+
+      const summaryProductListEl = document.getElementById("summaryProductList");
+      if (summaryProductListEl) {
+        summaryProductListEl.innerHTML = s.productList?.length
+          ? s.productList.map(p => `<li class="text-warning">${p.name} — ${p.qty} × $${p.retail.toFixed(2)} = $${p.total}</li>`).join("")
           : "<li>No products selected</li>";
       }
       break;
     }
 
-    // =========================================================
-    // 🔹 Balance Drawer
-    // =========================================================
-    case "balanceDrawer": {
-      const s = drawerState.balanceDrawer;
-      const totalEl = document.querySelector("#balanceDrawer p:nth-child(1)");
-      const paidEl = document.querySelector("#balanceDrawer p:nth-child(2)");
-      const balanceEl = document.querySelector("#balanceDrawer p:nth-child(3)");
-
-      if (totalEl) totalEl.textContent = `Total: $${s.total ?? "0.00"}`;
-      if (paidEl) paidEl.textContent = `Paid: $${s.paid ?? "0.00"}`;
-      if (balanceEl) balanceEl.textContent = `Balance: $${s.balance ?? "0.00"}`;
+    case "balanceDetailsDrawer": {
+      const s = drawerState.balanceDetailsDrawer;
+      const containerEl = document.getElementById("balanceDetailsDrawer");
+      if (containerEl) {
+        const bodyEl = containerEl.querySelector(".offcanvas-body");
+        if (bodyEl) {
+          bodyEl.innerHTML = s.items?.length
+            ? `<ul>${s.items.map(i => `<li>${i.desc}: ${i.amount}</li>`).join("")}</ul>`
+            : "<p>No items yet</p>";
+        }
+      }
       break;
     }
 
-    // =========================================================
-    // 🔹 Balance Details Drawer
-    // =========================================================
-    case "balanceDetailsDrawer": {
-      const s = drawerState.balanceDetailsDrawer;
-      const itemsContainer = document.getElementById("balanceDetailsItems");
-      if (itemsContainer) {
-        itemsContainer.innerHTML = s.items?.length
-          ? s.items.map(item => `<li>${item.desc}: ${item.amount}</li>`).join("")
-          : "<p>No items</p>";
+    case "runningTotalDrawer": {
+      const containerEl = document.getElementById("runningTotalBody");
+      if (containerEl) {
+        containerEl.innerHTML = drawerState.runningTotalDrawer.html || "<p>No totals available</p>";
       }
       break;
     }
@@ -95,21 +83,23 @@ function renderDrawer(drawerName) {
   }
 }
 
-// --- Initialize all drawers and buttons ---
+// =========================================================
+// 🧩 Initialization
+// =========================================================
 export function initDrawers() {
   const drawerMap = {
-    summaryDrawer: "openSummary",
-    balanceDrawer: "openBalance",
-    balanceDetailsDrawer: "openBalanceDetails"
+    quoteSummaryDrawer: "openQuoteSummary",
+    balanceDetailsDrawer: "openBalanceDetails",
+    runningTotalDrawer: "openRunningTotal"
   };
 
   const drawerInstances = {};
 
-  // Initialize Bootstrap Offcanvas instances
+  // Bootstrap Offcanvas init
   Object.keys(drawerMap).forEach(drawerId => {
-    const drawerEl = document.getElementById(drawerId);
-    if (!drawerEl) return;
-    drawerInstances[drawerId] = new bootstrap.Offcanvas(drawerEl);
+    const el = document.getElementById(drawerId);
+    if (!el) return;
+    drawerInstances[drawerId] = new bootstrap.Offcanvas(el);
   });
 
   // Button click handlers
@@ -122,23 +112,86 @@ export function initDrawers() {
       Object.entries(drawerInstances).forEach(([otherId, instance]) => {
         if (otherId !== drawerId) instance.hide();
       });
-
-      // Open this drawer
-      drawerInstances[drawerId].show();
+      drawerInstances[drawerId]?.show();
     });
   });
 
-  // Listen for unified slide updates
+  // Unified update listener
   drawerEvents.addEventListener("updateDrawer", (e) => {
     const { drawer, fields } = e.detail;
     if (!drawerState[drawer]) return;
+
+    // Running totals special handling
+    // Inside drawerEvents listener in initDrawers()
+    if (drawer === "runningTotalDrawer" && fields.quote) {
+      const q = fields.quote;
+
+const productsHtml = (q.products?.length
+  ? `
+    <p><strong>Selected Products:</strong></p>
+    ${q.products.map(p => `
+      <div class="product-row">
+        <span class="name">${p.productName}</span>
+        <span class="qty">${p.qty}</span> @
+        <span class="price">$${(p.retailPrice ?? 0).toFixed(2)}</span> =
+        <span class="total">$${((p.qty || 0) * (p.retailPrice ?? 0)).toFixed(2)}</span>
+      </div>
+    `).join("")}
+    <div class="product-subtotal">
+      <strong>Subtotal:</strong> $${(q.totalProductRetail ?? 0).toFixed(2)}
+    </div>
+  `
+  : "<div class='no-products'>No products selected</div>"
+);
+
+      const totalsHtml = `
+        <div class="receipt">
+          <div class="receipt-header">
+            <p>Generated: ${new Date().toLocaleDateString()}</p>
+          </div>
+
+          <div class="receipt-products">
+            ${productsHtml}
+          </div>
+
+          <div class="receipt-subtotals">
+            <div><span>Sales Tax (8.875%):</span><span>$${(q.subTotal1 ?? 0).toFixed(2)}</span></div>
+            <div><span>Discount (${q.discount ?? 0}%):</span><span>$${(q.subTotal3 ?? 0).toFixed(2)}</span></div>
+            <div><span>After Discount:</span><span>$${(q.discountedTotal ?? 0).toFixed(2)}</span></div>
+          </div>
+
+          <div class="receipt-addons">
+            <div><span>Delivery:</span><span>$${(q.deliveryFee ?? 0).toFixed(2)}</span></div>
+            <div><span>Setup:</span><span>$${(q.setupFee ?? 0).toFixed(2)}</span></div>
+            <div><span>Other:</span><span>$${(q.otherFee ?? 0).toFixed(2)}</span></div>
+            <div><span>Add-ons Total:</span><span>$${(q.addonsTotal ?? 0).toFixed(2)}</span></div>
+          </div>
+
+          <div class="receipt-total">
+            <div><strong>Grand Total:</strong><span>$${(q.grandTotal ?? 0).toFixed(2)}</span></div>
+            <div><span>Deposit:</span><span>$${(q.deposit ?? 0).toFixed(2)}</span></div>
+            <div><strong>Balance Due:</strong><span>$${(q.balanceDue ?? 0).toFixed(2)}</span></div>
+          </div>
+
+          <div class="receipt-footer">
+            <p>Thank you for your business!</p>
+          </div>
+        </div>
+      `;
+
+      drawerState.runningTotalDrawer.html = totalsHtml;
+      renderDrawer("runningTotalDrawer");
+      return;
+    }
 
     Object.assign(drawerState[drawer], fields);
     renderDrawer(drawer);
   });
 }
 
-// --- Helper to notify drawers from slides ---
+// =========================================================
+// 🧩 Drawer Update API
+// =========================================================
 export function notifyDrawer(drawerName, fields) {
   drawerEvents.dispatchEvent(new CustomEvent("updateDrawer", {
     detail: { drawer: drawerName, fields }

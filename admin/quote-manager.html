@@ -430,24 +430,19 @@
 
     <!-- Drawer Buttons (visible on main pane) -->
     <div class="btn-group mt-2 mt-auto m-2 pt-3 border-top border-info">
-      <button class="btn" style="flex: 0 0 150px;" id="openSummary">Quote Summary</button>
+      <button class="btn" style="flex: 0 0 150px;" id="openQuoteSummary">Quote Summary</button>
       <button class="btn" style="flex: 0 0 150px;" id="openBalanceDetails">Balance Details</button>
-      <button class="btn" style="flex: 0 0 150px;" id="runningTotal">Running Total</button>
+      <button class="btn" style="flex: 0 0 150px;" id="openRunningTotal">Running Total</button>
     </div>
 
-  </div>
-</div>
-
-<button id="debugQuoteBtn" class="btn bg-info text-black btn-sm">Debug Quote</button>
-
-
 <!-- === Offcanvas Drawers === -->
-<div class="offcanvas offcanvas-end bg-black text-info" tabindex="-1" id="summaryDrawer">
+
+<!-- Quote Summary Drawer -->
+<div class="offcanvas offcanvas-end bg-black text-info" tabindex="-1" id="quoteSummaryDrawer">
   <div class="offcanvas-header">
     <h5 class="offcanvas-title">Quote Summary</h5>
     <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
   </div>
-
   <div class="offcanvas-body">
     <!-- 🟦 Client Section -->
     <p><strong>Client:</strong> <span id="summaryClient">—</span></p>
@@ -465,25 +460,13 @@
     <p><strong>Products:</strong> <span id="summaryProductCount">—</span></p>
     <p><strong>Total Retail:</strong> <span id="summaryProductTotal">—</span></p>
 
-    <!-- Optional product list for quick view -->
     <ul id="summaryProductList" class="small mt-2 text-warning" style="list-style: none; padding-left: 0;">
       <!-- dynamically filled -->
     </ul>
   </div>
 </div>
 
-<div class="offcanvas offcanvas-end bg-black text-info" tabindex="-1" id="balanceDrawer">
-  <div class="offcanvas-header">
-    <h5 class="offcanvas-title">Running Balance</h5>
-    <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
-  </div>
-  <div class="offcanvas-body">
-    <p><strong>Total:</strong> $0.00</p>
-    <p><strong>Paid:</strong> $0.00</p>
-    <p><strong>Balance:</strong> $0.00</p>
-  </div>
-</div>
-
+<!-- Balance Details Drawer -->
 <div class="offcanvas offcanvas-end bg-black text-info" tabindex="-1" id="balanceDetailsDrawer">
   <div class="offcanvas-header">
     <h5 class="offcanvas-title">Balance Details</h5>
@@ -493,6 +476,25 @@
     <p>Breakdown of charges, discounts, and taxes will appear here.</p>
   </div>
 </div>
+
+<!-- Running Totals Drawer -->
+<div class="offcanvas offcanvas-end bg-black text-info" tabindex="-1" id="runningTotalDrawer">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title">Running Total</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+  </div>
+  <div class="offcanvas-body" id="runningTotalBody">
+    <!-- dynamically filled by drawer code -->
+  </div>
+</div>
+
+<!-- Debug Quote Button -->
+<div class="container py-4">
+<button id="debugQuoteBtn" class="btn bg-info text-black btn-sm" style="position: fixed; bottom: 10px; left: 10px; z-index: 10000;">
+  Console Log currentQuote
+</button>
+</div>
+
 
 <!-- === Scripts === -->
 <script type="module" src="admin.js"></script>
