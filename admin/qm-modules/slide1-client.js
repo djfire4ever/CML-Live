@@ -156,7 +156,7 @@ export async function initSlide1Client(currentQuote, scriptURL) {
     notifyDrawer("quoteSummaryDrawer", {
       name: `${client.firstName} ${client.lastName}`,
       clientID: client.clientID,
-      email: client.email
+      tier: client.tier
     });
 
     suggestions.style.display = "none";
