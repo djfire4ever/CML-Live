@@ -433,6 +433,7 @@
       <button class="btn" style="flex: 0 0 150px;" id="openQuoteSummary">Quote Summary</button>
       <button class="btn" style="flex: 0 0 150px;" id="openBalanceDetails">Balance Details</button>
       <button class="btn" style="flex: 0 0 150px;" id="openRunningTotal">Running Total</button>
+      <button class="btn btn-warning" style="flex: 0 0 150px;" id="openInvoicePreview">Invoice Preview</button>
     </div>
 
 <!-- === Offcanvas Drawers === -->
@@ -486,6 +487,17 @@
   </div>
   <div class="offcanvas-body" id="runningTotalBody">
     <!-- dynamically filled by drawer code -->
+  </div>
+</div>
+
+<!-- Invoice Preview Drawer -->
+<div class="offcanvas offcanvas-end bg-black text-info" style="width: 700px;" tabindex="-1" id="invoiceDrawer">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title">Invoice Preview</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+  </div>
+  <div class="offcanvas-body" id="invoiceBody">
+    <!-- dynamically filled by injectInvoiceIntoDrawer() -->
   </div>
 </div>
 

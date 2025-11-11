@@ -1,4 +1,5 @@
 // quote-manager.js
+
 // === Module Imports ===
 import { initSlide1Client } from "./qm-modules/slide1-client.js";
 import { initSlide2Event } from "./qm-modules/slide2-event.js";
@@ -6,8 +7,8 @@ import { initSlide3Products } from './qm-modules/slide3-products.js';
 import { initSlide4Other } from "./qm-modules/slide4-other.js";
 // import { initSlide5Finalize } from "./qm-modules/slide5-finalize.js";
 import { drawerEvents, initDrawers } from "./qm-modules/drawers.js";
+import { initInvoice } from "./qm-modules/invoice.js";
 import { collectQuotePayload } from "./qm-modules/quote-payload.js";
-
 
 // === Carousel Initialization ===
 function initCarousel() {
@@ -162,7 +163,7 @@ async function initSlides() {
   await initSlide2Event(currentQuote);
   await initSlide3Products(currentQuote);
   await initSlide4Other(currentQuote);
-
+  await initInvoice(currentQuote);
   // If you add future slides:
   // await initSlide5Finalize(currentQuote);
 
@@ -182,18 +183,26 @@ if (debugBtn) {
 
 // === Window Load Entry Point ===
 window.addEventListener('load', async () => {
-  // Carousel
+  // --- Carousel ---
   const bsCarousel = initCarousel();
   if (!bsCarousel) return;
 
-  // Steps / progress
+  // --- Steps / progress ---
   const stepsData = initStepsAndProgress();
   initNavigation(bsCarousel, stepsData);
 
-  // Drawers
+  // --- Drawers ---
   initAppDrawers();
 
-  // Slide modules
-  const scriptURL = window.scriptURL; // Already defined globally in global.js
-  await initSlides();
+  // --- Slide modules ---
+  const currentQuote = {}; // shared mutable object
+  await initSlides();      // populates currentQuote
+  window.currentQuote = currentQuote; // expose for debugging
+
+  // --- Debug button (optional) ---
+  const debugBtn = document.getElementById("debugQuoteBtn");
+  if (debugBtn) {
+    debugBtn.addEventListener("click", () => console.log("🧠 Current Quote Snapshot:", currentQuote));
+  }
+
 });

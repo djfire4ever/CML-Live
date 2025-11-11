@@ -96,7 +96,8 @@ export function initDrawers() {
   const drawerMap = {
     quoteSummaryDrawer: "openQuoteSummary",
     balanceDetailsDrawer: "openBalanceDetails",
-    runningTotalDrawer: "openRunningTotal"
+    runningTotalDrawer: "openRunningTotal",
+    invoiceDrawer: "openInvoicePreview" // Button still mapped, but handled elsewhere
   };
 
   const drawerInstances = {};
@@ -159,6 +160,7 @@ export function initDrawers() {
 
       case "runningTotalDrawer":
         if (quote) {
+          // Existing running total rendering logic
           const productsHtml = (quote.products?.length
             ? `
               <p><strong>Selected Products:</strong></p>
@@ -173,46 +175,17 @@ export function initDrawers() {
               <div class="product-subtotal">
                 <strong>Subtotal:</strong> $${(quote.totalProductRetail ?? 0).toFixed(2)}
               </div>
-            `
-            : "<div class='no-products'>No products selected</div>"
+            ` : "<div class='no-products'>No products selected</div>"
           );
 
-          const totalsHtml = `
+          drawerState.runningTotalDrawer.html = `
             <div class="receipt">
-              <div class="receipt-header">
-                <p>Generated: ${new Date().toLocaleDateString()}</p>
-              </div>
-
-              <div class="receipt-products">
-                ${productsHtml}
-              </div>
-
-              <div class="receipt-subtotals">
-                <div><span>Sales Tax (8.875%):</span><span>$${(quote.subTotal1 ?? 0).toFixed(2)}</span></div>
-                <div><span>Discount (${quote.discount ?? 0}%):</span><span>$${(quote.subTotal3 ?? 0).toFixed(2)}</span></div>
-                <div><span>After Discount:</span><span>$${(quote.discountedTotal ?? 0).toFixed(2)}</span></div>
-              </div>
-
-              <div class="receipt-addons">
-                <div><span>Delivery:</span><span>$${(quote.deliveryFee ?? 0).toFixed(2)}</span></div>
-                <div><span>Setup:</span><span>$${(quote.setupFee ?? 0).toFixed(2)}</span></div>
-                <div><span>Other:</span><span>$${(quote.otherFee ?? 0).toFixed(2)}</span></div>
-                <div><span>Add-ons Total:</span><span>$${(quote.addonsTotal ?? 0).toFixed(2)}</span></div>
-              </div>
-
+              <div class="receipt-products">${productsHtml}</div>
               <div class="receipt-total">
-                <div><strong>Grand Total:</strong><span>$${(quote.grandTotal ?? 0).toFixed(2)}</span></div>
-                <div><span>Deposit:</span><span>$${(quote.deposit ?? 0).toFixed(2)}</span></div>
-                <div><strong>Balance Due:</strong><span>$${(quote.balanceDue ?? 0).toFixed(2)}</span></div>
-              </div>
-
-              <div class="receipt-footer">
-                <p>Thank you for your business!</p>
+                <div><strong>Grand Total:</strong> $${(quote.grandTotal ?? 0).toFixed(2)}</div>
               </div>
             </div>
           `;
-
-          drawerState.runningTotalDrawer.html = totalsHtml;
         }
         break;
 
