@@ -1,14 +1,13 @@
 // qm-modules/slide3-products.js
 import { notifyDrawer } from "./drawers.js";
 
-let products = [];       // currently selected products
-let productData = [];    // cached product info
+let products = [];
+let productData = [];
 let editingIndex = null;
 
-const SKIP_PRODUCT_FETCH = true; // toggle to false for real fetch
+const SKIP_PRODUCT_FETCH = true;
 
 export async function initSlide3Products(currentQuote, scriptURL) {
-  // -------------------- DOM References --------------------
   const grid = document.querySelector(".product-grid");
   const overlay = document.getElementById("product-overlay");
   const overlayTitle = document.getElementById("overlay-title");
@@ -24,7 +23,6 @@ export async function initSlide3Products(currentQuote, scriptURL) {
   const cancelBtn = document.getElementById("cancelProduct");
   const deleteBtn = document.getElementById("deleteProduct");
 
-  // -------------------- Load product data --------------------
   async function loadProductData() {
     toggleLoader?.(true, { message: "Loading products..." });
     try {
@@ -60,7 +58,6 @@ export async function initSlide3Products(currentQuote, scriptURL) {
     }
   }
 
-  // -------------------- Populate dropdown --------------------
   function populateDropdown() {
     nameSelect.innerHTML = `<option value="" disabled selected>Select a product</option>`;
     productData.forEach(p => {
@@ -71,7 +68,6 @@ export async function initSlide3Products(currentQuote, scriptURL) {
     });
   }
 
-  // -------------------- Overlay totals --------------------
   function updateOverlayTotals() {
     const qty = parseInt(qtyInput.value, 10) || 0;
     const cost = parseFloat(costSpan.textContent) || 0;
@@ -92,7 +88,6 @@ export async function initSlide3Products(currentQuote, scriptURL) {
 
   qtyInput.addEventListener("input", updateOverlayTotals);
 
-  // -------------------- Render grid --------------------
   function renderGrid() {
     grid.innerHTML = "";
 
@@ -112,6 +107,7 @@ export async function initSlide3Products(currentQuote, scriptURL) {
         products.splice(idx, 1);
         renderGrid();
         markSlideFilled();
+        dispatchQuoteChanged();
       });
 
       tile.addEventListener("click", e => {
@@ -131,7 +127,6 @@ export async function initSlide3Products(currentQuote, scriptURL) {
     markSlideFilled();
   }
 
-  // -------------------- Update totals & notify drawers --------------------
   function updateProductTotals() {
     const count = products.length;
     const totalCost = products.reduce((sum, p) => sum + p.qty * p.costPrice, 0);
@@ -161,9 +156,10 @@ export async function initSlide3Products(currentQuote, scriptURL) {
     });
 
     notifyDrawer("runningTotalDrawer", { quote: currentQuote });
+
+    dispatchQuoteChanged();
   }
 
-  // -------------------- Overlay controls --------------------
   function openOverlay(prod = null, idx = null) {
     editingIndex = idx;
     overlay.classList.remove("d-none");
@@ -183,6 +179,10 @@ export async function initSlide3Products(currentQuote, scriptURL) {
     overlay.classList.remove("show");
     overlay.classList.add("d-none");
     editingIndex = null;
+  }
+
+  function dispatchQuoteChanged() {
+    document.dispatchEvent(new CustomEvent("quoteDataChanged", { detail: currentQuote }));
   }
 
   cancelBtn.addEventListener("click", closeOverlay);
@@ -217,7 +217,6 @@ export async function initSlide3Products(currentQuote, scriptURL) {
     }
   });
 
-  // -------------------- Slide progress --------------------
   function markSlideFilled() {
     const stepsData = window.stepsData;
     if (!stepsData?.slides) return;
@@ -229,7 +228,6 @@ export async function initSlide3Products(currentQuote, scriptURL) {
     stepsData.updateProgress?.();
   }
 
-  // -------------------- Initialize --------------------
   await loadProductData();
   populateDropdown();
   renderGrid();

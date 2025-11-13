@@ -82,9 +82,17 @@ export async function initSlide4Other(currentQuote = {}) {
     document.getElementById("balanceDue").textContent = fmt(balanceDue);
 
     // --- Notify drawers ---
-    notifyDrawer("summaryDrawer", { discountedTotal, grandTotal });
-    notifyDrawer("balanceDrawer", { total: grandTotal, paid: appliedPayment, balance: balanceDue });
+    notifyDrawer("quoteSummaryDrawer", {
+      productTotal: `$${totalProductRetail.toFixed(2)}`,
+      productCount: currentQuote.products?.length ?? 0
+    });
+    notifyDrawer("balanceDetailsDrawer", { 
+      total: grandTotal, 
+      paid: appliedPayment, 
+      balance: balanceDue 
+    });
     notifyDrawer("runningTotalDrawer", { quote: currentQuote });
+    notifyDrawer("invoiceDrawer", { quote: currentQuote });
   }
 
   // ------------------------
@@ -101,7 +109,6 @@ export async function initSlide4Other(currentQuote = {}) {
     document.getElementById("addonsTotal").textContent = `$${addonsTotal.toFixed(2)}`;
     document.getElementById("addonsTotalSummary").textContent = `$${addonsTotal.toFixed(2)}`;
 
-    notifyDrawer("summaryDrawer", { addonsTotal });
     recalcTotals();
     markSlideFilled();
   }
@@ -186,7 +193,7 @@ export async function initSlide4Other(currentQuote = {}) {
   });
 
   // ------------------------
-  // Listen for live updates from Slide 3
+  // Listen for live updates from other slides
   // ------------------------
   document.addEventListener("quoteDataChanged", () => {
     recalcTotals();

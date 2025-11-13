@@ -1,69 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Invoice Template</title>
+
 <style>
-  /* === Base Invoice Styles === */
-  @page {
-    margin: 0; /* remove default print margins */
-  }
+  @page { margin: 0; }
 
   body {
+    width: 100%;
+    height: 100%;
     margin: 0;
     padding: 0;
-  }
-
-  /* === Invoice container === */
-  .invoice-page {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 7.5in;      /* debug width */
-    height: 10in;      /* debug height */
-    border: 2px dashed red; /* debug visualization */
-    box-sizing: border-box;
-    background-color: white;
-  }
-
-  .invoice-table {
-    border-collapse: collapse;
-    table-layout: fixed;
-    width: 100%; /* fill container */
+    background: #fff;
     font-family: Arial, sans-serif;
     font-size: 10pt;
+    color: #111;
+  }
+
+  .invoice-page {
+    position: absolute; /* stick to top-left */
+    top: 0;
+    left: 0;
+    width: 7.5in;
+    height: 10in;
+    border: 1px dashed red; /* debug visualization */
+    box-sizing: border-box; /* width & height include border */
+    background-color: #fff;
+    /* no padding here — content starts at border exactly */
+  }
+
+  table.invoice-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-family: Arial, sans-serif;
+    font-size: 10pt;
+    box-sizing: border-box;
   }
 
   .invoice-table td {
-    padding: 2px 3px;
+    padding: 2px 3px; /* small cell padding, matches original */
     vertical-align: bottom;
     overflow: hidden;
     text-overflow: ellipsis;
-    /* border: 1px solid rgba(0, 0, 0, 0.3); */
   }
 
-  .invoice-table .header-row td {
+  .header-row td {
     font-weight: bold;
     border-bottom: 1px solid #999;
     padding-top: 6px;
   }
 
-  .invoice-table .text-right {
-    text-align: right;
-  }
+  .text-right { text-align: right; }
+  .text-center { text-align: center; }
+  .nowrap { white-space: nowrap; }
 
-  .invoice-table .nowrap {
-    white-space: nowrap;
-  }
+  .spacer td { padding-top: 12px; }
 
-  .invoice-table .terms {
-    padding-top: 10px;
-    line-height: 1.4;
-    font-size: 9pt;
-  }
-
-  .invoice-table .totals-section td {
+  .totals-row td {
     border-top: 1px solid #999;
     padding-top: 6px;
+    font-weight: bold;
+  }
+
+  .terms {
+    font-size: 9pt;
+    line-height: 1.4;
+    padding-top: 10px;
   }
 </style>
 
-<div class="invoice-page">
+</head>
+
+<body>
+<div class="invoice-page bg-light text-dark">
   <table class="invoice-table">
     <colgroup>
       <col style="width: 150px;">
@@ -73,96 +84,119 @@
       <col style="width: 120px;">
       <col style="width: 120px;">
     </colgroup>
-    <tbody id="invoice-body">
-      <!-- Header -->
+    <tbody>
+
+      <!-- ===================== COMPANY HEADER ===================== -->
       <tr><td colspan="6" style="background-color: green; height: 24px;">&nbsp;</td></tr>
       <tr><td colspan="6" style="font-weight: bold; font-size: 18pt; color: green;">CraftyMama Labs</td></tr>
       <tr><td colspan="6" style="font-weight: bold; font-size: 12pt; color: greenyellow;">CUSTOM EVENT DECOR CREATOR</td></tr>
       <tr><td colspan="6" style="font-weight: bold;">(332) 202-8819</td></tr>
       <tr><td colspan="6" style="font-weight: bold;">tiffany@craftymamalabs.com</td></tr>
-      <tr><td colspan="6" style="font-weight: bold; font-size: 14pt; color: green;"><strong>Invoice</strong></td></tr>
 
-      <!-- Client + Invoice Info -->
+      <tr class="spacer"><td colspan="6">&nbsp;</td></tr>
+
+      <!-- ================= CLIENT + INVOICE INFO ================== -->
       <tr>
         <td style="font-weight: bold;">Bill To:</td><td></td>
         <td style="font-weight: bold;">Invoice #</td><td></td>
         <td style="font-weight: bold;">Invoice Date</td><td></td>
       </tr>
+
       <tr>
-        <td>&lt;&lt;firstName&gt;&gt;</td>
-        <td>&lt;&lt;lastName&gt;&gt;</td>
-        <td>&lt;&lt;invoiceID&gt;&gt;</td>
+        <td>{{firstName}}</td>
+        <td>{{lastName}}</td>
+        <td>{{invoiceID}}</td>
         <td></td>
-        <td class="nowrap">&lt;&lt;invoiceDate&gt;&gt;</td>
+        <td class="nowrap">{{invoiceDate}}</td>
         <td></td>
       </tr>
+
       <tr>
-        <td colspan="6">&lt;&lt;street&gt;&gt;</td>
+        <td colspan="6">{{street}}</td>
       </tr>
+
       <tr>
-        <td>&lt;&lt;city&gt;&gt;</td>
-        <td>&lt;&lt;state&gt;&gt;</td>
-        <td>&lt;&lt;zip&gt;&gt;</td>
-        <td></td><td></td><td></td>
+        <td>{{city}}</td>
+        <td>{{state}}</td>
+        <td>{{zip}}</td>
+        <td></td>
+        <td></td>
+        <td></td>
       </tr>
+
       <tr>
-        <td style="font-weight: bold;">&lt;&lt;clientID&gt;&gt;</td>
+        <td>{{clientID}}</td>
         <td></td>
         <td style="font-weight: bold;">Event Date</td>
         <td></td>
         <td style="font-weight: bold;">Event Location</td>
-        <td></td>
-      </tr>
-      <tr>
-        <td colspan="2">&lt;&lt;email&gt;&gt;</td>
-        <td class="nowrap">&lt;&lt;eventDate&gt;&gt;</td>
-        <td></td>
-        <td colspan="2">&lt;&lt;eventLocation&gt;&gt;</td>
       </tr>
 
+      <tr>
+        <td colspan="2">{{email}}</td>
+        <td>{{eventDate}}</td>
+        <td></td>
+        <td>{{eventLocation}}</td>
+      </tr>
+
+      <tr class="spacer"><td colspan="6">&nbsp;</td></tr>
+
+      <!-- ===================== PRODUCTS HEADER ===================== -->
       <tr class="header-row" id="parts-header">
-        <td colspan="3" style="font-weight: bold;">Description</td>
-        <td style="font-weight: bold; text-align: center;">Qty</td>
-        <td style="font-weight: bold; text-align: right;">Unit Price</td>
-        <td style="font-weight: bold; text-align: right;">Total Price</td>
+        <td colspan="3">Description</td>
+        <td class="text-center">Qty</td>
+        <td class="text-right">Unit Price</td>
+        <td class="text-right">Total Price</td>
       </tr>
     </tbody>
 
-    <!-- Totals Section -->
+    <!-- ===================== DYNAMIC PRODUCTS ===================== -->
+    <tbody>
+      <tr>
+        <td colspan="6" style="border-top: 2px solid #999; padding-top: 4px;"></td>
+      </tr>
+    </tbody>
+    <tbody id="invoice-products"></tbody>
+
+    <!-- ===================== TOTALS SECTION ===================== -->
     <tbody id="totals-section">
-      <tr class="totals-section">
-        <td></td>
-        <td></td>
-        <td></td><td></td>
-        <td style="font-weight: bold; text-align: right;">Subtotal</td>
-         <td style="font-weight: bold; text-align: right;">&lt;&lt;totalProductRetail&gt;&gt;</td>
+      <tr class="totals-row">
+        <td colspan="4"></td>
+        <td class="text-right">Subtotal</td>
+        <td class="text-right">{{totalProductRetail}}</td>
       </tr>
       <tr>
         <td style="font-weight: bold;">Tax</td><td>8.875%</td><td></td><td></td>
-        <td style="text-align: right; ">&lt;&lt;subTotal1&gt;&gt;</td><td style="text-align: right;">&lt;&lt;subTotal2&gt;&gt;</td>
+        <td class="text-right">{{subTotal1}}</td>
+        <td class="text-right">{{subTotal2}}</td>
       </tr>
       <tr>
         <td style="font-weight: bold;">Discount</td><td></td><td></td>
-        <td style="text-align: right;">&lt;&lt;discount&gt;&gt;</td><td style="text-align: right;">&lt;&lt;subTotal3&gt;&gt;</td><td style="text-align: right;">&lt;&lt;discountedTotal&gt;&gt;</td>
+        <td class="text-right">{{discount}}</td>
+        <td class="text-right">{{subTotal3}}</td>
+        <td class="text-right">{{discountedTotal}}</td>
       </tr>
       <tr>
         <td style="font-weight: bold;">Add-Ons</td><td></td><td></td><td></td>
-        <td style="text-align: right;">&lt;&lt;addonsTotals&gt;&gt;</td><td style="text-align: right;">&lt;&lt;grandTotal&gt;&gt;</td>
+        <td class="text-right">{{addonsTotals}}</td>
+        <td class="text-right">{{grandTotal}}</td>
       </tr>
       <tr>
         <td style="font-weight: bold;">Deposit*</td><td></td>
-        <td>&lt;&lt;deposit&gt;&gt;</td>
+        <td>{{deposit}}</td>
         <td style="font-weight: bold;">Paid on</td>
-        <td class="nowrap">&lt;&lt;depositDate&gt;&gt;</td>
+        <td class="nowrap">{{depositDate}}</td>
         <td></td>
       </tr>
       <tr>
         <td style="font-weight: bold;">Balance of</td><td></td>
-        <td>&lt;&lt;balanceDue&gt;&gt;</td>
+        <td>{{balanceDue}}</td>
         <td style="font-weight: bold;">Due By</td>
-        <td class="nowrap">&lt;&lt;balanceDueDate&gt;&gt;</td>
-        <td>&lt;&lt;paymentMethod&gt;&gt;</td>
+        <td class="nowrap">{{balanceDueDate}}</td>
+        <td>{{paymentMethod}}</td>
       </tr>
+
+      <tr class="spacer"><td colspan="6">&nbsp;</td></tr>
       <tr>
         <td colspan="6" class="terms">
           <strong>Terms:</strong> As per agreed Terms and Conditions<br>
@@ -174,59 +208,6 @@
     </tbody>
   </table>
 </div>
+</body>
+</html>
 
-<script>
-  const fakeData = {
-    firstName: "Tiffany",
-    lastName: "Anderson",
-    invoiceID: "25",
-    invoiceDate: "11/22/2025",
-    street: "1234 Long Street Name Avenue",
-    city: "Brooklyn",
-    state: "NY",
-    zip: "11206",
-    clientID: "(212) 555-7890",
-    email: "tiffany@craftymamalabs.com",
-    eventDate: "12/15/2025",
-    eventLocation: "Grand Metropolitan Ballroom",
-    totalProductRetail: "$1,245.00",
-    subTotal1: "$110.49",
-    subTotal2: "$1,355.49",
-    discount: "10%",
-    subTotal3: "$1,220.00",
-    discountedTotal: "$1,220.00",
-    addonsTotals: "$150.00",
-    grandTotal: "$1,370.00",
-    deposit: "$500.00",
-    depositDate: "11/10/2025",
-    balanceDue: "$870.00",
-    balanceDueDate: "12/20/2025",
-    paymentMethod: "Credit Card"
-  };
-
-  // Replace placeholders with fake data
-  document.querySelectorAll(".invoice-table td").forEach(td => {
-    td.innerHTML = td.innerHTML.replace(/&lt;&lt;(\w+)&gt;&gt;/g, (match, key) => {
-      return fakeData[key] || match;
-    });
-  });
-
-  // Insert parts directly after the header
-  const headerRow = document.getElementById("parts-header");
-
-  for (let i = 1; i <= 15; i++) {
-    const partName = `Custom Floral Arrangement Custom Floral Even Longer  ${i}`;
-    const qty = Math.floor(Math.random() * 5) + 1;
-    const unitPrice = (Math.random() * 120 + 25).toFixed(2);
-    const totalPrice = (qty * unitPrice).toFixed(2);
-
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td colspan="3">${partName}</td>
-      <td style="text-align: center;">${qty}</td>
-      <td style="text-align: right;">$${unitPrice}</td>
-      <td style="text-align: right;">$${totalPrice}</td>
-    `;
-    headerRow.parentNode.insertBefore(row, headerRow.nextSibling);
-  }
-</script>
