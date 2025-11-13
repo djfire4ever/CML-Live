@@ -1,4 +1,3 @@
-// qm-modules/slide2-event.js
 import { notifyDrawer } from "./drawers.js";
 
 // =========================================================
@@ -16,35 +15,34 @@ export function initSlide2Event(currentQuote) {
     return;
   }
 
-  function updateSummary() {
-    const eventDateValue = eventDateInput.value || "";
-    const eventLocationValue = eventLocationInput.value || "";
-    const dueDateValue = dueDateInput?.value || "";
-    const eventNotesValue = eventNotesInput?.value || "";
-    const eventThemeValue = eventThemeInput?.value || "";
-
+  function updateQuoteState() {
     // --- Update shared quote state ---
     Object.assign(currentQuote, {
-      eventDate: eventDateValue,
-      dueDate: dueDateValue,
-      eventLocation: eventLocationValue,
-      eventNotes: eventNotesValue,
-      eventTheme: eventThemeValue
+      eventDate: eventDateInput.value || "",
+      dueDate: dueDateInput?.value || "",
+      eventLocation: eventLocationInput.value || "",
+      eventNotes: eventNotesInput?.value || "",
+      eventTheme: eventThemeInput?.value || ""
     });
 
     // --- Notify summary drawer using unified state ---
     notifyDrawer("quoteSummaryDrawer", {
-      eventDate: eventDateValue,
-      eventLocation: eventLocationValue
+      name: currentQuote.clientName,
+      clientID: currentQuote.clientID,
+      tier: currentQuote.tier,
+      eventDate: currentQuote.eventDate,
+      eventLocation: currentQuote.eventLocation
     });
+
+    // Optionally update other drawers if needed:
+    notifyDrawer("runningTotalDrawer", {}); // reads from currentQuote internally
   }
 
-  // --- Event listeners (on input & blur) ---
+  // --- Attach listeners ---
   [eventDateInput, eventLocationInput, dueDateInput, eventNotesInput, eventThemeInput].forEach(el => {
-    if (el) {
-      el.addEventListener("input", updateSummary);
-      el.addEventListener("blur", updateSummary);
-    }
+    if (!el) return;
+    el.addEventListener("input", updateQuoteState);
+    el.addEventListener("blur", updateQuoteState);
   });
 }
 

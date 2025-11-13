@@ -6,9 +6,10 @@ import { initSlide2Event } from "./qm-modules/slide2-event.js";
 import { initSlide3Products } from './qm-modules/slide3-products.js';
 import { initSlide4Other } from "./qm-modules/slide4-other.js";
 // import { initSlide5Finalize } from "./qm-modules/slide5-finalize.js";
+import { injectInvoiceIntoDrawer } from "./qm-modules/invoice.js";
 import { drawerEvents, initDrawers } from "./qm-modules/drawers.js";
-import { initInvoice } from "./qm-modules/invoice.js";
 import { collectQuotePayload } from "./qm-modules/quote-payload.js";
+import { setupShoppingListButton } from './qm-modules/shoppinglist.js';
 
 // === Carousel Initialization ===
 function initCarousel() {
@@ -159,50 +160,61 @@ function initAppDrawers() {
 async function initSlides() {
   const currentQuote = {}; // 🔹 shared mutable object
 
-  await initSlide1Client(currentQuote);
+  await initSlide1Client(currentQuote, scriptURL);
   await initSlide2Event(currentQuote);
-  await initSlide3Products(currentQuote);
+  await initSlide3Products(currentQuote, scriptURL);
   await initSlide4Other(currentQuote);
-  await initInvoice(currentQuote);
-  // If you add future slides:
-  // await initSlide5Finalize(currentQuote);
 
-  // Optional: expose for debugging
-  window.currentQuote = currentQuote;
-}
-
-window.showQuote = () => {
-  console.log("🧠 Current Quote Snapshot:", window.currentQuote);
-  return window.currentQuote;
-};
-
-const debugBtn = document.getElementById("debugQuoteBtn");
-if (debugBtn) {
-  debugBtn.addEventListener("click", window.showQuote);
+  window.currentQuote = currentQuote; // 🔹 Expose globally for debugging
 }
 
 // === Window Load Entry Point ===
 window.addEventListener('load', async () => {
-  // --- Carousel ---
   const bsCarousel = initCarousel();
   if (!bsCarousel) return;
 
-  // --- Steps / progress ---
   const stepsData = initStepsAndProgress();
   initNavigation(bsCarousel, stepsData);
 
-  // --- Drawers ---
+  // === 🔹 Add this block here (focus + optional clear) ===
+  const carouselEl = document.getElementById("quoteCarousel");
+  carouselEl.addEventListener("slid.bs.carousel", () => {
+    if (stepsData.getCurrentStep() === 0) {
+      const input = document.querySelector(".clientID-input");
+      if (input) {
+        input.focus();
+        input.select();
+      }
+
+      // Optional: clear suggestions or fields
+      const suggestions = document.querySelector(".client-suggestions");
+      if (suggestions) {
+        suggestions.style.display = "none";
+      }
+
+      // input.value = "";       // optional
+      // populateClientFields(); // optional
+    }
+  });
+  // === end insert ===
+
   initAppDrawers();
+  await initSlides();
 
-  // --- Slide modules ---
-  const currentQuote = {}; // shared mutable object
-  await initSlides();      // populates currentQuote
-  window.currentQuote = currentQuote; // expose for debugging
-
-  // --- Debug button (optional) ---
-  const debugBtn = document.getElementById("debugQuoteBtn");
-  if (debugBtn) {
-    debugBtn.addEventListener("click", () => console.log("🧠 Current Quote Snapshot:", currentQuote));
-  }
-
+  setupShoppingListButton(document.getElementById('openShoppingList'), scriptURL);
 });
+
+// === OPTIONAL DEBUG SECTION ===
+// Keep this part isolated so it’s easy to remove later.
+(() => {
+  const debugBtn = document.getElementById("debugQuoteBtn");
+  if (!debugBtn) return;
+
+  window.showQuote = () => {
+    console.log("🧠 Current Quote Snapshot:", window.currentQuote);
+    return window.currentQuote;
+  };
+
+  debugBtn.addEventListener("click", window.showQuote);
+})();
+

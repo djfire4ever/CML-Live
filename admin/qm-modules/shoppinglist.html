@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>🛒 Required Materials for Quote</title>
+
+  <style>
+    body {
+      padding: 24px;
+    }
+    .clickable-row:hover {
+      background-color: #f2f2f2;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body class="page-body" style="min-height:100vh;" data-element="page-bg">
+<div class="watermark"></div>
+<div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3"></div>
+
+<!-- ⏳ Loader -->
+<div id="loadingOverlay" class="d-none">
+  <div class="text-center">
+    <div class="spinner-border" role="status"></div>
+    <p class="mt-4 loader-message">Loading... Please wait...</p>
+  </div>
+</div>
+
+  <h3 class="mb-4">🛒 Required Materials for Quote</h3>
+
+  <!-- RESULT TABLE -->
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>Material</th>
+        <th>Needed</th>
+        <th>In Stock</th>
+        <th>Status</th>
+        <th>Supplier</th>
+        <th>Reorder</th>
+      </tr>
+    </thead>
+    <tbody id="shoppinglist-body"></tbody>
+  </table>
+
+
+</body>
+</html>
+

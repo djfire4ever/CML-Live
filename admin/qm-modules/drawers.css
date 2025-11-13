@@ -1,5 +1,6 @@
-/* // qm-modules/drawers.css */
-/* === Offcanvas (Drawers) === */
+/* ============================
+   Offcanvas (Drawers)
+============================ */
 .offcanvas {
   transition: transform 0.4s ease;
   box-shadow: -5px 0 20px rgba(var(--bs-info-rgb), 0.4);
@@ -7,74 +8,111 @@
   background-color: var(--bs-black);
   color: var(--bs-info);
 }
+
 .offcanvas-header .btn-close {
   filter: invert(1) brightness(200%);
 }
+
 .offcanvas-title {
   font-weight: 600;
   text-shadow: 0 0 10px rgba(var(--bs-info-rgb), 0.8);
 }
+
 .offcanvas-body hr {
   border-color: rgba(var(--bs-info-rgb), 0.25);
 }
-/* New receipt drawer styles */
 
-.receipt { 
-  font-family: "Courier New", monospace; 
-  font-size: 0.9rem; 
-  color: var(--bs-info); 
+/* ============================
+   Receipt Drawer Base Styles
+============================ */
+.receipt {
+  font-family: "Courier New", monospace;
+  font-size: 0.9rem;
+  color: var(--bs-info);
 }
 
-.receipt-header { text-align: center; margin-bottom: 0.5rem; }
-.receipt-products .product-row,
-.receipt-subtotals div,
-.receipt-addons div,
-.receipt-total div { 
-  display: flex; 
-  justify-content: space-between; 
-  margin-bottom: 0.2rem; 
+.receipt-header {
+  text-align: center;
+  margin-bottom: 0.5rem;
 }
 
-.receipt-products .product-row { border-bottom: 1px dashed #555; padding: 0.2rem 0; }
-.receipt-subtotals, .receipt-addons { margin-top: 0.5rem; border-top: 1px dashed #555; padding-top: 0.3rem; }
-.receipt-total { font-weight: bold; border-top: 1px solid #fff; padding-top: 0.5rem; margin-top: 0.5rem; }
-.receipt-footer { text-align: center; font-size: 0.8rem; margin-top: 0.5rem; color: #ccc; }
-.no-products { font-style: italic; }
+.receipt-footer {
+  text-align: center;
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+  color: #ccc;
+}
 
-.receipt-products .product-row {
+.no-products {
+  font-style: italic;
+}
+
+/* ============================
+   Product Rows (Fully Fixed)
+============================ */
+.receipt-products {
   display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.product-row {
+  display: flex;
+  align-items: center;
   justify-content: space-between;
+  gap: 6px;
+
   border-bottom: 1px dashed #555;
   padding: 0.2rem 0;
   font-size: 0.85rem;
 }
 
-.receipt-products .product-row .name { flex: 2; }
-.receipt-products .product-row .qty,
-.receipt-products .product-row .unit,
-.receipt-products .product-row .price,
-.receipt-products .product-row .total { flex: 1; text-align: right; }
-
-.selected-products {
-  margin-bottom: 1rem;
+/* Product name (truncates cleanly) */
+.product-row .name {
+  flex: 1 1 auto;
+  max-width: 180px; /* adjust for drawer width */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.selected-products .product-list {
-  margin-left: 1.2rem; /* indent the list */
-  margin-top: 0.3rem;
+/* qty, price, total */
+.product-row .qty,
+.product-row .price,
+.product-row .total {
+  flex: 0 0 auto;
+  text-align: right;
+  min-width: 60px;
 }
 
-.selected-products .product-row {
-  display: flex;
-  gap: 0.5rem; /* space between columns */
-  font-size: 0.85rem;
+.product-row .divider {
+  margin: 0 4px;
 }
-.receipt-products .product-row {
-  margin-bottom: 0; /* remove line spacing */
+
+/* ============================
+   Subtotals + Add-ons
+============================ */
+.receipt-subtotals,
+.receipt-addons {
+  margin-top: 0.5rem;
+  border-top: 1px dashed #555;
+  padding-top: 0.3rem;
 }
-.product-subtotal {
-  margin-top: 0.25rem; /* small gap above subtotal */
-  font-weight: bold;
+
+.receipt-subtotals div,
+.receipt-addons div,
+.receipt-total div {
   display: flex;
   justify-content: space-between;
+  margin-bottom: 0.2rem;
+}
+
+/* ============================
+   Grand Total Area
+============================ */
+.receipt-total {
+  font-weight: bold;
+  border-top: 1px solid #fff;
+  padding-top: 0.5rem;
+  margin-top: 0.5rem;
 }

@@ -1,14 +1,12 @@
 // qm-modules/slide3-products.js
 import { notifyDrawer } from "./drawers.js";
 
-let products = [];       // currently selected products
-let productData = [];    // cached product info
-let editingIndex = null;
+let products = [];
+let productData = [];
 
-const SKIP_PRODUCT_FETCH = true; // toggle to false for real fetch
+const SKIP_PRODUCT_FETCH = true;
 
 export async function initSlide3Products(currentQuote, scriptURL) {
-  // -------------------- DOM References --------------------
   const grid = document.querySelector(".product-grid");
   const overlay = document.getElementById("product-overlay");
   const overlayTitle = document.getElementById("overlay-title");
@@ -19,22 +17,19 @@ export async function initSlide3Products(currentQuote, scriptURL) {
   const retailSpan = document.getElementById("retailPrice");
   const totalCostSpan = document.getElementById("totalProductCost");
   const totalRetailSpan = document.getElementById("totalProductRetail");
-
-  const saveBtn = document.getElementById("saveProduct");
-  const cancelBtn = document.getElementById("cancelProduct");
-  const deleteBtn = document.getElementById("deleteProduct");
+  const closeBtn = document.getElementById("closeProduct");
 
   // -------------------- Load product data --------------------
   async function loadProductData() {
     toggleLoader?.(true, { message: "Loading products..." });
     try {
-      let rawData = SKIP_PRODUCT_FETCH
+      const rawData = SKIP_PRODUCT_FETCH
         ? [
-            [1, "Test Product A", "", "", "", "", 10.5, 20],
-            [2, "Test Product B", "", "", "", "", 5, 12.5],
-            [3, "Test Product C", "", "", "", "", 7.25, 15],
-            [4, "Test Product D", "", "", "", "", 2.5, 5],
-            [5, "Test Product E", "", "", "", "", 12, 25]
+            [1, "Chocolate Covered Marshmallows-Deluxe (Gold/Color) (Holographic Bag)", "", "", JSON.stringify([{ matName: "Cardstock-110 lb White", qty: 3 }, { matName: "LED Lights", qty: 3 }]), "", 10.5, 21],
+            [2, "Test Product B", "", "", JSON.stringify([{ matName: "Cricut Mat", qty: 1 }, { matName: "Double-Sided Tape", qty: 6 }]), "", 5, 10],
+            [3, "Test Product C", "", "", JSON.stringify([{ matName: "HP Instant Ink & Paper", qty: 1 }, { matName: "3D Tape-White", qty: 20 }]), "", 7.25, 14.5],
+            [4, "Test Product D", "", "", JSON.stringify([{ matName: "Cardstock-110 lb White", qty: 5 }, { matName: "Photo Paper-Glossy", qty: 1 }]), "", 2.5, 5],
+            [5, "Test Product E", "", "", JSON.stringify([{ matName: "Happy Birthday Neon Sign", qty: 1 }]), "", 12, 2]
           ]
         : await (async () => {
             const res = await fetch(`${scriptURL}?action=getProdDataForSearch`);
@@ -47,6 +42,7 @@ export async function initSlide3Products(currentQuote, scriptURL) {
         .map(r => ({
           prodID: String(r[0]).trim(),
           productName: String(r[1]).trim(),
+          partsJSON: r[4] ? JSON.parse(r[4]) : [],
           costPrice: parseFloat(r[6]) || 0,
           retailPrice: parseFloat(r[7]) || 0
         }));
@@ -92,7 +88,7 @@ export async function initSlide3Products(currentQuote, scriptURL) {
 
   qtyInput.addEventListener("input", updateOverlayTotals);
 
-  // -------------------- Render grid --------------------
+  // -------------------- Render product grid --------------------
   function renderGrid() {
     grid.innerHTML = "";
 
@@ -111,11 +107,11 @@ export async function initSlide3Products(currentQuote, scriptURL) {
         e.stopPropagation();
         products.splice(idx, 1);
         renderGrid();
-        markSlideFilled();
+        updateProductTotals();
       });
 
       tile.addEventListener("click", e => {
-        if (!e.target.classList.contains("delete")) openOverlay(prod, idx);
+        if (!e.target.classList.contains("delete")) openOverlay(prod);
       });
 
       grid.appendChild(tile);
@@ -128,27 +124,28 @@ export async function initSlide3Products(currentQuote, scriptURL) {
     grid.appendChild(addTile);
 
     updateProductTotals();
-    markSlideFilled();
   }
 
-  // -------------------- Update totals & notify drawers --------------------
+  // -------------------- Update product totals --------------------
   function updateProductTotals() {
     const count = products.length;
-    const totalCost = products.reduce((sum, p) => sum + p.qty * p.costPrice, 0);
     const totalRetail = products.reduce((sum, p) => sum + p.qty * p.retailPrice, 0);
 
     currentQuote.products = products;
     currentQuote.productsCount = count;
-    currentQuote.totalProductCost = totalCost;
     currentQuote.totalProductRetail = totalRetail;
 
-    const countSpan = document.querySelector(".summary-line .count");
-    const totalSpan = document.querySelector(".summary-line .total");
-    if (countSpan && totalSpan) {
-      countSpan.textContent = `${count} ${count === 1 ? "item" : "items"}`;
-      totalSpan.textContent = `$${totalRetail.toFixed(2)}`;
+    // ✅ Update the summary line DOM
+    const summaryCard = document.querySelector("#productSummaryCard .summary-line");
+    if (summaryCard) {
+      const countSpan = summaryCard.querySelector(".count");
+      const totalSpan = summaryCard.querySelector(".total");
+
+      if (countSpan) countSpan.textContent = `${count} item${count !== 1 ? "s" : ""}`;
+      if (totalSpan) totalSpan.textContent = `$${totalRetail.toFixed(2)}`;
     }
 
+    // ✅ Notify other drawers
     notifyDrawer("quoteSummaryDrawer", {
       productCount: count,
       productTotal: `$${totalRetail.toFixed(2)}`,
@@ -163,9 +160,8 @@ export async function initSlide3Products(currentQuote, scriptURL) {
     notifyDrawer("runningTotalDrawer", { quote: currentQuote });
   }
 
-  // -------------------- Overlay controls --------------------
-  function openOverlay(prod = null, idx = null) {
-    editingIndex = idx;
+  // -------------------- Overlay functions --------------------
+  function openOverlay(prod = null) {
     overlay.classList.remove("d-none");
     overlay.classList.add("show");
 
@@ -176,58 +172,30 @@ export async function initSlide3Products(currentQuote, scriptURL) {
     retailSpan.textContent = prod?.retailPrice?.toFixed(2) || "0.00";
 
     updateOverlayTotals();
-    deleteBtn.style.display = idx !== null ? "inline-block" : "none";
   }
 
   function closeOverlay() {
-    overlay.classList.remove("show");
-    overlay.classList.add("d-none");
-    editingIndex = null;
-  }
-
-  cancelBtn.addEventListener("click", closeOverlay);
-
-  saveBtn.addEventListener("click", () => {
     const name = nameSelect.value.trim();
-    if (!name) return alert("Please select a product");
+    if (!name) return overlay.classList.add("d-none");
 
     const prodInfo = productData.find(p => p.productName === name);
-    if (!prodInfo) return alert("Invalid product selected");
+    if (!prodInfo) return overlay.classList.add("d-none");
 
     const qty = parseInt(qtyInput.value, 10) || 1;
-    const newProduct = {
+    products.push({
       productName: prodInfo.productName,
       costPrice: prodInfo.costPrice,
       retailPrice: prodInfo.retailPrice,
-      qty
-    };
-
-    if (editingIndex !== null) products[editingIndex] = newProduct;
-    else products.push(newProduct);
+      qty,
+      partsJSON: Array.isArray(prodInfo.partsJSON) ? prodInfo.partsJSON : []
+    });
 
     renderGrid();
-    closeOverlay();
-  });
-
-  deleteBtn.addEventListener("click", () => {
-    if (editingIndex !== null) {
-      products.splice(editingIndex, 1);
-      renderGrid();
-      closeOverlay();
-    }
-  });
-
-  // -------------------- Slide progress --------------------
-  function markSlideFilled() {
-    const stepsData = window.stepsData;
-    if (!stepsData?.slides) return;
-
-    const slideEl = grid.closest(".carousel-item");
-    const idx = Array.from(stepsData.slides).indexOf(slideEl);
-    if (idx >= 0) stepsData.slideFilled[idx] = products.length > 0;
-
-    stepsData.updateProgress?.();
+    overlay.classList.remove("show");
+    overlay.classList.add("d-none");
   }
+
+  closeBtn.addEventListener("click", closeOverlay);
 
   // -------------------- Initialize --------------------
   await loadProductData();

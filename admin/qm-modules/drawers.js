@@ -1,121 +1,154 @@
 // qm-modules/drawers.js
+import { injectInvoiceIntoDrawer } from './invoice.js';
 
-// --- Event dispatcher for slides to notify drawers ---
 export const drawerEvents = new EventTarget();
 
-// --- Central drawer state ---
 const drawerState = {
   quoteSummaryDrawer: {
     name: null,
     clientID: null,
     tier: null,
+    memberSince: null,
     eventDate: null,
     eventLocation: null,
+    eventTheme: null,
     productCount: 0,
     productTotal: "$0.00",
-    productList: []
+    discount: null,
+    discountedTotal: null,
+    deposit: null,
+    amountPaid: null,
+    grandTotal: null
   },
-  balanceDetailsDrawer: {
-    items: []
-  },
-  runningTotalDrawer: {
-    html: ""
-  }
+  shoppingListDrawer: { items: [] },
+  runningTotalDrawer: { html: "" },
+  invoiceDrawer: { html: "" } // cached filled invoice
 };
 
-// =========================================================
-// 🧩 Drawer Rendering
-// =========================================================
-function renderDrawer(drawerName) {
+// -------------------- RENDER DRAWER --------------------
+async function renderDrawer(drawerName) {
   switch (drawerName) {
 
-    case "quoteSummaryDrawer": {
-      const s = drawerState.quoteSummaryDrawer;
+    case "invoiceDrawer": {
+      const container = document.getElementById("invoiceDrawer");
+      if (!container) return;
 
-      const summaryClientNameEl = document.getElementById("summaryClientName");
-      if (summaryClientNameEl) summaryClientNameEl.textContent = s.name || "—";
-
-      const summaryClientIDEl = document.getElementById("summaryClientID");
-      if (summaryClientIDEl) summaryClientIDEl.textContent = s.clientID ? formatPhoneNumber(s.clientID) : "—";
-
-      const summaryTierEl = document.getElementById("summaryTier");
-      if (summaryTierEl) summaryTierEl.textContent = s.tier || "—";
-
-      const summaryEventDateEl = document.getElementById("summaryEventDate");
-      if (summaryEventDateEl) summaryEventDateEl.textContent = s.eventDate ? formatDateForUser(s.eventDate) : "—";
-
-      const summaryEventLocationEl = document.getElementById("summaryEventLocation");
-      if (summaryEventLocationEl) summaryEventLocationEl.textContent = s.eventLocation || "—";
-
-      const summaryProductCountEl = document.getElementById("summaryProductCount");
-      if (summaryProductCountEl) summaryProductCountEl.textContent = `${s.productCount ?? 0} items`;
-
-      const summaryProductTotalEl = document.getElementById("summaryProductTotal");
-      if (summaryProductTotalEl) summaryProductTotalEl.textContent = s.productTotal || "$0.00";
-
-      const summaryProductListEl = document.getElementById("summaryProductList");
-      if (summaryProductListEl) {
-        summaryProductListEl.innerHTML = s.productList?.length
-          ? s.productList.map(p => `<li class="text-warning">${p.name} — ${p.qty} × $${p.retail.toFixed(2)} = $${p.total}</li>`).join("")
-          : "<li>No products selected</li>";
+      const currentQuote = window.currentQuote || {};
+      try {
+        await injectInvoiceIntoDrawer(currentQuote);
+      } catch (err) {
+        console.error("❌ Error injecting invoice:", err);
+        container.innerHTML = "<p>Invoice preview unavailable.</p>";
       }
       break;
     }
 
-    case "balanceDetailsDrawer": {
-      const s = drawerState.balanceDetailsDrawer;
-      const containerEl = document.getElementById("balanceDetailsDrawer");
-      if (containerEl) {
-        const bodyEl = containerEl.querySelector(".offcanvas-body");
-        if (bodyEl) {
-          bodyEl.innerHTML = s.items?.length
-            ? `<ul>${s.items.map(i => `<li>${i.desc}: ${i.amount}</li>`).join("")}</ul>`
-            : "<p>No items yet</p>";
-        }
+    case "quoteSummaryDrawer": {
+      const s = drawerState.quoteSummaryDrawer;
+      const mapping = {
+        summaryClientName: s.name,
+        summaryClientID: s.clientID ? formatPhoneNumber(s.clientID) : "—",
+        summaryTier: s.tier,
+        summaryMemberSince: s.memberSince ? formatDateForUser(s.memberSince) : "—",
+        summaryEventDate: s.eventDate ? formatDateForUser(s.eventDate) : "—",
+        summaryEventLocation: s.eventLocation,
+        summaryEventTheme: s.eventTheme,
+        summaryProductCount: `${s.productCount ?? 0}`,
+        summaryProductTotal: s.productTotal,
+        summaryDiscount: s.discount ?? "—",
+        summaryDiscountedTotal: s.discountedTotal ?? "—",
+        summaryDeposit: s.deposit ?? "—",
+        summaryAmountPaid: s.amountPaid ?? "—",
+        summaryPaidToDate: s.summaryPaidToDate ?? "—",
+        summaryGrandTotal: s.grandTotal ?? "—"
+      };
+      Object.entries(mapping).forEach(([id, value]) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = value || "—";
+      });
+      break;
+    }
+
+    case "shoppingListDrawer": {
+      const s = drawerState.shoppingListDrawer;
+      const container = document.getElementById("shoppinglist-body");
+      if (!container) break;
+      container.innerHTML = "";
+
+      if (!s.items?.length) {
+        container.innerHTML = `
+          <tr>
+            <td colspan="6" class="text-center text-muted py-3">
+              No materials needed
+            </td>
+          </tr>`;
+        break;
       }
+
+      s.items.forEach(mat => {
+        const row = document.createElement("tr");
+
+        const needed = Number(mat.totalNeeded) || 0;
+        const onHand = Number(mat.onHand) || 0;
+        const incoming = Number(mat.incoming) || 0;
+        const outgoing = Number(mat.outgoing) || 0;
+        const netAvailable = onHand + incoming - outgoing;
+
+        const shortfall = needed > netAvailable;
+        const reorder = netAvailable < (Number(mat.reorderLevel) || 0);
+
+        row.innerHTML = `
+          <td>${mat.matName || "—"}</td>
+          <td class="text-center">${needed}</td>
+          <td class="text-center">${onHand}</td>
+          <td class="text-center">
+            ${shortfall 
+                ? '<span class="text-danger fw-bold">Shortfall</span>' 
+                : '<span class="text-success">OK</span>'}
+          </td>
+          <td>${mat.supplier || "—"}</td>
+          <td class="text-center">
+            ${reorder 
+                ? '<span class="text-warning fw-bold">⚠️</span>' 
+                : '<span class="text-muted">—</span>'}
+          </td>
+        `;
+        container.appendChild(row);
+      });
       break;
     }
 
     case "runningTotalDrawer": {
-      const containerEl = document.getElementById("runningTotalBody");
-      if (containerEl) {
-        containerEl.innerHTML = drawerState.runningTotalDrawer.html || "<p>No totals available</p>";
-      }
+      const container = document.getElementById("runningTotalBody");
+      if (container) container.innerHTML = drawerState.runningTotalDrawer.html || "<p>No totals available</p>";
       break;
     }
 
     default:
-      console.warn("Unknown drawer for render:", drawerName);
+      console.warn("Unknown drawer:", drawerName);
   }
 }
 
-// =========================================================
-// 🧩 Initialization
-// =========================================================
+// -------------------- INIT DRAWERS --------------------
 export function initDrawers() {
   const drawerMap = {
     quoteSummaryDrawer: "openQuoteSummary",
-    balanceDetailsDrawer: "openBalanceDetails",
+    shoppingListDrawer: "openShoppingList",
     runningTotalDrawer: "openRunningTotal",
-    invoiceDrawer: "openInvoicePreview" // Button still mapped, but handled elsewhere
+    invoiceDrawer: "openInvoicePreview"
   };
 
   const drawerInstances = {};
-
-  // Bootstrap Offcanvas init
   Object.keys(drawerMap).forEach(drawerId => {
     const el = document.getElementById(drawerId);
     if (!el) return;
     drawerInstances[drawerId] = new bootstrap.Offcanvas(el);
   });
 
-  // Button click handlers
   Object.entries(drawerMap).forEach(([drawerId, btnId]) => {
     const btn = document.getElementById(btnId);
     if (!btn) return;
-
     btn.addEventListener("click", () => {
-      // Close other drawers
       Object.entries(drawerInstances).forEach(([otherId, instance]) => {
         if (otherId !== drawerId) instance.hide();
       });
@@ -123,85 +156,85 @@ export function initDrawers() {
     });
   });
 
-  // Unified drawer update listener
-  drawerEvents.addEventListener("updateDrawer", (e) => {
-    const { drawer, fields } = e.detail;
-    if (!drawerState[drawer]) return;
+  drawerEvents.addEventListener("updateDrawer", async () => {
+    const q = window.currentQuote;
+    if (!q) return;
 
-    // Default to global currentQuote if quote is not explicitly passed
-    const quote = fields.quote || window.currentQuote;
+    // Quote Summary Drawer
+    Object.assign(drawerState.quoteSummaryDrawer, {
+      name: q.clientName,
+      clientID: q.clientID,
+      tier: q.tier,
+      memberSince: q.memberSince,
+      eventDate: q.eventDate,
+      eventLocation: q.eventLocation,
+      eventTheme: q.eventTheme,
+      productCount: q.products?.length ?? 0,
+      productTotal: `$${(q.totalProductRetail ?? 0).toFixed(2)}`,
+      discount: q.discount != null ? `${q.discount}%` : "—",
+      discountedTotal: `$${(q.discountedTotal ?? 0).toFixed(2)}`,
+      deposit: `$${(q.deposit ?? 0).toFixed(2)}`,
+      amountPaid: `$${(q.amountPaid ?? 0).toFixed(2)}`,
+      grandTotal: `$${(q.grandTotal ?? 0).toFixed(2)}`,
+      summaryPaidToDate: `$${((q.deposit ?? 0) + (q.amountPaid ?? 0)).toFixed(2)}`
+    });
 
-    switch(drawer) {
-      case "quoteSummaryDrawer":
-        if (quote) {
-          Object.assign(drawerState.quoteSummaryDrawer, {
-            name: quote.clientName,
-            clientID: quote.clientID,
-            tier: quote.tier,
-            eventDate: quote.eventDate,
-            eventLocation: quote.eventLocation,
-            productCount: quote.products?.length ?? 0,
-            productTotal: `$${quote.totalProductRetail?.toFixed(2) || 0}`,
-            productList: quote.products?.map(p => ({
-              name: p.productName,
-              qty: p.qty,
-              retail: p.retailPrice,
-              total: (p.qty * p.retailPrice).toFixed(2)
-            })) || []
-          });
-        }
-        break;
+    // Running Total Drawer
+    drawerState.runningTotalDrawer.html = generateRunningTotalHTML(q);
 
-      case "balanceDetailsDrawer":
-        if (quote) {
-          drawerState.balanceDetailsDrawer.items = quote.balanceItems || [];
-        }
-        break;
+    // Clear cached invoice HTML
+    drawerState.invoiceDrawer.html = "";
 
-      case "runningTotalDrawer":
-        if (quote) {
-          // Existing running total rendering logic
-          const productsHtml = (quote.products?.length
-            ? `
-              <p><strong>Selected Products:</strong></p>
-              ${quote.products.map(p => `
-                <div class="product-row">
-                  <span class="name">${p.productName}</span>
-                  <span class="qty">${p.qty}</span> @
-                  <span class="price">$${(p.retailPrice ?? 0).toFixed(2)}</span> =
-                  <span class="total">$${((p.qty || 0) * (p.retailPrice ?? 0)).toFixed(2)}</span>
-                </div>
-              `).join("")}
-              <div class="product-subtotal">
-                <strong>Subtotal:</strong> $${(quote.totalProductRetail ?? 0).toFixed(2)}
-              </div>
-            ` : "<div class='no-products'>No products selected</div>"
-          );
-
-          drawerState.runningTotalDrawer.html = `
-            <div class="receipt">
-              <div class="receipt-products">${productsHtml}</div>
-              <div class="receipt-total">
-                <div><strong>Grand Total:</strong> $${(quote.grandTotal ?? 0).toFixed(2)}</div>
-              </div>
-            </div>
-          `;
-        }
-        break;
-
-      default:
-        Object.assign(drawerState[drawer], fields);
+    // Render all drawers
+    for (const d of ["quoteSummaryDrawer", "shoppingListDrawer", "runningTotalDrawer", "invoiceDrawer"]) {
+      await renderDrawer(d);
     }
-
-    renderDrawer(drawer);
   });
 }
 
-// =========================================================
-// 🧩 Drawer Update API
-// =========================================================
-export function notifyDrawer(drawerName, fields) {
-  drawerEvents.dispatchEvent(new CustomEvent("updateDrawer", {
-    detail: { drawer: drawerName, fields }
-  }));
+// -------------------- NOTIFY --------------------
+export function notifyDrawer() {
+  drawerEvents.dispatchEvent(new CustomEvent("updateDrawer"));
+}
+
+// -------------------- HELPER --------------------
+function generateRunningTotalHTML(q) {
+  const productsHtml = (q.products?.length
+    ? q.products.map(p => `
+      <div class="product-row">
+        <span class="name" title="${p.productName}">${p.productName}</span>
+        <span class="qty">${p.qty}</span> @ 
+        <span class="price">$${(p.retailPrice ?? 0).toFixed(2)}</span> = 
+        <span class="total">$${((p.qty||0)*(p.retailPrice??0)).toFixed(2)}</span>
+      </div>`).join("")
+    : "<div class='no-products'>No products selected</div>"
+  );
+
+  return `<div class="receipt">
+    <div class="receipt-header"><p>Generated: ${new Date().toLocaleDateString()}</p></div>
+
+    <div class="receipt-products">${productsHtml}</div>
+
+    <div class="receipt-subtotals">
+      <div><span>Total Product Retail:</span><span>$${(q.totalProductRetail??0).toFixed(2)}</span></div>
+      <div><span>Sales Tax (8.875%):</span><span>$${(q.subTotal1??0).toFixed(2)}</span></div>
+      <div><span>Discount (${q.discount??0}%):</span><span>$${(q.subTotal3??0).toFixed(2)}</span></div>
+      <div><span>After Discount:</span><span>$${(q.discountedTotal??0).toFixed(2)}</span></div>
+    </div>
+
+    <div class="receipt-addons">
+      <div><span>Delivery:</span><span>$${(q.deliveryFee??0).toFixed(2)}</span></div>
+      <div><span>Setup:</span><span>$${(q.setupFee??0).toFixed(2)}</span></div>
+      <div><span>Other:</span><span>$${(q.otherFee??0).toFixed(2)}</span></div>
+      <div><span>Add-ons Total:</span><span>$${(q.addonsTotal??0).toFixed(2)}</span></div>
+    </div>
+
+    <div class="receipt-total">
+      <div><strong>Grand Total:</strong><span>$${(q.grandTotal??0).toFixed(2)}</span></div>
+      <div><span>Deposit:</span><span>$${(q.deposit??0).toFixed(2)}</span></div>
+      <div><strong>Balance Due:</strong><span>$${(q.balanceDue??0).toFixed(2)}</span></div>
+    </div>
+
+    <div class="receipt-footer"><p>Thank you for your business!</p></div>
+  </div>`;
 }

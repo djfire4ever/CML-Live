@@ -87,17 +87,20 @@
   text-align: center;
   font-weight: 600;
   cursor: pointer;
+  /* overflow: visible; */
 
   /* Apply project theme */
   composes: project-theme;
 }
 
 .product-tile .name {
-  font-size: 1rem;
+  font-size: 1.2rem;
   line-height: 1.1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: nowrap;         /* keep it single line */
+  overflow: hidden;            /* hide overflow */
+  text-overflow: ellipsis;     /* show "..." for long text */
+  width: 100%;                 /* ensure it fills the tile width */
+  display: block;              /* makes width take effect reliably */
 }
 
 .product-tile .bottom-row {
@@ -249,4 +252,14 @@
 
 .product-summary-card:hover {
   transform: scale(1.03);
+}
+
+/* -------- Slide 3 select dropdown pseudo-options styling -------- */
+#productNameSelect option {
+  background-color: var(--theme-bg);
+  color: var(--theme-warning);
+}
+#productNameSelect option:checked {
+  background-color: var(--theme-warning);
+  color: var(--theme-bg);
 }

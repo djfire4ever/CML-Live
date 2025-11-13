@@ -66,12 +66,3 @@
   border: none !important;
 }
 
-/* -------- Slide 3 select dropdown pseudo-options styling -------- */
-#productNameSelect option {
-  background-color: var(--theme-bg);
-  color: var(--theme-warning);
-}
-#productNameSelect option:checked {
-  background-color: var(--theme-warning);
-  color: var(--theme-bg);
-}

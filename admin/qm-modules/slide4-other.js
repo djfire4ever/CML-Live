@@ -1,4 +1,3 @@
-// qm-modules/slide4-other.js
 import { notifyDrawer } from "./drawers.js";
 
 export async function initSlide4Other(currentQuote = {}) {
@@ -10,6 +9,18 @@ export async function initSlide4Other(currentQuote = {}) {
     if (!overlay) return;
     overlay.classList.remove("d-none");
     overlay.classList.add("show");
+
+    // Update overlay inputs when opened
+    if (overlayId === "addOnFeesOverlay") {
+      document.getElementById("deliveryFee").value = currentQuote.deliveryFee || 0;
+      document.getElementById("setupFee").value = currentQuote.setupFee || 0;
+      document.getElementById("otherFee").value = currentQuote.otherFee || 0;
+    } else if (overlayId === "balanceDetailsOverlay") {
+      document.getElementById("deposit").value = currentQuote.deposit || 0;
+      document.getElementById("amountPaid").value = currentQuote.amountPaid || 0;
+    } else if (overlayId === "discountOverlay") {
+      document.getElementById("discount").value = currentQuote.discount || 0;
+    }
   }
 
   function closeOverlay(overlayId) {
@@ -48,13 +59,13 @@ export async function initSlide4Other(currentQuote = {}) {
     const amountPaid = parseFloat(document.getElementById("amountPaid")?.value) || 0;
 
     Object.assign(currentQuote, {
+      deliveryFee,
+      setupFee,
+      otherFee,
       addonsTotal,
       discount,
       deposit,
-      amountPaid,
-      deliveryFee,
-      setupFee,
-      otherFee
+      amountPaid
     });
 
     // --- Calculations ---
@@ -76,32 +87,45 @@ export async function initSlide4Other(currentQuote = {}) {
       balanceDue
     });
 
-    // --- Update UI ---
+    // --- Update UI: Tiles ---
     const fmt = val => `$${val.toFixed(2)}`;
     document.getElementById("discountedTotal").textContent = fmt(discountedTotal);
     document.getElementById("balanceDue").textContent = fmt(balanceDue);
+    document.getElementById("addonsTotal").textContent = fmt(addonsTotal);
+    document.getElementById("addonsTotalSummary").textContent = fmt(addonsTotal);
+    document.getElementById("discountSummary").textContent = `${discount}%`;
+    document.getElementById("balanceDueSummary").textContent = fmt(balanceDue);
+
+    // --- Update overlays live ---
+    ["deliveryFee","setupFee","otherFee"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el && el !== document.activeElement) el.value = currentQuote[id] || 0;
+    });
+    ["deposit","amountPaid"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el && el !== document.activeElement) el.value = currentQuote[id] || 0;
+    });
+    const discountEl = document.getElementById("discount");
+    if (discountEl && discountEl !== document.activeElement) discountEl.value = currentQuote.discount || 0;
 
     // --- Notify drawers ---
-    notifyDrawer("summaryDrawer", { discountedTotal, grandTotal });
-    notifyDrawer("balanceDrawer", { total: grandTotal, paid: appliedPayment, balance: balanceDue });
+    notifyDrawer("quoteSummaryDrawer", {
+      productTotal: `$${totalProductRetail.toFixed(2)}`,
+      productCount: currentQuote.products?.length ?? 0
+    });
+    notifyDrawer("balanceDetailsDrawer", { 
+      total: grandTotal, 
+      paid: appliedPayment, 
+      balance: balanceDue 
+    });
     notifyDrawer("runningTotalDrawer", { quote: currentQuote });
+    notifyDrawer("invoiceDrawer", { quote: currentQuote });
   }
 
   // ------------------------
   // Slide 4 input update handlers
   // ------------------------
   function updateAddOns() {
-    const deliveryFee = parseFloat(document.getElementById("deliveryFee")?.value) || 0;
-    const setupFee = parseFloat(document.getElementById("setupFee")?.value) || 0;
-    const otherFee = parseFloat(document.getElementById("otherFee")?.value) || 0;
-    const addonsTotal = deliveryFee + setupFee + otherFee;
-
-    Object.assign(currentQuote, { deliveryFee, setupFee, otherFee, addonsTotal });
-
-    document.getElementById("addonsTotal").textContent = `$${addonsTotal.toFixed(2)}`;
-    document.getElementById("addonsTotalSummary").textContent = `$${addonsTotal.toFixed(2)}`;
-
-    notifyDrawer("summaryDrawer", { addonsTotal });
     recalcTotals();
     markSlideFilled();
   }
@@ -110,20 +134,11 @@ export async function initSlide4Other(currentQuote = {}) {
     let discount = parseFloat(document.getElementById("discount")?.value) || 0;
     discount = Math.max(0, Math.min(discount, 100));
     currentQuote.discount = discount;
-
-    document.getElementById("discount").value = discount;
-    document.getElementById("discountSummary").textContent = `${discount}%`;
-
     recalcTotals();
     markSlideFilled();
   }
 
   function updateBalance() {
-    const deposit = parseFloat(document.getElementById("deposit")?.value) || 0;
-    const amountPaid = parseFloat(document.getElementById("amountPaid")?.value) || 0;
-
-    Object.assign(currentQuote, { deposit, amountPaid });
-
     recalcTotals();
     markSlideFilled();
   }
@@ -134,13 +149,10 @@ export async function initSlide4Other(currentQuote = {}) {
   function markSlideFilled() {
     const stepsData = window.stepsData;
     if (!stepsData?.slides) return;
-
     const slideEl = document.getElementById("slide4OtherCarouselItem");
     if (!slideEl) return;
-
     const idx = Array.from(stepsData.slides).indexOf(slideEl);
     if (idx < 0) return;
-
     const filled = [
       currentQuote.deliveryFee,
       currentQuote.setupFee,
@@ -149,7 +161,6 @@ export async function initSlide4Other(currentQuote = {}) {
       currentQuote.amountPaid,
       currentQuote.discount
     ].some(v => v > 0);
-
     stepsData.slideFilled[idx] = filled;
     stepsData.updateProgress?.();
   }
@@ -158,40 +169,26 @@ export async function initSlide4Other(currentQuote = {}) {
   // Event Listeners
   // ------------------------
   document.getElementById("addOnFeesCard")?.addEventListener("click", () => openOverlay("addOnFeesOverlay"));
-  ["deliveryFee", "setupFee", "otherFee"].forEach(id =>
+  ["deliveryFee","setupFee","otherFee"].forEach(id =>
     document.getElementById(id)?.addEventListener("input", updateAddOns)
   );
-  document.getElementById("saveAddOnFees")?.addEventListener("click", () => {
-    updateAddOns();
-    closeOverlay("addOnFeesOverlay");
-  });
-  document.getElementById("cancelAddOnFees")?.addEventListener("click", () => closeOverlay("addOnFeesOverlay"));
+  document.getElementById("saveAddOnFees")?.addEventListener("click", () => closeOverlay("addOnFeesOverlay"));
 
   document.getElementById("balanceDetailsCard")?.addEventListener("click", () => openOverlay("balanceDetailsOverlay"));
-  ["deposit", "amountPaid"].forEach(id =>
+  ["deposit","amountPaid"].forEach(id =>
     document.getElementById(id)?.addEventListener("input", updateBalance)
   );
-  document.getElementById("saveBalanceDetails")?.addEventListener("click", () => {
-    updateBalance();
-    document.getElementById("balanceDueSummary").textContent = document.getElementById("balanceDue")?.textContent;
-    closeOverlay("balanceDetailsOverlay");
-  });
-  document.getElementById("cancelBalanceDetails")?.addEventListener("click", () => closeOverlay("balanceDetailsOverlay"));
+  document.getElementById("saveBalanceDetails")?.addEventListener("click", () => closeOverlay("balanceDetailsOverlay"));
 
   document.getElementById("discountCard")?.addEventListener("click", () => openOverlay("discountOverlay"));
   document.getElementById("discount")?.addEventListener("input", updateDiscount);
-  document.getElementById("saveDiscount")?.addEventListener("click", () => {
-    updateDiscount();
-    closeOverlay("discountOverlay");
-  });
+  document.getElementById("saveDiscount")?.addEventListener("click", () => closeOverlay("discountOverlay"));
 
   // ------------------------
-  // Listen for live updates from Slide 3
+  // Listen for live updates from other slides
   // ------------------------
-  document.addEventListener("quoteDataChanged", () => {
-    recalcTotals();
-  });
+  document.addEventListener("quoteDataChanged", recalcTotals);
 
-  // Initial calculation to populate drawers
+  // Initial calculation to populate tiles and overlays
   recalcTotals();
 }

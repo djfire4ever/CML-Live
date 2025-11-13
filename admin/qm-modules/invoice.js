@@ -1,89 +1,81 @@
-// qm-modules/invoice.js
+// invoice.js
+export async function injectInvoiceIntoDrawer(currentQuote) {
+  const invoiceBody = document.getElementById("invoiceBody");
+  if (!invoiceBody) return console.error("❌ Missing #invoiceBody in DOM");
 
-// Helper: format currency using global function if available
-const fmt = formatCurrency;
+  try {
+    // 1️⃣ Fetch invoice template
+    const res = await fetch("./qm-modules/invoice.html");
+    if (!res.ok) throw new Error(`Failed to fetch template: ${res.status}`);
+    let html = await res.text();
 
-// =========================================================
-// Generate HTML for the invoice drawer
-// =========================================================
-export function generateInvoiceHTML(quote) {
-    // Generate up to 15 product rows
-    const productRows = [];
-    for (let i = 1; i <= 15; i++) {
-        const part = quote[`part${i}`];
-        if (!part) continue;
-        const qty = quote[`qty${i}`] ?? 0;
-        const unitPrice = quote[`unitPrice${i}`] ?? 0;
-        const total = quote[`totalRowRetail${i}`] ?? 0;
+    // 2️⃣ Replace placeholders with data
+    const data = {
+      firstName: currentQuote.firstName || "",
+      lastName: currentQuote.lastName || "",
+      invoiceID: currentQuote.invoiceID || "",
+      invoiceDate: currentQuote.invoiceDate || "",
+      street: currentQuote.street || "",
+      city: currentQuote.city || "",
+      state: currentQuote.state || "",
+      zip: currentQuote.zip || "",
+      clientID: currentQuote.clientID || "",
+      email: currentQuote.email || "",
+      eventDate: currentQuote.eventDate || "",
+      eventLocation: currentQuote.eventLocation || "",
+      totalProductRetail: formatCurrency(currentQuote.totalProductRetail),
+      subTotal1: formatCurrency(currentQuote.subTotal1),
+      discount: currentQuote.discount || "0%",
+      subTotal3: formatCurrency(currentQuote.subTotal3),
+      grandTotal: formatCurrency(currentQuote.grandTotal),
+      deposit: formatCurrency(currentQuote.deposit),
+      balanceDue: formatCurrency(currentQuote.balanceDue),
+      addonsTotals: formatCurrency(currentQuote.addonsTotals),
+      discountedTotal: formatCurrency(currentQuote.discountedTotal),
+      balanceDueDate: currentQuote.balanceDueDate || "",
+      depositDate: currentQuote.depositDate || "",
+      paymentMethod: currentQuote.paymentMethod || ""
+    };
 
-        productRows.push(`
-            <tr>
-                <td>${part}</td>
-                <td></td>
-                <td></td>
-                <td>${qty}</td>
-                <td>${fmt(unitPrice)}</td>
-                <td>${fmt(total)}</td>
-                <td></td>
-                <td></td>
-            </tr>
-        `);
-    }
+    html = html.replace(/{{(\w+)}}/g, (_, key) => data[key] ?? "");
 
-    return `
-        <style>
-            table td, table th {
-                font-size: smaller;
-                border: 1px solid black;
-                line-height: 1.4;
-                padding: 10px 10px;
-            }
-        </style>
-        <table>
-            <tbody>
-                <tr><th></th><th>CraftyMama Labs</th><th></th><th></th><th></th><th></th><th></th><th></th></tr>
-                <tr><td></td><td>CUSTOM EVENT DECOR CREATOR</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-                <tr><td></td><td>(332) 202-8819</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-                <tr><td></td><td>tiffany@craftymamaalabs.com</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-                <tr><td></td><td>Invoice</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-                
-                <tr><td></td><td>Bill To:</td><td></td><td>Invoice #</td><td></td><td>Invoice date</td><td></td><td></td></tr>
-                <tr><td></td><td>${quote.firstName ?? ""}</td><td>${quote.lastName ?? ""}</td><td>${quote.invoiceID ?? ""}</td><td></td><td>${quote.invoiceDate ?? ""}</td><td></td><td></td></tr>
-                <tr><td></td><td>${quote.street ?? ""}</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-                <tr><td></td><td>${quote.city ?? ""}</td><td>${quote.state ?? ""}</td><td>${quote.zip ?? ""}</td><td></td><td></td><td></td><td></td></tr>
-                <tr><td></td><td>${quote.phone ?? ""}</td><td></td><td>Event Date</td><td></td><td>Event Location</td><td></td><td></td></tr>
-                <tr><td></td><td>${quote.email ?? ""}</td><td></td><td>${quote.eventDate ?? ""}</td><td></td><td>${quote.eventLocation ?? ""}</td><td></td><td></td></tr>
+    // 3️⃣ Inject filled HTML into drawer
+    invoiceBody.innerHTML = html;
 
-                <tr><td></td><td>Description</td><td></td><td></td><td>Qty</td><td>Unit Price</td><td>Total Price</td><td></td></tr>
-                ${productRows.join("")}
+    // 4️⃣ Inject products dynamically with proper alignment
+    const tbody = invoiceBody.querySelector("#invoice-products");
+    if (!tbody) return;
 
-                <tr><td></td><td> </td><td>0</td><td></td><td></td><td>Subtotal</td><td>${fmt(quote.totalProductRetail)}</td><td></td></tr>
-                <tr><td></td><td>Tax</td><td>8.875%</td><td></td><td></td><td>${fmt(quote.subTotal1)}</td><td>${fmt(quote.subTotal2)}</td><td></td></tr>
-                <tr><td></td><td>Discount</td><td></td><td></td><td>${quote.discount ?? 0}</td><td>${fmt(quote.subTotal3)}</td><td>${fmt(quote.discountedTotal)}</td><td></td></tr>
-                <tr><td></td><td>Add-Ons</td><td></td><td></td><td></td><td>${fmt(quote.addonsTotal)}</td><td>${fmt(quote.grandTotal)}</td><td></td></tr>
-                <tr><td></td><td>Deposit*</td><td></td><td>${fmt(quote.deposit)}</td><td>Paid on</td><td>${quote.depositDate ?? ""}</td><td></td><td></td></tr>
-                <tr><td></td><td>Balance of</td><td></td><td>${fmt(quote.balanceDue)}</td><td>Due By</td><td>${quote.balanceDueDate ?? ""}</td><td>${quote.paymentMethod ?? ""}</td><td></td></tr>
-                <tr><td></td><td>"Terms: As per agreed Terms and Conditions"</td></tr>
-                <tr><td>*Payment is due within 30 days of the invoice date. Late payments may be subject to a 5% late fee.</td></tr>
-                <tr><td>*Deposits are due up receipt of this invoice and are non-refundable.</td></tr>
-                <tr><td>*Deposit does not include Add-Ons. Add-Ons are due upon final payment."</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-            </tbody>
-        </table>
-    `;
-}
+    (currentQuote.parts || []).forEach(p => {
+      const row = document.createElement("tr");
 
-// =========================================================
-// Initialize Invoice Drawer
-// =========================================================
-export function initInvoice(currentQuote) {
-    const invoiceBtn = document.getElementById("openInvoicePreview");
-    if (!invoiceBtn) return;
+      const descTd = document.createElement("td");
+      descTd.setAttribute("colspan", "3");
+      descTd.textContent = p.part || p.description || "Unnamed Item";
 
-    invoiceBtn.addEventListener("click", () => {
-        const invoiceBody = document.getElementById("invoiceBody");
-        invoiceBody.innerHTML = generateInvoiceHTML(currentQuote);
+      const qtyTd = document.createElement("td");
+      qtyTd.className = "text-center";
+      qtyTd.textContent = p.qty || 0;
 
-        const invoiceDrawer = new bootstrap.Offcanvas(document.getElementById("invoiceDrawer"));
-        invoiceDrawer.show();
+      const unitTd = document.createElement("td");
+      unitTd.className = "text-right";
+      unitTd.style.textAlign = "right";
+      unitTd.style.whiteSpace = "nowrap";
+      unitTd.textContent = formatCurrency(p.unitPrice);
+
+      const totalTd = document.createElement("td");
+      totalTd.className = "text-right";
+      totalTd.style.textAlign = "right";
+      totalTd.style.whiteSpace = "nowrap";
+      totalTd.textContent = formatCurrency(p.total);
+
+      row.append(descTd, qtyTd, unitTd, totalTd);
+      tbody.appendChild(row);
     });
+
+    console.log("✅ Invoice successfully rendered into drawer");
+  } catch (err) {
+    console.error("❌ Error rendering invoice:", err);
+    invoiceBody.innerHTML = "<p>Failed to load invoice.</p>";
+  }
 }

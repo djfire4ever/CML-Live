@@ -5,7 +5,7 @@
 .event-tile {
   background-color: var(--theme-bg);         /* same as project theme */
   color: var(--theme-text);                  /* text color */
-  border: 1px solid var(--theme-text);      /* border matches text color */
+  border: 1px solid var(--theme-text);       /* border matches text color */
   border-radius: 12px;                       /* rounded corners */
   padding: 10px 14px;                        /* internal spacing */
   display: flex;                             /* flex layout */
