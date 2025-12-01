@@ -2,17 +2,11 @@
 import { notifyDrawer } from "./drawers.js";
 
 let clientData = [];
-const SKIP_CLIENT_FETCH = true; // toggle to false for real fetch
 
-const TIERS = {
-  New:      { iconBgColor: "success" },
-  Silver:   { iconBgColor: "secondary" },
-  Gold:     { iconBgColor: "warning" },
-  Platinum: { iconBgColor: "primary" }
-};
+// --- Toggle to skip fetching clients for testing ---
+const SKIP_CLIENT_FETCH = true; // set to false to enable real fetch
 
-const getTierData = tier => TIERS[tier] || TIERS.New;
-
+// --- Populate client fields in the form ---
 function populateClientFields(client) {
   const setText = (selector, value) => {
     const el = document.querySelector(selector);
@@ -113,33 +107,30 @@ export async function initSlide1Client(currentQuote, scriptURL) {
     }
 
     const query = input.value.trim().toLowerCase();
-
-    // (3) FIXED buggy clear case
     if (!query) {
-      suggestions.innerHTML = "";
       suggestions.style.display = "none";
+      suggestions.innerHTML = "";
       return;
     }
 
-    const matches = clientData.filter(c =>
-      [c.clientID, c.firstName, c.lastName, c.nickName]
-      .some(f => String(f||"").toLowerCase().includes(query))
+    const matches = clientData.filter(client =>
+      [client.clientID, client.firstName, client.lastName, client.nickName]
+        .some(f => String(f || "").toLowerCase().includes(query))
     );
 
     if (!matches.length) {
-      suggestions.innerHTML = "";
       suggestions.style.display = "none";
+      suggestions.innerHTML = "";
       return;
     }
 
     suggestions.innerHTML = matches.map(c =>
-      `<li class="list-group-item" data-id="${c.clientID}">${c.firstName} ${c.lastName} (${c.clientID})</li>`
-    ).join("");
-
+      `<li class="list-group-item" data-id="${c.clientID}">
+        ${c.firstName} ${c.lastName} (${c.clientID})
+      </li>`).join("");
     suggestions.style.display = "block";
   });
 
-  // Click suggestion
   suggestions.addEventListener("click", (e) => {
     const li = e.target.closest("li[data-id]");
     if (!li) return;
@@ -150,6 +141,7 @@ export async function initSlide1Client(currentQuote, scriptURL) {
     populateClientFields(client);
     input.value = `${client.firstName} ${client.lastName}`;
 
+    // --- Update shared state ---
     Object.assign(currentQuote, {
       clientID: client.clientID,
       firstName: client.firstName,

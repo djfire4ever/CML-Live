@@ -1,8 +1,9 @@
 // qm-modules/slide3-products.js
 import { notifyDrawer } from "./drawers.js";
 
-let products = [];
-let productData = [];
+let products = [];       // currently selected products
+let productData = [];    // cached product info
+let editingIndex = null;
 
 const SKIP_PRODUCT_FETCH = true;
 
@@ -19,7 +20,6 @@ export async function initSlide3Products(currentQuote, scriptURL) {
   const totalRetailSpan = document.getElementById("totalProductRetail");
   const closeBtn = document.getElementById("closeProduct");
 
-  // -------------------- Load product data --------------------
   async function loadProductData() {
     toggleLoader?.(true, { message: "Loading products..." });
     try {
@@ -56,7 +56,6 @@ export async function initSlide3Products(currentQuote, scriptURL) {
     }
   }
 
-  // -------------------- Populate dropdown --------------------
   function populateDropdown() {
     nameSelect.innerHTML = `<option value="" disabled selected>Select a product</option>`;
     productData.forEach(p => {
@@ -67,7 +66,6 @@ export async function initSlide3Products(currentQuote, scriptURL) {
     });
   }
 
-  // -------------------- Overlay totals --------------------
   function updateOverlayTotals() {
     const qty = parseInt(qtyInput.value, 10) || 0;
     const cost = parseFloat(costSpan.textContent) || 0;
@@ -88,7 +86,7 @@ export async function initSlide3Products(currentQuote, scriptURL) {
 
   qtyInput.addEventListener("input", updateOverlayTotals);
 
-  // -------------------- Render product grid --------------------
+  // -------------------- Render grid --------------------
   function renderGrid() {
     grid.innerHTML = "";
 
@@ -107,7 +105,7 @@ export async function initSlide3Products(currentQuote, scriptURL) {
         e.stopPropagation();
         products.splice(idx, 1);
         renderGrid();
-        updateProductTotals();
+        markSlideFilled();
       });
 
       tile.addEventListener("click", e => {
@@ -126,7 +124,7 @@ export async function initSlide3Products(currentQuote, scriptURL) {
     updateProductTotals();
   }
 
-  // -------------------- Update product totals --------------------
+  // -------------------- Update totals & notify drawers --------------------
   function updateProductTotals() {
     const count = products.length;
     const totalRetail = products.reduce((sum, p) => sum + p.qty * p.retailPrice, 0);
@@ -158,10 +156,13 @@ export async function initSlide3Products(currentQuote, scriptURL) {
     });
 
     notifyDrawer("runningTotalDrawer", { quote: currentQuote });
+
+    dispatchQuoteChanged();
   }
 
-  // -------------------- Overlay functions --------------------
-  function openOverlay(prod = null) {
+  // -------------------- Overlay controls --------------------
+  function openOverlay(prod = null, idx = null) {
+    editingIndex = idx;
     overlay.classList.remove("d-none");
     overlay.classList.add("show");
 
@@ -175,6 +176,14 @@ export async function initSlide3Products(currentQuote, scriptURL) {
   }
 
   function closeOverlay() {
+    overlay.classList.remove("show");
+    overlay.classList.add("d-none");
+    editingIndex = null;
+  }
+
+  cancelBtn.addEventListener("click", closeOverlay);
+
+  saveBtn.addEventListener("click", () => {
     const name = nameSelect.value.trim();
     if (!name) return overlay.classList.add("d-none");
 
@@ -191,13 +200,29 @@ export async function initSlide3Products(currentQuote, scriptURL) {
     });
 
     renderGrid();
-    overlay.classList.remove("show");
-    overlay.classList.add("d-none");
+    closeOverlay();
+  });
+
+  deleteBtn.addEventListener("click", () => {
+    if (editingIndex !== null) {
+      products.splice(editingIndex, 1);
+      renderGrid();
+      closeOverlay();
+    }
+  });
+
+  // -------------------- Slide progress --------------------
+  function markSlideFilled() {
+    const stepsData = window.stepsData;
+    if (!stepsData?.slides) return;
+
+    const slideEl = grid.closest(".carousel-item");
+    const idx = Array.from(stepsData.slides).indexOf(slideEl);
+    if (idx >= 0) stepsData.slideFilled[idx] = products.length > 0;
+
+    stepsData.updateProgress?.();
   }
 
-  closeBtn.addEventListener("click", closeOverlay);
-
-  // -------------------- Initialize --------------------
   await loadProductData();
   populateDropdown();
   renderGrid();

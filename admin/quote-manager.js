@@ -8,6 +8,10 @@ import { initSlide4Other } from "./qm-modules/slide4-other.js";
 // import { initSlide5Finalize } from "./qm-modules/slide5-finalize.js";
 import { injectInvoiceIntoDrawer } from "./qm-modules/invoice.js";
 import { drawerEvents, initDrawers } from "./qm-modules/drawers.js";
+<<<<<<< HEAD
+=======
+// import { initInvoice } from "./qm-modules/invoice.js";
+>>>>>>> c84d58e361c5649abe4e01d1372b4a8429cc7e7b
 import { collectQuotePayload } from "./qm-modules/quote-payload.js";
 import { setupShoppingListButton } from './qm-modules/shoppinglist.js';
 
@@ -164,6 +168,10 @@ async function initSlides() {
   await initSlide2Event(currentQuote);
   await initSlide3Products(currentQuote, scriptURL);
   await initSlide4Other(currentQuote);
+<<<<<<< HEAD
+=======
+  // await initInvoice(currentQuote);
+>>>>>>> c84d58e361c5649abe4e01d1372b4a8429cc7e7b
 
   window.currentQuote = currentQuote; // 🔹 Expose globally for debugging
 }
@@ -176,6 +184,7 @@ window.addEventListener('load', async () => {
   const stepsData = initStepsAndProgress();
   initNavigation(bsCarousel, stepsData);
 
+<<<<<<< HEAD
   // === 🔹 Add this block here (focus + optional clear) ===
   const carouselEl = document.getElementById("quoteCarousel");
   carouselEl.addEventListener("slid.bs.carousel", () => {
@@ -204,6 +213,13 @@ window.addEventListener('load', async () => {
   setupShoppingListButton(document.getElementById('openShoppingList'), scriptURL);
 });
 
+=======
+  initAppDrawers();
+  await initSlides();
+});
+
+
+>>>>>>> c84d58e361c5649abe4e01d1372b4a8429cc7e7b
 // === OPTIONAL DEBUG SECTION ===
 // Keep this part isolated so it’s easy to remove later.
 (() => {

@@ -126,6 +126,19 @@ export async function initSlide4Other(currentQuote = {}) {
   // Slide 4 input update handlers
   // ------------------------
   function updateAddOns() {
+<<<<<<< HEAD
+=======
+    const deliveryFee = parseFloat(document.getElementById("deliveryFee")?.value) || 0;
+    const setupFee = parseFloat(document.getElementById("setupFee")?.value) || 0;
+    const otherFee = parseFloat(document.getElementById("otherFee")?.value) || 0;
+    const addonsTotal = deliveryFee + setupFee + otherFee;
+
+    Object.assign(currentQuote, { deliveryFee, setupFee, otherFee, addonsTotal });
+
+    document.getElementById("addonsTotal").textContent = `$${addonsTotal.toFixed(2)}`;
+    document.getElementById("addonsTotalSummary").textContent = `$${addonsTotal.toFixed(2)}`;
+
+>>>>>>> c84d58e361c5649abe4e01d1372b4a8429cc7e7b
     recalcTotals();
     markSlideFilled();
   }
