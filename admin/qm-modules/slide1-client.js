@@ -1,12 +1,25 @@
 // qm-modules/slide1-client.js
-import { notifyDrawer } from "./drawers.js";
+
+// import { notifyDrawer } from "./drawers.js";
 
 let clientData = [];
+const SKIP_CLIENT_FETCH = true; // toggle to false for real fetch
 
-// --- Toggle to skip fetching clients for testing ---
-const SKIP_CLIENT_FETCH = true; // set to false to enable real fetch
+// ===============================
+// Tier config
+// ===============================
+const TIERS = {
+  New:      { iconBgColor: "success" },
+  Silver:   { iconBgColor: "secondary" },
+  Gold:     { iconBgColor: "warning" },
+  Platinum: { iconBgColor: "primary" }
+};
 
-// --- Populate client fields in the form ---
+const getTierData = tier => TIERS[tier] || TIERS.New;
+
+// ===============================
+// Populate UI fields
+// ===============================
 function populateClientFields(client) {
   const setText = (selector, value) => {
     const el = document.querySelector(selector);
@@ -14,7 +27,11 @@ function populateClientFields(client) {
   };
 
   if (!client) {
-    ["firstName","nickName","lastName","tier","email","street","city","state","zip","memberSince","birthday"].forEach(s => setText(`.${s}`, ""));
+    [
+      "firstName","nickName","lastName","tier","email","street",
+      "city","state","zip","memberSince","birthday"
+    ].forEach(s => setText(`.${s}`, ""));
+
     setText(".tier", "New");
     return;
   }
@@ -41,6 +58,9 @@ function populateClientFields(client) {
   setText(".birthday", client.birthday ? formatDateForUser(client.birthday) : "");
 }
 
+// ===============================
+// Load clients
+// ===============================
 async function loadClients(scriptURL) {
   toggleLoader(true, { message: "Loading clients..." });
   try {
@@ -75,6 +95,7 @@ async function loadClients(scriptURL) {
     }));
 
     console.log("➡️ Client data loaded", clientData);
+
   } catch (err) {
     console.error("❌ Error loading client data:", err);
     clientData = [];
@@ -84,21 +105,23 @@ async function loadClients(scriptURL) {
   }
 }
 
+// ===============================
+// Init slide
+// ===============================
 export async function initSlide1Client(currentQuote, scriptURL) {
   await loadClients(scriptURL);
 
   const input = document.querySelector(".clientID-input");
-  if (input) {
-    input.focus();
-    input.select();
-  }
   const suggestions = document.querySelector(".client-suggestions");
   if (!input || !suggestions) return;
 
-  // 🔥 NEW — handle built-in browser "X" clear button + fix suggestion clearing
+  input.focus();
+  input.select();
+
+  // --- INPUT EVENT ---
   input.addEventListener("input", () => {
 
-    // (2) User clicked the native search input "X"
+    // Native "X" clear button
     if (input.value === "") {
       suggestions.innerHTML = "";
       suggestions.style.display = "none";
@@ -107,30 +130,34 @@ export async function initSlide1Client(currentQuote, scriptURL) {
     }
 
     const query = input.value.trim().toLowerCase();
+
     if (!query) {
-      suggestions.style.display = "none";
       suggestions.innerHTML = "";
+      suggestions.style.display = "none";
       return;
     }
 
-    const matches = clientData.filter(client =>
-      [client.clientID, client.firstName, client.lastName, client.nickName]
+    const matches = clientData.filter(c =>
+      [c.clientID, c.firstName, c.lastName, c.nickName]
         .some(f => String(f || "").toLowerCase().includes(query))
     );
 
     if (!matches.length) {
-      suggestions.style.display = "none";
       suggestions.innerHTML = "";
+      suggestions.style.display = "none";
       return;
     }
 
     suggestions.innerHTML = matches.map(c =>
       `<li class="list-group-item" data-id="${c.clientID}">
         ${c.firstName} ${c.lastName} (${c.clientID})
-      </li>`).join("");
+      </li>`
+    ).join("");
+
     suggestions.style.display = "block";
   });
 
+  // --- CLICK SUGGESTION ---
   suggestions.addEventListener("click", (e) => {
     const li = e.target.closest("li[data-id]");
     if (!li) return;
@@ -141,7 +168,6 @@ export async function initSlide1Client(currentQuote, scriptURL) {
     populateClientFields(client);
     input.value = `${client.firstName} ${client.lastName}`;
 
-    // --- Update shared state ---
     Object.assign(currentQuote, {
       clientID: client.clientID,
       firstName: client.firstName,
@@ -160,25 +186,19 @@ export async function initSlide1Client(currentQuote, scriptURL) {
     // Progress tracking
     const stepsData = window.stepsData;
     if (stepsData && stepsData.slides) {
-      const slideEl = input.closest('.carousel-item');
+      const slideEl = input.closest(".carousel-item");
       if (slideEl) {
         const idx = Array.from(stepsData.slides).indexOf(slideEl);
         if (idx >= 0) stepsData.slideFilled[idx] = true;
       }
-      if (typeof stepsData.updateProgress === 'function') stepsData.updateProgress();
+      if (typeof stepsData.updateProgress === "function") stepsData.updateProgress();
     }
-
-    notifyDrawer("quoteSummaryDrawer", {
-      name: currentQuote.clientName,
-      clientID: currentQuote.clientID,
-      tier: currentQuote.tier
-    });
 
     suggestions.style.display = "none";
     showToast(`Loaded client: ${currentQuote.clientName}`, "info");
   });
 
-  // Hide suggestions when clicking elsewhere
+  // --- CLICK OUTSIDE TO HIDE ---
   document.addEventListener("click", e => {
     if (!input.contains(e.target) && !suggestions.contains(e.target)) {
       suggestions.style.display = "none";

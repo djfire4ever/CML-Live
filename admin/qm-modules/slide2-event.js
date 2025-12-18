@@ -1,4 +1,6 @@
-import { notifyDrawer } from "./drawers.js";
+// qm-modules/slide2-event.js
+
+// import { notifyDrawer } from "./drawers.js";
 
 // =========================================================
 // Slide 2: Event Details - QM Module
@@ -26,16 +28,16 @@ export function initSlide2Event(currentQuote) {
     });
 
     // --- Notify summary drawer using unified state ---
-    notifyDrawer("quoteSummaryDrawer", {
-      name: currentQuote.clientName,
-      clientID: currentQuote.clientID,
-      tier: currentQuote.tier,
-      eventDate: currentQuote.eventDate,
-      eventLocation: currentQuote.eventLocation
-    });
+    // notifyDrawer("quoteSummaryDrawer", {
+    //   name: currentQuote.clientName,
+    //   clientID: currentQuote.clientID,
+    //   tier: currentQuote.tier,
+    //   eventDate: currentQuote.eventDate,
+    //   eventLocation: currentQuote.eventLocation
+    // });
 
     // Optionally update other drawers if needed:
-    notifyDrawer("runningTotalDrawer", {}); // reads from currentQuote internally
+    // notifyDrawer("runningTotalDrawer", {}); // reads from currentQuote internally
   }
 
   // --- Attach listeners ---

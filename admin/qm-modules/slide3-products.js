@@ -1,9 +1,7 @@
 // qm-modules/slide3-products.js
-import { notifyDrawer } from "./drawers.js";
 
-let products = [];       // currently selected products
-let productData = [];    // cached product info
-let editingIndex = null;
+let products = [];
+let productData = [];
 
 const SKIP_PRODUCT_FETCH = true;
 
@@ -20,6 +18,7 @@ export async function initSlide3Products(currentQuote, scriptURL) {
   const totalRetailSpan = document.getElementById("totalProductRetail");
   const closeBtn = document.getElementById("closeProduct");
 
+  // -------------------- Load product data --------------------
   async function loadProductData() {
     toggleLoader?.(true, { message: "Loading products..." });
     try {
@@ -46,7 +45,6 @@ export async function initSlide3Products(currentQuote, scriptURL) {
           costPrice: parseFloat(r[6]) || 0,
           retailPrice: parseFloat(r[7]) || 0
         }));
-
       console.log("➡️ Product data loaded", productData);
     } catch (err) {
       console.error("❌ Failed to load product data:", err);
@@ -56,6 +54,7 @@ export async function initSlide3Products(currentQuote, scriptURL) {
     }
   }
 
+  // -------------------- Populate dropdown --------------------
   function populateDropdown() {
     nameSelect.innerHTML = `<option value="" disabled selected>Select a product</option>`;
     productData.forEach(p => {
@@ -66,6 +65,7 @@ export async function initSlide3Products(currentQuote, scriptURL) {
     });
   }
 
+  // -------------------- Overlay totals --------------------
   function updateOverlayTotals() {
     const qty = parseInt(qtyInput.value, 10) || 0;
     const cost = parseFloat(costSpan.textContent) || 0;
@@ -86,7 +86,7 @@ export async function initSlide3Products(currentQuote, scriptURL) {
 
   qtyInput.addEventListener("input", updateOverlayTotals);
 
-  // -------------------- Render grid --------------------
+  // -------------------- Render product grid --------------------
   function renderGrid() {
     grid.innerHTML = "";
 
@@ -105,11 +105,11 @@ export async function initSlide3Products(currentQuote, scriptURL) {
         e.stopPropagation();
         products.splice(idx, 1);
         renderGrid();
-        markSlideFilled();
+        updateProductTotals();
       });
 
       tile.addEventListener("click", e => {
-        if (!e.target.classList.contains("delete")) openOverlay(prod);
+        if (!e.target.classList.contains("delete")) openOverlay(prod, idx);
       });
 
       grid.appendChild(tile);
@@ -118,13 +118,13 @@ export async function initSlide3Products(currentQuote, scriptURL) {
     const addTile = document.createElement("div");
     addTile.className = "add-product-tile project-theme-tile";
     addTile.innerHTML = `<i class="bi bi-plus"></i> Product`;
-    addTile.addEventListener("click", () => openOverlay());
+    addTile.addEventListener("click", () => openOverlay(null, null));
     grid.appendChild(addTile);
 
     updateProductTotals();
   }
 
-  // -------------------- Update totals & notify drawers --------------------
+  // -------------------- Update product totals --------------------
   function updateProductTotals() {
     const count = products.length;
     const totalRetail = products.reduce((sum, p) => sum + p.qty * p.retailPrice, 0);
@@ -133,7 +133,6 @@ export async function initSlide3Products(currentQuote, scriptURL) {
     currentQuote.productsCount = count;
     currentQuote.totalProductRetail = totalRetail;
 
-    // ✅ Update the summary line DOM
     const summaryCard = document.querySelector("#productSummaryCard .summary-line");
     if (summaryCard) {
       const countSpan = summaryCard.querySelector(".count");
@@ -142,27 +141,12 @@ export async function initSlide3Products(currentQuote, scriptURL) {
       if (countSpan) countSpan.textContent = `${count} item${count !== 1 ? "s" : ""}`;
       if (totalSpan) totalSpan.textContent = `$${totalRetail.toFixed(2)}`;
     }
-
-    // ✅ Notify other drawers
-    notifyDrawer("quoteSummaryDrawer", {
-      productCount: count,
-      productTotal: `$${totalRetail.toFixed(2)}`,
-      productList: products.map(p => ({
-        name: p.productName,
-        qty: p.qty,
-        retail: p.retailPrice,
-        total: (p.qty * p.retailPrice).toFixed(2)
-      }))
-    });
-
-    notifyDrawer("runningTotalDrawer", { quote: currentQuote });
-
-    dispatchQuoteChanged();
+    window.stepsData?.updateProgress();
   }
 
-  // -------------------- Overlay controls --------------------
-  function openOverlay(prod = null, idx = null) {
-    editingIndex = idx;
+  // -------------------- Overlay functions --------------------
+  function openOverlay(prod = null, prodIndex = null) {
+    overlay.dataset.editIndex = prodIndex !== null ? prodIndex : "";
     overlay.classList.remove("d-none");
     overlay.classList.add("show");
 
@@ -176,14 +160,6 @@ export async function initSlide3Products(currentQuote, scriptURL) {
   }
 
   function closeOverlay() {
-    overlay.classList.remove("show");
-    overlay.classList.add("d-none");
-    editingIndex = null;
-  }
-
-  cancelBtn.addEventListener("click", closeOverlay);
-
-  saveBtn.addEventListener("click", () => {
     const name = nameSelect.value.trim();
     if (!name) return overlay.classList.add("d-none");
 
@@ -191,38 +167,31 @@ export async function initSlide3Products(currentQuote, scriptURL) {
     if (!prodInfo) return overlay.classList.add("d-none");
 
     const qty = parseInt(qtyInput.value, 10) || 1;
-    products.push({
+    const editIndex = overlay.dataset.editIndex;
+
+    const newProduct = {
       productName: prodInfo.productName,
       costPrice: prodInfo.costPrice,
       retailPrice: prodInfo.retailPrice,
       qty,
       partsJSON: Array.isArray(prodInfo.partsJSON) ? prodInfo.partsJSON : []
-    });
+    };
 
-    renderGrid();
-    closeOverlay();
-  });
-
-  deleteBtn.addEventListener("click", () => {
-    if (editingIndex !== null) {
-      products.splice(editingIndex, 1);
-      renderGrid();
-      closeOverlay();
+    if (editIndex !== null && editIndex !== "") {
+      products[editIndex] = newProduct;
+    } else {
+      products.push(newProduct);
     }
-  });
 
-  // -------------------- Slide progress --------------------
-  function markSlideFilled() {
-    const stepsData = window.stepsData;
-    if (!stepsData?.slides) return;
-
-    const slideEl = grid.closest(".carousel-item");
-    const idx = Array.from(stepsData.slides).indexOf(slideEl);
-    if (idx >= 0) stepsData.slideFilled[idx] = products.length > 0;
-
-    stepsData.updateProgress?.();
+    overlay.dataset.editIndex = "";
+    renderGrid();
+    overlay.classList.remove("show");
+    overlay.classList.add("d-none");
   }
 
+  closeBtn.addEventListener("click", closeOverlay);
+
+  // -------------------- Initialize --------------------
   await loadProductData();
   populateDropdown();
   renderGrid();

@@ -518,12 +518,16 @@
 
 <!-- Invoice Preview Drawer -->
 <div class="offcanvas offcanvas-end bg-black text-info" style="width: 600px;" tabindex="-1" id="invoiceDrawer">
-  <div class="offcanvas-header">
+  <div class="offcanvas-header d-flex justify-content-between align-items-center">
     <h5 class="offcanvas-title">Invoice Preview</h5>
-    <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    <div class="d-flex gap-2">
+      <button class="btn btn-sm btn-info" id="printInvoiceBtn">Print</button>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    </div>
   </div>
   <div class="offcanvas-body" id="invoiceBody">
-    <!-- dynamically filled by injectInvoiceIntoDrawer() -->
+    <div id="invoicePrintArea"></div>
+    <!-- injectInvoiceIntoDrawer() inserts invoice here -->
   </div>
 </div>
 

@@ -5,72 +5,106 @@
 <title>Invoice Template</title>
 
 <style>
-  @page { margin: 0; } /* Changing this gives me the desire margin around the page but it also shows date/time and filename*/
+/* ------------------------------------------------------------------
+   1. GENERAL TEMPLATE STYLES (unchanged)
+------------------------------------------------------------------ */
+@page { margin: 0; }
 
-  body {
-    width: 100%;
-    height: 100%;
-    background: #fff;
-    font-family: Arial, sans-serif;
-    font-size: 10pt;
-    color: #111;
-  }
+.invoice-scope {
+  font-family: Arial, sans-serif;
+  font-size: 10pt;
+  color: #111;
+}
 
-  .invoice-page {
-    position: absolute; /* stick to top-left */
-    top: 0;
-    left: 0;
-    margin: 0.25in;
-    padding: .1in; /* This pushes the right border out to the edge of the paper wher i assume standard printers will not print */
-    width: 7.5in; /* This draws the right side border inward but covers prt of the last column */
-    height: 10in;
-    border: 14px solid green; /* debug visualization */
-    background-color: #fff;
-    /* no padding here — content starts at border exactly */
-  }
+.invoice-scope .invoice-page {
+  position: absolute;
+  top: 0;
+  left: 0;
+  margin: 0.25in;
+  padding: .1in;
+  width: 7.5in;
+  height: 10in;
+  border: 14px solid green;
+  background: #fff;
+}
 
-  table.invoice-table {
-    /* width: 100%; */
-    border-collapse: collapse;
-    table-layout: fixed;
-    font-family: Arial, sans-serif;
-    font-size: 10pt;
-    /* box-sizing: border-box; */
-  }
+.invoice-scope .invoice-table {
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 10pt;
+}
 
-  .invoice-table td {
-    padding: 2px 3px; /* small cell padding, matches original */
-    vertical-align: bottom;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
+.invoice-scope .invoice-table td {
+  padding: 2px 3px;
+  vertical-align: bottom;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
-  .header-row td {
-    font-weight: bold;
-    border-bottom: 1px solid #999;
-    padding-top: 6px;
-  }
+.invoice-scope .header-row td {
+  font-weight: bold;
+  border-bottom: 1px solid #999;
+  padding-top: 6px;
+}
 
-  .text-right { text-align: right; }
-  .text-center { text-align: center; }
-  .nowrap { white-space: nowrap; }
+.invoice-scope .text-right { text-align: right; }
+.invoice-scope .text-center { text-align: center; }
+.invoice-scope .nowrap { white-space: nowrap; }
 
-  .spacer td { padding-top: 12px; }
+.invoice-scope .spacer td { padding-top: 12px; }
 
-  .totals-row td {
-    border-top: 1px solid #999;
-    padding-top: 6px;
-    font-weight: bold;
-  }
+.invoice-scope .totals-row td {
+  border-top: 1px solid #999;
+  padding-top: 6px;
+  font-weight: bold;
+}
 
-  .terms {
-    font-size: 9pt;
-    line-height: 1.4;
-    padding-top: 10px;
-  }
-  #invoiceDrawer td.text-right {
-  text-align: right !important;
-  white-space: nowrap;
+.invoice-scope .terms {
+  font-size: 9pt;
+  line-height: 1.4;
+  padding-top: 10px;
+}
+
+/* ------------------------------------------------------------------
+   2. DRAWER FIXES — these correct your left gap + floating layout
+------------------------------------------------------------------ */
+
+/* Remove Bootstrap's padding so invoice touches the left edge */
+#invoiceDrawer .offcanvas-body {
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow-x: hidden !important;   /* no sideways scroll */
+  overflow-y: auto !important;     /* vertical scroll allowed */
+  background: transparent !important;
+}
+
+/* Wrap invoice in a viewport that hides the left gap entirely */
+#invoiceDrawer #invoiceBody {
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow: hidden !important;      /* prevents left-side drawer bg */
+  position: relative;
+}
+
+/* Scaled invoice page — locked perfectly to top-left */
+#invoiceDrawer .invoice-page {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+
+  transform-origin: top left;
+  transform: scale(0.833333);           /* scaled to fit 600px drawer */
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  width: 720px;                     /* full size before scaling */
+  height: 960px;
+}
+
+/* Prevent any weird internal scroll inside .invoice-scope */
+#invoiceDrawer .invoice-scope {
+  overflow: hidden !important;
 }
 
 </style>
@@ -78,144 +112,141 @@
 </head>
 
 <body>
-<div class="invoice-page bg-light text-dark">
-  <table class="invoice-table">
-    <colgroup>
-      <col style="width: 150px;">
-      <col style="width: 100px;">
-      <col style="width: 100px;">
-      <col style="width: 75px;">
-      <col style="width: 120px;">
-      <col style="width: 120px;">
-    </colgroup>
-    <tbody>
+<div class="invoice-scope">
+  <div class="invoice-page bg-light text-dark">
+    <table class="invoice-table">
+      <colgroup>
+        <col style="width: 150px;">
+        <col style="width: 100px;">
+        <col style="width: 100px;">
+        <col style="width: 75px;">
+        <col style="width: 120px;">
+        <col style="width: 120px;">
+      </colgroup>
 
-      <!-- ===================== COMPANY HEADER ===================== -->
-      <!-- <tr><td colspan="6" style="background-color: green; height: 24px;">&nbsp;</td></tr> -->
-      <tr><td colspan="6" style="font-weight: bold; font-size: 18pt; color: green;">CraftyMama Labs</td></tr>
-      <tr><td colspan="6" style="font-weight: bold; font-size: 12pt; color: greenyellow;">CUSTOM EVENT DECOR CREATOR</td></tr>
-      <tr><td colspan="6" style="font-weight: bold;">(332) 202-8819</td></tr>
-      <tr><td colspan="6" style="font-weight: bold;">tiffany@craftymamalabs.com</td></tr>
+      <tbody>
+        <tr><td colspan="6" style="font-weight: bold; font-size: 18pt; color: green;">CraftyMama Labs</td></tr>
+        <tr><td colspan="6" style="font-weight: bold; font-size: 12pt; color: greenyellow;">CUSTOM EVENT DECOR CREATOR</td></tr>
+        <tr><td colspan="6" style="font-weight: bold;">(332) 202-8819</td></tr>
+        <tr><td colspan="6" style="font-weight: bold;">tiffany@craftymamalabs.com</td></tr>
 
-      <tr class="spacer"><td colspan="6">&nbsp;</td></tr>
+        <tr class="spacer"><td colspan="6">&nbsp;</td></tr>
 
-      <!-- ================= CLIENT + INVOICE INFO ================== -->
-      <tr>
-        <td style="font-weight: bold;">Bill To:</td><td></td>
-        <td style="font-weight: bold;">Invoice #</td><td></td>
-        <td style="font-weight: bold;">Invoice Date</td><td></td>
-      </tr>
+        <tr>
+          <td style="font-weight: bold;">Bill To:</td><td></td>
+          <td style="font-weight: bold;">Invoice #</td><td></td>
+          <td style="font-weight: bold;">Invoice Date</td><td></td>
+        </tr>
 
-      <tr>
-        <td>{{firstName}}</td>
-        <td>{{lastName}}</td>
-        <td>{{invoiceID}}</td>
-        <td></td>
-        <td class="nowrap">{{invoiceDate}}</td>
-        <td></td>
-      </tr>
+        <tr>
+          <td>{{firstName}}</td>
+          <td>{{lastName}}</td>
+          <td>{{invoiceID}}</td>
+          <td></td>
+          <td class="nowrap">{{invoiceDate}}</td>
+          <td></td>
+        </tr>
 
-      <tr>
-        <td colspan="6">{{street}}</td>
-      </tr>
+        <tr><td colspan="6">{{street}}</td></tr>
 
-      <tr>
-        <td>{{city}}</td>
-        <td>{{state}}</td>
-        <td>{{zip}}</td>
-        <td></td>
-        <td></td>
-        <td></td>
-      </tr>
+        <tr>
+          <td>{{city}}</td>
+          <td>{{state}}</td>
+          <td>{{zip}}</td>
+          <td></td>
+          <td></td>
+          <td></td>
+        </tr>
 
-      <tr>
-        <td>{{clientID}}</td>
-        <td></td>
-        <td style="font-weight: bold;">Event Date</td>
-        <td></td>
-        <td style="font-weight: bold;">Event Location</td>
-      </tr>
+        <tr>
+          <td>{{clientID}}</td>
+          <td></td>
+          <td style="font-weight: bold;">Event Date</td>
+          <td></td>
+          <td style="font-weight: bold;">Event Location</td>
+        </tr>
 
-      <tr>
-        <td colspan="2">{{email}}</td>
-        <td>{{eventDate}}</td>
-        <td></td>
-        <td>{{eventLocation}}</td>
-      </tr>
+        <tr>
+          <td colspan="2">{{email}}</td>
+          <td>{{eventDate}}</td>
+          <td></td>
+          <td colspan="2">{{eventLocation}}</td>
+        </tr>
 
-      <tr class="spacer"><td colspan="6">&nbsp;</td></tr>
+        <tr class="spacer"><td colspan="6">&nbsp;</td></tr>
 
-      <!-- ===================== PRODUCTS HEADER ===================== -->
-      <tr class="header-row" id="parts-header">
-        <td colspan="3">Description</td>
-        <td class="text-center">Qty</td>
-        <td class="text-right">Unit Price</td>
-        <td class="text-right">Total Price</td>
-      </tr>
-    </tbody>
+        <tr class="header-row" id="parts-header">
+          <td colspan="3">Description</td>
+          <td class="text-center">Qty</td>
+          <td class="text-right">Unit Price</td>
+          <td class="text-right">Total Price</td>
+        </tr>
+      </tbody>
 
-    <!-- ===================== DYNAMIC PRODUCTS ===================== -->
-    <tbody>
-      <tr>
-        <td colspan="6" style="border-top: 2px solid #999; padding-top: 4px;"></td>
-      </tr>
-    </tbody>
-    <tbody id="invoice-products"></tbody>
+      <tbody>
+        <tr><td colspan="6" style="border-top: 2px solid #999; padding-top: 4px;"></td></tr>
+      </tbody>
 
-    <!-- ===================== TOTALS SECTION ===================== -->
-    <tbody id="totals-section">
-      <tr class="totals-row">
-        <td colspan="4"></td>
-        <td class="text-right">Subtotal</td>
-        <td class="text-right">{{totalProductRetail}}</td>
-      </tr>
-      <tr>
-        <td></td><td></td><td></td><td></td> <!-- Without the tax % -->
-        <!-- <td style="font-weight: bold;">Tax</td><td>8.875%</td><td></td><td></td> With the tax % -->
-        <td class="text-right">{{subTotal1}}</td>
-        <td class="text-right">{{subTotal2}}</td>
-      </tr>
-      <tr>
-        <td style="font-weight: bold;">Discount</td><td></td><td></td>
-        <td class="text-right">{{discount}}%</td>
-        <td class="text-right">{{subTotal3}}</td>
-        <td class="text-right">{{discountedTotal}}</td>
-      </tr>
-      <tr>
-        <td style="font-weight: bold;">Add-Ons</td><td></td><td></td><td></td>
-        <td class="text-right">{{addonsTotals}}</td>
-        <td class="text-right">{{grandTotal}}</td>
-      </tr>
-      <tr>
-        <td style="font-weight: bold;">Deposit*</td><td></td>
-        <td>{{deposit}}</td>
-        <td style="font-weight: bold;">Paid on</td>
-        <td class="nowrap">{{depositDate}}</td>
-        <td></td>
-      </tr>
-      <tr>
-        <td style="font-weight: bold;">Balance of</td><td></td>
-        <td>{{balanceDue}}</td>
-        <td style="font-weight: bold;">Due By</td>
-        <td class="nowrap">{{balanceDueDate}}</td>
-        <td>{{paymentMethod}}</td>
-      </tr>
+      <tbody id="invoice-products"></tbody>
 
-      <tr class="spacer"><td colspan="6">&nbsp;</td></tr>
-      <tr>
-        <td colspan="6" class="terms">
-          <strong>Terms:</strong> As per agreed Terms and Conditions<br>
-          *Payment is due within 30 days of the invoice date. Late payments may be subject to a 5% late fee.<br>
-          *Deposits are due upon receipt of this invoice and are non-refundable.<br>
-          *Deposit does not include Add-Ons. Add-Ons are due upon final payment.
-        </td>
-      </tr>
-    </tbody>
-  </table>
+      <tbody id="totals-section">
+        <tr class="totals-row">
+          <td colspan="4"></td>
+          <td class="text-right">Subtotal</td>
+          <td class="text-right">{{totalProductRetail}}</td>
+        </tr>
+
+        <tr>
+          <td></td><td></td><td></td><td></td>
+          <td class="text-right">{{subTotal1}}</td>
+          <td class="text-right">{{subTotal2}}</td>
+        </tr>
+
+        <tr>
+          <td style="font-weight: bold;">Discount</td><td></td>
+          <td class="text-left">{{discount}}</td><td></td>
+          <td class="text-right">{{subTotal3}}</td>
+          <td class="text-right">{{discountedTotal}}</td>
+        </tr>
+
+        <tr>
+          <td style="font-weight: bold;">Add-Ons</td><td></td><td></td><td></td>
+          <td class="text-right">{{addonsTotals}}</td>
+          <td class="text-right">{{grandTotal}}</td>
+        </tr>
+
+        <tr>
+          <td style="font-weight: bold;">Deposit*</td><td></td>
+          <td>{{deposit}}</td>
+          <td style="font-weight: bold;">Paid on</td>
+          <td class="nowrap">{{depositDate}}</td>
+          <td></td>
+        </tr>
+
+        <tr>
+          <td style="font-weight: bold;">Balance of</td><td></td>
+          <td>{{balanceDue}}</td>
+          <td style="font-weight: bold;">Due By</td>
+          <td class="nowrap">{{balanceDueDate}}</td>
+          <td>{{paymentMethod}}</td>
+        </tr>
+
+        <tr class="spacer"><td colspan="6">&nbsp;</td></tr>
+
+        <tr>
+          <td colspan="6" class="terms">
+            <strong>Terms:</strong> As per agreed Terms and Conditions<br>
+            *Payment is due within 30 days of the invoice date. Late payments may be subject to a 5% late fee.<br>
+            *Deposits are due upon receipt of this invoice and are non-refundable.<br>
+            *Deposit does not include Add-Ons. Add-Ons are due upon final payment.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 </div>
+
+<!-- <script src="qm-modules/invoice.js"></script> -->
 </body>
 </html>
-
-<!-- Load invoice.js first -->
-<script src="qm-modules/invoice.js"></script>
 

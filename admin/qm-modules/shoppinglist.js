@@ -17,7 +17,9 @@ export async function loadMaterials(scriptURL) {
         [1, "Cardstock-110 lb White", 0.2, "sheet", "1", "Acme Paper Co.", "https://acmepaper.com", 0.2, 50, 20, 5, 10],
         [2, "LED Lights", 0.5, "string", "1", "BrightTech", "https://brighttech.com", 0.5, 100, 50, 10, 20],
         [3, "Cricut Mat", 5, "unit", "1", "Cricut Supplies", "https://cricut.com", 5, 30, 10, 0, 5],
-        [4, "Double-Sided Tape", 0.25, "roll", "1", "TapeCo", "https://tapeco.com", 0.25, 80, 40, 5, 15]
+        [4, "Double-Sided Tape", 0.25, "roll", "1", "TapeCo", "https://tapeco.com", 0.25, 80, 40, 5, 15],
+        [5, "HP Instant Ink & Paper", 1, "unit", "1", "HP Supplies", "https://hp.com", 1, 100, 50, 0, 0],
+        [6, "3D Tape-White", 0.5, "roll", "1", "TapeCo", "https://tapeco.com", 0.5, 50, 20, 0, 0],
       ];
     } else {
       const res = await fetch(`${scriptURL}?action=getMatDataForSearch`);
@@ -60,38 +62,35 @@ export async function renderShoppingList(currentQuote, scriptURL) {
   }
 
   const tbody = document.getElementById("shoppinglist-body");
-  if (!tbody) return console.error("❌ #shoppinglist-body not found in DOM");
+  if (!tbody) return;
 
   const materials = await loadMaterials(scriptURL);
 
   const matMap = {};
   currentQuote.products.forEach(prod => {
-    if (!Array.isArray(prod.partsJSON)) return;
     const prodQty = parseFloat(prod.qty) || 1;
 
     prod.partsJSON.forEach(part => {
-      const partName = part.matName?.trim().toLowerCase();
+      const partName = part.matName.trim().toLowerCase();
       const qtyPerUnit = parseFloat(part.qty) || 0;
-      if (!partName || qtyPerUnit === 0) return;
 
+      // Live DB guarantees this always exists
       const mat = materials.find(m => m.matName.toLowerCase() === partName);
-      const matID = mat?.matID || `unknown-${partName}`;
 
-      if (!matMap[matID]) {
-        matMap[matID] = {
-          matID,
-          matName: mat?.matName || part.matName || "❓ Unknown",
-          unitType: mat?.unitType || "unit(s)",
-          supplier: mat?.supplier || "—",
-          totalNeeded: 0,
-          onHand: parseFloat(mat?.onHand) || 0,
-          incoming: parseFloat(mat?.incoming) || 0,
-          outgoing: parseFloat(mat?.outgoing) || 0,
-          reorderLevel: parseFloat(mat?.reorderLevel) || 0
-        };
-      }
+      matMap[mat.matID] = matMap[mat.matID] || {
+        matID: mat.matID,
+        matName: mat.matName,
+        unitType: mat.unitType,
+        supplier: mat.supplier,
+        supplierUrl: mat.supplierUrl,
+        totalNeeded: 0,
+        onHand: parseFloat(mat.onHand),
+        incoming: parseFloat(mat.incoming),
+        outgoing: parseFloat(mat.outgoing),
+        reorderLevel: parseFloat(mat.reorderLevel)
+      };
 
-      matMap[matID].totalNeeded += qtyPerUnit * prodQty;
+      matMap[mat.matID].totalNeeded += qtyPerUnit * prodQty;
     });
   });
 
@@ -117,6 +116,19 @@ export async function renderShoppingList(currentQuote, scriptURL) {
       <td>${mat.supplier || "—"}</td>
       <td class="text-center">${reorder ? '<span class="text-warning fw-bold">⚠️</span>' : '<span class="text-muted">—</span>'}</td>
     `;
+
+    // Add clickable behavior if supplierUrl exists
+    if (mat.supplierUrl) {
+      row.classList.add("clickable-row");
+
+      // Ensure pointer cursor on all cells
+      row.querySelectorAll("td").forEach(td => td.style.cursor = "pointer");
+
+      row.addEventListener("click", () => {
+        window.open(mat.supplierUrl, "_blank");
+      });
+    }
+
     tbody.appendChild(row);
   });
 
@@ -125,18 +137,14 @@ export async function renderShoppingList(currentQuote, scriptURL) {
 
 // -------------------- SETUP BUTTON --------------------
 export function setupShoppingListButton(buttonEl, scriptURL) {
-  if (!buttonEl) return console.warn("⚠️ Button element not provided");
-
-  let injected = false;
+  if (!buttonEl) return;
 
   buttonEl.addEventListener("click", async () => {
     const q = window.currentQuote;
-    if (!q) return console.warn("⚠️ currentQuote not ready yet");
+    if (!q) return;
 
-    if (injected) return console.log("⚠️ Shopping list already rendered");
     try {
       await renderShoppingList(q, scriptURL);
-      injected = true;
     } catch (err) {
       console.error("❌ Shopping list injection failed:", err);
     }

@@ -1,4 +1,6 @@
-import { notifyDrawer } from "./drawers.js";
+// qm-modules/slide4-other.js
+
+// import { notifyDrawer } from "./drawers.js";
 
 export async function initSlide4Other(currentQuote = {}) {
   // ------------------------
@@ -108,37 +110,12 @@ export async function initSlide4Other(currentQuote = {}) {
     const discountEl = document.getElementById("discount");
     if (discountEl && discountEl !== document.activeElement) discountEl.value = currentQuote.discount || 0;
 
-    // --- Notify drawers ---
-    notifyDrawer("quoteSummaryDrawer", {
-      productTotal: `$${totalProductRetail.toFixed(2)}`,
-      productCount: currentQuote.products?.length ?? 0
-    });
-    notifyDrawer("balanceDetailsDrawer", { 
-      total: grandTotal, 
-      paid: appliedPayment, 
-      balance: balanceDue 
-    });
-    notifyDrawer("runningTotalDrawer", { quote: currentQuote });
-    notifyDrawer("invoiceDrawer", { quote: currentQuote });
   }
 
   // ------------------------
   // Slide 4 input update handlers
   // ------------------------
   function updateAddOns() {
-<<<<<<< HEAD
-=======
-    const deliveryFee = parseFloat(document.getElementById("deliveryFee")?.value) || 0;
-    const setupFee = parseFloat(document.getElementById("setupFee")?.value) || 0;
-    const otherFee = parseFloat(document.getElementById("otherFee")?.value) || 0;
-    const addonsTotal = deliveryFee + setupFee + otherFee;
-
-    Object.assign(currentQuote, { deliveryFee, setupFee, otherFee, addonsTotal });
-
-    document.getElementById("addonsTotal").textContent = `$${addonsTotal.toFixed(2)}`;
-    document.getElementById("addonsTotalSummary").textContent = `$${addonsTotal.toFixed(2)}`;
-
->>>>>>> c84d58e361c5649abe4e01d1372b4a8429cc7e7b
     recalcTotals();
     markSlideFilled();
   }

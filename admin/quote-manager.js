@@ -6,14 +6,10 @@ import { initSlide2Event } from "./qm-modules/slide2-event.js";
 import { initSlide3Products } from './qm-modules/slide3-products.js';
 import { initSlide4Other } from "./qm-modules/slide4-other.js";
 // import { initSlide5Finalize } from "./qm-modules/slide5-finalize.js";
-import { injectInvoiceIntoDrawer } from "./qm-modules/invoice.js";
 import { drawerEvents, initDrawers } from "./qm-modules/drawers.js";
-<<<<<<< HEAD
-=======
-// import { initInvoice } from "./qm-modules/invoice.js";
->>>>>>> c84d58e361c5649abe4e01d1372b4a8429cc7e7b
-import { collectQuotePayload } from "./qm-modules/quote-payload.js";
+import { setupInvoiceButton } from './qm-modules/invoice.js';
 import { setupShoppingListButton } from './qm-modules/shoppinglist.js';
+import { collectQuotePayload } from "./qm-modules/quote-payload.js";
 
 // === Carousel Initialization ===
 function initCarousel() {
@@ -37,19 +33,21 @@ function initStepsAndProgress() {
   const slideFilled = Array(totalSlides).fill(false);
   let currentStep = 0;
 
-  function isSlideFilled(slideEl) {
-    const inputs = slideEl.querySelectorAll("input, select, textarea");
+  function isSlideFilled(slideEl, idx) {
+    // Slide 3: check products in currentQuote
+    if (idx === 2) {
+      return Array.isArray(window.currentQuote?.products) && window.currentQuote.products.length > 0;
+    }
 
+    // All other slides: check inputs
+    const inputs = slideEl.querySelectorAll("input, select, textarea");
     return Array.from(inputs).some(input => {
       const value = input.value.trim();
 
-      // 🟡 Ignore default zeros and empty strings
       if (input.type === "number") {
         const num = parseFloat(value);
         return !isNaN(num) && num > 0;
       }
-
-      // 🟡 Ignore placeholder "0%" or "$0.00"
       if (value === "0" || value === "0%" || value === "$0.00") return false;
 
       return value !== "";
@@ -58,41 +56,28 @@ function initStepsAndProgress() {
 
   function updateProgress() {
     slides.forEach((slide, idx) => {
-      if (idx === 2) {
-        // Slide 3 uses product tiles instead of inputs
-        const grid = slide.querySelector(".product-grid");
-        const productTiles = grid ? grid.querySelectorAll(".product-tile") : [];
-        slideFilled[idx] = productTiles.length > 0;
-      } else {
-        slideFilled[idx] = isSlideFilled(slide);
-      }
+      slideFilled[idx] = isSlideFilled(slide, idx);
     });
 
-    // Update step indicators
     steps.forEach((step, idx) => {
       step.classList.toggle("active", idx === currentStep);
       step.classList.toggle("filled", slideFilled[idx]);
     });
 
-    // Update progress bar width (0–80%)
     const filledCount = slideFilled.filter(Boolean).length;
     const percent = (filledCount / totalSlides) * 80;
     if (progressBar) progressBar.style.setProperty("width", `${percent}%`, "important");
   }
 
-  // Input listeners for normal slides
-  slides.forEach(slide => {
+  // Input listeners for slides (except Slide 3)
+  slides.forEach((slide, idx) => {
+    if (idx === 2) return; // Slide 3 doesn’t need input listeners
     slide.querySelectorAll("input, select, textarea").forEach(input =>
       input.addEventListener("input", updateProgress)
     );
   });
 
-  // 🔹 Listen for product changes from Slide 3
-  if (typeof drawerEvents !== "undefined") {
-    drawerEvents.addEventListener("slide3ProductsChanged", updateProgress);
-  }
-
-  // Return control interface
+  // Interface to control steps externally
   const stepsData = {
     steps,
     slides,
@@ -162,18 +147,31 @@ function initAppDrawers() {
 
 // === Slide Initialization ===
 async function initSlides() {
-  const currentQuote = {}; // 🔹 shared mutable object
+  // create the canonical object
+  const rawQuote = {}; // shared mutable object
 
+  // wrap it in a Proxy (without console traces)
+  const currentQuote = new Proxy(rawQuote, {
+    set(target, prop, value) {
+      target[prop] = value;
+      return true;
+    },
+    deleteProperty(target, prop) {
+      return delete target[prop];
+    }
+  });
+
+  // Expose the proxied object globally before handing it to slides
+  window.currentQuote = currentQuote;
+
+  // Pass the proxied object into the slide initializers
   await initSlide1Client(currentQuote, scriptURL);
   await initSlide2Event(currentQuote);
   await initSlide3Products(currentQuote, scriptURL);
   await initSlide4Other(currentQuote);
-<<<<<<< HEAD
-=======
-  // await initInvoice(currentQuote);
->>>>>>> c84d58e361c5649abe4e01d1372b4a8429cc7e7b
 
-  window.currentQuote = currentQuote; // 🔹 Expose globally for debugging
+  // Ensure window.currentQuote remains set
+  window.currentQuote = currentQuote;
 }
 
 // === Window Load Entry Point ===
@@ -184,7 +182,6 @@ window.addEventListener('load', async () => {
   const stepsData = initStepsAndProgress();
   initNavigation(bsCarousel, stepsData);
 
-<<<<<<< HEAD
   // === 🔹 Add this block here (focus + optional clear) ===
   const carouselEl = document.getElementById("quoteCarousel");
   carouselEl.addEventListener("slid.bs.carousel", () => {
@@ -200,9 +197,6 @@ window.addEventListener('load', async () => {
       if (suggestions) {
         suggestions.style.display = "none";
       }
-
-      // input.value = "";       // optional
-      // populateClientFields(); // optional
     }
   });
   // === end insert ===
@@ -211,26 +205,39 @@ window.addEventListener('load', async () => {
   await initSlides();
 
   setupShoppingListButton(document.getElementById('openShoppingList'), scriptURL);
+  setupInvoiceButton(document.getElementById('openInvoicePreview'), currentQuote, scriptURL);
 });
 
-=======
-  initAppDrawers();
-  await initSlides();
-});
-
-
->>>>>>> c84d58e361c5649abe4e01d1372b4a8429cc7e7b
-// === OPTIONAL DEBUG SECTION ===
+// === OPTIONAL DEBUG BUTTON (Collapsible Table) ===
 // Keep this part isolated so it’s easy to remove later.
 (() => {
   const debugBtn = document.getElementById("debugQuoteBtn");
   if (!debugBtn) return;
 
-  window.showQuote = () => {
-    console.log("🧠 Current Quote Snapshot:", window.currentQuote);
-    return window.currentQuote;
-  };
+  debugBtn.addEventListener("click", () => {
+    if (!window.currentQuote) {
+      console.warn("No currentQuote available");
+      return;
+    }
 
-  debugBtn.addEventListener("click", window.showQuote);
+    // Deep copy to freeze snapshot
+    const snapshot = JSON.parse(JSON.stringify(window.currentQuote));
+
+    console.groupCollapsed("🧠 Current Quote Snapshot");
+    for (const [key, value] of Object.entries(snapshot)) {
+      if (Array.isArray(value)) {
+        console.groupCollapsed(`${key} [Array: ${value.length}]`);
+        console.table(value);
+        console.groupEnd();
+      } else if (typeof value === "object" && value !== null) {
+        console.groupCollapsed(`${key} [Object]`);
+        console.table(value);
+        console.groupEnd();
+      } else {
+        console.log(`${key}:`, value);
+      }
+    }
+    console.groupEnd();
+  });
 })();
 

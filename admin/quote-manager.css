@@ -2,7 +2,7 @@
 
 /* --- Slide-specific overrides --- */
 @import url('qm-modules/slide1.css');
-@import url('qm-modules/slide2.css');
+/* @import url('qm-modules/slide2.css'); */
 @import url('qm-modules/slide3.css');
 @import url('qm-modules/slide4.css');
 @import url('qm-modules/drawers.css');
@@ -238,4 +238,42 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   border-radius: 12px;
   box-shadow: 0 0 15px var(--bs-info);
   margin: 1rem auto;     /* centers horizontally */
+}
+
+/* Print: only show #invoicePrintArea */
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+
+  #invoicePrintArea,
+  #invoicePrintArea * {
+    visibility: visible !important;
+  }
+
+  #invoicePrintArea {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 8.5in;
+    height: auto;
+    padding: 0;
+    margin: 0;
+    overflow: visible !important;
+  }
+
+  /* restore correct invoice layout */
+  #invoicePrintArea .invoice-page {
+    transform: none !important;
+    position: static !important;
+    margin: 0.25in !important;
+    padding: .1in !important;
+    width: 7.5in !important;
+    height: auto !important;
+    border: 14px solid green !important;
+  }
+
+  #invoiceDrawer {
+    display: none !important;
+  }
 }
