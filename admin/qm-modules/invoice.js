@@ -47,30 +47,8 @@ export async function injectInvoiceIntoDrawer(currentQuote, scriptURL) {
     let html = await res.text();
 
     const data = {
-      firstName: currentQuote.firstName || "",
-      lastName: currentQuote.lastName || "",
-      invoiceID: currentQuote.invoiceID || "",
-      invoiceDate: currentQuote.invoiceDate || "",
-      street: currentQuote.street || "",
-      city: currentQuote.city || "",
-      state: currentQuote.state || "",
-      zip: currentQuote.zip || "",
-      clientID: currentQuote.clientID || "",
-      email: currentQuote.email || "",
-      eventDate: formatDateForUser(currentQuote.eventDate) || "",
-      eventLocation: currentQuote.eventLocation || "",
-      totalProductRetail: formatCurrency(currentQuote.totalProductRetail),
-      subTotal1: formatCurrency(currentQuote.subTotal1),
-      discount: (currentQuote.discount || 0) + "%",
-      subTotal3: formatCurrency(currentQuote.subTotal3),
-      grandTotal: formatCurrency(currentQuote.grandTotal),
-      deposit: formatCurrency(currentQuote.deposit),
-      balanceDue: formatCurrency(currentQuote.balanceDue),
-      addonsTotals: formatCurrency(currentQuote.addonsTotals),
-      discountedTotal: formatCurrency(currentQuote.discountedTotal),
-      balanceDueDate: currentQuote.balanceDueDate || "",
-      depositDate: currentQuote.depositDate || "",
-      paymentMethod: currentQuote.paymentMethod || ""
+      // ... all your other fields
+      paymentMethod: currentQuote.paymentMethod
     };
 
     html = html.replace(/{{(\w+)}}/g, (_, key) => data[key] ?? "");
@@ -90,14 +68,6 @@ export async function injectInvoiceIntoDrawer(currentQuote, scriptURL) {
         tbody.appendChild(row);
       });
     }
-
-    // console.log("📍 Invoice render trace:", {
-    //   timestamp: new Date().toISOString(),
-    //   stack: new Error().stack.split("\n").slice(1, 5).join("\n"),
-    //   invoiceID: currentQuote.invoiceID,
-    //   clientID: currentQuote.clientID,
-    //   trigger: "injectInvoiceIntoDrawer"
-    // });
 
   } catch (err) {
     console.error("❌ Error rendering invoice:", err);

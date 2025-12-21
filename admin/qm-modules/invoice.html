@@ -116,8 +116,8 @@
   <div class="invoice-page bg-light text-dark">
     <table class="invoice-table">
       <colgroup>
-        <col style="width: 150px;">
-        <col style="width: 100px;">
+        <col style="width: 125px;">
+        <col style="width: 125px;">
         <col style="width: 100px;">
         <col style="width: 75px;">
         <col style="width: 120px;">
@@ -203,20 +203,23 @@
         </tr>
 
         <tr>
-          <td style="font-weight: bold;">Discount</td><td></td>
-          <td class="text-left">{{discount}}</td><td></td>
+          <td></td><td></td>
+          <td style="font-weight: bold;">Discount</td>
+          <td class="text-left">{{discount}}</td>
           <td class="text-right">{{subTotal3}}</td>
           <td class="text-right">{{discountedTotal}}</td>
         </tr>
 
         <tr>
-          <td style="font-weight: bold;">Add-Ons</td><td></td><td></td><td></td>
+          <td></td><td></td><td></td>
+          <td style="font-weight: bold;">Add-Ons</td>
           <td class="text-right">{{addonsTotals}}</td>
           <td class="text-right">{{grandTotal}}</td>
         </tr>
 
         <tr>
-          <td style="font-weight: bold;">Deposit*</td><td></td>
+          <td>{{paymentMethod}}</td>
+          <td style="font-weight: bold;">Deposit*</td>
           <td>{{deposit}}</td>
           <td style="font-weight: bold;">Paid on</td>
           <td class="nowrap">{{depositDate}}</td>
@@ -224,11 +227,12 @@
         </tr>
 
         <tr>
-          <td style="font-weight: bold;">Balance of</td><td></td>
+          <td></td>
+          <td style="font-weight: bold;">Balance of</td>
           <td>{{balanceDue}}</td>
           <td style="font-weight: bold;">Due By</td>
           <td class="nowrap">{{balanceDueDate}}</td>
-          <td>{{paymentMethod}}</td>
+          <td></td>
         </tr>
 
         <tr class="spacer"><td colspan="6">&nbsp;</td></tr>

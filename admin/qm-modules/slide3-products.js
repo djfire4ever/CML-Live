@@ -10,7 +10,9 @@ export async function initSlide3Products(currentQuote, scriptURL) {
   const overlay = document.getElementById("product-overlay");
   const overlayTitle = document.getElementById("overlay-title");
 
-  const nameSelect = document.getElementById("productNameSelect");
+  const input = document.querySelector(".productName-input");
+  const suggestions = document.querySelector(".product-suggestions");
+
   const qtyInput = document.getElementById("qty");
   const costSpan = document.getElementById("costPrice");
   const retailSpan = document.getElementById("retailPrice");
@@ -54,42 +56,63 @@ export async function initSlide3Products(currentQuote, scriptURL) {
     }
   }
 
-  // -------------------- Populate dropdown --------------------
-  function populateDropdown() {
-    nameSelect.innerHTML = `<option value="" disabled selected>Select a product</option>`;
-    productData.forEach(p => {
-      const opt = document.createElement("option");
-      opt.value = p.productName;
-      opt.textContent = p.productName;
-      nameSelect.appendChild(opt);
-    });
-  }
+  // -------------------- Search suggestions --------------------
+  input.addEventListener("input", () => {
+    const query = input.value.trim().toLowerCase();
+    if (!query) {
+      suggestions.innerHTML = "";
+      suggestions.style.display = "none";
+      return;
+    }
+
+    const matches = productData.filter(p =>
+      p.productName.toLowerCase().includes(query)
+    );
+
+    if (!matches.length) {
+      suggestions.innerHTML = "";
+      suggestions.style.display = "none";
+      return;
+    }
+
+    suggestions.innerHTML = matches.map(p =>
+      `<li class="list-group-item" data-name="${p.productName}">${p.productName}</li>`
+    ).join("");
+    suggestions.style.display = "block";
+  });
+
+  suggestions.addEventListener("click", e => {
+    const li = e.target.closest("li[data-name]");
+    if (!li) return;
+
+    const prod = productData.find(p => p.productName === li.dataset.name);
+    if (!prod) return;
+
+    input.value = prod.productName;
+    openOverlay(prod);
+    suggestions.style.display = "none";
+  });
+
+  document.addEventListener("click", e => {
+    if (!input.contains(e.target) && !suggestions.contains(e.target)) {
+      suggestions.style.display = "none";
+    }
+  });
 
   // -------------------- Overlay totals --------------------
   function updateOverlayTotals() {
     const qty = parseInt(qtyInput.value, 10) || 0;
     const cost = parseFloat(costSpan.textContent) || 0;
     const retail = parseFloat(retailSpan.textContent) || 0;
-
     totalCostSpan.textContent = `$${(qty * cost).toFixed(2)}`;
     totalRetailSpan.textContent = `$${(qty * retail).toFixed(2)}`;
   }
 
-  nameSelect.addEventListener("change", () => {
-    const prod = productData.find(p => p.productName === nameSelect.value);
-    if (!prod) return;
-
-    costSpan.textContent = prod.costPrice.toFixed(2);
-    retailSpan.textContent = prod.retailPrice.toFixed(2);
-    updateOverlayTotals();
-  });
-
   qtyInput.addEventListener("input", updateOverlayTotals);
 
-  // -------------------- Render product grid --------------------
+  // -------------------- Render grid --------------------
   function renderGrid() {
     grid.innerHTML = "";
-
     products.forEach((prod, idx) => {
       const tile = document.createElement("div");
       tile.className = "product-tile project-theme-tile";
@@ -133,11 +156,12 @@ export async function initSlide3Products(currentQuote, scriptURL) {
     currentQuote.productsCount = count;
     currentQuote.totalProductRetail = totalRetail;
 
+    document.dispatchEvent(new Event("quoteDataChanged"));
+
     const summaryCard = document.querySelector("#productSummaryCard .summary-line");
     if (summaryCard) {
       const countSpan = summaryCard.querySelector(".count");
       const totalSpan = summaryCard.querySelector(".total");
-
       if (countSpan) countSpan.textContent = `${count} item${count !== 1 ? "s" : ""}`;
       if (totalSpan) totalSpan.textContent = `$${totalRetail.toFixed(2)}`;
     }
@@ -151,7 +175,7 @@ export async function initSlide3Products(currentQuote, scriptURL) {
     overlay.classList.add("show");
 
     overlayTitle.textContent = prod ? "Edit Product" : "Add Product";
-    nameSelect.value = prod?.productName || "";
+    input.value = prod?.productName || "";
     qtyInput.value = prod?.qty || 1;
     costSpan.textContent = prod?.costPrice?.toFixed(2) || "0.00";
     retailSpan.textContent = prod?.retailPrice?.toFixed(2) || "0.00";
@@ -160,7 +184,7 @@ export async function initSlide3Products(currentQuote, scriptURL) {
   }
 
   function closeOverlay() {
-    const name = nameSelect.value.trim();
+    const name = input.value.trim();
     if (!name) return overlay.classList.add("d-none");
 
     const prodInfo = productData.find(p => p.productName === name);
@@ -193,6 +217,5 @@ export async function initSlide3Products(currentQuote, scriptURL) {
 
   // -------------------- Initialize --------------------
   await loadProductData();
-  populateDropdown();
   renderGrid();
 }

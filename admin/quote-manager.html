@@ -231,14 +231,9 @@
           <div class="product-form-card">
             <h5 class="glow-info mb-3" id="overlay-title">Add Product</h5>
 
-            <!-- Product Name -->
-            <div class="mb-2">
-              <label class="form-label text-info">Product Name</label>
-              <select id="productNameSelect" class="form-control">
-                <option value="" disabled selected>Select a product</option>
-                <!-- Options injected dynamically -->
-              </select>
-            </div>
+          <!-- Product Name -->
+          <input type="search" class="productName-input">
+          <ul class="product-suggestions"></ul>
 
             <!-- Cost / Retail Row -->
             <div class="row g-2 align-items-end">
@@ -348,7 +343,7 @@
               <div class="col-6 text-warning fw-bold" id="addonsTotal">$0.00</div>
             </div>
             <div class="row g-2 mt-3 overlay-btn-group">
-              <div class="col"><button id="cancelAddOnFees" class="btn btn-outline-info w-100">Cancel</button></div>
+              <!-- <div class="col"><button id="cancelAddOnFees" class="btn btn-outline-info w-100">Cancel</button></div> -->
               <div class="col"><button id="saveAddOnFees" class="btn btn-info w-100">Save</button></div>
             </div>
           </div>
@@ -366,8 +361,15 @@
                   <div class="col-6"><input type="text" class="form-control" id="depositDate"></div>
                   <div class="col-6"><label for="paymentMethod" class="mb-0">Method</label></div>
                   <div class="col-6">
-                    <input type="text" class="form-control" id="paymentMethod" list="payment-method-options">
-                    <datalist id="payment-method-options"></datalist>
+                    <select class="form-control" id="paymentMethod">
+                      <option value="">Select a payment method</option>
+                      <option value="Cash">Cash</option>
+                      <option value="CashApp">CashApp</option>
+                      <option value="Credit Card">Credit Card</option>
+                      <option value="Zelle">Zelle</option>
+                      <option value="Venmo">Venmo</option>
+                      <option value="Other">Other</option>
+                    </select>
                   </div>
                   <div class="col-6"><label for="balanceDueDate" class="mb-0">Due Date</label></div>
                   <div class="col-6"><input type="text" class="form-control" id="balanceDueDate"></div>
@@ -387,7 +389,7 @@
               </div>
             </div>
             <div class="row g-2 mt-4 overlay-btn-group">
-              <div class="col"><button id="cancelBalanceDetails" class="btn btn-outline-info w-100">Cancel</button></div>
+              <!-- <div class="col"><button id="cancelBalanceDetails" class="btn btn-outline-info w-100">Cancel</button></div> -->
               <div class="col"><button id="saveBalanceDetails" class="btn btn-info w-100">Save</button></div>
             </div>
           </div>
@@ -406,7 +408,7 @@
               <div class="col-4 text-warning fw-bold" id="discountedTotal">$0.00</div>
             </div>
             <div class="row g-2 mt-3 overlay-btn-group">
-              <div class="col"><button id="cancelDiscount" class="btn btn-outline-info w-100">Cancel</button></div>
+              <!-- <div class="col"><button id="cancelDiscount" class="btn btn-outline-info w-100">Cancel</button></div> -->
               <div class="col"><button id="saveDiscount" class="btn btn-info w-100">Save</button></div>
             </div>
           </div>
