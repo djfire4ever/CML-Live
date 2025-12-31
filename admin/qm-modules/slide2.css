@@ -1,61 +1,43 @@
-/* // qm-modules/slide2.css */
-/* === Slide 2: Event Tiles === */
+/* qm-modules/slide2.css (>>> DO NOT DELETE THIS FILE IDENTIFICATION LINE <<<) */
 
-/* --- Event Tile Base --- */
-.event-tile {
-  background-color: var(--theme-bg);         /* same as project theme */
-  color: var(--theme-text);                  /* text color */
-  border: 1px solid var(--theme-text);       /* border matches text color */
-  border-radius: 12px;                       /* rounded corners */
-  padding: 10px 14px;                        /* internal spacing */
-  display: flex;                             /* flex layout */
-  align-items: center;                       /* center vertically */
-  gap: 8px;                                  /* spacing between children */
-  min-height: 80px;                          /* consistent tile height */
-  box-shadow: 0 0 10px var(--theme-text), inset 0 0 6px var(--theme-text); /* shadow/glow */
-  transition: transform 0.2s ease, box-shadow 0.4s ease, border-color 0.3s ease;
+/* =========================================
+   Slide 2: Event Details
+   ========================================= */
+
+/* === Event Tiles (layout only) === */
+#slide2 .event-tile {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: 12px;
+  /* Box-shadow, hover, and focus are handled by project-theme */
 }
 
-/* --- Hover Glow Effect --- */
-.event-tile:hover {
-  transform: translateY(-1px);
-  animation: pulseGlow 1.5s infinite ease-in-out;
+/* === Tile Inner Elements === */
+#slide2 .tile-icon {
+  font-size: 1.25rem;
+  color: var(--bs-info); /* content color stays here for layout specificity */
+  flex-shrink: 0;
 }
 
-/* --- Focused / Active Glow --- */
-.event-tile:focus-within {
-  box-shadow: 0 0 25px var(--theme-text), inset 0 0 12px var(--theme-text);
-  transform: translateY(-1px);
-  border-color: var(--theme-text);
-}
-
-/* --- Pulse Glow Keyframes --- */
-@keyframes pulseGlow {
-  0%, 100% {
-    box-shadow: 0 0 10px var(--theme-text), inset 0 0 6px var(--theme-text);
-  }
-  50% {
-    box-shadow: 0 0 20px var(--theme-text), inset 0 0 12px var(--theme-text);
-  }
-}
-
-/* --- Optional: tile icons and inputs --- */
-.event-tile .tile-icon {
-  font-size: 1.5rem;
-  opacity: 0.7;
-}
-
-.event-tile .tile-input {
-  background-color: var(--theme-bg);
-  color: var(--theme-text);
-  border: none;
-  width: 100%;
-  outline: none;
-}
-
-/* --- Optional: labels --- */
-.event-tile .tile-label {
-  font-size: 0.85rem;
-  color: var(--theme-text);
+#slide2 .tile-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--bs-info);
   margin-bottom: 2px;
+}
+
+/* Layout for text/input block inside tiles */
+#slide2 .event-tile .flex-fill {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* === Notes textarea (Slide 2 only) === */
+#slide2 #eventNotes {
+  min-height: 70px;
+  resize: vertical;
+  /* Focus/glow handled by project-theme */
 }

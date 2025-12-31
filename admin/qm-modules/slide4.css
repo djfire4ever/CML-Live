@@ -1,91 +1,93 @@
-/* Slide 4 Overlay Styles */
-.slide4-overlay {
+/* qm-modules/slide4.css (>>> DO NOT DELETE THIS FILE IDENTIFICATION LINE <<<) */
+
+/* =========================================
+   Slide 4: Other - Slide-Specific Styles
+   ========================================= */
+
+/* --- Quote Notes Card --- */
+#slide4 #quoteNotesCard {
+  padding: 1rem;
+  background-color: rgba(0,0,0,0.6); /* slide-specific background if different from theme */
+  border-radius: 12px;
+}
+
+/* =========================================
+   Overlays
+   ========================================= */
+
+/* Keyframes for overlay pop-in */
+@keyframes overlayPopIn {
+  0% { opacity: 0; transform: scale(0.9); }
+  60% { opacity: 1; transform: scale(1.02); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* Overlay containers */
+#slide4 .fees-overlay,
+#slide4 .balance-overlay,
+#slide4 .discount-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 1050;
-  display: flex;
+  background-color: rgba(0,0,0,0.7);
+  display: none;
   align-items: center;
   justify-content: center;
+  z-index: 9999;
 }
 
-.slide4-overlay-backdrop {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  top: 0;
-  left: 0;
-}
-
-.slide4-overlay-content {
-  position: relative;
-  z-index: 1;
-  max-width: 500px;   /* limits overlay width */
-  width: 90%;         /* responsive for small screens */
-  box-sizing: border-box;
-  transition: transform 0.2s ease, opacity 0.2s ease;
-}
-
-/* Prevent jitter: remove hover/scale effects on overlay itself */
-.slide4-overlay-content:hover {
-  transform: none !important;
-}
-
-/* Overlay form styling */
-.overlay-form .overlay-title {
-  font-size: 1.1rem;
-  font-weight: bold;
-}
-
-.overlay-form .row > .col {
-  padding-bottom: 0.5rem;
-}
-
-.overlay-form .btn {
-  min-width: 70px;
-}
-
-/* Optional: smooth appearance */
-.slide4-overlay:not(.d-none) .slide4-overlay-content {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.overlay-form .form-row {
+/* Show overlay when active */
+#slide4 .fees-overlay.show,
+#slide4 .balance-overlay.show,
+#slide4 .discount-overlay.show {
   display: flex;
-  align-items: center;
-  justify-content: space-between; /* label left, input right */
-  margin-bottom: 0.5rem;
 }
 
-.overlay-form .form-row label {
-  flex: 0 0 35%; /* label takes ~35% of width */
-  text-align: right;
-  margin-right: 0.5rem;
+/* Overlay cards — Slide 4 layout only */
+#slide4 .fees-overlay .overlay-card,
+#slide4 .balance-overlay .overlay-card,
+#slide4 .discount-overlay .overlay-card {
+  background-color: rgba(0,0,0,0.95);
+  padding: 1.5rem;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 0 20px var(--bs-info); /* optional: overlay shadow */
+  animation: overlayPopIn 0.8s ease forwards;
 }
 
-.overlay-form .form-row input,
-.overlay-form .form-row span {
-  flex: 1 1 auto; /* input/span fills remaining space */
-}
-
-#paymentMethod {
-  background-color: var(--theme-bg) !important;
-  color: var(--theme-warning) !important;
-  border: 1px solid var(--theme-text);
-  border-radius: 0.25rem;
-  padding: 0.375rem 0.75rem;
+/* Overlay form inputs and selects — spacing only */
+#slide4 .fees-overlay input,
+#slide4 .balance-overlay input,
+#slide4 .discount-overlay input,
+#slide4 .balance-overlay select,
+#slide4 .discount-overlay select {
   width: 100%;
-  box-shadow: 0 0 10px var(--theme-text);
-  transition: box-shadow 0.3s, border-color 0.3s;
+  padding: 0.375rem 0.75rem;
+  margin-bottom: 0.5rem;
+  border-radius: 6px;
+  border: 1px solid var(--bs-info); /* uses theme color for border */
+  background-color: var(--bs-black); /* can still rely on theme */
+  color: var(--bs-warning);         /* text color from theme */
+  box-shadow: 0 0 10px var(--bs-info); /* hover/glow handled by theme if needed */
 }
 
-#paymentMethod:hover,
-#paymentMethod:focus {
-  outline: none;
-  border-color: var(--theme-text);
-  box-shadow: 0 0 10px var(--theme-warning);
+/* Overlay button groups — layout only */
+#slide4 .overlay-btn-group {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+#slide4 .overlay-btn-group .btn {
+  flex: 1;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 0 10px var(--bs-info); /* optional: glow handled by theme */
+}
+
+#slide4 .overlay-btn-group .btn:hover {
+  box-shadow: 0 0 25px var(--bs-info); /* optional: hover glow handled by theme */
 }

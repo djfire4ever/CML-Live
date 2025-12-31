@@ -1,3 +1,5 @@
+// qm-modules/drawers.js
+
 export const drawerEvents = new EventTarget();
 
 const drawerState = {
@@ -79,7 +81,62 @@ async function renderDrawer(drawerName) {
     }
 
     case "runningTotalDrawer": {
-      container.innerHTML = q ? generateRunningTotalHTML(q) : drawerState.runningTotalDrawer.html || "<p>No data available</p>";
+      if (!q) return;
+
+      // Set generated date
+      const generatedDateEl = document.getElementById("rt-generated-date");
+      if (generatedDateEl) {
+        generatedDateEl.textContent = `Generated: ${new Date().toLocaleDateString()}`;
+      }
+
+      // Populate products
+      const productsEl = document.getElementById("rt-products");
+      if (productsEl) {
+        productsEl.innerHTML = ""; // clear old rows
+
+        q.products?.forEach(p => {
+          const row = document.createElement("div");
+          row.className = "product-row";
+
+          row.innerHTML = `
+            <span class="name" title="${p.productName}">${p.productName}</span>
+            <span class="qty">${p.qty}</span> @ 
+            <span class="price">$${(p.retailPrice ?? 0).toFixed(2)}</span> = 
+            <span class="total">$${((p.qty||0)*(p.retailPrice??0)).toFixed(2)}</span>
+          `;
+
+          productsEl.appendChild(row);
+        });
+      }
+
+      // Populate subtotals
+      const mappings = [
+        ["rt-product-total", q.totalProductRetail],
+        ["rt-tax", q.subTotal1],
+        ["rt-discount-rate", q.discount ?? 0],
+        ["rt-discount", q.subTotal3],
+        ["rt-after-discount", q.discountedTotal],
+        ["rt-delivery", q.deliveryFee],
+        ["rt-setup", q.setupFee],
+        ["rt-other", q.otherFee],
+        ["rt-addons-total", q.addonsTotal],
+        ["rt-grand-total", q.grandTotal],
+        ["rt-deposit", q.deposit],
+        ["rt-balance-due", q.balanceDue]
+      ];
+
+      mappings.forEach(([id, value]) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+
+        // Special case for discount rate
+        if (id === "rt-discount-rate") {
+          el.textContent = ` ${value ?? 0}% `;
+        } else {
+          el.textContent = `$${(value ?? 0).toFixed(2)}`;
+        }
+      });
+
       break;
     }
 
@@ -124,39 +181,3 @@ export function initDrawers() {
   });
 }
 
-// -------------------- HELPER (RUNNING TOTAL HTML) --------------------
-function generateRunningTotalHTML(q) {
-  if (!q.products?.length) return "<p>No products selected</p>";
-
-  const productsHtml = q.products.map(p => `
-    <div class="product-row">
-      <span class="name" title="${p.productName}">${p.productName}</span>
-      <span class="qty">${p.qty}</span> @ 
-      <span class="price">$${(p.retailPrice ?? 0).toFixed(2)}</span> = 
-      <span class="total">$${((p.qty||0)*(p.retailPrice??0)).toFixed(2)}</span>
-    </div>
-  `).join("");
-
-  return `<div class="receipt">
-    <div class="receipt-header"><p>Generated: ${new Date().toLocaleDateString()}</p></div>
-    <div class="receipt-products">${productsHtml}</div>
-    <div class="receipt-subtotals">
-      <div><span>Total Product Retail:</span><span>$${(q.totalProductRetail ?? 0).toFixed(2)}</span></div>
-      <div><span>Sales Tax (8.875%):</span><span>$${(q.subTotal1 ?? 0).toFixed(2)}</span></div>
-      <div><span>Discount (${q.discount ?? 0}%):</span><span>$${(q.subTotal3 ?? 0).toFixed(2)}</span></div>
-      <div><span>After Discount:</span><span>$${(q.discountedTotal ?? 0).toFixed(2)}</span></div>
-    </div>
-    <div class="receipt-addons">
-      <div><span>Delivery:</span><span>$${(q.deliveryFee ?? 0).toFixed(2)}</span></div>
-      <div><span>Setup:</span><span>$${(q.setupFee ?? 0).toFixed(2)}</span></div>
-      <div><span>Other:</span><span>$${(q.otherFee ?? 0).toFixed(2)}</span></div>
-      <div><span>Add-ons Total:</span><span>$${(q.addonsTotal ?? 0).toFixed(2)}</span></div>
-    </div>
-    <div class="receipt-total">
-      <div><strong>Grand Total:</strong><span>$${(q.grandTotal ?? 0).toFixed(2)}</span></div>
-      <div><span>Deposit:</span><span>$${(q.deposit ?? 0).toFixed(2)}</span></div>
-      <div><strong>Balance Due:</strong><span>$${(q.balanceDue ?? 0).toFixed(2)}</span></div>
-    </div>
-    <div class="receipt-footer"><p>Thank you for your business!</p></div>
-  </div>`;
-}

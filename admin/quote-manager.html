@@ -10,7 +10,7 @@
 
 </style>
 
-<body class="bg-black">
+<body class="project-theme">
 <!-- ⏳ Loader -->
 <div id="loadingOverlay" class="d-none">
   <div class="text-center">
@@ -18,6 +18,11 @@
     <p class="mt-4 loader-message text-info">Loading... Please wait...</p>
   </div>
 </div>
+<!-- For VS Code CSS analysis: .step.active .circle, .step.filled .circle -->
+<template style="display:none;">
+  <div class="step active"><div class="circle"></div></div>
+  <div class="step filled"><div class="circle"></div></div>
+</template>
 
 <div class="container py-4">
   <div class="quote-container d-flex flex-column" style="height: 80vh;">
@@ -49,18 +54,18 @@
     </div>
 
     <!-- Progress Bar -->
-    <div class="progress project-theme border border-info">
-      <div class="progress-bar project-theme" id="progressBar" style="width: 0%;"></div>
+    <div class="progress border border-info">
+      <div class="progress-bar" id="progressBar" style="width: 0%;"></div>
     </div>
 
   <!-- Carousel -->
     <div id="quoteCarousel" class="carousel slide flex-grow-1" data-bs-interval="false">
       <div class="carousel-inner">
 
-      <!-- Step 1: Client Info -->
-      <div class="carousel-item active">
+      <!-- Slide 1: Client Info -->
+      <div class="carousel-item active" id="slide1">
         <div class="project-theme slide-inner p-3">
-          <h4 class="glow-info">Client Information</h4>
+          <h4 class="glow-title">Client Information</h4>
 
           <!-- Client Info Fieldset -->
           <fieldset id="clientInfoFieldset" class="mb-2 p-2">
@@ -68,7 +73,7 @@
 
               <!-- Left Column: Icon + Names + Tier -->
               <div id="clientIconColumn"
-                  class="position-relative d-flex flex-column justify-content-center align-items-center ps-1 pe-3 rounded border-end border-2 border-info shadow"
+                  class="position-relative d-flex flex-column justify-content-center align-items-center ps-1 pe-3 rounded border-end border-2 shadow"
                   style="width:200px; min-height:220px; overflow:hidden; background:rgba(255,255,255,0.02);">
                 <i class="bi bi-award tier-icon-bg position-absolute"
                   style="font-size:12rem; opacity:0.45; z-index:0;"></i>
@@ -98,8 +103,8 @@
                   <div class="col-md-6">
                     <label class="form-label text-info mb-0">Phone</label>
                     <div class="position-relative">
-                      <input type="search" class="clientID-input form-control form-control-sm" placeholder="Search phone or name">
-                      <ul class="client-suggestions list-group"></ul>
+                      <input type="search" class="clientID-input" placeholder="Search phone or name">
+                      <ul class="client-suggestions"></ul>
                     </div>
                   </div>
 
@@ -149,9 +154,9 @@
         </div>
       </div>
 
-      <!-- Step 2: Event -->
-      <div class="carousel-item">
-        <h4 class="glow-info mb-3">Event Details</h4>
+      <!-- Slide 2: Event -->
+      <div class="carousel-item" id="slide2">
+        <h4 class="glow-title mb-3">Event Details</h4>
 
         <!-- First Row: Event Date + Location -->
         <div class="row mb-2 g-2">
@@ -211,10 +216,10 @@
         </div>
       </div>
 
-      <!-- Step 3: Products -->
-      <div class="carousel-item">
+      <!-- Slide 3: Products -->
+      <div class="carousel-item" id="slide3">
         <div class="slide3-header">
-          <h4 class="glow-info mb-1">Products</h4>
+          <h4 class="glow-title mb-1">Products</h4>
           <div id="productSummaryCard" class="product-summary-card" title="Click for details">
             <div class="summary-line text-warning">
               <span class="count">0 items</span>
@@ -229,14 +234,14 @@
         <!-- Overlay Form -->
         <div id="product-overlay" class="product-overlay d-none">
           <div class="product-form-card">
-            <h5 class="glow-info mb-3" id="overlay-title">Add Product</h5>
+            <h5 class="glow-title mb-3" id="overlay-title">Add Product</h5>
 
           <!-- Product Name -->
-          <input type="search" class="productName-input">
+          <input type="search" class="productName-input" placeholder="Search products">
           <ul class="product-suggestions"></ul>
 
             <!-- Cost / Retail Row -->
-            <div class="row g-2 align-items-end">
+            <div class="row g-2 mt-1 align-items-end">
               <div class="col-3 text-info">Cost $</div>
               <div class="col-3 text-warning">
                 <span id="costPrice">0.00</span>
@@ -272,38 +277,35 @@
             <!-- Action Buttons -->
             <div class="row g-2 mt-3 overlay-btn-group">
               <div class="col">
-                <button id="closeProduct" class="btn btn-info w-100">Add & Close</button>
+                <button id="closeProduct" class="btn w-100">Add & Close</button>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Step 4: Other -->
-      <div class="carousel-item">
-        <h4 class="glow-info mb-3">Other</h4>
+      <!-- Slide 4: Other -->
+      <div class="carousel-item" id="slide4">
+        <h4 class="glow-title mb-3">Other</h4>
 
         <!-- Tiles Row -->
         <div class="row g-3">
-          <!-- Add-On Fees Tile -->
           <div class="col-md-4">
-            <div id="addOnFeesCard" class="slide4-summary-card project-theme-tile p-3 d-flex flex-column align-items-center justify-content-center text-center" title="Click for details">
+            <div class="fees-tile project-theme-tile p-3 d-flex flex-column align-items-center justify-content-center text-center" title="Click for details">
               <div class="title fw-bold mb-1">Add-On Fees</div>
               <div class="total text-warning fw-bold" id="addonsTotalSummary">$0.00</div>
             </div>
           </div>
 
-          <!-- Balance Details Tile -->
           <div class="col-md-4">
-            <div id="balanceDetailsCard" class="slide4-summary-card project-theme-tile p-3 d-flex flex-column align-items-center justify-content-center text-center" title="Click for details">
+            <div class="balance-tile project-theme-tile p-3 d-flex flex-column align-items-center justify-content-center text-center" title="Click for details">
               <div class="title fw-bold mb-1">Balance Details</div>
               <div class="total text-warning fw-bold" id="balanceDueSummary">$0.00</div>
             </div>
           </div>
 
-          <!-- Discount Tile -->
           <div class="col-md-4">
-            <div id="discountCard" class="slide4-summary-card project-theme-tile p-3 d-flex flex-column align-items-center justify-content-center text-center" title="Click for details">
+            <div class="discount-tile project-theme-tile p-3 d-flex flex-column align-items-center justify-content-center text-center" title="Click for details">
               <div class="title fw-bold mb-1">Discount</div>
               <div class="total text-warning fw-bold" id="discountSummary">0%</div>
             </div>
@@ -320,12 +322,10 @@
           </div>
         </div>
 
-        <!-- === Overlays === -->
-
-        <!-- Add-On Fees Overlay -->
-        <div id="addOnFeesOverlay" class="product-overlay d-none">
-          <div class="product-form-card mx-auto" style="max-width: 300px;">
-            <h5 class="glow-info mb-3">Add-On Fees</h5>
+        <!-- Overlays -->
+        <div class="fees-overlay d-none">
+          <div class="overlay-card mx-auto" style="max-width: 300px;">
+            <h5 class="glow-title mb-3">Add-On Fees</h5>
             <div class="row g-2 align-items-center">
               <div class="col-6"><label for="deliveryFee" class="mb-0">Delivery Fee</label></div>
               <div class="col-6"><input type="number" class="form-control" id="deliveryFee" min="0" value="0"></div>
@@ -343,18 +343,15 @@
               <div class="col-6 text-warning fw-bold" id="addonsTotal">$0.00</div>
             </div>
             <div class="row g-2 mt-3 overlay-btn-group">
-              <!-- <div class="col"><button id="cancelAddOnFees" class="btn btn-outline-info w-100">Cancel</button></div> -->
-              <div class="col"><button id="saveAddOnFees" class="btn btn-info w-100">Save</button></div>
+              <div class="col"><button id="saveAddOnFees" class="btn w-100">Save</button></div>
             </div>
           </div>
         </div>
 
-        <!-- Balance Details Overlay -->
-        <div id="balanceDetailsOverlay" class="product-overlay d-none">
-          <div class="product-form-card mx-auto" style="width: 90%; max-width: 600px;">
-            <h5 class="glow-info mb-3">Edit Balance Details</h5>
+        <div class="balance-overlay d-none">
+          <div class="overlay-card mx-auto" style="width: 90%; max-width: 600px;">
+            <h5 class="glow-title mb-3">Edit Balance Details</h5>
             <div class="row g-4">
-              <!-- Left Section -->
               <div class="col-md-6">
                 <div class="row g-2 align-items-center">
                   <div class="col-6"><label for="depositDate" class="mb-0">Deposit Date</label></div>
@@ -376,7 +373,6 @@
                 </div>
               </div>
 
-              <!-- Right Section -->
               <div class="col-md-6">
                 <div class="row g-2 align-items-center">
                   <div class="col-6"><label for="deposit" class="mb-0">Deposit Amount</label></div>
@@ -389,16 +385,14 @@
               </div>
             </div>
             <div class="row g-2 mt-4 overlay-btn-group">
-              <!-- <div class="col"><button id="cancelBalanceDetails" class="btn btn-outline-info w-100">Cancel</button></div> -->
-              <div class="col"><button id="saveBalanceDetails" class="btn btn-info w-100">Save</button></div>
+              <div class="col"><button id="saveBalanceDetails" class="btn w-100">Save</button></div>
             </div>
           </div>
         </div>
 
-        <!-- Discount Overlay -->
-        <div id="discountOverlay" class="product-overlay d-none">
-          <div class="product-form-card mx-auto" style="max-width: 300px;">
-            <h5 class="glow-info mb-3">Discount</h5>
+        <div class="discount-overlay d-none">
+          <div class="overlay-card mx-auto" style="max-width: 300px;">
+            <h5 class="glow-title mb-3">Discount</h5>
             <div class="row g-2 align-items-center">
               <div class="col-8"><label for="discount" class="mb-0">Discount (%)</label></div>
               <div class="col-4"><input type="number" class="form-control" id="discount" min="0" max="100" value="0"></div>
@@ -408,15 +402,14 @@
               <div class="col-4 text-warning fw-bold" id="discountedTotal">$0.00</div>
             </div>
             <div class="row g-2 mt-3 overlay-btn-group">
-              <!-- <div class="col"><button id="cancelDiscount" class="btn btn-outline-info w-100">Cancel</button></div> -->
-              <div class="col"><button id="saveDiscount" class="btn btn-info w-100">Save</button></div>
+              <div class="col"><button id="saveDiscount" class="btn w-100">Save</button></div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Step 5: Finalize -->
-      <div class="carousel-item">
+      <!-- Slide 5: Finalize -->
+      <div class="carousel-item" id="slide5">
         <h4 class="glow mb-3">Finalize</h4>
         <p>Coming soon...</p>
       </div>
@@ -428,7 +421,7 @@
     <div class="btn-group mt-2 mt-auto m-2 pt-3 border-top border-info">
       <button class="btn" style="flex: 0 0 150px;" id="openQuoteSummary">Quote Summary</button>
       <button class="btn" style="flex: 0 0 150px;" id="openRunningTotal">Running Total</button>
-      <button class="btn btn-warning" style="flex: 0 0 150px;" id="openInvoicePreview">Invoice Preview</button>
+      <button class="btn" style="flex: 0 0 150px;" id="openInvoicePreview">Invoice Preview</button>
       <button class="btn" style="flex: 0 0 150px;" id="openShoppingList">Shopping List</button> <!-- 🛒 -->
     </div>
 
@@ -513,8 +506,51 @@
     <h5 class="offcanvas-title">Running Total</h5>
     <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
   </div>
+
   <div class="offcanvas-body" id="runningTotalBody">
-    <!-- dynamically filled by drawer code -->
+
+    <div class="receipt">
+
+      <!-- receipt header -->
+      <div class="receipt-header">
+        <p id="rt-generated-date">Generated:</p>
+      </div>
+
+      <!-- products list -->
+      <div class="receipt-products" id="rt-products">
+        <!-- product rows injected here -->
+      </div>
+
+      <!-- subtotals -->
+      <div class="receipt-subtotals">
+        <div><span>Total Product Retail:</span> <span id="rt-product-total">$0.00</span></div>
+        <div><span>Sales Tax ( 8.875% ):</span> <span id="rt-tax">$0.00</span></div>
+        <div><span>Discount (<span id="rt-discount-rate">0</span>):</span> <span id="rt-discount">$0.00</span></div>
+        <div><span>After Discount:</span> <span id="rt-after-discount">$0.00</span></div>
+      </div>
+
+      <!-- addons -->
+      <div class="receipt-addons">
+        <div><span>Delivery:</span> <span id="rt-delivery">$0.00</span></div>
+        <div><span>Setup:</span> <span id="rt-setup">$0.00</span></div>
+        <div><span>Other:</span> <span id="rt-other">$0.00</span></div>
+        <div><span>Add-ons Total:</span> <span id="rt-addons-total">$0.00</span></div>
+      </div>
+
+      <!-- totals -->
+      <div class="receipt-total">
+        <div><strong>Grand Total:</strong> <span id="rt-grand-total">$0.00</span></div>
+        <div><span>Deposit:</span> <span id="rt-deposit">$0.00</span></div>
+        <div><strong>Balance Due:</strong> <span id="rt-balance-due">$0.00</span></div>
+      </div>
+
+      <!-- footer -->
+      <div class="receipt-footer">
+        <p>Thank you for your business!</p>
+      </div>
+
+    </div>
+
   </div>
 </div>
 
@@ -523,7 +559,7 @@
   <div class="offcanvas-header d-flex justify-content-between align-items-center">
     <h5 class="offcanvas-title">Invoice Preview</h5>
     <div class="d-flex gap-2">
-      <button class="btn btn-sm btn-info" id="printInvoiceBtn">Print</button>
+      <button class="btn btn-sm" id="printInvoiceBtn">Print</button>
       <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
     </div>
   </div>

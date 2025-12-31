@@ -48,7 +48,10 @@ window.LIB_VERSIONS = {
 // global.js
 window.loadSharedStyles = () => {
   const isAdmin = location.pathname.includes('/admin/');
-  const stylesheet = isAdmin ? '/admin/style.css' : 'style.css';
+  // Restore this line after refactoring quote-manager.css
+  // const stylesheet = isAdmin ? '/admin/style.css' : 'style.css';
+
+  const stylesheet = '/admin/quote-manager.css';
 
   const stylesheets = [
     `https://cdn.jsdelivr.net/npm/bootstrap@${window.LIB_VERSIONS.bootstrap}/dist/css/bootstrap.min.css`,

@@ -26,18 +26,6 @@ export function initSlide2Event(currentQuote) {
       eventNotes: eventNotesInput?.value || "",
       eventTheme: eventThemeInput?.value || ""
     });
-
-    // --- Notify summary drawer using unified state ---
-    // notifyDrawer("quoteSummaryDrawer", {
-    //   name: currentQuote.clientName,
-    //   clientID: currentQuote.clientID,
-    //   tier: currentQuote.tier,
-    //   eventDate: currentQuote.eventDate,
-    //   eventLocation: currentQuote.eventLocation
-    // });
-
-    // Optionally update other drawers if needed:
-    // notifyDrawer("runningTotalDrawer", {}); // reads from currentQuote internally
   }
 
   // --- Attach listeners ---

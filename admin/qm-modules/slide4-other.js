@@ -1,8 +1,9 @@
 // qm-modules/slide4-other.js
 
 export async function initSlide4Other(currentQuote = {}) {
-  function openOverlay(overlayId) {
-    const overlay = document.getElementById(overlayId);
+
+  function openOverlay(overlayClass) {
+    const overlay = document.querySelector(`.${overlayClass}`);
     if (!overlay) return;
 
     overlay.classList.remove("d-none");
@@ -10,27 +11,27 @@ export async function initSlide4Other(currentQuote = {}) {
 
     // Populate overlay fields
     const fields = {
-      addOnFeesOverlay: {
+      "fees-overlay": {
         deliveryFee: currentQuote.deliveryFee || 0,
         setupFee: currentQuote.setupFee || 0,
         otherFee: currentQuote.otherFee || 0,
       },
-      balanceDetailsOverlay: {
+      "balance-overlay": {
         deposit: currentQuote.deposit || 0,
         amountPaid: currentQuote.amountPaid || 0,
         paymentMethod: currentQuote.paymentMethod || "",
       },
-      discountOverlay: {
+      "discount-overlay": {
         discount: currentQuote.discount || 0,
       }
     };
 
-    Object.entries(fields[overlayId] || {}).forEach(([id, val]) => {
+    Object.entries(fields[overlayClass] || {}).forEach(([id, val]) => {
       const el = document.getElementById(id);
       if (el) el.value = val;
     });
 
-    // Close overlay when clicking outside (self-cleaning)
+    // Close overlay when clicking outside
     const outsideClickHandler = e => {
       if (e.target === overlay) {
         overlay.classList.replace("show", "d-none");
@@ -42,17 +43,14 @@ export async function initSlide4Other(currentQuote = {}) {
     // Close overlay when save button clicked
     const saveBtn = overlay.querySelector("button[id^='save']");
     if (saveBtn) {
-      saveBtn.addEventListener(
-        "click",
-        () => {
-          overlay.classList.replace("show", "d-none");
-          overlay.removeEventListener("click", outsideClickHandler);
-        },
-        { once: true }
-      );
+      saveBtn.addEventListener("click", () => {
+        overlay.classList.replace("show", "d-none");
+        overlay.removeEventListener("click", outsideClickHandler);
+      }, { once: true });
     }
   }
 
+  // Payment method listener
   document.getElementById("paymentMethod")?.addEventListener("change", e => {
     currentQuote.paymentMethod = e.target.value;
   });
@@ -103,7 +101,7 @@ export async function initSlide4Other(currentQuote = {}) {
     });
   }
 
-  // Input Update Handlers
+  // Input handlers
   const updateAddOns = () => { recalcTotals(); markSlideFilled(); };
   const updateDiscount = () => {
     let discount = parseFloat(document.getElementById("discount")?.value) || 0;
@@ -118,7 +116,7 @@ export async function initSlide4Other(currentQuote = {}) {
   function markSlideFilled() {
     const stepsData = window.stepsData;
     if (!stepsData?.slides) return;
-    const slideEl = document.getElementById("slide4OtherCarouselItem");
+    const slideEl = document.getElementById("slide4");
     if (!slideEl) return;
     const idx = Array.from(stepsData.slides).indexOf(slideEl);
     if (idx < 0) return;
@@ -133,14 +131,14 @@ export async function initSlide4Other(currentQuote = {}) {
     stepsData.updateProgress?.();
   }
 
-  // Event Listeners
-  document.getElementById("addOnFeesCard")?.addEventListener("click", () => openOverlay("addOnFeesOverlay"));
+  // Event listeners for tiles
+  document.querySelector(".fees-tile")?.addEventListener("click", () => openOverlay("fees-overlay"));
+  document.querySelector(".balance-tile")?.addEventListener("click", () => openOverlay("balance-overlay"));
+  document.querySelector(".discount-tile")?.addEventListener("click", () => openOverlay("discount-overlay"));
+
+  // Input listeners
   ["deliveryFee","setupFee","otherFee"].forEach(id => document.getElementById(id)?.addEventListener("input", updateAddOns));
-
-  document.getElementById("balanceDetailsCard")?.addEventListener("click", () => openOverlay("balanceDetailsOverlay"));
   ["deposit","amountPaid"].forEach(id => document.getElementById(id)?.addEventListener("input", updateBalance));
-
-  document.getElementById("discountCard")?.addEventListener("click", () => openOverlay("discountOverlay"));
   document.getElementById("discount")?.addEventListener("input", updateDiscount);
 
   // Listen for live updates from other slides

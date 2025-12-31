@@ -1,3 +1,5 @@
+/* qm-modules/drawers.css (>>> DO NOT DELETE THIS FILE IDENTIFICATION LINE <<<) */
+
 /* ============================
    Offcanvas (Drawers)
 ============================ */
@@ -61,8 +63,6 @@
   align-items: center;
   justify-content: space-between;
   gap: 6px;
-
-  border-bottom: 1px dashed #555;
   padding: 0.2rem 0;
   font-size: 0.85rem;
 }

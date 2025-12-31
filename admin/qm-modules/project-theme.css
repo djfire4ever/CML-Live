@@ -1,4 +1,9 @@
-/* === Project Theme === */
+/* qm-modules/project-theme.css (>>> DO NOT DELETE THIS FILE IDENTIFICATION LINE <<<) */
+
+/* =========================================
+   Project Theme
+   Generic styles shared across all slides
+   ========================================= */
 
 /* --- Base colors --- */
 :root {
@@ -9,57 +14,177 @@
   --theme-info-rgb: var(--bs-info-rgb); /* for rgba shadows */
 }
 
-/* --- General body settings --- */
+/* --- Body base --- */
 body.project-theme {
-  background-color: var(--theme-bg);  /* replaces bg-black */
+  background-color: var(--theme-bg);
   color: var(--theme-text);
   overflow-x: hidden;
   border: none;
 }
 
-/* --- Containers inherit theme --- */
-.container, 
-.quote-container,
-.carousel-item,
-.offcanvas.project-theme {
+/* --- Unified Inputs / Textareas / Selects --- */
+.project-theme input.form-control,
+.project-theme textarea.form-control,
+.project-theme select.form-control,
+.project-theme input.tile-input,
+.project-theme textarea.tile-input,
+.project-theme select.tile-input,
+.project-theme input[type="date"],
+.project-theme input[type="search"] {
   background-color: var(--theme-bg);
-  color: var(--theme-text);
-}
-
-/* --- Inputs / Textareas / Selects --- */
-input.project-theme,
-textarea.project-theme,
-select.project-theme {
-  background-color: var(--theme-bg);
-  color: var(--theme-text);
+  color: var(--theme-warning);
   border: 1px solid var(--theme-text);
+  border-radius: 8px;
+  padding: 0.375rem 0.75rem;
+  width: 100%;
+  box-sizing: border-box;
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
 }
 
-input.project-theme::placeholder,
-textarea.project-theme::placeholder,
-select.project-theme::placeholder {
+.project-theme input.form-control::placeholder,
+.project-theme textarea.form-control::placeholder,
+.project-theme select::placeholder,
+.project-theme input.tile-input::placeholder,
+.project-theme textarea.tile-input::placeholder,
+.project-theme select.tile-input::placeholder,
+.project-theme input[type="date"]::placeholder,
+.project-theme input[type="search"]::placeholder {
   color: var(--theme-warning);
   opacity: 0.5;
 }
 
-input.project-theme:focus,
-textarea.project-theme:focus,
-select.project-theme:focus {
+.project-theme input.form-control:hover,
+.project-theme textarea.form-control:hover,
+.project-theme select.form-control:hover,
+.project-theme input.tile-input:hover,
+.project-theme textarea.tile-input:hover,
+.project-theme select.tile-input:hover,
+.project-theme input[type="date"]:hover,
+.project-theme input[type="search"]:hover,
+.project-theme input[type="search"]:focus {
+  box-shadow: 0 0 10px var(--theme-text), 0 0 20px rgba(var(--theme-info-rgb), 0.5);
   outline: none;
+}
+
+/* === Focus / Glow animation for inputs === */
+.project-theme input.form-control:focus,
+.project-theme textarea.form-control:focus,
+.project-theme select.form-control:focus,
+.project-theme input.tile-input:focus,
+.project-theme textarea.tile-input:focus,
+.project-theme select.tile-input:focus,
+.project-theme input[type="date"]:focus {
   border-color: var(--theme-text);
   box-shadow: 0 0 10px var(--theme-text);
   animation: glowPulseInput 4s infinite alternate;
 }
 
-/* --- Keyframes for input glow --- */
 @keyframes glowPulseInput {
   0%   { box-shadow: 0 0 6px var(--theme-text), 0 0 12px rgba(var(--theme-info-rgb), 0.5); }
   50%  { box-shadow: 0 0 4px rgba(var(--theme-info-rgb), 0.3), 0 0 8px rgba(var(--theme-info-rgb), 0.2); }
   100% { box-shadow: 0 0 6px var(--theme-text), 0 0 12px rgba(var(--theme-info-rgb), 0.5); }
 }
 
-/* --- Glowing headings (h4 for slide titles) --- */
-h4.project-theme {
+/* === Date Input Text Color (modern browsers) === */
+.project-theme input[type="date"]::-webkit-datetime-edit,
+.project-theme input[type="date"]::-webkit-datetime-edit-text,
+.project-theme input[type="date"]::-webkit-datetime-edit-month-field,
+.project-theme input[type="date"]::-webkit-datetime-edit-day-field,
+.project-theme input[type="date"]::-webkit-datetime-edit-year-field {
+  color: var(--theme-warning);
+  opacity: 0.75;
+}
+
+.project-theme input[type="date"]::-moz-placeholder {
+  color: var(--theme-warning);
+  opacity: 1;
+}
+
+.project-theme input[type="date"]::-webkit-inner-spin-button,
+.project-theme input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}
+
+/* === Buttons / Tiles / Step Circles === */
+.project-theme .btn,
+.project-theme .btn-group .btn,
+.project-theme .step .circle,
+.project-theme .project-theme-tile,
+.project-theme .event-tile,
+.project-theme .add-product-tile,
+.project-theme .fees-tile,
+.project-theme .balance-tile,
+.project-theme .discount-tile {
+  cursor: pointer;
+  color: var(--theme-text);
+  box-shadow: 0 0 10px var(--theme-text);
+  transition: box-shadow 0.3s ease, transform 0.2s ease;
+  border-radius: 12px;
+}
+
+.project-theme .btn:hover,
+.project-theme .btn-group .btn:hover,
+.project-theme .step .circle:hover,
+.project-theme .project-theme-tile:hover,
+.project-theme .event-tile:hover,
+.project-theme .add-product-tile:hover,
+.project-theme .fees-tile:hover,
+.project-theme .balance-tile:hover,
+.project-theme .discount-tile:hover {
+  box-shadow: 0 0 25px var(--theme-text);
+  transform: translateY(-2px);
+}
+
+.project-theme .project-theme-tile:focus-within,
+.project-theme .event-tile:focus-within,
+.project-theme .add-product-tile:focus-within,
+.project-theme .fees-tile:focus-within,
+.project-theme .balance-tile:focus-within,
+.project-theme .discount-tile:focus-within {
+  box-shadow: 0 0 25px var(--theme-text), inset 0 0 12px var(--theme-text);
+  transform: translateY(-1px);
+}
+
+/* === Autocomplete Suggestions === */
+.project-theme .client-suggestions,
+.project-theme .product-suggestions {
+  max-height: 200px;
+  overflow-y: auto;
+  position: absolute;
+  width: 100%;
+  z-index: 1000;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  border-radius: 0.25rem;
+  border: 1px solid var(--theme-text);
+  background-color: rgba(0, 0, 0, 0.95);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+  scrollbar-width: none;
+}
+
+.project-theme .client-suggestions li,
+.project-theme .product-suggestions li {
+  background-color: var(--theme-bg);
+  color: var(--theme-warning);
+  padding: 0.4rem 0.6rem;
+  cursor: pointer;
+  border: none;
+}
+
+.project-theme .client-suggestions li:hover,
+.project-theme .product-suggestions li:hover {
+  background-color: var(--theme-warning);
+  color: var(--theme-bg);
+}
+
+.project-theme .client-suggestions,
+.project-theme .product-suggestions {
+  display: none;
+}
+
+/* === Glowing Headings === */
+.glow-title {
   color: var(--theme-text);
   animation: glowPulseFade 2.5s infinite alternate;
 }
@@ -69,41 +194,3 @@ h4.project-theme {
   50%  { color: rgba(0,0,0,0.2); text-shadow: 0 0 5px rgba(var(--theme-info-rgb),0.1),0 0 10px rgba(var(--theme-info-rgb),0.05); }
   100% { color: var(--theme-text); text-shadow: 0 0 35px var(--theme-text),0 0 60px rgba(var(--theme-info-rgb),0.8); }
 }
-
-/* --- Buttons --- */
-.btn.project-theme {
-  border-radius: 12px;
-  box-shadow: 0 0 10px var(--theme-text);
-  transition: box-shadow 0.3s ease;
-}
-
-.btn.project-theme:hover {
-  box-shadow: 0 0 25px var(--theme-text);
-}
-
-/* --- Tiles --- */
-.project-theme-tile {
-  background-color: var(--theme-bg);
-  color: var(--theme-text);
-  border: 1px solid var(--theme-text);
-  border-radius: 12px;
-  padding: 10px 14px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  box-shadow: 0 0 10px var(--theme-text), inset 0 0 6px var(--theme-text);
-  transition: transform 0.2s ease, box-shadow 0.4s ease, border-color 0.3s ease;
-  min-height: 80px;
-}
-
-.project-theme-tile:hover {
-  transform: translateY(-1px);
-  animation: pulseGlow 1.5s infinite ease-in-out;
-}
-
-.project-theme-tile:focus-within {
-  box-shadow: 0 0 25px var(--theme-text), inset 0 0 12px var(--theme-text);
-  transform: translateY(-1px);
-  border-color: var(--theme-text);
-}
-
