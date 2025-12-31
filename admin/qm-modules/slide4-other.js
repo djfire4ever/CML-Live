@@ -17,9 +17,10 @@ export async function initSlide4Other(currentQuote = {}) {
         otherFee: currentQuote.otherFee || 0,
       },
       "balance-overlay": {
-        deposit: currentQuote.deposit || 0,
-        amountPaid: currentQuote.amountPaid || 0,
+        deposit: currentQuote.deposit || "",
+        amountPaid: currentQuote.amountPaid || "",
         paymentMethod: currentQuote.paymentMethod || "",
+        balanceDueDate: currentQuote.balanceDueDate || ""
       },
       "discount-overlay": {
         discount: currentQuote.discount || 0,
@@ -49,6 +50,15 @@ export async function initSlide4Other(currentQuote = {}) {
       }, { once: true });
     }
   }
+
+  ["balanceDueDate", "depositDate"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener("input", e => {
+        currentQuote[id] = formatDateForUser(e.target.value);
+      });
+    }
+  });
 
   // Payment method listener
   document.getElementById("paymentMethod")?.addEventListener("change", e => {

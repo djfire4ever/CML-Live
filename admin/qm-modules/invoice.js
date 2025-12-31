@@ -33,37 +33,89 @@ async function fetchNextInvoiceID(scriptURL) {
 // -------------------- INJECT INVOICE --------------------
 export async function injectInvoiceIntoDrawer(currentQuote, scriptURL) {
   const invoiceBody = document.getElementById("invoiceBody");
-  if (!invoiceBody) return console.error("❌ Missing #invoiceBody in DOM");
+  if (!invoiceBody) {
+    console.error("❌ Missing #invoiceBody in DOM");
+    return;
+  }
 
   toggleLoader(true, { message: "Loading invoice..." });
 
   try {
+    // Ensure invoice ID exists (but do not format here)
     if (!currentQuote.invoiceID) {
       currentQuote.invoiceID = await fetchNextInvoiceID(scriptURL);
     }
 
+    // Fetch invoice template
     const res = await fetch("./qm-modules/invoice.html");
-    if (!res.ok) throw new Error(`Failed to fetch template: ${res.status}`);
+    if (!res.ok) {
+      throw new Error(`Failed to fetch template: ${res.status}`);
+    }
+
     let html = await res.text();
 
-    const data = {
-      // ... all your other fields
-      paymentMethod: currentQuote.paymentMethod
-    };
+    // Clone quote for presentation-only formatting
+    const data = { ...currentQuote };
 
+    // Fields that should render as currency
+    const currencyFields = [
+      "totalProductRetail",
+      "subTotal1",
+      "subTotal2",
+      "subTotal3",
+      "discountedTotal",
+      "addonsTotal",
+      "grandTotal",
+      "deposit",
+      "balanceDue"
+    ];
+
+    // Fields that should render as dates
+    const dateFields = [
+      "invoiceDate",
+      "eventDate",
+      "depositDate",
+      "balanceDueDate",
+      "memberSince",
+      "birthday"
+    ];
+
+    // Apply global formatters
+    currencyFields.forEach(key => {
+      if (key in data) {
+        data[key] = window.formatCurrency(data[key]);
+      }
+    });
+
+    dateFields.forEach(key => {
+      if (key in data) {
+        data[key] = window.formatDateForUser(data[key]);
+      }
+    });
+
+    // Replace template tokens
     html = html.replace(/{{(\w+)}}/g, (_, key) => data[key] ?? "");
     invoiceBody.innerHTML = html;
 
     // Inject products dynamically
     const tbody = invoiceBody.querySelector("#invoice-products");
     if (tbody) {
+      tbody.innerHTML = "";
+
       currentQuote.products?.forEach(prod => {
+        const qty = prod.qty || 0;
+        const price = prod.retailPrice || 0;
+
         const row = document.createElement("tr");
         row.innerHTML = `
           <td colspan="3">${prod.productName || "Unnamed Product"}</td>
-          <td class="text-center">${prod.qty || 0}</td>
-          <td class="text-right" style="white-space:nowrap">${formatCurrency(prod.retailPrice || 0)}</td>
-          <td class="text-right" style="white-space:nowrap">${formatCurrency((prod.retailPrice || 0) * (prod.qty || 0))}</td>
+          <td class="text-center">${qty}</td>
+          <td class="text-right" style="white-space:nowrap">
+            ${window.formatCurrency(price)}
+          </td>
+          <td class="text-right" style="white-space:nowrap">
+            ${window.formatCurrency(price * qty)}
+          </td>
         `;
         tbody.appendChild(row);
       });

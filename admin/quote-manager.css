@@ -86,12 +86,16 @@
   padding-bottom: 0;
 }
 
-.project-theme button.prevBtn {
-  border-radius: 16px;
-}
-
+.project-theme button.prevBtn,
 .project-theme button.nextBtn {
-  border-radius: 16px;
+  height: 25px; /* same as .circle */
+  min-width: 100px; /* optional, same as .circle width if desired */
+  line-height: 20px; /* vertical alignment */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px; /* match circle radius */
+  padding: 0 0.75rem; /* horizontal padding */
 }
 
 /* === Progress Bar — project-scoped (not global) === */
