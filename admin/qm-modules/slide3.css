@@ -28,7 +28,7 @@
 }
 
 #slide3 .product-tile .name {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   line-height: 1.1;
   white-space: nowrap;
   overflow: hidden;
@@ -45,7 +45,7 @@
 
 #slide3 .product-tile .price {
   flex: 1;
-  font-size: 0.8rem;
+  font-size: 1rem;
   color: var(--bs-warning);
   text-align: center;
 }
@@ -76,7 +76,7 @@
   align-items: center;
   font-size: 1.5rem;
   cursor: pointer;
-  border: 1px var(--bs-info);
+  /* border: 1px var(--bs-info); */
   /* Hover/Glow/Shadow handled by project-theme.css */
 }
 

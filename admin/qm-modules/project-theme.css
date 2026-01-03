@@ -132,6 +132,7 @@ body.project-theme {
 .project-theme .balance-tile:hover,
 .project-theme .discount-tile:hover {
   box-shadow: 0 0 25px var(--theme-text);
+  border: .15rem solid var(--theme-text);
   transform: translateY(-2px);
 }
 
