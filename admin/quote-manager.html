@@ -7,6 +7,118 @@
   <title>QuoteManager 2.0</title>
 </head>
 <style>
+/* ===== Buttons ===== */
+.spotlight-btn {
+  --x: 50%;
+  --y: 50%;
+  cursor: pointer;
+  color: var(--bs-info);
+  background-color: var(--bs-black);
+  border: 0.15rem solid transparent;
+  border-radius: 12px;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  box-shadow: 0 0 10px var(--bs-info);
+  position: relative;
+  transition: box-shadow 0.3s ease, transform 0.2s ease, background 0.2s ease;
+
+  /* Base radial spotlight */
+  background: radial-gradient(circle at var(--x) var(--y), rgba(13,110,253,0.6), var(--bs-black));
+}
+
+.spotlight-btn:hover,
+.spotlight-btn:focus {
+  transform: translateY(-2px);
+  box-shadow: 0 0 35px var(--bs-info);
+
+  /* Brighter spotlight on hover */
+  background: radial-gradient(circle at var(--x) var(--y), rgba(13,110,253,0.9), var(--bs-black));
+}
+
+.spotlight-btn:active {
+  transform: translateY(-1px) scale(0.97);
+}
+
+/* ===== Step Circles ===== */
+.spotlight-step {
+  --x: 50%;
+  --y: 50%;
+  cursor: pointer;
+  color: var(--bs-info);
+  background-color: var(--bs-black);
+  border-radius: 12px;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.8rem;
+  box-shadow: 0 0 6px var(--bs-info);
+  position: relative;
+  transition: box-shadow 0.3s ease, transform 0.2s ease, background 0.2s ease;
+
+  /* Base radial spotlight */
+  background: radial-gradient(circle at var(--x) var(--y), rgba(13,110,253,0.45), var(--bs-black));
+}
+
+.spotlight-step:hover,
+.spotlight-step:focus {
+  transform: translateY(-1px);
+  box-shadow: 0 0 20px var(--bs-info);
+
+  /* Brighter spotlight on hover */
+  background: radial-gradient(circle at var(--x) var(--y), rgba(13,110,253,0.7), var(--bs-black));
+}
+
+.spotlight-step:active {
+  transform: translateY(0) scale(0.97);
+}
+/* ===== Spotlight Tiles ===== */
+.spotlight-tile {
+  --x: 50%;
+  --y: 50%;
+  cursor: pointer;
+  color: var(--bs-info);
+  background-color: var(--bs-black);
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 0 10px var(--bs-info);
+  position: relative;
+  transition: box-shadow 0.3s ease, transform 0.2s ease, background 0.2s ease;
+
+  /* Base radial spotlight */
+  background: radial-gradient(circle at var(--x) var(--y), rgba(13,110,253,0.45), var(--bs-black));
+}
+
+.spotlight-tile:hover,
+.spotlight-tile:focus {
+  transform: translateY(-2px);
+  box-shadow: 0 0 25px var(--bs-info);
+
+  /* Brighter spotlight on hover */
+  background: radial-gradient(circle at var(--x) var(--y), rgba(13,110,253,0.75), var(--bs-black));
+}
+
+.spotlight-tile:active {
+  transform: translateY(-1px) scale(0.97);
+}
+.project-theme .add-product-tile.spotlight-tile {
+  --x: 50%;
+  --y: 50%;
+  position: relative;          /* <- important for the gradient */
+  cursor: pointer;
+  color: var(--bs-info);
+  background-color: var(--bs-black);
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 0 10px var(--bs-info);
+  transition: box-shadow 0.3s ease, transform 0.2s ease, background 0.2s ease;
+
+  background: radial-gradient(circle at var(--x) var(--y), rgba(13,110,253,0.45), var(--bs-black));
+}
+
+.project-theme .add-product-tile.spotlight-tile:hover,
+.project-theme .add-product-tile.spotlight-tile:focus {
+  transform: translateY(-2px);
+  box-shadow: 0 0 25px var(--bs-info);
+  background: radial-gradient(circle at var(--x) var(--y), rgba(13,110,253,0.75), var(--bs-black));
+}
 
 </style>
 
@@ -602,6 +714,60 @@
 <!-- === Scripts === -->
 <script type="module" src="admin.js"></script>
 <script type="module" src="quote-manager.js"></script>
+
+<script>
+// ===== Smooth Spotlight JS =====
+function applySmoothSpotlight(selector, optionalClass) {
+  document.querySelectorAll(selector).forEach(el => {
+    if (optionalClass) el.classList.add(optionalClass);
+
+    let targetX = 0, targetY = 0;
+    let currentX = 0, currentY = 0;
+    let rafId;
+
+    function updatePosition() {
+      // interpolate towards target
+      currentX += (targetX - currentX) * 0.2; // adjust 0.2 for speed
+      currentY += (targetY - currentY) * 0.2;
+
+      el.style.setProperty('--x', `${currentX}px`);
+      el.style.setProperty('--y', `${currentY}px`);
+
+      rafId = requestAnimationFrame(updatePosition);
+    }
+
+    el.addEventListener('mousemove', e => {
+      const rect = el.getBoundingClientRect();
+      targetX = e.clientX - rect.left;
+      targetY = e.clientY - rect.top;
+
+      if (!rafId) updatePosition();
+    });
+
+    el.addEventListener('mouseleave', () => {
+      targetX = el.offsetWidth / 2;
+      targetY = el.offsetHeight / 2;
+    });
+
+    el.addEventListener('focus', () => {
+      targetX = el.offsetWidth / 2;
+      targetY = el.offsetHeight / 2;
+    });
+  });
+}
+
+// Apply to all buttons in btn-group
+applySmoothSpotlight('.btn-group .btn', 'spotlight-btn');
+
+// Apply to all step circles
+applySmoothSpotlight('.step .circle', 'spotlight-step');
+
+// ===== Spotlight for Tiles =====
+applySmoothSpotlight('.project-theme-tile', 'spotlight-tile');
+
+applySmoothSpotlight('.project-theme-tile, .add-product-tile', 'spotlight-tile');
+
+</script>
 
 </body>
 </html>
