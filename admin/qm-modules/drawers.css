@@ -5,9 +5,9 @@
 ============================ */
 .offcanvas {
   transition: transform 0.4s ease;
-  box-shadow: -5px 0 20px rgba(var(--bs-info-rgb), 0.4);
-  border-left: 1px solid rgba(var(--bs-info-rgb), 0.2);
-  background-color: var(--bs-black);
+  box-shadow: -5px 0 20px rgba(var(--theme-success), 0.4);
+  /* border-left: 1px solid rgba(var(--bs-danger), 0.2); */
+  background-color: var(--theme-bg);
   color: var(--bs-info);
 }
 
@@ -17,11 +17,11 @@
 
 .offcanvas-title {
   font-weight: 600;
-  text-shadow: 0 0 10px rgba(var(--bs-info-rgb), 0.8);
+  /* text-shadow: 0 0 10px rgba(var(--bs-info-rgb), 0.8); */
 }
 
 .offcanvas-body hr {
-  border-color: rgba(var(--bs-info-rgb), 0.25);
+  border-color: rgba(var(--theme-info-rgb), 0.25);
 }
 
 /* ============================
@@ -30,7 +30,7 @@
 .receipt {
   font-family: "Courier New", monospace;
   font-size: 0.9rem;
-  color: var(--bs-info);
+  color: var(--theme-text);
 }
 
 .receipt-header {
@@ -42,7 +42,7 @@
   text-align: center;
   font-size: 0.8rem;
   margin-top: 0.5rem;
-  color: #ccc;
+  color: var(--theme-text);
 }
 
 .no-products {
@@ -95,7 +95,7 @@
 .receipt-subtotals,
 .receipt-addons {
   margin-top: 0.5rem;
-  border-top: 1px dashed #555;
+  border-top: 1px dashed green;
   padding-top: 0.3rem;
 }
 
@@ -112,7 +112,7 @@
 ============================ */
 .receipt-total {
   font-weight: bold;
-  border-top: 1px solid #fff;
+  border-top: 1px solid green;
   padding-top: 0.5rem;
   margin-top: 0.5rem;
 }

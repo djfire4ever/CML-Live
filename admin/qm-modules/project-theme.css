@@ -1,28 +1,117 @@
-/* qm-modules/project-theme.css (>>> DO NOT DELETE THIS FILE IDENTIFICATION LINE <<<) */
+/* qm-modules/project-theme.css  (>>> DO NOT DELETE THIS FILE IDENTIFICATION LINE <<<) */
 
 /* =========================================
    Project Theme
-   Generic styles shared across all slides
+   Shared across all slides
    ========================================= */
 
-/* --- Base colors --- */
+/* ---------- Theme Variables & Spotlight System ---------- */
 :root {
-  --theme-bg: var(--bs-black);      /* background for all project elements */
-  --theme-text: var(--bs-info);     /* main text color */
-  --theme-warning: var(--bs-warning);
-  --theme-success: var(--bs-success);
-  --theme-info-rgb: var(--bs-info-rgb); /* for rgba shadows */
+  /* Default / fallback theme (sage) */
+  --theme-page-bg: #000000;      /* full page background */
+  --theme-bg: #000000;           /* element backgrounds */
+  --theme-text: #FFC0CB;         /* baby pink text */
+  --theme-primary: #9CAF88;      /* sage green primary */
+  --theme-primary-rgb: 156, 175, 136;
+
+  /* Glow intensities (default) */
+  --glow-frame-outer: 0.75;
+  --glow-frame-inner: 0.5;
+  --glow-interactive-rest: 0.45;
+  --glow-interactive-hover: 0.75;
+
+  /* Spotlight defaults */
+  --theme-spotlight: var(--theme-primary);
+  --theme-spotlight-hover: var(--theme-primary);
+  --theme-frame-accent: var(--theme-primary);
 }
 
-/* --- Body base --- */
+/* ---------- Theme Variants ---------- */
+.project-theme[data-theme="sage"] {
+  --theme-page-bg: #000000;
+  --theme-bg: #000000;
+  --theme-text: #FFC0CB;      /* baby pink */
+  --theme-primary: #9CAF88;   /* sage green */
+  --theme-primary-rgb: 156, 175, 136;
+
+  --theme-spotlight: var(--theme-primary);
+  --theme-spotlight-hover: var(--theme-primary);
+  --theme-frame-accent: var(--theme-primary);
+}
+
+.project-theme[data-theme="gold"] {
+  --theme-page-bg: #1c1c1c;
+  --theme-bg: #1c1c1c;
+  --theme-text: #f2c94c;      /* gold text */
+  --theme-primary: #f2c94c;   /* gold primary */
+  --theme-primary-rgb: 242, 201, 76;
+
+  --theme-spotlight: var(--theme-primary);
+  --theme-spotlight-hover: var(--theme-primary);
+  --theme-frame-accent: var(--theme-primary);
+}
+
+.project-theme[data-theme="info"] {
+  --theme-page-bg: #0f2f2e;
+  --theme-bg: #0f2f2e;
+  --theme-text: var(--bs-info);      /* teal text */
+  --theme-primary: var(--bs-info);   /* teal primary */
+  --theme-primary-rgb: 56, 178, 172;
+
+  --theme-spotlight: var(--theme-primary);
+  --theme-spotlight-hover: var(--theme-primary);
+  --theme-frame-accent: var(--theme-primary);
+}
+
+.project-theme[data-theme="rose"] {
+  --theme-page-bg: #1c0f0f;
+  --theme-bg: #1c0f0f;
+  --theme-text: #e76f51;      /* rose text */
+  --theme-primary: #e76f51;   /* rose primary */
+  --theme-primary-rgb: 231, 111, 81;
+
+  --theme-spotlight: var(--theme-primary);
+  --theme-spotlight-hover: var(--theme-primary);
+  --theme-frame-accent: var(--theme-primary);
+}
+
+.project-theme[data-theme="purple"] {
+  --theme-page-bg: #120d1f;
+  --theme-bg: #120d1f;
+  --theme-text: #b388eb;      /* lavender text */
+  --theme-primary: #b388eb;   /* purple primary */
+  --theme-primary-rgb: 179, 136, 235;
+
+  --theme-spotlight: var(--theme-primary);
+  --theme-spotlight-hover: var(--theme-primary);
+  --theme-frame-accent: var(--theme-primary);
+}
+
+/* ---------- Glow Variants ---------- */
+.project-theme[data-glow="calm"] {
+  --glow-interactive-rest: 0.3;
+  --glow-interactive-hover: 0.6;
+  --glow-frame-outer: 0.5;
+  --glow-frame-inner: 0.25;
+}
+
+.project-theme[data-glow="vibrant"] {
+  --glow-interactive-rest: 0.5;
+  --glow-interactive-hover: 1;
+  --glow-frame-outer: 0.9;
+  --glow-frame-inner: 0.6;
+}
+
+/* ---------- Body ---------- */
 body.project-theme {
-  background-color: var(--theme-bg);
+  background-color: var(--theme-page-bg);
   color: var(--theme-text);
   overflow-x: hidden;
-  border: none;
 }
 
-/* --- Unified Inputs / Textareas / Selects --- */
+/* =========================================
+   Unified Inputs / Textareas / Selects
+   ========================================= */
 .project-theme input.form-control,
 .project-theme textarea.form-control,
 .project-theme select.form-control,
@@ -32,8 +121,8 @@ body.project-theme {
 .project-theme input[type="date"],
 .project-theme input[type="search"] {
   background-color: var(--theme-bg);
-  color: var(--theme-warning);
-  border: 1px solid var(--theme-text);
+  color: var(--theme-text);
+  border: 1px solid var(--theme-primary);
   border-radius: 8px;
   padding: 0.375rem 0.75rem;
   width: 100%;
@@ -41,158 +130,214 @@ body.project-theme {
   transition: box-shadow 0.3s ease, border-color 0.3s ease;
 }
 
-.project-theme input.form-control::placeholder,
-.project-theme textarea.form-control::placeholder,
-.project-theme select::placeholder,
-.project-theme input.tile-input::placeholder,
-.project-theme textarea.tile-input::placeholder,
-.project-theme select.tile-input::placeholder,
-.project-theme input[type="date"]::placeholder,
-.project-theme input[type="search"]::placeholder {
-  color: var(--theme-warning);
+.project-theme input::placeholder,
+.project-theme textarea::placeholder,
+.project-theme select::placeholder {
+  color: var(--theme-text);
   opacity: 0.5;
 }
 
-.project-theme input.form-control:hover,
-.project-theme textarea.form-control:hover,
-.project-theme select.form-control:hover,
-.project-theme input.tile-input:hover,
-.project-theme textarea.tile-input:hover,
-.project-theme select.tile-input:hover,
-.project-theme input[type="date"]:hover,
-.project-theme input[type="search"]:hover,
-.project-theme input[type="search"]:focus {
-  box-shadow: 0 0 10px var(--theme-text), 0 0 20px rgba(var(--theme-info-rgb), 0.5);
-  outline: none;
+.project-theme input:hover,
+.project-theme textarea:hover,
+.project-theme select:hover {
+  box-shadow:
+    0 0 10px var(--theme-primary),
+    0 0 20px rgba(var(--theme-primary-rgb), var(--glow-interactive-rest));
 }
 
-/* === Focus / Glow animation for inputs === */
-.project-theme input.form-control:focus,
-.project-theme textarea.form-control:focus,
-.project-theme select.form-control:focus,
-.project-theme input.tile-input:focus,
-.project-theme textarea.tile-input:focus,
-.project-theme select.tile-input:focus,
-.project-theme input[type="date"]:focus {
-  border-color: var(--theme-text);
-  box-shadow: 0 0 10px var(--theme-text);
+.project-theme input:focus,
+.project-theme textarea:focus,
+.project-theme select:focus {
+  outline: none;
+  border-color: var(--theme-primary);
+  box-shadow: 0 0 10px var(--theme-primary);
   animation: glowPulseInput 4s infinite alternate;
 }
 
 @keyframes glowPulseInput {
-  0%   { box-shadow: 0 0 6px var(--theme-text), 0 0 12px rgba(var(--theme-info-rgb), 0.5); }
-  50%  { box-shadow: 0 0 4px rgba(var(--theme-info-rgb), 0.3), 0 0 8px rgba(var(--theme-info-rgb), 0.2); }
-  100% { box-shadow: 0 0 6px var(--theme-text), 0 0 12px rgba(var(--theme-info-rgb), 0.5); }
+  0%   { box-shadow: 0 0 6px var(--theme-primary); }
+  50%  { box-shadow: 0 0 3px rgba(var(--theme-primary-rgb), var(--glow-interactive-rest)); }
+  100% { box-shadow: 0 0 6px var(--theme-primary); }
 }
 
-/* === Date Input Text Color (modern browsers) === */
-.project-theme input[type="date"]::-webkit-datetime-edit,
-.project-theme input[type="date"]::-webkit-datetime-edit-text,
-.project-theme input[type="date"]::-webkit-datetime-edit-month-field,
-.project-theme input[type="date"]::-webkit-datetime-edit-day-field,
-.project-theme input[type="date"]::-webkit-datetime-edit-year-field {
-  color: var(--theme-warning);
-  opacity: 0.75;
+/* =========================================
+   Spotlight System (Unified)
+   ========================================= */
+.project-theme .spotlight-btn,
+.project-theme .spotlight-step,
+.project-theme .spotlight-tile,
+.project-theme .add-product-tile {
+  --x: 50%;
+  --y: 50%;
+  position: relative;
+  cursor: pointer;
+
+  color: var(--theme-text);
+  background-color: var(--theme-bg);
+  border-radius: 12px;
+  box-shadow: 0 0 10px var(--theme-primary);
+  transition: box-shadow 0.3s ease, transform 0.2s ease, background 0.2s ease;
+
+  /* Radial gradient for JS-controlled spotlight */
+  background: radial-gradient(
+    circle at var(--x) var(--y),
+    var(--theme-spotlight),
+    var(--theme-bg)
+  );
 }
 
-.project-theme input[type="date"]::-moz-placeholder {
-  color: var(--theme-warning);
-  opacity: 1;
+/* Hover / Focus */
+.project-theme .spotlight-btn:hover,
+.project-theme .spotlight-step:hover,
+.project-theme .spotlight-tile:hover,
+.project-theme .add-product-tile:hover,
+.project-theme .spotlight-btn:focus,
+.project-theme .spotlight-step:focus,
+.project-theme .spotlight-tile:focus,
+.project-theme .add-product-tile:focus {
+  transform: translateY(-2px);
+  box-shadow: 0 0 25px var(--theme-primary);
+
+  background: radial-gradient(
+    circle at var(--x) var(--y),
+    var(--theme-spotlight-hover),
+    var(--theme-bg)
+  );
 }
 
-.project-theme input[type="date"]::-webkit-inner-spin-button,
-.project-theme input[type="date"]::-webkit-calendar-picker-indicator {
-  filter: invert(1);
+/* Active */
+.project-theme .spotlight-btn:active,
+.project-theme .spotlight-step:active,
+.project-theme .spotlight-tile:active,
+.project-theme .add-product-tile:active {
+  transform: translateY(-1px) scale(0.97);
+
+  background: radial-gradient(
+    circle at var(--x) var(--y),
+    var(--theme-spotlight),
+    var(--theme-bg)
+  );
 }
 
-/* === Buttons / Tiles / Step Circles === */
+/* =========================================
+   Structural Elements
+   ========================================= */
 .project-theme .btn,
 .project-theme .btn-group .btn,
 .project-theme .step .circle,
 .project-theme .project-theme-tile,
 .project-theme .event-tile,
-.project-theme .add-product-tile,
 .project-theme .fees-tile,
 .project-theme .balance-tile,
-.project-theme .discount-tile {
-  cursor: pointer;
-  color: var(--theme-text);
-  box-shadow: 0 0 10px var(--theme-text);
-  transition: box-shadow 0.3s ease, transform 0.2s ease;
+.project-theme .discount-tile,
+.project-theme .add-product-tile {
   border-radius: 12px;
 }
 
-.project-theme .btn:hover,
-.project-theme .btn-group .btn:hover,
-.project-theme .step .circle:hover,
-.project-theme .project-theme-tile:hover,
-.project-theme .event-tile:hover,
-.project-theme .add-product-tile:hover,
-.project-theme .fees-tile:hover,
-.project-theme .balance-tile:hover,
-.project-theme .discount-tile:hover {
-  box-shadow: 0 0 25px var(--theme-text);
-  border: .15rem solid var(--theme-text);
-  transform: translateY(-2px);
-}
-
-.project-theme .project-theme-tile:focus-within,
-.project-theme .event-tile:focus-within,
-.project-theme .add-product-tile:focus-within,
-.project-theme .fees-tile:focus-within,
-.project-theme .balance-tile:focus-within,
-.project-theme .discount-tile:focus-within {
-  box-shadow: 0 0 25px var(--theme-text), inset 0 0 12px var(--theme-text);
-  transform: translateY(-1px);
-}
-
-/* === Autocomplete Suggestions === */
+/* =========================================
+   Autocomplete Suggestions
+   ========================================= */
 .project-theme .client-suggestions,
 .project-theme .product-suggestions {
+  position: absolute;
+  z-index: 1000;
   max-height: 200px;
   overflow-y: auto;
-  position: absolute;
-  width: 100%;
-  z-index: 1000;
+  background: var(--theme-bg);
+  border: 1px solid var(--theme-primary);
+  border-radius: 4px;
+  list-style: none;
   padding: 0;
   margin: 0;
-  list-style: none;
-  border-radius: 0.25rem;
-  border: 1px solid var(--theme-text);
-  background-color: rgba(0, 0, 0, 0.95);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
-  scrollbar-width: none;
+  display: none;
 }
 
 .project-theme .client-suggestions li,
 .project-theme .product-suggestions li {
-  background-color: var(--theme-bg);
-  color: var(--theme-warning);
   padding: 0.4rem 0.6rem;
+  background-color: var(--theme-bg);
+  color: var(--theme-text);
   cursor: pointer;
-  border: none;
 }
 
 .project-theme .client-suggestions li:hover,
 .project-theme .product-suggestions li:hover {
-  background-color: var(--theme-warning);
+  background-color: var(--theme-primary);
   color: var(--theme-bg);
 }
 
-.project-theme .client-suggestions,
-.project-theme .product-suggestions {
-  display: none;
-}
-
-/* === Glowing Headings === */
+/* =========================================
+   Glowing Titles
+   ========================================= */
 .glow-title {
   color: var(--theme-text);
   animation: glowPulseFade 2.5s infinite alternate;
 }
 
 @keyframes glowPulseFade {
-  0%   { color: var(--theme-text); text-shadow: 0 0 35px var(--theme-text), 0 0 60px rgba(var(--theme-info-rgb), 0.8); }
-  50%  { color: rgba(0,0,0,0.2); text-shadow: 0 0 5px rgba(var(--theme-info-rgb),0.1),0 0 10px rgba(var(--theme-info-rgb),0.05); }
-  100% { color: var(--theme-text); text-shadow: 0 0 35px var(--theme-text),0 0 60px rgba(var(--theme-info-rgb),0.8); }
+  0% {
+    text-shadow:
+      0 0 25px var(--theme-primary),
+      0 0 45px rgba(var(--theme-primary-rgb), var(--glow-interactive-hover));
+  }
+  50% {
+    text-shadow:
+      0 0 5px rgba(var(--theme-primary-rgb), var(--glow-interactive-rest));
+  }
+  100% {
+    text-shadow:
+      0 0 25px var(--theme-primary),
+      0 0 45px rgba(var(--theme-primary-rgb), var(--glow-interactive-hover));
+  }
 }
 
+/* =========================================
+   Quote Container specific glow
+   ========================================= */
+.quote-container {
+  box-shadow:
+    0 0 30px rgba(var(--theme-primary-rgb), var(--glow-frame-outer)),
+    0 0 15px var(--theme-frame-accent) inset;
+}
+
+/* =========================================
+   Buttons / Navigation
+   ========================================= */
+.project-theme button.prevBtn,
+.project-theme button.nextBtn {
+  height: 25px; /* same as .circle */
+  min-width: 100px; /* same as .circle width */
+  line-height: 20px; /* vertical alignment */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px; /* match circle radius */
+  padding: 0 0.75rem; /* horizontal padding */
+}
+
+/* =========================================
+   Progress Bar — project-scoped
+   ========================================= */
+.project-theme .progress {
+  height: 10px;
+  background-color: var(--theme-bg);
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--theme-primary);
+}
+
+.project-theme .progress-bar {
+  background-color: var(--theme-primary);
+  transition: width 0.6s ease;
+}
+
+/* Theme-aware element background */
+.theme-bg-element {
+  background-color: var(--theme-bg);
+}
+
+/* Theme-aware text */
+.theme-text,
+.tier-text {
+  color: var(--theme-text);
+}

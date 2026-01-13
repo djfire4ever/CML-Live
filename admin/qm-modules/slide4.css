@@ -7,8 +7,9 @@
 /* --- Quote Notes Card --- */
 #slide4 #quoteNotesCard {
   padding: 1rem;
-  background-color: rgba(0,0,0,0.6); /* slide-specific background if different from theme */
+  background-color: var(--theme-bg); /* use theme background */
   border-radius: 12px;
+  box-shadow: 0 0 15px rgba(var(--theme-primary-rgb), var(--glow-frame-inner)); /* subtle glow */
 }
 
 /* =========================================
@@ -31,7 +32,8 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0,0,0,0.7);
+  background-color: rgba(var(--theme-page-bg-rgb), 0.25); /* semi-transparent theme bg */
+  backdrop-filter: blur(2px);
   display: none;
   align-items: center;
   justify-content: center;
@@ -45,20 +47,20 @@
   display: flex;
 }
 
-/* Overlay cards — Slide 4 layout only */
+/* Overlay cards — layout only, colors delegated to theme */
 #slide4 .fees-overlay .overlay-card,
 #slide4 .balance-overlay .overlay-card,
 #slide4 .discount-overlay .overlay-card {
-  background-color: rgba(0,0,0,0.95);
+  background-color: var(--theme-bg); /* dark theme background */
   padding: 1.5rem;
   border-radius: 12px;
   width: 90%;
   max-width: 400px;
-  box-shadow: 0 0 20px var(--bs-info); /* optional: overlay shadow */
+  box-shadow: 0 0 20px rgba(var(--theme-primary-rgb), var(--glow-frame-inner));
   animation: overlayPopIn 0.8s ease forwards;
 }
 
-/* Overlay form inputs and selects — spacing only */
+/* Overlay form inputs and selects — spacing and theme colors */
 #slide4 .fees-overlay input,
 #slide4 .balance-overlay input,
 #slide4 .discount-overlay input,
@@ -68,11 +70,14 @@
   padding: 0.375rem 0.75rem;
   margin-bottom: 0.5rem;
   border-radius: 6px;
-  border: 1px solid var(--bs-info); /* uses theme color for border */
-  background-color: var(--bs-black); /* can still rely on theme */
-  color: var(--bs-warning);         /* text color from theme */
-  box-shadow: 0 0 10px var(--bs-info); /* hover/glow handled by theme if needed */
+  border: 1px solid var(--theme-primary);
+  background-color: var(--theme-bg);
+  color: var(--theme-text);
+  box-shadow: 0 0 10px rgba(var(--theme-primary-rgb), var(--glow-interactive-rest));
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
 }
+
+/* Optional hover/focus effects handled by theme.css */
 
 /* Overlay button groups — layout only */
 #slide4 .overlay-btn-group {
@@ -85,9 +90,9 @@
   flex: 1;
   border-radius: 12px;
   text-align: center;
-  box-shadow: 0 0 10px var(--bs-info); /* optional: glow handled by theme */
+  box-shadow: 0 0 10px rgba(var(--theme-primary-rgb), var(--glow-interactive-rest));
 }
 
 #slide4 .overlay-btn-group .btn:hover {
-  box-shadow: 0 0 25px var(--bs-info); /* optional: hover glow handled by theme */
+  box-shadow: 0 0 25px rgba(var(--theme-primary-rgb), var(--glow-interactive-hover));
 }

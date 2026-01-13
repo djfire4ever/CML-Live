@@ -6,123 +6,8 @@
   <link rel="stylesheet" href="quote-manager.css">
   <title>QuoteManager 2.0</title>
 </head>
-<style>
-/* ===== Buttons ===== */
-.spotlight-btn {
-  --x: 50%;
-  --y: 50%;
-  cursor: pointer;
-  color: var(--bs-info);
-  background-color: var(--bs-black);
-  border: 0.15rem solid transparent;
-  border-radius: 12px;
-  padding: 0.5rem 1rem;
-  font-size: 1rem;
-  box-shadow: 0 0 10px var(--bs-info);
-  position: relative;
-  transition: box-shadow 0.3s ease, transform 0.2s ease, background 0.2s ease;
 
-  /* Base radial spotlight */
-  background: radial-gradient(circle at var(--x) var(--y), rgba(13,110,253,0.6), var(--bs-black));
-}
-
-.spotlight-btn:hover,
-.spotlight-btn:focus {
-  transform: translateY(-2px);
-  box-shadow: 0 0 35px var(--bs-info);
-
-  /* Brighter spotlight on hover */
-  background: radial-gradient(circle at var(--x) var(--y), rgba(13,110,253,0.9), var(--bs-black));
-}
-
-.spotlight-btn:active {
-  transform: translateY(-1px) scale(0.97);
-}
-
-/* ===== Step Circles ===== */
-.spotlight-step {
-  --x: 50%;
-  --y: 50%;
-  cursor: pointer;
-  color: var(--bs-info);
-  background-color: var(--bs-black);
-  border-radius: 12px;
-  padding: 0.3rem 0.6rem;
-  font-size: 0.8rem;
-  box-shadow: 0 0 6px var(--bs-info);
-  position: relative;
-  transition: box-shadow 0.3s ease, transform 0.2s ease, background 0.2s ease;
-
-  /* Base radial spotlight */
-  background: radial-gradient(circle at var(--x) var(--y), rgba(13,110,253,0.45), var(--bs-black));
-}
-
-.spotlight-step:hover,
-.spotlight-step:focus {
-  transform: translateY(-1px);
-  box-shadow: 0 0 20px var(--bs-info);
-
-  /* Brighter spotlight on hover */
-  background: radial-gradient(circle at var(--x) var(--y), rgba(13,110,253,0.7), var(--bs-black));
-}
-
-.spotlight-step:active {
-  transform: translateY(0) scale(0.97);
-}
-/* ===== Spotlight Tiles ===== */
-.spotlight-tile {
-  --x: 50%;
-  --y: 50%;
-  cursor: pointer;
-  color: var(--bs-info);
-  background-color: var(--bs-black);
-  border-radius: 12px;
-  padding: 1rem;
-  box-shadow: 0 0 10px var(--bs-info);
-  position: relative;
-  transition: box-shadow 0.3s ease, transform 0.2s ease, background 0.2s ease;
-
-  /* Base radial spotlight */
-  background: radial-gradient(circle at var(--x) var(--y), rgba(13,110,253,0.45), var(--bs-black));
-}
-
-.spotlight-tile:hover,
-.spotlight-tile:focus {
-  transform: translateY(-2px);
-  box-shadow: 0 0 25px var(--bs-info);
-
-  /* Brighter spotlight on hover */
-  background: radial-gradient(circle at var(--x) var(--y), rgba(13,110,253,0.75), var(--bs-black));
-}
-
-.spotlight-tile:active {
-  transform: translateY(-1px) scale(0.97);
-}
-.project-theme .add-product-tile.spotlight-tile {
-  --x: 50%;
-  --y: 50%;
-  position: relative;          /* <- important for the gradient */
-  cursor: pointer;
-  color: var(--bs-info);
-  background-color: var(--bs-black);
-  border-radius: 12px;
-  padding: 1rem;
-  box-shadow: 0 0 10px var(--bs-info);
-  transition: box-shadow 0.3s ease, transform 0.2s ease, background 0.2s ease;
-
-  background: radial-gradient(circle at var(--x) var(--y), rgba(13,110,253,0.45), var(--bs-black));
-}
-
-.project-theme .add-product-tile.spotlight-tile:hover,
-.project-theme .add-product-tile.spotlight-tile:focus {
-  transform: translateY(-2px);
-  box-shadow: 0 0 25px var(--bs-info);
-  background: radial-gradient(circle at var(--x) var(--y), rgba(13,110,253,0.75), var(--bs-black));
-}
-
-</style>
-
-<body class="project-theme">
+<body class="project-theme" data-theme="sage" data-glow="calm">
 <!-- ⏳ Loader -->
 <div id="loadingOverlay" class="d-none">
   <div class="text-center">
@@ -184,13 +69,10 @@
             <div class="d-flex flex-wrap justify-content-start align-items-start gap-3">
 
               <!-- Left Column: Icon + Names + Tier -->
-              <div id="clientIconColumn"
-                  class="position-relative d-flex flex-column justify-content-center align-items-center ps-1 pe-3 rounded shadow"
-                  style="width:200px; min-height:220px; overflow:hidden; background:rgba(255,255,255,0.02);">
-                <i class="bi bi-award tier-icon-bg position-absolute"
-                  style="font-size:12rem; opacity:0.45; z-index:0;"></i>
+              <div id="clientIconColumn" class="position-relative d-flex flex-column justify-content-center align-items-center rounded shadow theme-bg-element">
+                <i class="bi bi-award tier-icon-bg position-absolute"></i>
 
-                <div class="position-relative z-1 w-100 mt-2 d-flex flex-column justify-content-center align-items-center text-warning">
+                <div class="position-relative z-1 w-100 mt-2 d-flex flex-column justify-content-center align-items-center tier-text">
                   <div class="mb-1 text-center w-100">
                     <span class="firstName d-block mb-1 fw-bold fs-6"></span>
                   </div>
@@ -202,18 +84,18 @@
                   </div>
                 </div>
 
-                <div class="mt-auto w-100 px-1 mb-1 text-center text-warning">
+                <div class="mt-auto w-100 px-1 mb-1 text-center tier-text">
                   <span class="tier" data-tier-id="0"></span>
                 </div>
               </div>
 
               <!-- Right Column: Contact & Address -->
-              <div id="clientDetailsColumn" class="d-flex flex-column flex-grow-1" style="width:220px;">
-                <div class="row gx-2 gy-2 text-warning">
+              <div id="clientDetailsColumn" class="d-flex flex-column flex-grow-1 theme-bg-element">
+                <div class="row gx-2 gy-2 theme-text">
 
                   <!-- Phone (editable search input) -->
                   <div class="col-md-6">
-                    <label class="form-label text-info mb-0">Phone</label>
+                    <label class="form-label mb-0">Phone</label>
                     <div class="position-relative">
                       <input type="search" class="clientID-input" placeholder="Search phone or name">
                       <ul class="client-suggestions"></ul>
@@ -222,39 +104,39 @@
 
                   <!-- Email -->
                   <div class="col-md-6">
-                    <label class="form-label text-info mb-0">Email</label>
+                    <label class="form-label mb-0">Email</label>
                     <span class="email d-block"></span>
                   </div>
 
                   <!-- Street -->
                   <div class="col-md-12">
-                    <label class="form-label text-info mb-0">Street</label>
+                    <label class="form-label mb-0">Street</label>
                     <span class="street d-block"></span>
                   </div>
 
                   <!-- City / State / Zip -->
                   <div class="col-md-6">
-                    <label class="form-label text-info mb-0">City</label>
+                    <label class="form-label mb-0">City</label>
                     <span class="city d-block"></span>
                   </div>
                   <div class="col-md-2">
-                    <label class="form-label text-info mb-0">State</label>
+                    <label class="form-label mb-0">State</label>
                     <span class="state d-block"></span>
                   </div>
                   <div class="col-md-4">
-                    <label class="form-label text-info mb-0">Zip</label>
+                    <label class="form-label mb-0">Zip</label>
                     <span class="zip d-block"></span>
                   </div>
 
                   <!-- Member Since -->
                   <div class="col-md-6">
-                    <label class="form-label text-info mb-0">Member Since</label>
+                    <label class="form-label mb-0">Member Since</label>
                     <span class="memberSince d-block"></span>
                   </div>
 
                   <!-- Birthday -->
                   <div class="col-md-4">
-                    <label class="form-label text-info mb-0">Birthday</label>
+                    <label class="form-label mb-0">Birthday</label>
                     <span class="birthday d-block"></span>
                   </div>
 
@@ -273,19 +155,19 @@
         <!-- First Row: Event Date + Location -->
         <div class="row mb-2 g-2">
           <div class="col-3">
-            <div class="event-tile d-flex align-items-center gap-2 project-theme project-theme-tile">
-              <i class="bi bi-calendar-event tile-icon"></i>
+            <div class="event-tile project-theme-tile d-flex align-items-center gap-2 theme-bg-element">
+              <i class="bi bi-calendar-event tile-icon theme-warning"></i>
               <div class="flex-fill">
-                <label for="eventDate" class="tile-label">Event Date</label>
+                <label for="eventDate" class="tile-label theme-text">Event Date</label>
                 <input type="date" id="eventDate" class="tile-input">
               </div>
             </div>
           </div>
           <div class="col-9">
-            <div class="event-tile d-flex align-items-center gap-2 project-theme project-theme-tile">
-              <i class="bi bi-geo-alt tile-icon"></i>
+            <div class="event-tile project-theme-tile d-flex align-items-center gap-2 theme-bg-element">
+              <i class="bi bi-geo-alt tile-icon theme-warning"></i>
               <div class="flex-fill">
-                <label for="eventLocation" class="tile-label">Location</label>
+                <label for="eventLocation" class="tile-label theme-text">Location</label>
                 <textarea id="eventLocation" class="tile-input" rows="1" placeholder="Where is it happening?"></textarea>
               </div>
             </div>
@@ -295,19 +177,19 @@
         <!-- Second Row: Due Date + Theme -->
         <div class="row mb-2 g-2">
           <div class="col-3">
-            <div class="event-tile d-flex align-items-center gap-2 project-theme project-theme-tile">
-              <i class="bi bi-hourglass-split tile-icon"></i>
+            <div class="event-tile project-theme-tile d-flex align-items-center gap-2 theme-bg-element">
+              <i class="bi bi-hourglass-split tile-icon theme-warning"></i>
               <div class="flex-fill">
-                <label for="dueDate" class="tile-label">Due Date</label>
+                <label for="dueDate" class="tile-label theme-text">Due Date</label>
                 <input type="date" id="dueDate" class="tile-input">
               </div>
             </div>
           </div>
           <div class="col-9">
-            <div class="event-tile d-flex align-items-center gap-2 project-theme project-theme-tile">
-              <i class="bi bi-palette tile-icon"></i>
+            <div class="event-tile project-theme-tile d-flex align-items-center gap-2 theme-bg-element">
+              <i class="bi bi-palette tile-icon theme-warning"></i>
               <div class="flex-fill">
-                <label for="eventTheme" class="tile-label">Theme</label>
+                <label for="eventTheme" class="tile-label theme-text">Theme</label>
                 <textarea id="eventTheme" class="tile-input" rows="1" placeholder="Optional theme"></textarea>
               </div>
             </div>
@@ -317,10 +199,10 @@
         <!-- Third Row: Notes -->
         <div class="row g-2">
           <div class="col-12">
-            <div class="event-tile d-flex align-items-start gap-2 project-theme project-theme-tile">
-              <i class="bi bi-pencil-square tile-icon mt-2"></i>
+            <div class="event-tile project-theme-tile d-flex align-items-start gap-2 theme-bg-element">
+              <i class="bi bi-pencil-square tile-icon mt-2 theme-warning"></i>
               <div class="flex-fill">
-                <label for="eventNotes" class="tile-label">Notes</label>
+                <label for="eventNotes" class="tile-label theme-text">Notes</label>
                 <textarea id="eventNotes" class="tile-input" rows="2" placeholder="Add details here..."></textarea>
               </div>
             </div>
@@ -330,66 +212,68 @@
 
       <!-- Slide 3: Products -->
       <div class="carousel-item" id="slide3">
-        <div class="slide3-header">
-          <h4 class="glow-title mb-1">Products</h4>
-          <div id="productSummaryCard" class="product-summary-card" title="Click for details">
-            <div class="summary-line text-warning">
-              <span class="count">0 items</span>
-              <span class="total">$0.00</span>
+        <div class="project-theme slide-inner p-3">
+          <div class="slide3-header d-flex justify-content-between align-items-center mb-3">
+            <h4 class="glow-title mb-0">Products</h4>
+            <div id="productSummaryCard" class="product-summary-card project-theme-tile p-2 rounded" title="Click for details">
+              <div class="summary-line d-flex justify-content-between">
+                <span class="count text-success">0 items</span>
+                <span class="total text-warning">$0.00</span>
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- Product Grid -->
-        <div class="product-grid"></div>
+          <!-- Product Grid -->
+          <div class="product-grid d-grid gap-3"></div>
 
-        <!-- Overlay Form -->
-        <div id="product-overlay" class="product-overlay d-none">
-          <div class="product-form-card">
-            <h5 class="glow-title mb-3" id="overlay-title">Add Product</h5>
+          <!-- Overlay Form -->
+          <div id="product-overlay" class="product-overlay d-none">
+            <div class="product-form-card p-3">
+              <h5 class="glow-title mb-3" id="overlay-title">Add Product</h5>
 
-          <!-- Product Name -->
-          <input type="search" class="productName-input" placeholder="Search products">
-          <ul class="product-suggestions"></ul>
+              <!-- Product Name -->
+              <input type="search" class="productName-input" placeholder="Search products">
+              <ul class="product-suggestions"></ul>
 
-            <!-- Cost / Retail Row -->
-            <div class="row g-2 mt-1 align-items-end">
-              <div class="col-3 text-info">Cost $</div>
-              <div class="col-3 text-warning">
-                <span id="costPrice">0.00</span>
-              </div>
-              <div class="col-3 text-info">Retail $</div>
-              <div class="col-3 text-warning">
-                <span id="retailPrice">0.00</span>
-              </div>
-            </div>
-
-            <!-- Qty + Totals -->
-            <div class="mt-3 border-top border-info pt-2">
-              <div class="row g-2 align-items-center">
-                <div class="col-1">
-                  <label class="form-label text-info">Qty</label>
+              <!-- Cost / Retail Row -->
+              <div class="row g-2 mt-1 align-items-end">
+                <div class="col-3 text-success">Cost $</div>
+                <div class="col-3 text-warning">
+                  <span id="costPrice">0.00</span>
                 </div>
-                <div class="col-2">
-                  <input type="number" id="qty" class="form-control bg-black text-warning border-info" min="1" value="1">
+                <div class="col-3 text-success">Retail $</div>
+                <div class="col-3 text-warning">
+                  <span id="retailPrice">0.00</span>
                 </div>
-                <div class="col-8">
-                  <div class="d-flex justify-content-between text-warning">
-                    <span>Total Cost:</span>
-                    <span id="totalProductCost">$0.00</span>
+              </div>
+
+              <!-- Qty + Totals -->
+              <div class="mt-3 border-top border-info pt-2">
+                <div class="row g-2 align-items-center">
+                  <div class="col-1">
+                    <label class="form-label text-success">Qty</label>
                   </div>
-                  <div class="d-flex justify-content-between text-warning">
-                    <span>Total Retail:</span>
-                    <span id="totalProductRetail">$0.00</span>
+                  <div class="col-2">
+                    <input type="number" id="qty" class="form-control" min="1" value="1">
+                  </div>
+                  <div class="col-8">
+                    <div class="d-flex justify-content-between text-warning">
+                      <span>Total Cost:</span>
+                      <span id="totalProductCost">$0.00</span>
+                    </div>
+                    <div class="d-flex justify-content-between text-warning">
+                      <span>Total Retail:</span>
+                      <span id="totalProductRetail">$0.00</span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <!-- Action Buttons -->
-            <div class="row g-2 mt-3 overlay-btn-group">
-              <div class="col">
-                <button id="closeProduct" class="btn w-100">Add & Close</button>
+              <!-- Action Buttons -->
+              <div class="row g-2 mt-3 overlay-btn-group">
+                <div class="col">
+                  <button id="closeProduct" class="btn w-100">Add & Close</button>
+                </div>
               </div>
             </div>
           </div>
@@ -405,21 +289,21 @@
           <div class="col-md-4">
             <div class="fees-tile project-theme-tile p-3 d-flex flex-column align-items-center justify-content-center text-center" title="Click for details">
               <div class="title fw-bold mb-1">Add-On Fees</div>
-              <div class="total text-warning fw-bold" id="addonsTotalSummary">$0.00</div>
+              <div class="total fw-bold" id="addonsTotalSummary">$0.00</div>
             </div>
           </div>
 
           <div class="col-md-4">
             <div class="balance-tile project-theme-tile p-3 d-flex flex-column align-items-center justify-content-center text-center" title="Click for details">
               <div class="title fw-bold mb-1">Balance Details</div>
-              <div class="total text-warning fw-bold" id="balanceDueSummary">$0.00</div>
+              <div class="total fw-bold" id="balanceDueSummary">$0.00</div>
             </div>
           </div>
 
           <div class="col-md-4">
             <div class="discount-tile project-theme-tile p-3 d-flex flex-column align-items-center justify-content-center text-center" title="Click for details">
               <div class="title fw-bold mb-1">Discount</div>
-              <div class="total text-warning fw-bold" id="discountSummary">0%</div>
+              <div class="total fw-bold" id="discountSummary">0%</div>
             </div>
           </div>
         </div>
@@ -428,7 +312,7 @@
         <div class="row g-2 mt-3">
           <div class="col-12">
             <div id="quoteNotesCard" class="project-theme project-theme-tile p-3">
-              <label for="quoteNotes" class="text-warning mb-1">Quote Notes</label>
+              <label for="quoteNotes" class="mb-1">Quote Notes</label>
               <textarea class="form-control" id="quoteNotes" rows="3" placeholder="Add optional notes for this quote..."></textarea>
             </div>
           </div>
@@ -452,7 +336,7 @@
             </div>
             <div class="row g-2 align-items-center mt-2">
               <div class="col-6 fw-bold">Total:</div>
-              <div class="col-6 text-warning fw-bold" id="addonsTotal">$0.00</div>
+              <div class="col-6 fw-bold" id="addonsTotal">$0.00</div>
             </div>
             <div class="row g-2 mt-3 overlay-btn-group">
               <div class="col"><button id="saveAddOnFees" class="btn w-100">Save</button></div>
@@ -491,8 +375,8 @@
                   <div class="col-6"><input type="number" class="form-control" id="deposit" min="0" value="0"></div>
                   <div class="col-6"><label for="amountPaid" class="mb-0">Amount Paid</label></div>
                   <div class="col-6"><input type="number" class="form-control" id="amountPaid" min="0" value="0"></div>
-                  <div class="col-6 fw-bold text-warning">Balance Due</div>
-                  <div class="col-6 fw-bold text-info" id="balanceDue">$0.00</div>
+                  <div class="col-6 fw-bold">Balance Due</div>
+                  <div class="col-6 fw-bold" id="balanceDue">$0.00</div>
                 </div>
               </div>
             </div>
@@ -511,7 +395,7 @@
             </div>
             <div class="row g-2 align-items-center mt-1">
               <div class="col-8 fw-bold">After Discount</div>
-              <div class="col-4 text-warning fw-bold" id="discountedTotal">$0.00</div>
+              <div class="col-4 fw-bold" id="discountedTotal">$0.00</div>
             </div>
             <div class="row g-2 mt-3 overlay-btn-group">
               <div class="col"><button id="saveDiscount" class="btn w-100">Save</button></div>
@@ -524,6 +408,14 @@
       <div class="carousel-item" id="slide5">
         <h4 class="glow mb-3">Finalize</h4>
         <p>Coming soon...</p>
+<br>
+        <p>I don't know how to finish here</p>
+<br>
+        <p>Option 1: save quote and create invoice. Then use the emailmanager for invoice and links</p>
+<br>
+        <p>Option 2: create invoice and scrap quote. Then use the emailmanager for invoice and links</p>
+<br>
+        <p>Or any other options???</p>
       </div>
 
     </div>
@@ -540,7 +432,7 @@
 <!-- === Offcanvas Drawers === -->
 
 <!-- Quote Summary Drawer (Final Layout) -->
-<div class="offcanvas offcanvas-end bg-black text-info" style="width: 500px;" tabindex="-1" id="quoteSummaryDrawer">
+<div class="offcanvas offcanvas-end bg-black text-success" style="width: 500px;" tabindex="-1" id="quoteSummaryDrawer">
   <div class="offcanvas-header">
     <h5 class="offcanvas-title">Quote Summary</h5>
     <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
@@ -613,7 +505,7 @@
 </div>
 
 <!-- Running Totals Drawer -->
-<div class="offcanvas offcanvas-end bg-black text-info" style="width: 500px;" tabindex="-1" id="runningTotalDrawer">
+<div class="offcanvas offcanvas-end bg-black text-success" style="width: 500px;" tabindex="-1" id="runningTotalDrawer">
   <div class="offcanvas-header">
     <h5 class="offcanvas-title">Running Total</h5>
     <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
@@ -667,7 +559,7 @@
 </div>
 
 <!-- Invoice Preview Drawer -->
-<div class="offcanvas offcanvas-end bg-black text-info" style="width: 600px;" tabindex="-1" id="invoiceDrawer">
+<div class="offcanvas offcanvas-end bg-black text-success" style="width: 600px;" tabindex="-1" id="invoiceDrawer">
   <div class="offcanvas-header d-flex justify-content-between align-items-center">
     <h5 class="offcanvas-title">Invoice Preview</h5>
     <div class="d-flex gap-2">
@@ -682,7 +574,7 @@
 </div>
 
 <!-- Shopping List Drawer -->
-<div class="offcanvas offcanvas-end bg-black text-info" style="width: 700px;" tabindex="-1" id="shoppingListDrawer">
+<div class="offcanvas offcanvas-end bg-black text-success" style="width: 700px;" tabindex="-1" id="shoppingListDrawer">
   <div class="offcanvas-header">
   <h5 class="offcanvas-title">🛒 Shopping List of Materials for this quote</h5>
   <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
@@ -716,57 +608,48 @@
 <script type="module" src="quote-manager.js"></script>
 
 <script>
-// ===== Smooth Spotlight JS =====
-function applySmoothSpotlight(selector, optionalClass) {
+function applySmoothSpotlight(selector, spotlightClass) {
   document.querySelectorAll(selector).forEach(el => {
-    if (optionalClass) el.classList.add(optionalClass);
+    if (spotlightClass) el.classList.add(spotlightClass);
 
-    let targetX = 0, targetY = 0;
-    let currentX = 0, currentY = 0;
-    let rafId;
+    let targetX = el.offsetWidth / 2;
+    let targetY = el.offsetHeight / 2;
+    let currentX = targetX;
+    let currentY = targetY;
+    let rafId = null;
 
-    function updatePosition() {
-      // interpolate towards target
-      currentX += (targetX - currentX) * 0.2; // adjust 0.2 for speed
+    function update() {
+      currentX += (targetX - currentX) * 0.2;
       currentY += (targetY - currentY) * 0.2;
 
       el.style.setProperty('--x', `${currentX}px`);
       el.style.setProperty('--y', `${currentY}px`);
 
-      rafId = requestAnimationFrame(updatePosition);
+      rafId = requestAnimationFrame(update);
     }
 
     el.addEventListener('mousemove', e => {
       const rect = el.getBoundingClientRect();
       targetX = e.clientX - rect.left;
       targetY = e.clientY - rect.top;
-
-      if (!rafId) updatePosition();
+      if (!rafId) update();
     });
 
     el.addEventListener('mouseleave', () => {
       targetX = el.offsetWidth / 2;
       targetY = el.offsetHeight / 2;
     });
-
-    el.addEventListener('focus', () => {
-      targetX = el.offsetWidth / 2;
-      targetY = el.offsetHeight / 2;
-    });
   });
 }
 
-// Apply to all buttons in btn-group
+// buttons
 applySmoothSpotlight('.btn-group .btn', 'spotlight-btn');
 
-// Apply to all step circles
+// steps
 applySmoothSpotlight('.step .circle', 'spotlight-step');
 
-// ===== Spotlight for Tiles =====
+// ALL tiles (including add-product-tile)
 applySmoothSpotlight('.project-theme-tile', 'spotlight-tile');
-
-applySmoothSpotlight('.project-theme-tile, .add-product-tile', 'spotlight-tile');
-
 </script>
 
 </body>

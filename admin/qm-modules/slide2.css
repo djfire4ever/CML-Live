@@ -2,6 +2,7 @@
 
 /* =========================================
    Slide 2: Event Details
+   Theme-compliant & layout-only
    ========================================= */
 
 /* === Event Tiles (layout only) === */
@@ -11,21 +12,21 @@
   gap: 0.5rem;
   padding: 0.6rem 0.8rem;
   border-radius: 12px;
-  /* Box-shadow, hover, and focus are handled by project-theme */
+  /* Background, box-shadow, and glow handled by project-theme */
 }
 
 /* === Tile Inner Elements === */
 #slide2 .tile-icon {
   font-size: 1.25rem;
-  color: var(--bs-info); /* content color stays here for layout specificity */
   flex-shrink: 0;
+  /* Color handled by theme-warning class */
 }
 
 #slide2 .tile-label {
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--bs-info);
   margin-bottom: 2px;
+  /* Color handled by theme-text class */
 }
 
 /* Layout for text/input block inside tiles */
@@ -40,4 +41,11 @@
   min-height: 70px;
   resize: vertical;
   /* Focus/glow handled by project-theme */
+}
+
+/* =========================================
+   Additional layout tweaks (optional)
+   ========================================= */
+#slide2 .row.g-2 {
+  margin-bottom: 0.5rem; /* spacing between rows if needed */
 }

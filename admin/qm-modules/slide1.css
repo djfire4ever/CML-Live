@@ -10,7 +10,10 @@
 #slide1 .slide-inner {
   background: var(--theme-bg);
   border-radius: 12px;
-  box-shadow: 0 0 15px var(--theme-text);
+
+  /* Use theme variables for glow/elevation */
+  box-shadow: 0 0 15px rgba(var(--theme-primary-rgb), var(--glow-frame-inner));
+
   margin: 1rem auto;
   position: relative;
 }
@@ -39,7 +42,8 @@
   background: var(--theme-bg);
   overflow: hidden;
 
-  border-right: 2px solid var(--theme-text);
+  /* Use theme variable for divider */
+  border-right: 2px solid var(--theme-primary);
   border-radius: 0;
 }
 
@@ -60,6 +64,9 @@
   font-size: 12rem;
   opacity: 0.45;
   pointer-events: none;
+
+  /* Optional: color using theme text for consistency */
+  color: var(--theme-text);
 }
 
 /* === Name Fields === */
@@ -68,12 +75,18 @@
 #slide1 .lastName {
   text-align: center;
   margin-bottom: 0.25rem;
+
+  /* Optional: theme-colored text */
+  color: var(--theme-text);
 }
 
 /* === Tier Badge === */
 #slide1 .tier {
   display: block;
   text-align: center;
+
+  /* Optional: theme-colored text */
+  color: var(--theme-text);
 }
 
 /* === Notes ===

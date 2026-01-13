@@ -116,6 +116,8 @@ export async function initSlide3Products(currentQuote, scriptURL) {
     products.forEach((prod, idx) => {
       const tile = document.createElement("div");
       tile.className = "product-tile project-theme-tile";
+      tile.style.backgroundColor = "var(--theme-bg)";
+      tile.style.color = "var(--theme-text)";
       tile.innerHTML = `
         <div class="name" title="${prod.productName}">${prod.productName}</div>
         <div class="bottom-row text-warning">
@@ -140,9 +142,14 @@ export async function initSlide3Products(currentQuote, scriptURL) {
 
     const addTile = document.createElement("div");
     addTile.className = "add-product-tile project-theme-tile";
+    addTile.style.backgroundColor = "var(--theme-bg)";
+    addTile.style.color = "var(--theme-text)";
     addTile.innerHTML = `<i class="bi bi-plus"></i> Product`;
     addTile.addEventListener("click", () => openOverlay(null, null));
     grid.appendChild(addTile);
+
+    applySmoothSpotlight('.product-grid .product-tile', 'spotlight-tile');
+    applySmoothSpotlight('.product-grid .add-product-tile', 'spotlight-tile');
 
     updateProductTotals();
   }
@@ -179,6 +186,16 @@ export async function initSlide3Products(currentQuote, scriptURL) {
     qtyInput.value = prod?.qty || 1;
     costSpan.textContent = prod?.costPrice?.toFixed(2) || "0.00";
     retailSpan.textContent = prod?.retailPrice?.toFixed(2) || "0.00";
+
+    // Set overlay dimming and card styling
+    overlay.style.backgroundColor = "rgba(0,0,0,0.25)"; // semi-transparent black
+    overlayTitle.style.color = "var(--theme-text)";
+    qtyInput.style.backgroundColor = "var(--theme-bg)";
+    qtyInput.style.color = "var(--theme-text)";
+    costSpan.style.color = "var(--theme-warning)";
+    retailSpan.style.color = "var(--theme-warning)";
+    totalCostSpan.style.color = "var(--theme-warning)";
+    totalRetailSpan.style.color = "var(--theme-warning)";
 
     updateOverlayTotals();
   }

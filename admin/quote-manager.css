@@ -20,7 +20,12 @@
   margin: 2rem auto;
   border-radius: 16px;
   padding: 1rem;
-  box-shadow: 0 0 30px rgba(var(--bs-info-rgb), 0.75), 0 0 15px magenta inset;
+
+  /* Theme-controlled outer and inset glow */
+  box-shadow:
+    0 0 30px rgba(var(--theme-primary-rgb), var(--glow-frame-outer)),
+    0 0 15px var(--theme-frame-accent) inset;
+
   transition: box-shadow 0.4s ease, height 0.4s ease;
   min-height: 60vh;
   max-height: 85vh;
@@ -40,21 +45,26 @@
   transition: all 0.4s ease;
 }
 
+/* Active step circle */
 .step.active .circle {
-  background-color: var(--bs-info);
-  color: var(--bs-black);
-  box-shadow: 0 0 15px var(--bs-info);
+  background-color: var(--theme-primary);
+  color: var(--theme-page-bg);
+  box-shadow: 0 0 15px rgba(var(--theme-primary-rgb), var(--glow-interactive-hover));
 }
 
+/* Filled step circle */
 .step.filled .circle {
-  background-color: var(--bs-success);
-  color: var(--bs-black);
+  background-color: var(--theme-success);
+  color: var(--theme-page-bg);
+  box-shadow: 0 0 10px rgba(var(--bs-success-rgb), var(--glow-interactive-rest));
 }
 
+/* Hover state for unfilled steps */
 .step:not(.filled):hover .circle {
-  border: 2px solid var(--bs-info);
+  border: 2px solid var(--theme-primary);
 }
 
+/* Circle dimensions */
 .circle {
   width: 100px;
   height: 25px;
@@ -77,7 +87,7 @@
   gap: 0.75rem;
   margin-top: auto;
   padding-top: 0.5rem;
-  border-top: 1px solid var(--bs-info);
+  border-top: 1px solid var(--theme-primary);
 }
 
 /* === Layout / Debug Fixes === */
@@ -86,28 +96,42 @@
   padding-bottom: 0;
 }
 
+/* === Progress Bar — project-scoped === */
+.project-theme .progress {
+  height: 10px;
+  background-color: var(--theme-bg);
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--theme-primary);
+}
+
+.project-theme .progress-bar {
+  background-color: var(--theme-primary);
+  transition: width 0.6s ease;
+}
+
+/* === Buttons / Navigation (prev/next) === */
 .project-theme button.prevBtn,
 .project-theme button.nextBtn {
-  height: 25px; /* same as .circle */
-  min-width: 100px; /* optional, same as .circle width if desired */
+  height: 25px; /* match .circle height */
+  min-width: 100px; /* optional, match .circle width */
   line-height: 20px; /* vertical alignment */
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 16px; /* match circle radius */
   padding: 0 0.75rem; /* horizontal padding */
+  background-color: var(--theme-bg);
+  color: var(--theme-text);
+  border: 1px solid var(--theme-primary);
+  cursor: pointer;
+  transition: box-shadow 0.3s ease, transform 0.2s ease, background 0.2s ease;
 }
 
-/* === Progress Bar — project-scoped (not global) === */
-.project-theme .progress {
-  height: 10px;
-  background-color: var(--bs-black);
-  border-radius: 16px;
-  overflow: hidden;
-  border: 1px solid var(--bs-info);
-}
-
-.project-theme .progress-bar {
-  background-color: var(--bs-info);
-  transition: width 0.6s ease;
+.project-theme button.prevBtn:hover,
+.project-theme button.nextBtn:hover {
+  box-shadow: 0 0 15px rgba(var(--theme-primary-rgb), var(--glow-interactive-hover));
+  transform: translateY(-1px);
+  background-color: var(--theme-primary);
+  color: var(--theme-page-bg);
 }

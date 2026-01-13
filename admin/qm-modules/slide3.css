@@ -24,9 +24,14 @@
   padding: 0.4rem;
   text-align: center;
   font-weight: 600;
-  /* Hover/Glow/Shadow handled by project-theme.css */
+
+  /* Colors & glow handled by project-theme */
+  background-color: var(--theme-bg);
+  color: var(--theme-text);
+  border-radius: 12px;
 }
 
+/* Product Name */
 #slide3 .product-tile .name {
   font-size: 1.1rem;
   line-height: 1.1;
@@ -35,27 +40,31 @@
   text-overflow: ellipsis;
   width: 100%;
   display: block;
+  color: var(--theme-text);
 }
 
+/* Bottom row: price + delete */
 #slide3 .product-tile .bottom-row {
   display: flex;
   align-items: center;
   padding: 2px 0;
 }
 
+/* Price text */
 #slide3 .product-tile .price {
   flex: 1;
   font-size: 1rem;
-  color: var(--bs-warning);
+  color: var(--theme-warning);
   text-align: center;
 }
 
+/* Delete button */
 #slide3 .product-tile .delete {
   font-size: 0.8rem;
   font-weight: bold;
   color: var(--bs-danger);
   cursor: pointer;
-  background: var(--bs-black);
+  background: var(--theme-bg);
   border-radius: 50%;
   width: 18px;
   height: 18px;
@@ -67,7 +76,7 @@
   background: rgba(255, 0, 0, 0.5);
 }
 
-/* === Add Product Tile Layout === */
+/* === Add Product Tile === */
 #slide3 .add-product-tile {
   width: 260px;
   height: 61px;
@@ -76,16 +85,18 @@
   align-items: center;
   font-size: 1.5rem;
   cursor: pointer;
-  /* border: 1px var(--bs-info); */
-  /* Hover/Glow/Shadow handled by project-theme.css */
+
+  background-color: var(--theme-bg);
+  color: var(--theme-text);
+  border-radius: 12px;
 }
 
 /* === Overlay Containers === */
 #slide3 .product-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(6px);
+  background-color: rgba(0, 0, 0, 0.25); /* semi-transparent black */
+  backdrop-filter: blur(2px);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -97,31 +108,29 @@
   display: none;
 }
 
+/* Overlay inner card */
 #slide3 .product-form-card {
   width: 420px;
   padding: 1.5rem;
   border-radius: 16px;
-  box-shadow: 0 0 25px rgba(var(--bs-info-rgb), 0.3),
-              0 0 60px rgba(var(--bs-info-rgb), 0.15);
-  color: var(--bs-info);
-  transition: box-shadow 0.4s ease, border-color 0.4s ease;
-  /* Hover/Glow/Shadow handled by project-theme.css */
+  background-color: var(--theme-bg); /* solid card background */
+  color: var(--theme-text);
+  box-shadow: 0 0 15px var(--theme-success); /* optional glow */
 }
 
+/* Animate overlay pop-in */
 #slide3 .product-overlay.show .product-form-card {
   animation: overlayPopIn 1s ease forwards;
 }
 
-/* === Overlay Buttons — layout only === */
+/* Overlay buttons */
 #slide3 .overlay-btn-group .btn {
   border-radius: 12px;
   text-align: center;
-  box-shadow: 0 0 10px var(--bs-info);
-  transition: box-shadow 0.3s ease, transform 0.2s ease;
-  /* Hover/Glow handled by project-theme.css */
+  /* Glow handled by project-theme */
 }
 
-/* === Slide 3 Header / Summary Card === */
+/* Slide header & summary card */
 #slide3 .slide3-header {
   position: relative;
   margin-bottom: 0.5rem;
@@ -134,12 +143,9 @@
   top: 0;
   right: 0;
   min-width: 180px;
-  background: rgba(0, 0, 0, 0.85);
+  background: var(--theme-bg);
   border-radius: 12px;
   padding: 0.4rem 0.8rem;
   font-size: 0.9rem;
   cursor: pointer;
-  transition: box-shadow 0.3s ease, transform 0.2s ease, background 0.2s ease;
-  /* Hover/Glow handled by project-theme.css */
 }
-
