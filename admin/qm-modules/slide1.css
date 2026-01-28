@@ -24,6 +24,11 @@
   margin-bottom: 1rem;
 }
 
+/* Labels inside fieldset use theme-text */
+#slide1 #clientInfoFieldset label {
+  color: var(--theme-text);
+}
+
 /* === Left Column: Icon / Tier === */
 /* Layout + divider only — no shadow, no glow */
 #slide1 #clientIconColumn {
@@ -47,6 +52,15 @@
   border-radius: 0;
 }
 
+/* Data spans inside icon column use alt text */
+#slide1 #clientIconColumn .firstName,
+#slide1 #clientIconColumn .nickName,
+#slide1 #clientIconColumn .lastName {
+  color: var(--theme-alt-text);
+  text-align: center;
+  margin-bottom: 0.25rem;
+}
+
 /* === Right Column: Client Details === */
 /* Pure layout container */
 #slide1 #clientDetailsColumn {
@@ -54,6 +68,11 @@
   flex-direction: column;
   flex-grow: 1;
   width: 220px;
+}
+
+/* Data spans inside details column use alt text */
+#slide1 #clientDetailsColumn span {
+  color: var(--theme-alt-text);
 }
 
 /* === Tier Icon Background === */
@@ -69,24 +88,11 @@
   color: var(--theme-text);
 }
 
-/* === Name Fields === */
-#slide1 .firstName,
-#slide1 .nickName,
-#slide1 .lastName {
-  text-align: center;
-  margin-bottom: 0.25rem;
-
-  /* Optional: theme-colored text */
-  color: var(--theme-text);
-}
-
 /* === Tier Badge === */
+/* fully JS-managed */
 #slide1 .tier {
   display: block;
   text-align: center;
-
-  /* Optional: theme-colored text */
-  color: var(--theme-text);
 }
 
 /* === Notes ===
@@ -95,4 +101,6 @@
    • Divider is structural, theme-colored
    • All inputs are styled via project-theme.css
    • No visual responsibility leaks into columns
+   • Labels = --theme-text
+   • Data spans = --theme-alt-text
 */

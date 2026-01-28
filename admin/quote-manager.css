@@ -1,6 +1,9 @@
-/* quote-manager.css - main orchestrator for the QuoteManager project (>>> DO NOT DELETE THIS FILE IDENTIFICATION LINE <<<) */
+/* quote-manager.css - main orchestrator for the QuoteManager project
+   (>>> DO NOT DELETE THIS FILE IDENTIFICATION LINE <<<) */
 
-/* --- Slide-specific overrides --- */
+/* =========================================
+   Slide-specific overrides
+   ========================================= */
 @import url('qm-modules/slide1.css');
 @import url('qm-modules/slide2.css');
 @import url('qm-modules/slide3.css');
@@ -9,10 +12,12 @@
 @import url('qm-modules/project-theme.css');
 
 /* =========================================
-   QuoteManager Global Styles
+   QuoteManager Global Layout Styles
    ========================================= */
 
-/* === Quote Container === */
+/* =========================================
+   Quote Container — Hero Glow
+   ========================================= */
 .quote-container {
   position: relative;
   overflow: hidden;
@@ -21,17 +26,21 @@
   border-radius: 16px;
   padding: 1rem;
 
-  /* Theme-controlled outer and inset glow */
+  /* Depth: lifts container off the page */
+  /* Importance: strong, authoritative glow */
   box-shadow:
-    0 0 30px rgba(var(--theme-primary-rgb), var(--glow-frame-outer)),
-    0 0 15px var(--theme-frame-accent) inset;
+    0 14px 34px rgba(0, 0, 0, 0.5),
+    0 0 48px var(--theme-primary),
+    0 0 96px var(--theme-primary);
 
   transition: box-shadow 0.4s ease, height 0.4s ease;
   min-height: 60vh;
   max-height: 85vh;
 }
 
-/* === Step Indicators === */
+/* =========================================
+   Step Indicators
+   ========================================= */
 .step-nav {
   display: flex;
   justify-content: center;
@@ -42,46 +51,63 @@
 .step {
   position: relative;
   text-align: center;
-  transition: all 0.4s ease;
+  transition: transform 0.3s ease;
 }
 
-/* Active step circle */
-.step.active .circle {
-  background-color: var(--theme-primary);
-  color: var(--theme-page-bg);
-  box-shadow: 0 0 15px rgba(var(--theme-primary-rgb), var(--glow-interactive-hover));
-}
-
-/* Filled step circle */
-.step.filled .circle {
-  background-color: var(--theme-success);
-  color: var(--theme-page-bg);
-  box-shadow: 0 0 10px rgba(var(--bs-success-rgb), var(--glow-interactive-rest));
-}
-
-/* Hover state for unfilled steps */
-.step:not(.filled):hover .circle {
-  border: 2px solid var(--theme-primary);
-}
-
-/* Circle dimensions */
+/* Circle base */
 .circle {
   width: 100px;
   height: 25px;
   display: flex;
   align-items: center;
   justify-content: center;
+
   border-radius: 12px;
   text-align: center;
+
+  background-color: var(--theme-bg);
+  color: var(--theme-text);
+  border: 1px solid var(--theme-primary);
+
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    box-shadow 0.3s ease;
 }
 
-/* === Carousel Items === */
+/* Active step */
+.step.active .circle {
+  background-color: var(--theme-primary);
+  color: var(--theme-page-bg);
+  box-shadow:
+    0 0 12px rgba(var(--theme-primary-rgb), var(--glow-secondary));
+}
+
+/* Filled step */
+.step.filled .circle {
+  background-color: var(--theme-alt-text);
+  color: var(--theme-page-bg);
+  box-shadow:
+    0 0 10px rgba(var(--bs-success-rgb), var(--glow-secondary));
+}
+
+/* Hover for unfilled steps */
+.step:not(.filled):hover .circle {
+  box-shadow:
+    0 0 12px rgba(var(--theme-primary-rgb), var(--glow-secondary));
+}
+
+/* =========================================
+   Carousel Items
+   ========================================= */
 .carousel-item {
   padding: 2rem;
   transition: transform 0.6s ease, opacity 0.6s ease;
 }
 
-/* === Drawer / Navigation Button Groups === */
+/* =========================================
+   Drawer / Navigation Button Groups
+   ========================================= */
 .btn-group {
   display: flex;
   gap: 0.75rem;
@@ -90,48 +116,11 @@
   border-top: 1px solid var(--theme-primary);
 }
 
-/* === Layout / Debug Fixes === */
+/* =========================================
+   Layout / Bootstrap Fixes
+   ========================================= */
 .container.py-4 {
   padding-top: 0;
   padding-bottom: 0;
 }
 
-/* === Progress Bar — project-scoped === */
-.project-theme .progress {
-  height: 10px;
-  background-color: var(--theme-bg);
-  border-radius: 16px;
-  overflow: hidden;
-  border: 1px solid var(--theme-primary);
-}
-
-.project-theme .progress-bar {
-  background-color: var(--theme-primary);
-  transition: width 0.6s ease;
-}
-
-/* === Buttons / Navigation (prev/next) === */
-.project-theme button.prevBtn,
-.project-theme button.nextBtn {
-  height: 25px; /* match .circle height */
-  min-width: 100px; /* optional, match .circle width */
-  line-height: 20px; /* vertical alignment */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 16px; /* match circle radius */
-  padding: 0 0.75rem; /* horizontal padding */
-  background-color: var(--theme-bg);
-  color: var(--theme-text);
-  border: 1px solid var(--theme-primary);
-  cursor: pointer;
-  transition: box-shadow 0.3s ease, transform 0.2s ease, background 0.2s ease;
-}
-
-.project-theme button.prevBtn:hover,
-.project-theme button.nextBtn:hover {
-  box-shadow: 0 0 15px rgba(var(--theme-primary-rgb), var(--glow-interactive-hover));
-  transform: translateY(-1px);
-  background-color: var(--theme-primary);
-  color: var(--theme-page-bg);
-}

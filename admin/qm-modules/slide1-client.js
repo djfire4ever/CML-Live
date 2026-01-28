@@ -1,7 +1,5 @@
 // qm-modules/slide1-client.js
 
-// import { notifyDrawer } from "./drawers.js";
-
 let clientData = [];
 const SKIP_CLIENT_FETCH = true; // toggle to false for real fetch
 
@@ -32,18 +30,34 @@ function populateClientFields(client) {
       "city","state","zip","memberSince","birthday"
     ].forEach(s => setText(`.${s}`, ""));
 
-    setText(".tier", "New");
+    // Reset tier
+    const tierSpan = document.querySelector(".tier");
+    const iconBg = document.querySelector(".tier-icon-bg");
+    if (tierSpan) {
+      tierSpan.textContent = "New";
+      tierSpan.className = "tier text-success"; // default tier color
+    }
+    if (iconBg) {
+      iconBg.className = "bi bi-award tier-icon-bg position-absolute text-success";
+      iconBg.style.pointerEvents = "none";
+    }
     return;
   }
 
   setText(".firstName", client.firstName);
   setText(".nickName", client.nickName);
   setText(".lastName", client.lastName);
-  setText(".tier", client.tier);
 
-  // Update tier icon
-  const tierData = getTierData(client?.tier || "New");
+  // Update tier span and icon together
+  const tierData = getTierData(client.tier || "New");
+  const tierSpan = document.querySelector(".tier");
   const iconBg = document.querySelector(".tier-icon-bg");
+
+  if (tierSpan) {
+    tierSpan.textContent = client.tier;
+    tierSpan.className = `tier text-${tierData.iconBgColor}`;
+  }
+
   if (iconBg) {
     iconBg.className = `bi bi-award tier-icon-bg position-absolute text-${tierData.iconBgColor}`;
     iconBg.style.pointerEvents = "none";
@@ -67,7 +81,7 @@ async function loadClients(scriptURL) {
     let data;
     if (SKIP_CLIENT_FETCH) {
       data = [
-        { clientID: "1234567890", firstName: "Test", lastName: "User", nickName: "Tester", tier: "New", email: "test@example.com", street: "123 Main St", city: "Anytown", state: "NY", zip: "10001", memberSince: "2023-01-01", birthday: "1990-01-01", raw: { balance: 0 } },
+        { clientID: "1234567890", firstName: "Eliza", lastName: "Hamilton", nickName: "Elizaaa", tier: "New", email: "eliza.hamilton@example.com", street: "123 Main St", city: "Anytown", state: "NY", zip: "10001", memberSince: "2023-01-01", birthday: "1990-01-01", raw: { balance: 0 } },
         { clientID: "2345678901", firstName: "Thomas", lastName: "Jefferson", nickName: "TJ", tier: "Gold", email: "thomas.jefferson@example.com", street: "456 Elm St", city: "Charlottesville", state: "VA", zip: "22903", memberSince: "2022-07-04", birthday: "1743-04-13", raw: { balance: 0 } },
         { clientID: "3456789012", firstName: "Alexander", lastName: "Hamilton", nickName: "Alex", tier: "Silver", email: "alex.hamilton@example.com", street: "789 Oak St", city: "New York", state: "NY", zip: "10004", memberSince: "2022-01-11", birthday: "1755-01-11", raw: { balance: 0 } },
         { clientID: "4567890123", firstName: "King", lastName: "George", nickName: "KG", tier: "Platinum", email: "king.george@example.com", street: "10 Downing St", city: "London", state: "UK", zip: "SW1A 2AA", memberSince: "1714-10-25", birthday: "1683-06-04", raw: { balance: 0 } }
@@ -121,7 +135,6 @@ export async function initSlide1Client(currentQuote, scriptURL) {
   // --- INPUT EVENT ---
   input.addEventListener("input", () => {
 
-    // Native "X" clear button
     if (input.value === "") {
       suggestions.innerHTML = "";
       suggestions.style.display = "none";
@@ -130,7 +143,6 @@ export async function initSlide1Client(currentQuote, scriptURL) {
     }
 
     const query = input.value.trim().toLowerCase();
-
     if (!query) {
       suggestions.innerHTML = "";
       suggestions.style.display = "none";

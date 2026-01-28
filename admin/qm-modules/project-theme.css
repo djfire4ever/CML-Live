@@ -1,117 +1,95 @@
 /* qm-modules/project-theme.css  (>>> DO NOT DELETE THIS FILE IDENTIFICATION LINE <<<) */
 
-/* =========================================
-   Project Theme
-   Shared across all slides
-   ========================================= */
+/* ======================================================
+   PROJECT THEME — MODEL A (GLOBAL, BODY-SCOPED)
+   ====================================================== */
 
-/* ---------- Theme Variables & Spotlight System ---------- */
+/* ------------------------------------------------------
+   ROOT FALLBACK (DEFAULT THEME = INFO)
+   Applies when no data-theme is present
+   ------------------------------------------------------ */
 :root {
-  /* Default / fallback theme (sage) */
-  --theme-page-bg: #000000;      /* full page background */
-  --theme-bg: #000000;           /* element backgrounds */
-  --theme-text: #FFC0CB;         /* baby pink text */
-  --theme-primary: #9CAF88;      /* sage green primary */
-  --theme-primary-rgb: 156, 175, 136;
+  /* Page / surface */
+  --theme-page-bg: var(--bs-black);
+  --theme-bg: var(--bs-black);
 
-  /* Glow intensities (default) */
-  --glow-frame-outer: 0.75;
-  --glow-frame-inner: 0.5;
-  --glow-interactive-rest: 0.45;
-  --glow-interactive-hover: 0.75;
-
-  /* Spotlight defaults */
-  --theme-spotlight: var(--theme-primary);
-  --theme-spotlight-hover: var(--theme-primary);
-  --theme-frame-accent: var(--theme-primary);
-}
-
-/* ---------- Theme Variants ---------- */
-.project-theme[data-theme="sage"] {
-  --theme-page-bg: #000000;
-  --theme-bg: #000000;
-  --theme-text: #FFC0CB;      /* baby pink */
-  --theme-primary: #9CAF88;   /* sage green */
-  --theme-primary-rgb: 156, 175, 136;
-
-  --theme-spotlight: var(--theme-primary);
-  --theme-spotlight-hover: var(--theme-primary);
-  --theme-frame-accent: var(--theme-primary);
-}
-
-.project-theme[data-theme="gold"] {
-  --theme-page-bg: #1c1c1c;
-  --theme-bg: #1c1c1c;
-  --theme-text: #f2c94c;      /* gold text */
-  --theme-primary: #f2c94c;   /* gold primary */
-  --theme-primary-rgb: 242, 201, 76;
-
-  --theme-spotlight: var(--theme-primary);
-  --theme-spotlight-hover: var(--theme-primary);
-  --theme-frame-accent: var(--theme-primary);
-}
-
-.project-theme[data-theme="info"] {
-  --theme-page-bg: #0f2f2e;
-  --theme-bg: #0f2f2e;
-  --theme-text: var(--bs-info);      /* teal text */
-  --theme-primary: var(--bs-info);   /* teal primary */
+  /* Primary accent */
+  --theme-primary: var(--bs-info);
   --theme-primary-rgb: 56, 178, 172;
 
+  /* Text roles */
+  --theme-text: var(--bs-info);        /* primary voice */
+  --theme-alt-text: var(--bs-warning); /* informational / data */
+
+  /* Spotlight */
   --theme-spotlight: var(--theme-primary);
   --theme-spotlight-hover: var(--theme-primary);
-  --theme-frame-accent: var(--theme-primary);
+
+  /* Glow strengths */
+  --glow-primary: 1;
+  --glow-secondary: 0.45;
 }
 
-.project-theme[data-theme="rose"] {
-  --theme-page-bg: #1c0f0f;
-  --theme-bg: #1c0f0f;
-  --theme-text: #e76f51;      /* rose text */
-  --theme-primary: #e76f51;   /* rose primary */
-  --theme-primary-rgb: 231, 111, 81;
+/* ------------------------------------------------------
+   THEME VARIANTS (OVERRIDES ROOT)
+   ------------------------------------------------------ */
+body[data-theme="gold"] {
+  --theme-primary: #f2c94c;
+  --theme-primary-rgb: 242, 201, 76;
 
-  --theme-spotlight: var(--theme-primary);
+  --theme-spotlight: #f7d774;
   --theme-spotlight-hover: var(--theme-primary);
-  --theme-frame-accent: var(--theme-primary);
+
+  --theme-text: #f2c94c;
+  --theme-alt-text: #f2c94c;
+
+  --theme-page-bg: #000;
 }
 
-.project-theme[data-theme="purple"] {
-  --theme-page-bg: #120d1f;
-  --theme-bg: #120d1f;
-  --theme-text: #b388eb;      /* lavender text */
-  --theme-primary: #b388eb;   /* purple primary */
-  --theme-primary-rgb: 179, 136, 235;
+body[data-theme="sage"] {
+  --theme-primary: var(--bs-success);
+  --theme-primary-rgb: 156, 175, 136;
 
-  --theme-spotlight: var(--theme-primary);
+  --theme-spotlight: var(--bs-success);
   --theme-spotlight-hover: var(--theme-primary);
-  --theme-frame-accent: var(--theme-primary);
+
+  --theme-text: #e9599f;
+  --theme-alt-text: var(--bs-success);
+
+  --theme-page-bg: #000;
 }
 
-/* ---------- Glow Variants ---------- */
-.project-theme[data-glow="calm"] {
-  --glow-interactive-rest: 0.3;
-  --glow-interactive-hover: 0.6;
-  --glow-frame-outer: 0.5;
-  --glow-frame-inner: 0.25;
+body[data-theme="purple"] {
+  --theme-primary: #9b5de5;
+  --theme-primary-rgb: 155, 93, 229;
+
+  --theme-spotlight: #c77dff;
+  --theme-spotlight-hover: var(--theme-primary);
+
+  --theme-text: #cdb4ff;
+  --theme-alt-text: #f1c6ff;
+
+  --theme-page-bg: #000;
 }
 
-.project-theme[data-glow="vibrant"] {
-  --glow-interactive-rest: 0.5;
-  --glow-interactive-hover: 1;
-  --glow-frame-outer: 0.9;
-  --glow-frame-inner: 0.6;
-}
-
-/* ---------- Body ---------- */
+/* PAGE APPLICATION — REQUIRED */
 body.project-theme {
   background-color: var(--theme-page-bg);
   color: var(--theme-text);
   overflow-x: hidden;
 }
 
-/* =========================================
-   Unified Inputs / Textareas / Selects
-   ========================================= */
+/* ======================================================
+   LABELS (PRIMARY ROLE)
+   ====================================================== */
+.project-theme label,
+.project-theme .form-label {
+  color: var(--theme-text);
+}
+
+/* ======================================================
+   INPUTS / SELECTS (DATA ROLE)
+   ====================================================== */
 .project-theme input.form-control,
 .project-theme textarea.form-control,
 .project-theme select.form-control,
@@ -121,7 +99,7 @@ body.project-theme {
 .project-theme input[type="date"],
 .project-theme input[type="search"] {
   background-color: var(--theme-bg);
-  color: var(--theme-text);
+  color: var(--theme-alt-text);
   border: 1px solid var(--theme-primary);
   border-radius: 8px;
   padding: 0.375rem 0.75rem;
@@ -133,98 +111,82 @@ body.project-theme {
 .project-theme input::placeholder,
 .project-theme textarea::placeholder,
 .project-theme select::placeholder {
-  color: var(--theme-text);
+  color: var(--theme-alt-text);
   opacity: 0.5;
 }
 
 .project-theme input:hover,
 .project-theme textarea:hover,
-.project-theme select:hover {
-  box-shadow:
-    0 0 10px var(--theme-primary),
-    0 0 20px rgba(var(--theme-primary-rgb), var(--glow-interactive-rest));
-}
-
+.project-theme select:hover,
 .project-theme input:focus,
 .project-theme textarea:focus,
 .project-theme select:focus {
   outline: none;
   border-color: var(--theme-primary);
-  box-shadow: 0 0 10px var(--theme-primary);
-  animation: glowPulseInput 4s infinite alternate;
+  box-shadow: 0 0 12px rgba(var(--theme-primary-rgb), var(--glow-secondary));
 }
 
-@keyframes glowPulseInput {
-  0%   { box-shadow: 0 0 6px var(--theme-primary); }
-  50%  { box-shadow: 0 0 3px rgba(var(--theme-primary-rgb), var(--glow-interactive-rest)); }
-  100% { box-shadow: 0 0 6px var(--theme-primary); }
-}
-
-/* =========================================
-   Spotlight System (Unified)
-   ========================================= */
+/* ======================================================
+   SPOTLIGHT ELEMENTS (PRIMARY ROLE)
+   ====================================================== */
 .project-theme .spotlight-btn,
-.project-theme .spotlight-step,
 .project-theme .spotlight-tile,
-.project-theme .add-product-tile {
-  --x: 50%;
-  --y: 50%;
+.project-theme .add-product-tile,
+.project-theme .step .circle,
+.project-theme button.prevBtn,
+.project-theme button.nextBtn {
   position: relative;
   cursor: pointer;
-
   color: var(--theme-text);
-  background-color: var(--theme-bg);
+  background-color: var(--theme-page-bg);
   border-radius: 12px;
-  box-shadow: 0 0 10px var(--theme-primary);
-  transition: box-shadow 0.3s ease, transform 0.2s ease, background 0.2s ease;
-
-  /* Radial gradient for JS-controlled spotlight */
-  background: radial-gradient(
-    circle at var(--x) var(--y),
-    var(--theme-spotlight),
-    var(--theme-bg)
-  );
+  box-shadow:
+    0 8px 16px rgba(0,0,0,0.8),
+    0 0 36px rgba(var(--theme-primary-rgb), 0.8);
+  transition: box-shadow 0.3s ease, transform 0.2s ease, background 0.2s ease, color 0.2s ease;
 }
 
-/* Hover / Focus */
 .project-theme .spotlight-btn:hover,
-.project-theme .spotlight-step:hover,
 .project-theme .spotlight-tile:hover,
 .project-theme .add-product-tile:hover,
+.project-theme .step .circle:hover,
+.project-theme button.prevBtn:hover,
+.project-theme button.nextBtn:hover,
 .project-theme .spotlight-btn:focus,
-.project-theme .spotlight-step:focus,
 .project-theme .spotlight-tile:focus,
-.project-theme .add-product-tile:focus {
+.project-theme .add-product-tile:focus,
+.project-theme .step .circle:focus,
+.project-theme button.prevBtn:focus,
+.project-theme button.nextBtn:focus {
   transform: translateY(-2px);
-  box-shadow: 0 0 25px var(--theme-primary);
-
+  box-shadow:
+    0 12px 24px rgba(0,0,0,0.6),
+    0 0 36px rgba(var(--theme-primary-rgb), 0.75);
   background: radial-gradient(
     circle at var(--x) var(--y),
     var(--theme-spotlight-hover),
     var(--theme-bg)
   );
+  color: var(--theme-page-bg);
 }
 
 /* Active */
 .project-theme .spotlight-btn:active,
-.project-theme .spotlight-step:active,
 .project-theme .spotlight-tile:active,
-.project-theme .add-product-tile:active {
+.project-theme .add-product-tile:active,
+.project-theme .step .circle:active,
+.project-theme button.prevBtn:active,
+.project-theme button.nextBtn:active {
   transform: translateY(-1px) scale(0.97);
-
-  background: radial-gradient(
-    circle at var(--x) var(--y),
-    var(--theme-spotlight),
-    var(--theme-bg)
-  );
+  background: var(--theme-bg);
+  color: var(--theme-text);
 }
 
-/* =========================================
-   Structural Elements
-   ========================================= */
+/* ======================================================
+   STRUCTURE
+   ====================================================== */
 .project-theme .btn,
 .project-theme .btn-group .btn,
-.project-theme .step .circle,
 .project-theme .project-theme-tile,
 .project-theme .event-tile,
 .project-theme .fees-tile,
@@ -234,9 +196,9 @@ body.project-theme {
   border-radius: 12px;
 }
 
-/* =========================================
-   Autocomplete Suggestions
-   ========================================= */
+/* ======================================================
+   AUTOCOMPLETE (DATA ROLE)
+   ====================================================== */
 .project-theme .client-suggestions,
 .project-theme .product-suggestions {
   position: absolute;
@@ -256,68 +218,40 @@ body.project-theme {
 .project-theme .product-suggestions li {
   padding: 0.4rem 0.6rem;
   background-color: var(--theme-bg);
-  color: var(--theme-text);
+  color: var(--theme-alt-text);
   cursor: pointer;
 }
 
 .project-theme .client-suggestions li:hover,
 .project-theme .product-suggestions li:hover {
-  background-color: var(--theme-primary);
+  background-color: var(--theme-alt-text);
   color: var(--theme-bg);
 }
 
-/* =========================================
-   Glowing Titles
-   ========================================= */
+/* ======================================================
+   TITLES / HELPERS
+   ====================================================== */
 .glow-title {
   color: var(--theme-text);
-  animation: glowPulseFade 2.5s infinite alternate;
+  text-shadow: 0 0 12px rgba(var(--theme-primary-rgb), var(--glow-secondary));
 }
 
-@keyframes glowPulseFade {
-  0% {
-    text-shadow:
-      0 0 25px var(--theme-primary),
-      0 0 45px rgba(var(--theme-primary-rgb), var(--glow-interactive-hover));
-  }
-  50% {
-    text-shadow:
-      0 0 5px rgba(var(--theme-primary-rgb), var(--glow-interactive-rest));
-  }
-  100% {
-    text-shadow:
-      0 0 25px var(--theme-primary),
-      0 0 45px rgba(var(--theme-primary-rgb), var(--glow-interactive-hover));
-  }
+.theme-bg-element {
+  background-color: var(--theme-bg);
 }
 
-/* =========================================
-   Quote Container specific glow
-   ========================================= */
-.quote-container {
-  box-shadow:
-    0 0 30px rgba(var(--theme-primary-rgb), var(--glow-frame-outer)),
-    0 0 15px var(--theme-frame-accent) inset;
+/* .theme-text,
+.tier-text {
+  color: var(--theme-text);
+} */
+
+.theme-alt-text {
+  color: var(--theme-alt-text);
 }
 
-/* =========================================
-   Buttons / Navigation
-   ========================================= */
-.project-theme button.prevBtn,
-.project-theme button.nextBtn {
-  height: 25px; /* same as .circle */
-  min-width: 100px; /* same as .circle width */
-  line-height: 20px; /* vertical alignment */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 16px; /* match circle radius */
-  padding: 0 0.75rem; /* horizontal padding */
-}
-
-/* =========================================
-   Progress Bar — project-scoped
-   ========================================= */
+/* ======================================================
+   PROGRESS
+   ====================================================== */
 .project-theme .progress {
   height: 10px;
   background-color: var(--theme-bg);
@@ -327,17 +261,6 @@ body.project-theme {
 }
 
 .project-theme .progress-bar {
-  background-color: var(--theme-primary);
+  background-color: var(--theme-alt-text);
   transition: width 0.6s ease;
-}
-
-/* Theme-aware element background */
-.theme-bg-element {
-  background-color: var(--theme-bg);
-}
-
-/* Theme-aware text */
-.theme-text,
-.tier-text {
-  color: var(--theme-text);
 }
