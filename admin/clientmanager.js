@@ -586,7 +586,7 @@ function openEmailModal(client, template) {
       body = replacePlaceholders(template.body);
 
   if (body.includes("{{uploadLink}}")) {
-    const link = `https://cml-live-test.netlify.app/clientuploadform.html?clientID=${encodeURIComponent(client.clientID)}&firstName=${encodeURIComponent(client.firstName)}&lastName=${encodeURIComponent(client.lastName)}&email=${encodeURIComponent(client.email)}`;
+    const link = `https://cml-live-test.netlify.app/admin/clientuploadform.html?clientID=${encodeURIComponent(client.clientID)}&firstName=${encodeURIComponent(client.firstName)}&lastName=${encodeURIComponent(client.lastName)}&email=${encodeURIComponent(client.email)}`;
     body = body.replace(/{{uploadLink}}/g, link);
   }
 
