@@ -59,14 +59,27 @@ body[data-theme="sage"] {
   --theme-page-bg: #000;
 }
 
+body[data-theme="tangerine"] {
+  --theme-primary: #fd7e14;
+  --theme-primary-rgb: 156, 175, 136;
+
+  --theme-spotlight: var(--bs-success);
+  --theme-spotlight-hover: var(--theme-primary);
+
+  --theme-text: #e9599f;
+  --theme-alt-text: var(--bs-success);
+
+  --theme-page-bg: #000;
+}
+
 body[data-theme="purple"] {
   --theme-primary: #9b5de5;
   --theme-primary-rgb: 155, 93, 229;
 
-  --theme-spotlight: #c77dff;
+  --theme-spotlight:#f2c94c;
   --theme-spotlight-hover: var(--theme-primary);
 
-  --theme-text: #cdb4ff;
+  --theme-text: #f2c94c;
   --theme-alt-text: #f1c6ff;
 
   --theme-page-bg: #000;

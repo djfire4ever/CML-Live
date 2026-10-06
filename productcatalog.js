@@ -1,0 +1,355 @@
+let cart = [];
+let currentProduct = null;
+let autoRotateInterval = null;
+let allProducts = [];
+let allGalleries = {}; // keyed by prodID
+
+document.addEventListener('DOMContentLoaded', async () => {
+  const grid = document.getElementById('productGrid');
+  const searchInput = document.getElementById('searchInput');
+  const modal = document.getElementById('productModal');
+  const modalName = document.getElementById('modalName');
+  const modalPrice = document.getElementById('modalPrice');
+  const modalDesc = document.getElementById('modalDesc');
+  const carouselInner = document.getElementById('carouselInner');
+  const carouselIndicators = document.getElementById('carouselIndicators');
+  const carouselThumbnails = document.getElementById('carouselThumbnails');
+  const addToCartBtn = document.getElementById('addToCartBtn');
+  const modalClose = document.getElementById('modalClose');
+  const cartCounter = document.getElementById('cartCounter');
+
+  // Close modal
+  modalClose.onclick = () => { 
+    bootstrap.Modal.getInstance(modal)?.hide(); 
+    stopAutoRotate(); 
+  };
+
+  // Add to cart button in modal
+  addToCartBtn.onclick = () => {
+    if (!currentProduct) return;
+    cart.push({ id: currentProduct.prodID, name: currentProduct.productName, price: currentProduct.price });
+    cartCounter.textContent = `Cart: ${cart.length}`;
+    alert(`${currentProduct.productName} added to cart!`);
+  };
+
+  // --- Fetch products ---
+async function fetchProducts() {
+  try {
+    const res = await fetch(`${scriptURL}?action=getAllProducts`);
+    const data = await res.json();
+    if (!data || !data.data) return []; // <-- use data.data now
+
+    const products = data.data.map(p => ({
+      ...p,
+      category: p.category || ""
+    }));
+
+    allProducts = products.slice();
+    return allProducts;
+  } catch (err) {
+    console.error("Fetch products failed:", err);
+    return [];
+  }
+}
+
+  // --- Render dynamic category filters ---
+function renderCategoryFilters() {
+  const container = document.getElementById('categoryContainer');
+  if (!container) return;
+
+  container.innerHTML = ''; // ✅ only clears checkboxes
+
+  const categories = [...new Set(
+    allProducts.flatMap(p => (p.category || '').split(',').map(c => c.trim()))
+  )].filter(Boolean);
+
+  categories.forEach(cat => {
+    const label = document.createElement('label');
+    label.className = 'd-block text-info';
+
+    const input = document.createElement('input');
+    input.type = 'checkbox';
+    input.value = cat;
+    input.className = 'categoryFilter';
+
+    input.addEventListener('change', renderProducts);
+
+    label.appendChild(input);
+    label.append(` ${cat}`);
+    container.appendChild(label);
+  });
+}
+
+  // --- Fetch gallery ---
+async function fetchGallery(prodID) {
+    if (allGalleries[prodID]) return allGalleries[prodID];
+    try {
+      const res = await fetch(`${scriptURL}?action=getGalleryByProdId&prodID=${prodID}`);
+      const data = await res.json();
+      const gallery = data?.success ? data.gallery : { thumbnail: null, images: [] };
+      allGalleries[prodID] = gallery;
+      return gallery;
+    } catch (err) {
+      console.error(err);
+      return { thumbnail: null, images: [] };
+    }
+  }
+
+  // --- Render products ---
+async function renderProducts() {
+  const grid = document.getElementById('productGrid');
+  const searchInput = document.getElementById('searchInput');
+  const categoryCheckboxes = document.querySelectorAll('.categoryFilter');
+  const cartCounter = document.getElementById('cartCounter');
+
+  // 1️⃣ Clear grid
+  grid.innerHTML = '';
+
+  // 2️⃣ Show skeletons **only if allProducts is empty**
+  if (!allProducts.length) {
+    for (let i = 0; i < 4; i++) {
+      const sk = document.createElement('div');
+      sk.className = 'card skeleton-card';
+      sk.innerHTML = `
+        <div class="skeleton skeleton-img"></div>
+        <div class="skeleton skeleton-title"></div>
+        <div class="skeleton skeleton-price"></div>
+        <div class="skeleton skeleton-desc"></div>
+      `;
+      grid.appendChild(sk);
+    }
+
+    // Force at least 100ms so skeletons render visibly
+    await new Promise(resolve => setTimeout(resolve, 100));
+  }
+
+  // Then fetch products
+  const products = allProducts.length ? allProducts : await fetchProducts();
+
+  // Clear skeletons and render actual products
+  grid.innerHTML = '';
+
+  // 5️⃣ Handle empty product list
+  if (!products || products.length === 0) {
+    grid.innerHTML = '<p class="text-center text-muted">No products available</p>';
+    return;
+  }
+
+  // 6️⃣ Apply filters
+  const searchTerm = searchInput.value.toLowerCase();
+  const selectedCategories = Array.from(categoryCheckboxes)
+    .filter(cb => cb.checked)
+    .map(cb => cb.value);
+
+  const filteredProducts = products.filter(p => {
+    const matchesSearch = !searchTerm || p.productName.toLowerCase().includes(searchTerm);
+    const matchesCategory =
+      selectedCategories.length === 0 ||
+      selectedCategories.some(cat => (p.category || '').split(',').map(c => c.trim()).includes(cat));
+    return matchesSearch && matchesCategory;
+  });
+
+  if (!filteredProducts.length) {
+    grid.innerHTML = '<p class="text-center text-info">No products match the filters</p>';
+    return;
+  }
+
+  // 7️⃣ Render actual product cards
+  filteredProducts.forEach(product => {
+    if (!product.thumbnailURL) return;
+
+    const mainImage = convertGoogleDriveLink(product.thumbnailURL);
+
+    const card = document.createElement('div');
+    card.className = 'card';
+
+    const imgWrap = document.createElement('div');
+    imgWrap.className = 'card-image bg-black';
+    const img = document.createElement('img');
+    img.src = mainImage;
+    img.alt = product.productName || '';
+    img.loading = 'lazy';
+    img.onerror = () => { img.src = '/images/No_image_available.svg'; };
+    imgWrap.appendChild(img);
+
+    const content = document.createElement('div');
+    content.className = 'card-content bg-black';
+
+    const title = document.createElement('h3');
+    title.textContent = product.productName || '';
+    title.className = 'text-info';
+
+    const price = document.createElement('p');
+    price.className = 'price';
+    price.innerHTML = product.price ? formatCurrency(product.price) : '';
+
+    const actions = document.createElement('div');
+    actions.className = 'card-actions';
+    const qtyInput = document.createElement('input');
+    qtyInput.type = 'number';
+    qtyInput.className = 'qty-input';
+    qtyInput.value = '1';
+    qtyInput.min = '1';
+    qtyInput.setAttribute('aria-label', `Quantity for ${product.productName || ''}`);
+
+    const addBtn = document.createElement('button');
+    addBtn.type = 'button';
+    addBtn.className = 'add-cart-btn';
+    addBtn.textContent = 'Add to Cart';
+
+    actions.appendChild(qtyInput);
+    actions.appendChild(addBtn);
+
+    content.appendChild(title);
+    content.appendChild(price);
+    content.appendChild(actions);
+
+    card.appendChild(imgWrap);
+    card.appendChild(content);
+
+    // Click opens modal
+    card.addEventListener('click', e => {
+      if (e.target.closest('.add-cart-btn') || e.target.closest('.qty-input')) return;
+      openModal(product);
+    });
+
+    // Add-to-cart handler
+    addBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      const qty = Math.max(1, parseInt(qtyInput.value, 10) || 1);
+      for (let i = 0; i < qty; i++) {
+        cart.push({ id: product.prodID, name: product.productName, price: product.price });
+      }
+      cartCounter.textContent = `Cart: ${cart.length}`;
+      alert(`${qty} × ${product.productName} added to cart!`);
+    });
+
+    grid.appendChild(card);
+  });
+}
+
+  // --- INITIALIZE ---
+await renderProducts();
+renderCategoryFilters();
+
+// ✅ Attach filter event listeners (outside renderProducts)
+searchInput.addEventListener('input', renderProducts);
+
+// Open modal with skeleton
+function openModal(product) {
+  carouselInner.innerHTML = '';
+  carouselIndicators.innerHTML = '';
+  carouselThumbnails.innerHTML = '';
+  modalName.textContent = product.productName || '';
+  modalPrice.textContent = product.price ? formatCurrency(product.price) : '';
+  modalDesc.textContent = product.description || '';
+
+  // Add modal skeletons
+  const skMain = document.createElement('div');
+  skMain.className = 'skeleton-modal';
+  carouselInner.appendChild(skMain);
+
+  for (let i = 0; i < 3; i++) {
+    const skThumb = document.createElement('div');
+    skThumb.className = 'skeleton-thumb';
+    carouselThumbnails.appendChild(skThumb);
+  }
+
+  // Show modal **immediately**
+  new bootstrap.Modal(modal).show();
+
+  // Fetch gallery in background
+  fetchGallery(product.prodID).then(gallery => {
+    if (!gallery?.images?.length) {
+      carouselInner.innerHTML = '<div class="p-5 text-center text-muted">No images available</div>';
+      return;
+    }
+    currentProduct = { ...product, gallery };
+    renderCarousel();
+    startAutoRotate();
+  });
+}
+
+// Render modal carousel with skeleton fallback
+function renderCarousel() {
+  carouselInner.innerHTML = '';
+  carouselIndicators.innerHTML = '';
+  carouselThumbnails.innerHTML = '';
+
+  const gallery = currentProduct?.gallery?.images;
+  if (!gallery || !gallery.length) {
+    carouselInner.innerHTML = '<div class="p-5 text-center text-muted">No images available</div>';
+    return;
+  }
+
+  const carouselEl = document.getElementById('productCarousel');
+  const bsCarousel = bootstrap.Carousel.getOrCreateInstance(carouselEl, { interval: 3000, wrap: true });
+
+  gallery.forEach((img, i) => {
+    // Slide
+    const item = document.createElement('div');
+    item.className = `carousel-item ${i === 0 ? 'active' : ''}`;
+    const slideImg = document.createElement('img');
+    slideImg.src = convertGoogleDriveLink(img.url);
+    slideImg.className = 'd-block w-100';
+    slideImg.style.width = '400px';
+    slideImg.style.height = '400px';
+    slideImg.style.objectFit = 'contain';
+    item.appendChild(slideImg);
+
+    // Caption if available
+    if (img.caption) {
+      const captionDiv = document.createElement('div');
+      captionDiv.className = 'carousel-caption d-none d-md-block';
+      const captionH5 = document.createElement('h5');
+      captionH5.textContent = img.caption;
+      captionDiv.appendChild(captionH5);
+      item.appendChild(captionDiv);
+    }
+
+    carouselInner.appendChild(item);
+
+    // Indicator
+    const ind = document.createElement('button');
+    ind.setAttribute('data-bs-target', '#productCarousel');
+    ind.setAttribute('data-bs-slide-to', i);
+    ind.setAttribute('aria-label', `Slide ${i+1}`);
+    if (i === 0) ind.classList.add('active');
+    carouselIndicators.appendChild(ind);
+
+    // Thumbnail
+    const thumb = document.createElement('img');
+    thumb.src = convertGoogleDriveLink(img.url);
+    thumb.style.width = '60px';
+    thumb.style.height = '60px';
+    thumb.style.objectFit = 'cover';
+    thumb.style.cursor = 'pointer';
+    thumb.style.margin = '2px';
+    thumb.style.flex = '0 0 auto';
+    if (i === 0) thumb.style.border = '2px solid #007BFF';
+
+    thumb.onclick = () => {
+      document.querySelectorAll('#carouselThumbnails img').forEach(t => t.style.border = '2px solid transparent');
+      thumb.style.border = '2px solid #007BFF';
+      bsCarousel.to(i);
+    };
+
+    carouselThumbnails.appendChild(thumb);
+  });
+}
+
+  // Auto-rotate
+  function startAutoRotate() {
+    stopAutoRotate();
+    const bsCarousel = bootstrap.Carousel.getInstance(document.getElementById('productCarousel'));
+    if (!bsCarousel) return;
+    autoRotateInterval = setInterval(()=>bsCarousel.next(),3000);
+  }
+  function stopAutoRotate() {
+    if (autoRotateInterval){ clearInterval(autoRotateInterval); autoRotateInterval=null; }
+  }
+  modal.addEventListener('mouseenter', stopAutoRotate);
+  modal.addEventListener('mouseleave', startAutoRotate);
+
+  renderProducts();
+});
