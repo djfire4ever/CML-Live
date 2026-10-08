@@ -1,0 +1,159 @@
+/* =========================================================
+   carousel.css - QuoteManager carousel structure
+
+   PURPOSE
+   -------
+   This module owns the visual structure and behavior of the
+   QuoteManager carousel itself.
+
+   This includes:
+   - the main carousel container
+   - step/navigation indicators
+   - active and completed step states
+   - carousel item spacing and transitions
+
+   IMPORTANT
+   ---------
+   Keep carousel-specific styling here.
+
+   Generic Bootstrap/layout selectors should remain outside
+   this module unless they are given a carousel-specific
+   selector or are clearly owned by the carousel component.
+
+   The step indicators use the existing .step / .circle
+   markup and are also compatible with the project's shared
+   spotlight system.
+
+   The carousel container's glow is part of the carousel
+   visual treatment and should remain here.
+
+   ========================================================= */
+
+
+/* =========================================================
+   Carousel Container
+
+   The main visual frame for the QuoteManager carousel.
+
+   The large theme-primary glow is intentional. It provides
+   the visual boundary between the carousel and the page
+   background.
+   ========================================================= */
+.quote-container {
+  position: relative;
+  overflow: hidden;
+  width: min(95%, 1000px);
+  margin: 2rem auto;
+  border-radius: 16px;
+  padding: 1rem;
+
+  /* Depth: lifts container off the page */
+  /* Importance: strong, authoritative glow */
+  box-shadow:
+    0 14px 34px rgba(0, 0, 0, 0.5),
+    0 0 48px var(--theme-primary),
+    0 0 96px var(--theme-primary);
+
+  transition: box-shadow 0.4s ease, height 0.4s ease;
+  min-height: 60vh;
+  max-height: 85vh;
+}
+
+
+/* =========================================================
+   Step Indicators
+
+   These controls represent the user's position in the
+   carousel. State classes are managed by the carousel
+   JavaScript.
+
+   .active  → current step
+   .filled  → previously completed step
+   ========================================================= */
+.step-nav {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.step {
+  position: relative;
+  text-align: center;
+  transition: transform 0.3s ease;
+}
+
+
+/* =========================================================
+   Step Indicator Circle
+
+   .circle is the visual element inside each .step.
+   The shared project spotlight system may also target this
+   element, so avoid treating its appearance here as
+   completely self-contained.
+   ========================================================= */
+.circle {
+  width: 100px;
+  height: 25px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 12px;
+  text-align: center;
+
+  background-color: var(--theme-bg);
+  color: var(--theme-text);
+  border: 1px solid var(--theme-primary);
+
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+
+/* =========================================================
+   Active Step
+   ========================================================= */
+.step.active .circle {
+  background-color: var(--theme-primary);
+  color: var(--theme-page-bg);
+  box-shadow:
+    0 0 12px rgba(var(--theme-primary-rgb), var(--glow-secondary));
+}
+
+
+/* =========================================================
+   Completed Step
+   ========================================================= */
+.step.filled .circle {
+  background-color: var(--theme-alt-text);
+  color: var(--theme-page-bg);
+  box-shadow:
+    0 0 10px rgba(var(--bs-success-rgb), var(--glow-secondary));
+}
+
+
+/* =========================================================
+   Unfilled Step Hover
+   ========================================================= */
+.step:not(.filled):hover .circle {
+  box-shadow:
+    0 0 12px rgba(var(--theme-primary-rgb), var(--glow-secondary));
+}
+
+
+/* =========================================================
+   Carousel Items
+
+   Controls the spacing and transition behavior of each
+   carousel panel/slide.
+
+   The actual content and slide-specific styling belong in
+   the individual slide modules.
+   ========================================================= */
+.carousel-item {
+  padding: 2rem;
+  transition: transform 0.6s ease, opacity 0.6s ease;
+}

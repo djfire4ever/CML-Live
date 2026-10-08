@@ -1,9 +1,46 @@
-/* quote-manager.css - main orchestrator for the QuoteManager project
-   (>>> DO NOT DELETE THIS FILE IDENTIFICATION LINE <<<) */
+/* =========================================================
+   quote-manager.css - QuoteManager CSS orchestrator
 
-/* =========================================
-   Slide-specific overrides
-   ========================================= */
+   PURPOSE
+   -------
+   This file is the main CSS entry point for QuoteManager.
+   It primarily controls the module import order and contains
+   only QuoteManager-wide rules that do not belong to a
+   specific component or module.
+
+   MODULE OWNERSHIP
+   ----------------
+   - carousel.css      → shared carousel structure/navigation
+   - slide1.css        → Slide 1 / Client
+   - slide2.css        → Slide 2 / Event
+   - slide3.css        → Slide 3 / Products
+   - slide4.css        → Slide 4 / Other
+   - drawers.css       → drawers and drawer-specific UI
+   - project-theme.css → shared project theme, inputs, spotlight,
+                         autocomplete, progress, and theme helpers
+
+   IMPORTANT
+   ---------
+   Keep this file intentionally small.
+
+   A rule belongs in a module when that module owns the
+   component or behavior. Do not move generic Bootstrap or
+   layout rules into a module simply because QuoteManager
+   currently uses them there.
+
+   Likewise, avoid adding slide-specific styling here.
+
+   Import order is intentional. Shared carousel and slide
+   styles are loaded before the project-wide theme layer.
+
+   >>> DO NOT DELETE THIS FILE IDENTIFICATION LINE <<<
+   ========================================================= */
+
+
+/* =========================================================
+   QuoteManager CSS Modules
+   ========================================================= */
+@import url('qm-modules/carousel.css');
 @import url('qm-modules/slide1.css');
 @import url('qm-modules/slide2.css');
 @import url('qm-modules/slide3.css');
@@ -11,103 +48,39 @@
 @import url('qm-modules/drawers.css');
 @import url('qm-modules/project-theme.css');
 
-/* =========================================
+
+/* =========================================================
    QuoteManager Global Layout Styles
-   ========================================= */
+   ========================================================= */
 
-/* =========================================
-   Quote Container — Hero Glow
-   ========================================= */
-.quote-container {
-  position: relative;
-  overflow: hidden;
-  width: min(95%, 1000px);
-  margin: 2rem auto;
-  border-radius: 16px;
-  padding: 1rem;
 
-  /* Depth: lifts container off the page */
-  /* Importance: strong, authoritative glow */
-  box-shadow:
-    0 14px 34px rgba(0, 0, 0, 0.5),
-    0 0 48px var(--theme-primary),
-    0 0 96px var(--theme-primary);
+/* =========================================================
+   Layout / Bootstrap Fixes
 
-  transition: box-shadow 0.4s ease, height 0.4s ease;
-  min-height: 60vh;
-  max-height: 85vh;
+   These rules are QuoteManager-wide layout corrections.
+   They are intentionally kept here rather than placed in
+   carousel.css because they are generic layout/Bootstrap
+   adjustments, not carousel behavior.
+   ========================================================= */
+.container.py-4 {
+  padding-top: 0;
+  padding-bottom: 0;
 }
 
-/* =========================================
-   Step Indicators
-   ========================================= */
-.step-nav {
-  display: flex;
-  justify-content: center;
-  gap: 2rem;
-  margin-bottom: 2rem;
-}
 
-.step {
-  position: relative;
-  text-align: center;
-  transition: transform 0.3s ease;
-}
-
-/* Circle base */
-.circle {
-  width: 100px;
-  height: 25px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  border-radius: 12px;
-  text-align: center;
-
-  background-color: var(--theme-bg);
-  color: var(--theme-text);
-  border: 1px solid var(--theme-primary);
-
-  transition:
-    background-color 0.3s ease,
-    color 0.3s ease,
-    box-shadow 0.3s ease;
-}
-
-/* Active step */
-.step.active .circle {
-  background-color: var(--theme-primary);
-  color: var(--theme-page-bg);
-  box-shadow:
-    0 0 12px rgba(var(--theme-primary-rgb), var(--glow-secondary));
-}
-
-/* Filled step */
-.step.filled .circle {
-  background-color: var(--theme-alt-text);
-  color: var(--theme-page-bg);
-  box-shadow:
-    0 0 10px rgba(var(--bs-success-rgb), var(--glow-secondary));
-}
-
-/* Hover for unfilled steps */
-.step:not(.filled):hover .circle {
-  box-shadow:
-    0 0 12px rgba(var(--theme-primary-rgb), var(--glow-secondary));
-}
-
-/* =========================================
-   Carousel Items
-   ========================================= */
-.carousel-item {
-  padding: 2rem;
-  transition: transform 0.6s ease, opacity 0.6s ease;
-}
-
-/* =========================================
+/* =========================================================
    Drawer / Navigation Button Groups
-   ========================================= */
+
+   .btn-group is intentionally kept here.
+
+   Although QuoteManager currently uses this class for
+   navigation controls, the selector itself is generic and
+   does not establish ownership by the carousel. It may also
+   be used by drawers or other button groups.
+
+   Do not move this to carousel.css unless the selector is
+   later replaced with a carousel-specific class.
+   ========================================================= */
 .btn-group {
   display: flex;
   gap: 0.75rem;
@@ -115,12 +88,3 @@
   padding-top: 0.5rem;
   border-top: 1px solid var(--theme-primary);
 }
-
-/* =========================================
-   Layout / Bootstrap Fixes
-   ========================================= */
-.container.py-4 {
-  padding-top: 0;
-  padding-bottom: 0;
-}
-

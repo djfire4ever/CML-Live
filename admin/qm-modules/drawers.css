@@ -1,8 +1,37 @@
-/* qm-modules/drawers.css (>>> DO NOT DELETE THIS FILE IDENTIFICATION LINE <<<) */
+/* =========================================================
+   qm-modules/drawers.css
 
-/* ============================
-   Offcanvas (Drawers)
-============================ */
+   PURPOSE
+   -------
+   Styles for QuoteManager drawer/offcanvas interfaces.
+
+   This module currently contains two related areas:
+   - Bootstrap offcanvas drawer presentation
+   - Receipt content displayed within the drawer
+
+   Keep drawer-specific styling here rather than placing it
+   in quote-manager.css or in individual slide modules.
+
+   RECEIPT OWNERSHIP
+   -----------------
+   The receipt styles (.receipt, .receipt-*, .product-row,
+   etc.) belong here because the receipt is presented through
+   the QuoteManager drawer system.
+
+   IMPORTANT
+   ---------
+   This file should contain drawer/receipt presentation only.
+   Generic Bootstrap rules or unrelated component styles
+   should not be added here simply because they happen to
+   appear inside a drawer.
+
+   >>> DO NOT DELETE THIS FILE IDENTIFICATION LINE <<<
+   ========================================================= */
+
+
+/* =========================================================
+   Offcanvas / Drawer Base
+   ========================================================= */
 .offcanvas {
   transition: transform 0.4s ease;
   box-shadow: -5px 0 20px rgba(var(--theme-success), 0.4);
@@ -24,9 +53,13 @@
   border-color: rgba(var(--theme-info-rgb), 0.25);
 }
 
-/* ============================
-   Receipt Drawer Base Styles
-============================ */
+
+/* =========================================================
+   Receipt Drawer
+   ---------------------------------------------------------
+   Base typography and layout for the receipt displayed
+   within the drawer.
+   ========================================================= */
 .receipt {
   font-family: "Courier New", monospace;
   font-size: 0.9rem;
@@ -49,9 +82,14 @@
   font-style: italic;
 }
 
-/* ============================
-   Product Rows (Fully Fixed)
-============================ */
+
+/* =========================================================
+   Receipt Product Rows
+   ---------------------------------------------------------
+   Controls the layout of individual products, including
+   truncation of long product names and alignment of
+   quantity, price, and total.
+   ========================================================= */
 .receipt-products {
   display: flex;
   flex-direction: column;
@@ -67,16 +105,19 @@
   font-size: 0.85rem;
 }
 
-/* Product name (truncates cleanly) */
+
+/* Product name
+   Truncates cleanly when the drawer is too narrow. */
 .product-row .name {
   flex: 1 1 auto;
-  max-width: 180px; /* adjust for drawer width */
+  max-width: 180px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-/* qty, price, total */
+
+/* Quantity, price, and total columns */
 .product-row .qty,
 .product-row .price,
 .product-row .total {
@@ -89,9 +130,10 @@
   margin: 0 4px;
 }
 
-/* ============================
-   Subtotals + Add-ons
-============================ */
+
+/* =========================================================
+   Receipt Subtotals / Add-ons
+   ========================================================= */
 .receipt-subtotals,
 .receipt-addons {
   margin-top: 0.5rem;
@@ -107,9 +149,10 @@
   margin-bottom: 0.2rem;
 }
 
-/* ============================
-   Grand Total Area
-============================ */
+
+/* =========================================================
+   Receipt Grand Total
+   ========================================================= */
 .receipt-total {
   font-weight: bold;
   border-top: 1px solid green;
