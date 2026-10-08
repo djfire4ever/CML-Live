@@ -80,7 +80,7 @@ body[data-theme="purple"] {
   --theme-spotlight-hover: var(--theme-primary);
 
   --theme-text: #f2c94c;
-  --theme-alt-text: #f1c6ff;
+  --theme-alt-text: #f2c94c;
 
   --theme-page-bg: #000;
 }
@@ -90,14 +90,6 @@ body.project-theme {
   background-color: var(--theme-page-bg);
   color: var(--theme-text);
   overflow-x: hidden;
-}
-
-/* ======================================================
-   LABELS (PRIMARY ROLE)
-   ====================================================== */
-.project-theme label,
-.project-theme .form-label {
-  color: var(--theme-text);
 }
 
 /* ======================================================
@@ -150,7 +142,7 @@ body.project-theme {
 .project-theme button.nextBtn {
   position: relative;
   cursor: pointer;
-  color: var(--theme-text);
+  color: var(--theme-text) !important;
   background-color: var(--theme-page-bg);
   border-radius: 12px;
   box-shadow:
@@ -196,24 +188,11 @@ body.project-theme {
 }
 
 /* ======================================================
-   STRUCTURE
-   ====================================================== */
-.project-theme .btn,
-.project-theme .btn-group .btn,
-.project-theme .project-theme-tile,
-.project-theme .event-tile,
-.project-theme .fees-tile,
-.project-theme .balance-tile,
-.project-theme .discount-tile,
-.project-theme .add-product-tile {
-  border-radius: 12px;
-}
-
-/* ======================================================
    AUTOCOMPLETE (DATA ROLE)
    ====================================================== */
 .project-theme .client-suggestions,
-.project-theme .product-suggestions {
+.project-theme .product-suggestions,
+.project-theme .material-suggestions {
   position: absolute;
   z-index: 1000;
   max-height: 200px;
@@ -228,7 +207,8 @@ body.project-theme {
 }
 
 .project-theme .client-suggestions li,
-.project-theme .product-suggestions li {
+.project-theme .product-suggestions li,
+.project-theme .material-suggestions li {
   padding: 0.4rem 0.6rem;
   background-color: var(--theme-bg);
   color: var(--theme-alt-text);
@@ -236,19 +216,19 @@ body.project-theme {
 }
 
 .project-theme .client-suggestions li:hover,
-.project-theme .product-suggestions li:hover {
+.project-theme .product-suggestions li:hover,
+.project-theme .material-suggestions li:hover {
   background-color: var(--theme-alt-text);
   color: var(--theme-bg);
 }
+
 
 /* ======================================================
    TITLES / HELPERS
    ====================================================== */
 .glow-title {
   color: var(--theme-text);
-  text-shadow: 0 0 12px rgba(var(--theme-primary-rgb), var(--glow-secondary));
 }
-
 .theme-bg-element {
   background-color: var(--theme-bg);
 }
@@ -277,3 +257,28 @@ body.project-theme {
   background-color: var(--theme-alt-text);
   transition: width 0.6s ease;
 }
+
+
+/* Potentially Unused CSS */ 
+/* ======================================================
+   STRUCTURE
+   ====================================================== 
+.project-theme .btn,
+.project-theme .btn-group .btn,
+.project-theme .project-theme-tile,
+.project-theme .event-tile,
+.project-theme .fees-tile,
+.project-theme .balance-tile,
+.project-theme .discount-tile,
+.project-theme .add-product-tile {
+  border-radius: 12px;
+}*/
+
+/* ======================================================
+   LABELS (PRIMARY ROLE)
+   ====================================================== 
+.project-theme label,
+.project-theme .form-label {
+  color: var(--theme-text);
+}*/
+

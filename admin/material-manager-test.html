@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- QuoteManager CSS = visual source of truth -->
+    <link rel="stylesheet" href="quote-manager.css">
+
+    <!-- Bootstrap -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <title>Material Manager</title>
+</head>
+
+<body class="project-theme" data-theme="purple">
+
+<div class="container py-4">
+
+    <!-- =====================================================
+         MAIN CONTAINER
+         ===================================================== -->
+    <div class="quote-container bg-black d-flex flex-column">
+
+        <!-- =================================================
+             TOP NAVIGATION / STEP INDICATORS
+             ================================================= -->
+        <div class="btn-group d-flex justify-content-between m-2 align-items-center">
+
+            <button
+                class="btn btn-sm prevBtn"
+                type="button"
+                style="flex: 0 0 100px;">
+                Back
+            </button>
+
+            <div class="step-nav mb-1 d-flex gap-2">
+
+                <div class="step active">
+                    <div class="circle">Material</div>
+                </div>
+
+                <div class="step">
+                    <div class="circle">Inventory</div>
+                </div>
+
+                <div class="step">
+                    <div class="circle">Delivery</div>
+                </div>
+
+            </div>
+
+            <button
+                class="btn btn-sm nextBtn"
+                type="button"
+                style="flex: 0 0 100px;">
+                Next
+            </button>
+
+        </div>
+
+<!-- =================================================
+     MATERIAL PANEL
+     ================================================= -->
+<div class="carousel-inner">
+
+    <div
+        id="mm-slide1"
+        class="carousel-item active">
+
+        <div class="slide-inner p-3">
+
+            <!-- HEADER -->
+            <div class="d-flex justify-content-between align-items-center mb-3">
+
+                <h4 class="glow-title mb-0">
+                    Materials <span id="materialCount">47</span>
+                </h4>
+
+                <button
+                    type="button"
+                    class="btn btn-sm spotlight-btn rounded-pill">
+                    <i class="bi bi-stars me-1"></i>
+                    Test Glow
+                </button>
+
+            </div>
+
+<!-- SEARCH -->
+<div class="mb-3 position-relative">
+
+    <div class="input-group">
+
+        <input
+            id="materialSearch"
+            type="search"
+            class="form-control"
+            placeholder="Search materials..."
+            autocomplete="off">
+
+    </div>
+
+    <ul
+        id="materialSuggestions"
+        class="material-suggestions list-group"
+        style="display: none;">
+    </ul>
+
+</div>
+
+
+                    <!-- MATERIAL FIELDS -->
+                    <div class="row g-3">
+
+                        <div class="col-md-6">
+
+                            <label
+                                for="materialName"
+                                class="form-label">
+                                Material Name
+                            </label>
+
+                            <input
+                                id="materialName"
+                                type="text"
+                                class="form-control"
+                                value="Premium Example Material">
+
+                        </div>
+
+
+                        <div class="col-md-6">
+
+                            <label
+                                for="supplier"
+                                class="form-label">
+                                Supplier
+                            </label>
+
+                            <select
+                                id="supplier"
+                                class="form-control">
+
+                                <option>Select Supplier</option>
+                                <option>Example Supplier</option>
+                                <option>Second Supplier</option>
+
+                            </select>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- REPRESENTATIVE TILES -->
+                    <div class="row g-3 mt-2">
+
+                        <div class="col-md-4">
+
+                            <div class="project-theme-tile spotlight-tile p-3">
+
+                                <div class="small">
+                                    Current Inventory
+                                </div>
+
+                                <div class="fs-4 theme-alt-text">
+                                    24
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-md-4">
+
+                            <div
+                                class="project-theme-tile spotlight-tile p-3"
+                                role="button"
+                                tabindex="0"
+                                data-bs-toggle="modal"
+                                data-bs-target="#materialDetailsModal">
+
+                                <div class="small">
+                                    Unit Price
+                                </div>
+
+                                <div class="fs-4 theme-alt-text">
+                                    $4.00
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-md-4">
+
+                            <div class="project-theme-tile spotlight-tile p-3">
+
+                                <div class="small">
+                                    Stock Health
+                                </div>
+
+                                <div class="fs-4 theme-alt-text">
+                                    Healthy
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ADD MATERIAL -->
+                    <div class="mt-3">
+
+                        <div class="add-product-tile project-theme-tile spotlight-tile p-3">
+
+                            <i class="bi bi-plus-circle me-2"></i>
+                            Add Material
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- PROGRESS -->
+                    <div class="mt-3">
+
+                        <label class="form-label">
+                            Inventory Level
+                        </label>
+
+                        <div class="progress">
+
+                            <div
+                                class="progress-bar"
+                                role="progressbar"
+                                style="width: 65%;"
+                                aria-valuenow="65"
+                                aria-valuemin="0"
+                                aria-valuemax="100">
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+<!-- NOTES -->
+<div class="row g-2 mt-3">
+
+    <div class="col-12">
+
+        <div class="project-theme-tile d-flex align-items-start gap-2 theme-bg-element">
+
+            <i class="bi bi-pencil-square tile-icon mt-2 theme-warning"></i>
+
+            <div class="flex-fill">
+
+                <label
+                    for="testNotes"
+                    class="tile-label theme-text">
+                    Notes
+                </label>
+
+                <textarea
+                    id="testNotes"
+                    class="tile-input"
+                    rows="2"
+                    placeholder="Add details here..."></textarea>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+                    <!-- BUTTON VARIETY -->
+                    <div class="d-flex flex-wrap gap-2 mt-3">
+
+                        <button
+                            type="button"
+                            class="btn btn-primary">
+                            Bootstrap
+                        </button>
+
+                        <button
+                            type="button"
+                            class="btn spotlight-btn">
+                            <i class="bi bi-lightning-charge me-1"></i>
+                            Spotlight
+                        </button>
+
+                        <button
+                            type="button"
+                            class="btn btn-sm spotlight-btn rounded-pill">
+                            Rounded
+                        </button>
+
+                        <button
+                            type="button"
+                            class="btn btn-success">
+                            <i class="bi bi-check-lg me-1"></i>
+                            Save
+                        </button>
+
+                        <button
+                            type="button"
+                            class="btn btn-danger">
+                            <i class="bi bi-x-lg me-1"></i>
+                            Cancel
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     MATERIAL DETAILS MODAL
+     ===================================================== -->
+<div
+    class="modal fade"
+    id="materialDetailsModal"
+    tabindex="-1"
+    aria-labelledby="materialDetailsModalLabel"
+    aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered">
+
+        <div class="modal-content bg-black">
+
+            <div class="modal-header">
+
+                <h5
+                    class="modal-title glow-title"
+                    id="materialDetailsModalLabel">
+                    Material Details
+                </h5>
+
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="Close">
+                </button>
+
+            </div>
+
+            <div class="modal-body">
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Material
+                    </label>
+
+                    <div class="theme-alt-text">
+                        Premium Example Material
+                    </div>
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Supplier
+                    </label>
+
+                    <div class="theme-alt-text">
+                        Example Supplier
+                    </div>
+
+                </div>
+
+                <div class="row g-3">
+
+                    <div class="col-6">
+
+                        <label class="form-label">
+                            Unit Price
+                        </label>
+
+                        <div class="fs-5 theme-alt-text">
+                            $4.00
+                        </div>
+
+                    </div>
+
+                    <div class="col-6">
+
+                        <label class="form-label">
+                            On Hand
+                        </label>
+
+                        <div class="fs-5 theme-alt-text">
+                            24
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+
+                <button
+                    type="button"
+                    class="btn spotlight-btn"
+                    data-bs-dismiss="modal">
+                    Close
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     BOOTSTRAP JS
+     ===================================================== -->
+<script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
+</script>
+
+
+<!-- =====================================================
+     SPOTLIGHT
+     ===================================================== -->
+<script>
+
+function applySmoothSpotlight(selector, spotlightClass) {
+
+    document.querySelectorAll(selector).forEach(el => {
+
+        if (spotlightClass) {
+            el.classList.add(spotlightClass);
+        }
+
+        let targetX = el.offsetWidth / 2;
+        let targetY = el.offsetHeight / 2;
+
+        let currentX = targetX;
+        let currentY = targetY;
+
+        let rafId = null;
+
+
+        function update() {
+
+            currentX += (targetX - currentX) * 0.2;
+            currentY += (targetY - currentY) * 0.2;
+
+            el.style.setProperty('--x', `${currentX}px`);
+            el.style.setProperty('--y', `${currentY}px`);
+
+            rafId = requestAnimationFrame(update);
+        }
+
+
+        el.addEventListener('mousemove', e => {
+
+            const rect = el.getBoundingClientRect();
+
+            targetX = e.clientX - rect.left;
+            targetY = e.clientY - rect.top;
+
+            if (!rafId) {
+                update();
+            }
+
+        });
+
+
+        el.addEventListener('mouseleave', () => {
+
+            targetX = el.offsetWidth / 2;
+            targetY = el.offsetHeight / 2;
+
+        });
+
+    });
+
+}
+
+
+// Navigation buttons
+applySmoothSpotlight(
+    '.btn-group .btn',
+    'spotlight-btn'
+);
+
+
+// Step indicators
+applySmoothSpotlight(
+    '.step .circle',
+    'spotlight-step'
+);
+
+
+// Tiles
+applySmoothSpotlight(
+    '.project-theme-tile',
+    'spotlight-tile'
+);
+
+const testMaterials = [
+    {
+        materialID: "1001",
+        name: "Premium Example Material",
+        supplier: "Example Supplier"
+    },
+    {
+        materialID: "2002",
+        name: "Standard Example Material",
+        supplier: "Second Supplier"
+    },
+    {
+        materialID: "3003",
+        name: "Premium Alternate Material",
+        supplier: "Example Supplier"
+    },
+    {
+        materialID: "4104",
+        name: "Example Construction Material",
+        supplier: "Second Supplier"
+    }
+];
+
+const materialSearch = document.querySelector("#materialSearch");
+const materialSuggestions = document.querySelector("#materialSuggestions");
+
+materialSearch.addEventListener("input", () => {
+
+    const query = materialSearch.value.trim().toLowerCase();
+
+    if (!query) {
+        materialSuggestions.innerHTML = "";
+        materialSuggestions.style.display = "none";
+        return;
+    }
+
+    const matches = testMaterials.filter(material =>
+        [
+            material.materialID,
+            material.name,
+            material.supplier
+        ].some(value =>
+            String(value || "").toLowerCase().includes(query)
+        )
+    );
+
+    if (!matches.length) {
+        materialSuggestions.innerHTML = "";
+        materialSuggestions.style.display = "none";
+        return;
+    }
+
+    materialSuggestions.innerHTML = matches.map(material =>
+        `<li class="list-group-item" data-id="${material.materialID}">
+            ${material.name} (${material.materialID})
+        </li>`
+    ).join("");
+
+    materialSuggestions.style.display = "block";
+});
+
+materialSuggestions.addEventListener("click", (e) => {
+
+    const li = e.target.closest("li[data-id]");
+    if (!li) return;
+
+    const material = testMaterials.find(
+        material => String(material.materialID) === String(li.dataset.id)
+    );
+
+    if (!material) return;
+
+    materialSearch.value = material.name;
+
+    materialSuggestions.innerHTML = "";
+    materialSuggestions.style.display = "none";
+
+});
+
+document.addEventListener("click", (e) => {
+
+    if (
+        !materialSearch.contains(e.target) &&
+        !materialSuggestions.contains(e.target)
+    ) {
+        materialSuggestions.style.display = "none";
+    }
+
+});
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,469 @@
+/* material-manager-test.css
+   Experimental QuoteManager-inspired visual treatment.
+   TEST ONLY - do not move into Admin styles yet.
+*/
+
+:root {
+  --test-page-bg: #050505;
+  --test-surface: #000000;
+  --test-surface-raised: #080808;
+  --test-surface-hover: #101010;
+
+  --test-primary: #f2c94c;
+  --test-primary-rgb: 242, 201, 76;
+
+  --test-purple: #9b5de5;
+  --test-purple-rgb: 155, 93, 229;
+
+  --test-text: #f2c94c;
+  --test-text-soft: #d8d8d8;
+  --test-text-muted: #999999;
+
+  --test-border: rgba(155, 93, 229, 0.75);
+  --test-border-soft: rgba(155, 93, 229, 0.35);
+
+  --test-glow-primary: 1;
+  --test-glow-secondary: 0.45;
+}
+
+
+/* =========================================================
+   PAGE
+   ========================================================= */
+
+html,
+body {
+  background-color: var(--test-page-bg) !important;
+  color: var(--test-text-soft);
+}
+
+body {
+  min-height: 100vh;
+}
+
+
+/* =========================================================
+   MAIN PAGE SURFACE
+   ========================================================= */
+
+.container {
+  background-color: var(--test-surface);
+  color: var(--test-text-soft);
+  border-radius: 14px;
+  box-shadow:
+    0 0 30px rgba(var(--test-purple-rgb), 0.28),
+    0 0 70px rgba(var(--test-purple-rgb), 0.20);
+}
+
+
+/* =========================================================
+   PAGE TITLE
+   ========================================================= */
+
+h1,
+h2,
+h3 {
+  color: var(--test-primary);
+  text-shadow:
+    0 0 8px rgba(var(--test-primary-rgb), 0.45),
+    0 0 18px rgba(var(--test-purple-rgb), 0.35);
+}
+
+
+/* =========================================================
+   SEARCH
+   ========================================================= */
+
+#searchInput {
+  background-color: var(--test-surface-raised) !important;
+  color: var(--test-text);
+  border: 1px solid var(--test-purple) !important;
+  border-radius: 10px;
+  box-shadow:
+    0 0 10px rgba(var(--test-purple-rgb), 0.20);
+}
+
+#searchInput::placeholder {
+  color: var(--test-text-muted);
+  opacity: 1;
+}
+
+#searchInput:focus {
+  background-color: var(--test-surface-raised) !important;
+  color: var(--test-text);
+  border-color: var(--test-primary) !important;
+  box-shadow:
+    0 0 0 0.15rem rgba(var(--test-primary-rgb), 0.12),
+    0 0 18px rgba(var(--test-purple-rgb), 0.35);
+}
+
+
+/* =========================================================
+   COUNTERS
+   ========================================================= */
+
+.badge {
+  border-radius: 999px;
+}
+
+
+/* =========================================================
+   ACCORDION FOUNDATION
+   ========================================================= */
+
+.accordion {
+  --bs-accordion-bg: var(--test-surface);
+  --bs-accordion-color: var(--test-text-soft);
+  --bs-accordion-border-color: var(--test-border-soft);
+
+  --bs-accordion-btn-bg: var(--test-surface-raised);
+  --bs-accordion-btn-color: var(--test-text);
+
+  --bs-accordion-active-bg: var(--test-surface-raised);
+  --bs-accordion-active-color: var(--test-primary);
+
+  --bs-accordion-btn-focus-box-shadow:
+    0 0 0 0.15rem rgba(var(--test-purple-rgb), 0.15);
+}
+
+
+/* =========================================================
+   ACCORDION ITEMS
+   ========================================================= */
+
+.accordion-item {
+  background-color: var(--test-surface) !important;
+  color: var(--test-text-soft);
+  border: 1px solid var(--test-border-soft) !important;
+  border-radius: 12px !important;
+  overflow: hidden;
+
+  margin-bottom: 12px;
+
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.65),
+    0 0 14px rgba(var(--test-purple-rgb), 0.10);
+}
+
+
+/* =========================================================
+   ACCORDION HEADER
+   ========================================================= */
+
+.accordion-button {
+  background-color: var(--test-surface-raised) !important;
+  color: var(--test-text) !important;
+
+  border: 0;
+  border-radius: 10px;
+
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.accordion-button::after {
+  filter: invert(1);
+}
+
+.accordion-button:not(.collapsed) {
+  background-color: var(--test-surface-raised) !important;
+  color: var(--test-primary) !important;
+
+  box-shadow:
+    inset 0 -1px 0 var(--test-border-soft),
+    0 0 16px rgba(var(--test-purple-rgb), 0.12);
+}
+
+.accordion-button:hover {
+  background-color: var(--test-surface-hover) !important;
+  color: var(--test-primary) !important;
+
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.55),
+    0 0 16px rgba(var(--test-purple-rgb), 0.22);
+}
+
+.accordion-button:focus {
+  background-color: var(--test-surface-raised) !important;
+  color: var(--test-primary) !important;
+}
+
+
+/* =========================================================
+   ACCORDION BODY
+   ========================================================= */
+
+.accordion-body {
+  background-color: var(--test-surface) !important;
+  color: var(--test-text-soft);
+}
+
+
+/* =========================================================
+   MATERIAL INFORMATION PANELS
+   ========================================================= */
+
+fieldset {
+  background-color: var(--test-surface-raised);
+  color: var(--test-text-soft);
+
+  border-color: var(--test-purple) !important;
+  border-radius: 8px;
+
+  box-shadow:
+    0 0 10px rgba(var(--test-purple-rgb), 0.08);
+}
+
+legend {
+  color: var(--test-primary) !important;
+}
+
+
+/* =========================================================
+   TEXT HIERARCHY
+   ========================================================= */
+
+.form-label,
+label {
+  color: var(--test-text);
+}
+
+strong {
+  color: var(--test-primary);
+}
+
+p,
+span,
+div {
+  color: inherit;
+}
+
+
+/* =========================================================
+   FORM CONTROLS
+   ========================================================= */
+
+.form-control,
+.form-select {
+  background-color: var(--test-surface) !important;
+  color: var(--test-text-soft) !important;
+
+  border: 1px solid var(--test-border-soft) !important;
+  border-radius: 7px;
+
+  box-shadow: none;
+}
+
+.form-control:focus,
+.form-select:focus {
+  background-color: var(--test-surface) !important;
+  color: var(--test-text-soft) !important;
+
+  border-color: var(--test-primary) !important;
+
+  box-shadow:
+    0 0 0 0.12rem rgba(var(--test-primary-rgb), 0.10),
+    0 0 12px rgba(var(--test-purple-rgb), 0.28);
+}
+
+.form-control::placeholder {
+  color: var(--test-text-muted);
+  opacity: 1;
+}
+
+
+/* =========================================================
+   LINKS
+   ========================================================= */
+
+a {
+  color: var(--test-primary);
+}
+
+a:hover {
+  color: #fff0a8;
+}
+
+
+/* =========================================================
+   BUTTON FOUNDATION
+   ========================================================= */
+
+.btn {
+  border-radius: 999px;
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.btn:hover,
+.btn:focus {
+  transform: translateY(-2px);
+}
+
+
+/* =========================================================
+   PRIMARY / INFO
+   ========================================================= */
+
+.btn-primary,
+.btn-info {
+  background-color: var(--test-surface) !important;
+  border-color: var(--test-primary) !important;
+  color: var(--test-primary) !important;
+
+  box-shadow:
+    0 3px 10px rgba(0, 0, 0, 0.55);
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-info:hover,
+.btn-info:focus {
+  background-color: var(--test-surface-hover) !important;
+  border-color: var(--test-primary) !important;
+  color: var(--test-primary) !important;
+
+  box-shadow:
+    0 4px 14px rgba(0, 0, 0, 0.60),
+    0 0 16px rgba(var(--test-purple-rgb), 0.28);
+}
+
+
+/* =========================================================
+   SUCCESS
+   ========================================================= */
+
+.btn-success {
+  background-color: var(--test-surface) !important;
+  border-color: #1fa774 !important;
+  color: #54d49c !important;
+
+  box-shadow:
+    0 3px 10px rgba(0, 0, 0, 0.50);
+}
+
+.btn-success:hover,
+.btn-success:focus {
+  background-color: var(--test-surface-hover) !important;
+  border-color: #54d49c !important;
+  color: #54d49c !important;
+
+  box-shadow:
+    0 0 14px rgba(84, 212, 156, 0.25);
+}
+
+
+/* =========================================================
+   WARNING
+   ========================================================= */
+
+.btn-warning {
+  background-color: var(--test-surface) !important;
+  border-color: var(--test-primary) !important;
+  color: var(--test-primary) !important;
+}
+
+.btn-warning:hover,
+.btn-warning:focus {
+  background-color: var(--test-surface-hover) !important;
+  color: #fff0a8 !important;
+
+  box-shadow:
+    0 0 14px rgba(var(--test-primary-rgb), 0.28);
+}
+
+
+/* =========================================================
+   DANGER
+   ========================================================= */
+
+.btn-danger,
+.btn-outline-danger {
+  background-color: var(--test-surface) !important;
+  border-color: #d9534f !important;
+  color: #ff7772 !important;
+}
+
+.btn-danger:hover,
+.btn-danger:focus,
+.btn-outline-danger:hover,
+.btn-outline-danger:focus {
+  background-color: var(--test-surface-hover) !important;
+  color: #ff9995 !important;
+
+  box-shadow:
+    0 0 14px rgba(217, 83, 79, 0.25);
+}
+
+
+/* =========================================================
+   SECONDARY
+   ========================================================= */
+
+.btn-secondary,
+.btn-outline-secondary {
+  background-color: var(--test-surface) !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
+  color: var(--test-text-soft) !important;
+}
+
+.btn-secondary:hover,
+.btn-secondary:focus,
+.btn-outline-secondary:hover,
+.btn-outline-secondary:focus {
+  background-color: var(--test-surface-hover) !important;
+  border-color: var(--test-primary) !important;
+  color: var(--test-primary) !important;
+
+  box-shadow:
+    0 0 14px rgba(var(--test-purple-rgb), 0.22);
+}
+
+
+/* =========================================================
+   WARNING / REORDER ALERT
+   ========================================================= */
+
+.alert-warning {
+  background-color: rgba(242, 201, 76, 0.08) !important;
+  color: var(--test-primary) !important;
+
+  border-color: rgba(var(--test-primary-rgb), 0.55) !important;
+
+  box-shadow:
+    0 0 10px rgba(var(--test-primary-rgb), 0.08);
+}
+
+
+/* =========================================================
+   RECEIVE DELIVERY / OTHER ACTION BUTTONS
+   ========================================================= */
+
+button {
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+button:hover {
+  transform: translateY(-1px);
+}
+
+
+/* =========================================================
+   MATERIAL RECORD SPACING
+   ========================================================= */
+
+.accordion-item + .accordion-item {
+  margin-top: 10px;
+}

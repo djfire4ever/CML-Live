@@ -45,21 +45,23 @@ window.LIB_VERSIONS = {
   fullCalendarPlugins: "6.1.17"
 };
 
-// global.js
 window.loadSharedStyles = () => {
   const isAdmin = location.pathname.includes('/admin/');
-  // Restore this line after refactoring quote-manager.css
-  const stylesheet = isAdmin ? '/admin/style.css' : 'style.css';
-
-  // const stylesheet = '/admin/quote-manager.css';
-
+  const isQuoteManager =
+    location.pathname.includes('/admin/quote-manager.html') ||
+    location.pathname.includes('/admin/material-manager-test.html');
+    
   const stylesheets = [
     `https://cdn.jsdelivr.net/npm/bootstrap@${window.LIB_VERSIONS.bootstrap}/dist/css/bootstrap.min.css`,
     `https://cdn.jsdelivr.net/npm/bootstrap-icons@${window.LIB_VERSIONS.bootstrapIcons}/font/bootstrap-icons.min.css`,
-    `https://cdnjs.cloudflare.com/ajax/libs/font-awesome/${window.LIB_VERSIONS.fontAwesome}/css/all.min.css`,
-    stylesheet
+    `https://cdnjs.cloudflare.com/ajax/libs/font-awesome/${window.LIB_VERSIONS.fontAwesome}/css/all.min.css`
   ];
 
+  if (!isQuoteManager) {
+    const stylesheet = isAdmin ? '/admin/style.css' : 'style.css';
+    stylesheets.push(stylesheet);
+  }
+  
   stylesheets.forEach(href => {
     if (![...document.styleSheets].some(s => s.href && s.href.includes(href))) {
       const link = document.createElement('link');
